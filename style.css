@@ -111,6 +111,68 @@ body {
   letter-spacing: 1px;
 }
 
+/* 🌐 전체 대가 통합 포트폴리오 메인 버튼 */
+.grand-total-btn-wrap {
+  margin-bottom: 18px;
+  padding: 0 4px;
+}
+
+.grand-total-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(99, 102, 241, 0.15));
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-align: left;
+}
+
+.grand-total-btn:hover {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(99, 102, 241, 0.25));
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px var(--color-primary-glow);
+}
+
+.grand-total-btn.active {
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  border-color: #38bdf8;
+  box-shadow: 0 0 20px rgba(14, 165, 233, 0.5);
+}
+
+.grand-total-btn.active h4,
+.grand-total-btn.active p {
+  color: #fff;
+}
+
+.grand-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.grand-text h4 {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.grand-text p {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
 .nav-menu {
   display: flex;
   flex-direction: column;

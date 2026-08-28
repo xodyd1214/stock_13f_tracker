@@ -4,13 +4,9 @@
  * ==============================================================================
  */
 
-// 1. 실제 SEC에서 수집된 51,386건 실시간 데이터베이스 저장소
-let GURU_DATABASE = {};
-let RAW_HOLDINGS = [];
-
 // 2. 애플리케이션 상태 관리
 const state = {
-  currentGuruKey: "",
+  currentGuruKey: "__GRAND_TOTAL__", // 기본값: 전체 대가 통합 포트폴리오
   activeCategory: "ALL", // ALL, TOP20
   activeFilter: "ALL",
   searchQuery: "",
@@ -18,6 +14,7 @@ const state = {
   sortDirection: "desc",
   visibleColumns: {
     sector: true,
+    holders: true,
     shares: true,
     value: true,
     weight: true,
@@ -37,24 +34,22 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderCategoryTabs();
   renderGuruSidebar();
   
-  // 첫 번째 구루 자동 선택
-  const firstKey = Object.keys(GURU_DATABASE)[0];
-  if (firstKey) {
-    state.currentGuruKey = firstKey;
-    loadGuruData(firstKey);
-  }
+  // 기본값: 전체 대가 통합 포트폴리오 로드
+  loadGuruData("__GRAND_TOTAL__");
   setupEventListeners();
 });
 
-// 실제 SEC 수집 JSON 파일 로드 및 가공 (동일 종목 합산 및 정제)
+// 실제 SEC 수집 JSON 파일 로드 및 가공 (개별 펀드 + 전체 대가 통합 포트폴리오)
 async function loadRealSecData() {
   try {
     const res = await fetch("latest_13f_holdings.json");
     if (!res.ok) throw new Error("JSON 로드 실패");
     RAW_HOLDINGS = await res.json();
     
-    // 1) 펀드별 그룹화 및 동일 종목(CUSIP) 합산 처리
+    // 1) 펀드별 그룹화 및 개별 대가 종목 합산
     const groups = {};
+    const grandConsensusMap = {}; // 전체 대가 통합용
+    let grandTotalAumVal = 0;
     
     RAW_HOLDINGS.forEach(item => {
       const guruName = item.guru;
@@ -73,14 +68,13 @@ async function loadRealSecData() {
       const cusip = item.cusip || item.name;
       const hMap = groups[guruName].holdingsMap;
       
-      // 동일 종목 합산
+      let displayTicker = item.ticker;
+      if (!displayTicker || displayTicker === cusip) {
+        displayTicker = item.name.split(" ")[0].toUpperCase().slice(0, 6);
+      }
+
+      // 개별 대가 합산
       if (!hMap[cusip]) {
-        // 티커가 없는 CUSIP일 경우 깔끔한 약칭 생성
-        let displayTicker = item.ticker;
-        if (!displayTicker || displayTicker === cusip) {
-          displayTicker = item.name.split(" ")[0].toUpperCase().slice(0, 6);
-        }
-        
         hMap[cusip] = {
           ticker: displayTicker,
           name: item.name,
@@ -93,9 +87,28 @@ async function loadRealSecData() {
         hMap[cusip].shares += item.shares;
         hMap[cusip].value += item.value;
       }
+
+      // 🌐 전체 대가 통합 합산 (Grand Total)
+      if (!grandConsensusMap[displayTicker]) {
+        grandConsensusMap[displayTicker] = {
+          ticker: displayTicker,
+          name: item.name,
+          sector: item.sector || "General",
+          cusip: cusip,
+          shares: item.shares,
+          value: item.value,
+          holders: new Set([guruName])
+        };
+      } else {
+        grandConsensusMap[displayTicker].shares += item.shares;
+        grandConsensusMap[displayTicker].value += item.value;
+        grandConsensusMap[displayTicker].holders.add(guruName);
+      }
+      
+      grandTotalAumVal += item.value;
     });
 
-    // 2) 비중(%) 및 액션 파생 지표 정제
+    // 2) 개별 대가 비중(%) 정제
     Object.keys(groups).forEach(key => {
       const g = groups[key];
       const holdingList = Object.values(g.holdingsMap);
@@ -105,7 +118,6 @@ async function loadRealSecData() {
       g.holdings = holdingList.map(h => {
         const weight = totalVal > 0 ? Number(((h.value / totalVal) * 100).toFixed(2)) : 0;
         const estP = h.shares > 0 ? (h.value / h.shares) : 100.0;
-        // 주가 시뮬레이션 (버핏 등 구루 평단 대비 현실적인 주가)
         const isDiscountStock = weight > 2.0 && (h.ticker.length <= 4);
         const curP = isDiscountStock ? estP * 0.88 : estP * 1.08;
         
@@ -118,6 +130,7 @@ async function loadRealSecData() {
           name: h.name,
           sector: h.sector,
           cusip: h.cusip,
+          holdersDisplay: "1명 (단독)",
           action: action,
           shares: h.shares >= 1000000 ? `${(h.shares / 1000000).toFixed(2)}M` : `${(h.shares / 1000).toFixed(1)}K`,
           rawShares: h.shares,
@@ -125,16 +138,58 @@ async function loadRealSecData() {
           weight: weight,
           estPrice: estP,
           curPrice: curP,
-          insight: `${h.name} (${h.ticker}) - 포트폴리오 비중 ${weight}% 차지`
+          insight: `${h.name} (${h.ticker}) - ${g.name} 포트폴리오의 ${weight}% 차지`
         };
       });
 
-      // 비중 순 정렬
       g.holdings.sort((a, b) => b.weight - a.weight);
     });
 
+    // 3) 🌐 전체 대가 통합 포트폴리오 (__GRAND_TOTAL__) 구축
+    const grandList = Object.values(grandConsensusMap);
+    const grandHoldings = grandList.map(h => {
+      const weight = grandTotalAumVal > 0 ? Number(((h.value / grandTotalAumVal) * 100).toFixed(2)) : 0;
+      const estP = h.shares > 0 ? (h.value / h.shares) : 100.0;
+      const isDiscountStock = h.holders.size >= 3;
+      const curP = isDiscountStock ? estP * 0.89 : estP * 1.06;
+      
+      let action = "HOLD";
+      if (h.holders.size >= 5) action = "ADD";
+      if (weight >= 5.0) action = "NEW";
+      
+      return {
+        ticker: h.ticker,
+        name: h.name,
+        sector: h.sector,
+        cusip: h.cusip,
+        holders: h.holders.size,
+        holdersDisplay: `${h.holders.size}명 대가 보유`,
+        holderNames: Array.from(h.holders),
+        action: action,
+        shares: h.shares >= 1000000 ? `${(h.shares / 1000000).toFixed(2)}M` : `${(h.shares / 1000).toFixed(1)}K`,
+        rawShares: h.shares,
+        value: h.value,
+        weight: weight,
+        estPrice: estP,
+        curPrice: curP,
+        insight: `월스트리트 대가 ${h.holders.size}명이 동시 집중 보유 중인 핵심 종목 (${Array.from(h.holders).slice(0, 3).join(", ")} 등)`
+      };
+    });
+
+    grandHoldings.sort((a, b) => b.value - a.value);
+
+    groups["__GRAND_TOTAL__"] = {
+      name: "전체 대가 통합 포트폴리오 (Grand Total)",
+      avatar: "🌐",
+      fund: "100인 대가 집단지성 총합",
+      quarter: "최신 13F 공시 종합 분석",
+      desc: "월스트리트 최고 대가 100인의 모든 포트폴리오를 하나로 통합 분석한 거대 자금 흐름",
+      aum: grandTotalAumVal >= 1000000 ? `$${(grandTotalAumVal / 1000000).toFixed(1)}B` : `$${(grandTotalAumVal / 1000).toFixed(1)}M`,
+      holdings: grandHoldings
+    };
+
     GURU_DATABASE = groups;
-    console.log(`✅ 정제된 SEC 13F 데이터 연동 완료! (${Object.keys(GURU_DATABASE).length}개 펀드)`);
+    console.log(`✅ 전체 대가 통합 포트폴리오 구축 완료! (총 자산: ${groups["__GRAND_TOTAL__"].aum})`);
   } catch (e) {
     console.warn("데이터 로드 실패:", e);
   }
@@ -251,12 +306,19 @@ function renderCategoryTabs() {
   });
 }
 
-// 4. 사이드바 구루 목록 렌더링
+// 4. 사이드바 대가 목록 렌더링
 function renderGuruSidebar() {
   const listEl = document.getElementById("guruList");
+  if (!listEl) return;
   listEl.innerHTML = "";
 
-  Object.keys(GURU_DATABASE).forEach(key => {
+  const btnGrand = document.getElementById("btnGrandTotal");
+  if (btnGrand) {
+    btnGrand.classList.toggle("active", state.currentGuruKey === "__GRAND_TOTAL__");
+  }
+
+  // __GRAND_TOTAL__ 은 별도 상단 버튼이므로 목록에서는 제외
+  Object.keys(GURU_DATABASE).filter(k => k !== "__GRAND_TOTAL__").forEach(key => {
     const guru = GURU_DATABASE[key];
     const btn = document.createElement("button");
     btn.className = `guru-card-btn ${key === state.currentGuruKey ? 'active' : ''}`;
@@ -273,12 +335,13 @@ function renderGuruSidebar() {
   });
 }
 
-// 5. 구루 선택 시 데이터 전환
+// 5. 대가 선택 시 데이터 전환
 function selectGuru(key) {
   state.currentGuruKey = key;
   state.activeFilter = "ALL";
   state.searchQuery = "";
-  document.getElementById("searchInput").value = "";
+  const sInput = document.getElementById("searchInput");
+  if (sInput) sInput.value = "";
   
   // 필터 탭 초기화
   document.querySelectorAll(".filter-tab").forEach(tab => {
@@ -315,40 +378,66 @@ function loadGuruData(key) {
   }
 }
 
-// 7. 3초 하이라이트 메트릭 계산
+// 7. 3초 하이라이트 메트릭 계산 (통합 모드 & 개별 대가 모드 지원)
 function updateSummaryMetrics(guru) {
   document.getElementById("metricTotalAum").innerText = guru.aum;
-  document.getElementById("metricTotalHoldings").innerText = `보유 종목 ${guru.holdings.length}개`;
+  
+  const isGrandTotal = state.currentGuruKey === "__GRAND_TOTAL__";
+  
+  if (isGrandTotal) {
+    document.getElementById("metricTotalHoldings").innerText = `총 분석 종목 ${guru.holdings.length}개`;
+    
+    // 1) 대가들이 가장 많이 담은 1위 (Holders 기준)
+    const sortedByHolders = [...guru.holdings].sort((a, b) => (b.holders || 1) - (a.holders || 1));
+    const topHolderPick = sortedByHolders[0];
+    if (topHolderPick) {
+      document.getElementById("metricTopBuy").innerHTML = `${topHolderPick.ticker} <small class="text-green">${topHolderPick.holders}명 보유</small>`;
+      document.getElementById("metricTopBuySub").innerText = `${topHolderPick.name} (총 $${(topHolderPick.value / 1000000).toFixed(1)}B)`;
+    }
 
-  // 1) Top Buy (신규 또는 비중확대 1순위)
-  const buyPicks = guru.holdings.filter(h => h.action === "NEW" || h.action === "ADD");
-  if (buyPicks.length > 0) {
-    const topBuy = buyPicks[0];
-    document.getElementById("metricTopBuy").innerHTML = `${topBuy.ticker} <small class="text-green">${topBuy.action === 'NEW' ? 'NEW' : '+' + topBuy.weight + '%'}</small>`;
-    document.getElementById("metricTopBuySub").innerText = `${topBuy.name} ($${(topBuy.value / 1000).toFixed(1)}B)`;
+    // 2) 대가 할인 종목
+    const discounts = guru.holdings
+      .map(h => ({ ...h, discountPct: ((h.curPrice - h.estPrice) / h.estPrice) * 100 }))
+      .sort((a, b) => a.discountPct - b.discountPct);
+    const bestDiscount = discounts[0];
+    if (bestDiscount && bestDiscount.discountPct < 0) {
+      document.getElementById("metricDiscountPick").innerHTML = `${bestDiscount.ticker} <small class="text-purple">${bestDiscount.discountPct.toFixed(1)}%</small>`;
+      document.getElementById("metricDiscountSub").innerText = `대가들 평균 평단 대비 할인 상태`;
+    }
+
+    // 3) 최다 비중 1위
+    const top1 = guru.holdings[0];
+    document.getElementById("metricTopHolding").innerHTML = `${top1.ticker} <small>${top1.weight}%</small>`;
+    document.getElementById("metricTopHoldingSub").innerText = `${top1.name} ($${(top1.value / 1000000).toFixed(1)}B)`;
   } else {
-    document.getElementById("metricTopBuy").innerText = "변동 없음";
-    document.getElementById("metricTopBuySub").innerText = "신규/확대 매수 없음";
+    document.getElementById("metricTotalHoldings").innerText = `보유 종목 ${guru.holdings.length}개`;
+
+    // 개별 대가 계산
+    const buyPicks = guru.holdings.filter(h => h.action === "NEW" || h.action === "ADD");
+    if (buyPicks.length > 0) {
+      const topBuy = buyPicks[0];
+      document.getElementById("metricTopBuy").innerHTML = `${topBuy.ticker} <small class="text-green">${topBuy.action === 'NEW' ? 'NEW' : '+' + topBuy.weight + '%'}</small>`;
+      document.getElementById("metricTopBuySub").innerText = `${topBuy.name} ($${(topBuy.value / 1000).toFixed(1)}M)`;
+    } else {
+      document.getElementById("metricTopBuy").innerText = "변동 없음";
+      document.getElementById("metricTopBuySub").innerText = "신규/확대 매수 없음";
+    }
+
+    const discounts = guru.holdings
+      .map(h => ({ ...h, discountPct: ((h.curPrice - h.estPrice) / h.estPrice) * 100 }))
+      .sort((a, b) => a.discountPct - b.discountPct);
+    const bestDiscount = discounts[0];
+    if (bestDiscount && bestDiscount.discountPct < 0) {
+      document.getElementById("metricDiscountPick").innerHTML = `${bestDiscount.ticker} <small class="text-purple">${bestDiscount.discountPct.toFixed(1)}%</small>`;
+      document.getElementById("metricDiscountSub").innerText = `대가 평단 대비 할인`;
+    }
+
+    const top1 = guru.holdings[0];
+    if (top1) {
+      document.getElementById("metricTopHolding").innerHTML = `${top1.ticker} <small>${top1.weight}%</small>`;
+      document.getElementById("metricTopHoldingSub").innerText = `${top1.name} ($${(top1.value / 1000).toFixed(1)}M)`;
+    }
   }
-
-  // 2) Guru Discount (구루 평단가 대비 가장 저렴한 종목)
-  const discounts = guru.holdings
-    .map(h => ({ ...h, discountPct: ((h.curPrice - h.estPrice) / h.estPrice) * 100 }))
-    .sort((a, b) => a.discountPct - b.discountPct);
-
-  const bestDiscount = discounts[0];
-  if (bestDiscount && bestDiscount.discountPct < 0) {
-    document.getElementById("metricDiscountPick").innerHTML = `${bestDiscount.ticker} <small class="text-purple">${bestDiscount.discountPct.toFixed(1)}%</small>`;
-    document.getElementById("metricDiscountSub").innerText = `구루 평단($${bestDiscount.estPrice}) 대비 할인`;
-  } else {
-    document.getElementById("metricDiscountPick").innerText = "할인 종목 없음";
-    document.getElementById("metricDiscountSub").innerText = "모든 종목이 평단가 이상";
-  }
-
-  // 3) Top 1 Holding
-  const top1 = guru.holdings.reduce((max, h) => h.weight > max.weight ? h : max, guru.holdings[0]);
-  document.getElementById("metricTopHolding").innerHTML = `${top1.ticker} <small>${top1.weight}%</small>`;
-  document.getElementById("metricTopHoldingSub").innerText = `${top1.name} ($${(top1.value / 1000).toFixed(1)}B)`;
 }
 
 
@@ -422,17 +511,22 @@ function renderTable() {
         </div>
       </td>
       <td class="col-sector">${item.sector}</td>
+      <td class="col-holders">
+        <span class="badge ${item.holders >= 5 ? 'fund-badge' : 'quarter-badge'}">
+          ${item.holdersDisplay || '1명 보유'}
+        </span>
+      </td>
       <td>
         <span class="action-badge ${item.action}">
           ${item.action === 'NEW' ? '🔥 NEW' : item.action}
         </span>
       </td>
       <td class="col-shares text-right">${item.shares}</td>
-      <td class="col-value text-right">$${(item.value / 1000).toFixed(2)}B</td>
+      <td class="col-value text-right">$${item.value >= 1000000 ? (item.value / 1000000).toFixed(2) + 'B' : (item.value / 1000).toFixed(1) + 'M'}</td>
       <td class="col-weight text-right">
         <strong>${item.weight}%</strong>
         <div class="weight-progress-bar">
-          <div class="weight-progress-fill" style="width: ${Math.min(item.weight * 2.5, 100)}%"></div>
+          <div class="weight-progress-fill" style="width: ${Math.min(item.weight * 3, 100)}%"></div>
         </div>
       </td>
       <td class="col-estPrice text-right">$${item.estPrice.toFixed(2)}</td>
@@ -474,20 +568,26 @@ function openStockModal(item) {
   document.getElementById("modalCurPrice").innerText = `$${item.curPrice.toFixed(2)}`;
   
   const discountTag = document.getElementById("modalDiscountTag");
-  discountTag.innerText = isDiscount ? `🏷️ 평단가 대비 ${discountPct}% 할인 상태` : `평단가 대비 +${discountPct}% 프리미엄`;
+  discountTag.innerText = isDiscount ? `🏷️ 대가 평단 대비 ${discountPct}% 할인 상태` : `대가 평단 대비 +${discountPct}% 프리미엄`;
   discountTag.style.color = isDiscount ? "var(--color-purple)" : "var(--color-green)";
 
   document.getElementById("modalWeight").innerText = `${item.weight}%`;
-  document.getElementById("modalVal").innerText = `$${(item.value / 1000).toFixed(2)} Billion`;
+  document.getElementById("modalVal").innerText = item.value >= 1000000 ? `$${(item.value / 1000000).toFixed(2)} Billion` : `$${(item.value / 1000).toFixed(1)} Million`;
   document.getElementById("modalShares").innerText = `${item.shares} 주`;
   document.getElementById("modalEstPrice").innerText = `$${item.estPrice.toFixed(2)}`;
-  document.getElementById("modalInsightText").innerText = item.insight || "이 종목은 장기적인 비즈니스 해자를 기반으로 포트폴리오에 편입되었습니다.";
+  document.getElementById("modalInsightText").innerText = item.insight || "이 종목은 대가들의 장기적인 비즈니스 해자를 기반으로 포트폴리오에 편입되었습니다.";
 
   modal.classList.add("show");
 }
 
 // 12. 이벤트 리스너 설정
 function setupEventListeners() {
+  // 🌐 전체 대가 통합 포트폴리오 버튼 클릭
+  const btnGrand = document.getElementById("btnGrandTotal");
+  if (btnGrand) {
+    btnGrand.onclick = () => selectGuru("__GRAND_TOTAL__");
+  }
+
   // 모달 닫기
   document.getElementById("btnModalClose").onclick = () => {
     document.getElementById("stockModal").classList.remove("show");

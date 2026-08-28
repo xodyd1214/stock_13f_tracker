@@ -22,32 +22,39 @@
         </div>
         <div class="brand-text">
           <h1>Alpha<span>13F</span></h1>
-          <p>Guru Intelligence</p>
+          <p>투자 대가 인텔리전스</p>
         </div>
+      </div>
+
+      <!-- 🌐 전체 대가 통합 포트폴리오 메인 버튼 -->
+      <div class="grand-total-btn-wrap">
+        <button class="grand-total-btn active" id="btnGrandTotal">
+          <div class="grand-icon"><i data-lucide="globe"></i></div>
+          <div class="grand-text">
+            <h4>전체 대가 통합 포트폴리오</h4>
+            <p>100인 대가들의 집단지성 총합</p>
+          </div>
+        </button>
       </div>
 
       <nav class="nav-menu">
         <button class="nav-item active" data-tab="portfolio">
           <i data-lucide="pie-chart"></i>
-          <span>구루 포트폴리오</span>
+          <span>포트폴리오 비중</span>
         </button>
         <button class="nav-item" data-tab="consensus">
           <i data-lucide="layers"></i>
-          <span>그랜드 컨센서스 (교집합)</span>
+          <span>대가들의 공통 매수 (교집합)</span>
         </button>
         <button class="nav-item" data-tab="discount">
           <i data-lucide="tag"></i>
-          <span>구루보다 싼 할인 종목</span>
-        </button>
-        <button class="nav-item" data-tab="filings">
-          <i data-lucide="radio"></i>
-          <span>실시간 공시 피드</span>
+          <span>대가보다 싼 할인 종목</span>
         </button>
       </nav>
 
-      <!-- 구루 선택 리스트 -->
+      <!-- 개별 대가 선택 리스트 -->
       <div class="guru-selector-box">
-        <label class="section-label">슈퍼인베스터 선택</label>
+        <label class="section-label">개별 투자 대가 선택</label>
         <div class="guru-list" id="guruList">
           <!-- JS로 동적 렌더링 -->
         </div>
@@ -56,7 +63,7 @@
       <div class="sidebar-footer">
         <div class="sync-status">
           <span class="status-dot"></span>
-          <span>SEC EDGAR 자동 동기화 ON</span>
+          <span>SEC 공식 공시 실시간 연동</span>
         </div>
       </div>
     </aside>
@@ -66,14 +73,14 @@
       <!-- 상단 헤더 바 -->
       <header class="top-header">
         <div class="guru-profile-header">
-          <div class="guru-avatar" id="currentGuruAvatar">WB</div>
+          <div class="guru-avatar" id="currentGuruAvatar">🌐</div>
           <div class="guru-details">
             <div class="guru-name-row">
-              <h2 id="currentGuruName">Warren Buffett</h2>
-              <span class="badge fund-badge" id="currentFundName">Berkshire Hathaway</span>
-              <span class="badge quarter-badge" id="currentQuarter">2024 Q2 Filing</span>
+              <h2 id="currentGuruName">전체 대가 통합 포트폴리오 (Grand Total)</h2>
+              <span class="badge fund-badge" id="currentFundName">100인 대가 집단지성</span>
+              <span class="badge quarter-badge" id="currentQuarter">최신 13F 공시 종합</span>
             </div>
-            <p class="guru-desc" id="currentGuruDesc">가치투자의 거장, 지속 가능한 해자(Moat)를 지닌 현금창출 기업에 집중투자</p>
+            <p class="guru-desc" id="currentGuruDesc">월스트리트 최고 대가 100인의 모든 포트폴리오를 하나로 통합 분석한 거대 자금 흐름</p>
           </div>
         </div>
 
@@ -93,38 +100,38 @@
       <section class="overview-grid">
         <div class="metric-card">
           <div class="metric-header">
-            <span class="metric-title">총 운용 자산 ($)</span>
+            <span class="metric-title" id="metricTitleAum">대가들의 총 운용 자산</span>
             <div class="metric-icon blue"><i data-lucide="wallet"></i></div>
           </div>
-          <div class="metric-value" id="metricTotalAum">$280.5B</div>
-          <div class="metric-sub" id="metricTotalHoldings">보유 종목 41개</div>
+          <div class="metric-value" id="metricTotalAum">$482.6B</div>
+          <div class="metric-sub" id="metricTotalHoldings">분석 대상 대가 50명+</div>
         </div>
 
         <div class="metric-card highlight-card green">
           <div class="metric-header">
-            <span class="metric-title">🔥 이번 분기 최대 신규/확대</span>
+            <span class="metric-title" id="metricTitleBuy">🔥 대가들이 가장 많이 담은 1위</span>
             <div class="metric-icon green"><i data-lucide="sparkles"></i></div>
           </div>
-          <div class="metric-value" id="metricTopBuy">OXY <small>+12.4%</small></div>
-          <div class="metric-sub" id="metricTopBuySub">옥시덴탈 페트롤리움 ($16.1B)</div>
+          <div class="metric-value" id="metricTopBuy">AAPL <small>24명 보유</small></div>
+          <div class="metric-sub" id="metricTopBuySub">총 평가액 $142.5B</div>
         </div>
 
         <div class="metric-card highlight-card purple">
           <div class="metric-header">
-            <span class="metric-title">📉 구루보다 싼 할인 종목</span>
+            <span class="metric-title">📉 대가들보다 싼 할인 종목</span>
             <div class="metric-icon purple"><i data-lucide="badge-percent"></i></div>
           </div>
-          <div class="metric-value" id="metricDiscountPick">CVX <small>-14.2%</small></div>
-          <div class="metric-sub" id="metricDiscountSub">버핏 평단가 대비 14.2% 할인 상태</div>
+          <div class="metric-value" id="metricDiscountPick">GOOGL <small>-11.2%</small></div>
+          <div class="metric-sub" id="metricDiscountSub">대가들 평균 평단가 대비 할인 상태</div>
         </div>
 
         <div class="metric-card">
           <div class="metric-header">
-            <span class="metric-title">👑 최대 비중 (Top 1)</span>
+            <span class="metric-title">👑 최다 합산 비중 종목</span>
             <div class="metric-icon orange"><i data-lucide="crown"></i></div>
           </div>
-          <div class="metric-value" id="metricTopHolding">AAPL <small>38.2%</small></div>
-          <div class="metric-sub" id="metricTopHoldingSub">애플 ($107.2B)</div>
+          <div class="metric-value" id="metricTopHolding">MSFT <small>18.4%</small></div>
+          <div class="metric-sub" id="metricTopHoldingSub">마이크로소프트 (22개 펀드 집중)</div>
         </div>
       </section>
 
@@ -159,7 +166,7 @@
               <button class="filter-tab active" data-filter="ALL">전체 보기 (<span id="countAll">0</span>)</button>
               <button class="filter-tab" data-filter="NEW">🔥 신규 매수 (<span id="countNew">0</span>)</button>
               <button class="filter-tab" data-filter="ADD">➕ 비중 확대 (<span id="countAdd">0</span>)</button>
-              <button class="filter-tab" data-filter="DISCOUNT">📉 구루 할인 종목 (<span id="countDiscount">0</span>)</button>
+              <button class="filter-tab" data-filter="DISCOUNT">📉 대가보다 싼 할인 종목 (<span id="countDiscount">0</span>)</button>
               <button class="filter-tab" data-filter="CONVICTION">⭐ 비중 5%+ 집중 (<span id="countConviction">0</span>)</button>
               <button class="filter-tab" data-filter="REDUCE">➖ 비중 축소/매도</button>
             </div>
@@ -180,12 +187,13 @@
               </button>
               <div class="col-menu" id="colMenu">
                 <label><input type="checkbox" data-col="sector" checked> 섹터</label>
+                <label><input type="checkbox" data-col="holders" checked> 보유 대가 수</label>
                 <label><input type="checkbox" data-col="shares" checked> 보유 주식수</label>
-                <label><input type="checkbox" data-col="value" checked> 평가 금액 ($)</label>
-                <label><input type="checkbox" data-col="weight" checked> 비중 (%)</label>
-                <label><input type="checkbox" data-col="estPrice" checked> 구루 추정 평단가</label>
+                <label><input type="checkbox" data-col="value" checked> 총 평가 금액 ($)</label>
+                <label><input type="checkbox" data-col="weight" checked> 통합 비중 (%)</label>
+                <label><input type="checkbox" data-col="estPrice" checked> 대가 추정 평단가</label>
                 <label><input type="checkbox" data-col="curPrice" checked> 현재 실시간 주가</label>
-                <label><input type="checkbox" data-col="discount" checked> 할인/프리미엄 (%)</label>
+                <label><input type="checkbox" data-col="discount" checked> 대가 대비 할인율 (%)</label>
               </div>
             </div>
           </div>
@@ -198,13 +206,14 @@
               <tr>
                 <th class="sortable" data-sort="ticker">종목 / 티커 <i data-lucide="arrow-up-down"></i></th>
                 <th class="col-sector sortable" data-sort="sector">섹터 <i data-lucide="arrow-up-down"></i></th>
+                <th class="col-holders sortable" data-sort="holders">보유 대가 <i data-lucide="arrow-up-down"></i></th>
                 <th class="sortable" data-sort="action">매매 액션 <i data-lucide="arrow-up-down"></i></th>
                 <th class="col-shares sortable text-right" data-sort="shares">주식 수 <i data-lucide="arrow-up-down"></i></th>
-                <th class="col-value sortable text-right" data-sort="value">평가 금액 ($) <i data-lucide="arrow-up-down"></i></th>
-                <th class="col-weight sortable text-right" data-sort="weight">포트 비중 (%) <i data-lucide="arrow-up-down"></i></th>
-                <th class="col-estPrice sortable text-right" data-sort="estPrice">구루 추정 평단 <i data-lucide="arrow-up-down"></i></th>
+                <th class="col-value sortable text-right" data-sort="value">총 평가 금액 ($) <i data-lucide="arrow-up-down"></i></th>
+                <th class="col-weight sortable text-right" data-sort="weight">통합 비중 (%) <i data-lucide="arrow-up-down"></i></th>
+                <th class="col-estPrice sortable text-right" data-sort="estPrice">대가 추정 평단 <i data-lucide="arrow-up-down"></i></th>
                 <th class="col-curPrice sortable text-right" data-sort="curPrice">현재 실시간가 <i data-lucide="arrow-up-down"></i></th>
-                <th class="col-discount sortable text-right" data-sort="discount">구루 대비 할인율 <i data-lucide="arrow-up-down"></i></th>
+                <th class="col-discount sortable text-right" data-sort="discount">대가 대비 할인율 <i data-lucide="arrow-up-down"></i></th>
               </tr>
             </thead>
             <tbody id="tableBody">
