@@ -12,11 +12,11 @@ function formatMoney(thousandsVal) {
   if (!thousandsVal || thousandsVal <= 0) return "$0";
   const actualUsd = thousandsVal * 1000;
   if (actualUsd >= 1e12) {
-    return `$${(actualUsd / 1e12).toFixed(2)}T`; // 조 달러 ($ Trillion)
+    return `$${(actualUsd / 1e12).toFixed(2)}T`;
   } else if (actualUsd >= 1e9) {
-    return `$${(actualUsd / 1e9).toFixed(2)}B`;  // 십억 달러 ($ Billion)
+    return `$${(actualUsd / 1e9).toFixed(2)}B`;
   } else if (actualUsd >= 1e6) {
-    return `$${(actualUsd / 1e6).toFixed(1)}M`;  // 백만 달러 ($ Million)
+    return `$${(actualUsd / 1e6).toFixed(1)}M`;
   }
   return `$${thousandsVal.toLocaleString()}K`;
 }
@@ -41,9 +41,6 @@ const state = {
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
-  if (window.lucide) {
-    lucide.createIcons();
-  }
   await loadRealSecData();
   renderCategoryTabs();
   renderGuruSidebar();
@@ -65,7 +62,6 @@ async function loadRealSecData() {
     if (priceRes && priceRes.ok) {
       try {
         REALTIME_PRICES = await priceRes.json();
-        console.log("📡 [Yahoo Finance] 실제 시장 주가 연동 완료!");
       } catch (e) {}
     }
     
@@ -202,7 +198,7 @@ async function loadRealSecData() {
 
     groups["__GRAND_TOTAL__"] = {
       name: "전체 운용사 통합 포트폴리오 (Grand Total)",
-      avatar: "🌐",
+      avatar: "CO",
       fund: "100개 주요 운용사 총합",
       quarter: "최신 13F 공시 종합 분석",
       desc: "미국 1억 달러 이상 운용 자격을 갖춘 100개 주요 운용사의 포트폴리오를 하나로 통합 분석한 거대 자금 흐름",
@@ -211,7 +207,6 @@ async function loadRealSecData() {
     };
 
     GURU_DATABASE = groups;
-    console.log(`✅ 전체 운용사 통합 포트폴리오 구축 완료! (총 자산: ${groups["__GRAND_TOTAL__"].aum})`);
   } catch (e) {
     console.warn("데이터 로드 실패:", e);
   }
@@ -361,7 +356,6 @@ function loadGuruData(key) {
   const guru = GURU_DATABASE[key];
   if (!guru) return;
 
-  document.getElementById("currentGuruAvatar").innerText = guru.avatar;
   document.getElementById("currentGuruName").innerText = guru.name;
   document.getElementById("currentFundName").innerText = guru.fund;
   document.getElementById("currentQuarter").innerText = guru.quarter;
@@ -370,10 +364,6 @@ function loadGuruData(key) {
   updateSummaryMetrics(guru);
   renderTreemap(guru.holdings);
   renderTable();
-
-  if (window.lucide) {
-    lucide.createIcons();
-  }
 }
 
 function updateSummaryMetrics(guru) {
@@ -659,8 +649,6 @@ function setupEventListeners() {
     btnSync.onclick = async () => {
       btnSync.disabled = true;
       btnSync.classList.add("loading");
-      const sIcon = document.getElementById("syncIcon");
-      if (sIcon) sIcon.classList.add("spin");
       const sText = document.getElementById("syncText");
       if (sText) sText.innerText = "13F 수집 및 실시간 주가 분석 중...";
 
@@ -672,15 +660,13 @@ function setupEventListeners() {
             loadGuruData(state.currentGuruKey);
             btnSync.disabled = false;
             btnSync.classList.remove("loading");
-            if (sIcon) sIcon.classList.remove("spin");
             if (sText) sText.innerText = "최신 13F 데이터 수집";
-            alert("🎉 SEC 13F 공시 및 야후 파이낸스 실시간 주가 동기화가 완료되었습니다!");
+            alert("SEC 13F 공시 및 야후 파이낸스 실시간 주가 동기화가 완료되었습니다.");
           }, 3000);
         }
       } catch (err) {
         btnSync.disabled = false;
         btnSync.classList.remove("loading");
-        if (sIcon) sIcon.classList.remove("spin");
         if (sText) sText.innerText = "최신 13F 데이터 수집";
       }
     };
