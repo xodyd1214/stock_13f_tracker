@@ -8,6 +8,36 @@ let GURU_DATABASE = {};
 let RAW_HOLDINGS = [];
 let LIVE_PRICES = {};
 
+// 즐겨찾기 로컬 저장소 키
+const FAVORITES_STORAGE_KEY = "alpha13f_favorite_gurus";
+
+function getFavorites() {
+  try {
+    const saved = localStorage.getItem(FAVORITES_STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveFavorites(favs) {
+  try {
+    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favs));
+  } catch (e) {}
+}
+
+function toggleFavorite(guruKey) {
+  let favs = getFavorites();
+  if (favs.includes(guruKey)) {
+    favs = favs.filter(k => k !== guruKey);
+  } else {
+    favs.push(guruKey);
+  }
+  saveFavorites(favs);
+  renderCategoryTabs();
+  renderGuruSidebar();
+}
+
 // 주요 기업 공식 미국 티커 매핑 사전
 const TICKER_MAP = {
   "MICRON": "MU",
@@ -65,15 +95,12 @@ function getMappedTicker(name, rawTicker) {
   const upperName = (name || "").toUpperCase();
   const upperTicker = (rawTicker || "").toUpperCase();
 
-  // 1순위: TICKER_MAP에서 이름 또는 원본 티커로 정확한 공식 미국 티커 매핑
   for (const [key, val] of Object.entries(TICKER_MAP)) {
     if (upperName.includes(key) || upperTicker.includes(key) || upperTicker === key) {
       return val;
     }
   }
 
-  // 2순위: 이미 정상적인 1~5자리 알파벳 티커인 경우 (예: AAPL, NVDA, TSLA)
-  // 단, STATE, INVESC, MICRON 같은 이름 잘린 문자열은 제외
   const invalidTickers = ["STATE", "INVESC", "MICRON", "BERKSH", "TAIWAN", "ALPHAB"];
   if (rawTicker && rawTicker.length <= 5 && !rawTicker.includes(" ") && /^[A-Z]+$/.test(rawTicker) && !invalidTickers.includes(rawTicker)) {
     return rawTicker;
@@ -126,13 +153,17 @@ const state = {
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
+    // 초기 접속 시 즐겨찾기 기본값 (버핏, 애크먼, 달리오, 버리, 드러켄밀러)
+    if (!localStorage.getItem(FAVORITES_STORAGE_KEY)) {
+      saveFavorites(["Warren Buffett", "Bill Ackman", "Ray Dalio", "Michael Burry", "Stanley Druckenmiller"]);
+    }
+
     await loadRealSecData();
     renderCategoryTabs();
     renderGuruSidebar();
     loadGuruData("__GRAND_TOTAL__");
     setupEventListeners();
 
-    // 1분마다 조용히 최신 실시간 시장가 백그라운드 갱신
     setInterval(() => {
       fetchLivePricesForCurrentView();
     }, 60000);
@@ -354,10 +385,95 @@ async function loadRealSecData() {
     };
 
     GURU_DATABASE = groups;
-    console.log(`✅ 13F 데이터베이스 구축 완료! (총 운용사: ${Object.keys(groups).length - 1}개사, 총 자산: ${groups["__GRAND_TOTAL__"].aum})`);
   } catch (e) {
     console.error("데이터 로드 실패:", e);
   }
+}
+
+// 🎛️ 선택된 즐겨찾기 운용사들만의 커스텀 통합 포트폴리오 실시간 생성
+function buildCustomGroupPortfolio() {
+  const favs = getFavorites();
+  if (favs.length === 0) {
+    alert("즐겨찾기로 선택된 운용사가 없습니다! 운용사 목록에서 별표(★)를 눌러 추가해 보세요.");
+    return;
+  }
+
+  const customConsensusMap = {};
+  let customAumVal = 0;
+
+  favs.forEach(guruKey => {
+    const guru = GURU_DATABASE[guruKey];
+    if (!guru || !guru.holdings) return;
+
+    guru.holdings.forEach(h => {
+      const key = `${h.cusip}_${h.secType}`;
+      if (!customConsensusMap[key]) {
+        customConsensusMap[key] = {
+          ticker: h.ticker,
+          baseTicker: h.baseTicker,
+          name: h.name,
+          sector: h.sector,
+          secType: h.secType,
+          cusip: h.cusip,
+          shares: h.rawShares || 0,
+          value: h.value || 0,
+          holders: new Set([guru.name])
+        };
+      } else {
+        customConsensusMap[key].shares += (h.rawShares || 0);
+        customConsensusMap[key].value += (h.value || 0);
+        customConsensusMap[key].holders.add(guru.name);
+      }
+      customAumVal += (h.value || 0);
+    });
+  });
+
+  const customHoldings = Object.values(customConsensusMap).map(h => {
+    const weight = customAumVal > 0 ? Number(((h.value / customAumVal) * 100).toFixed(2)) : 0;
+    const estP = h.shares > 0 ? (h.value / h.shares) : 100.0;
+    
+    const realInfo = LIVE_PRICES[h.baseTicker] || LIVE_PRICES[h.ticker];
+    const curP = (realInfo && realInfo.price) ? realInfo.price : estP;
+    
+    let action = "HOLD";
+    if (h.holders.size >= 2) action = "ADD";
+    if (weight >= 5.0) action = "NEW";
+
+    return {
+      ticker: h.ticker,
+      baseTicker: h.baseTicker,
+      name: h.name,
+      sector: h.sector,
+      secType: h.secType,
+      cusip: h.cusip,
+      holders: h.holders.size,
+      holdersDisplay: `${h.holders.size}/${favs.length}개사 보유`,
+      holderNames: Array.from(h.holders),
+      action: action,
+      shares: h.shares >= 1000000 ? `${(h.shares / 1000000).toFixed(2)}M` : `${(h.shares / 1000).toFixed(1)}K`,
+      rawShares: h.shares,
+      value: h.value,
+      weight: weight,
+      estPrice: estP,
+      curPrice: curP,
+      priceChangePct: realInfo ? realInfo.changePct : 0.0,
+      insight: `선택하신 ${favs.length}개사 중 ${h.holders.size}개사가 집중 보유 중인 포지션`
+    };
+  });
+
+  customHoldings.sort((a, b) => b.value - a.value);
+
+  GURU_DATABASE["__CUSTOM_GROUP__"] = {
+    name: `내 즐겨찾기 ${favs.length}개사 맞춤 통합 포트폴리오`,
+    avatar: "VIP",
+    fund: `선택 운용사: ${favs.slice(0, 3).join(", ")}${favs.length > 3 ? ` 외 ${favs.length - 3}곳` : ''}`,
+    quarter: "13F 맞춤 실시간 합산",
+    desc: `내가 직접 선택한 ${favs.length}개 주요 운용사의 포트폴리오를 합산하여 분석한 맞춤형 자금 흐름`,
+    aum: formatMoney(customAumVal),
+    holdings: customHoldings
+  };
+
+  selectGuru("__CUSTOM_GROUP__");
 }
 
 function renderTreemap(holdings) {
@@ -441,30 +557,48 @@ function renderCategoryTabs() {
   const sidebarBox = document.querySelector(".guru-selector-box");
   if (!sidebarBox) return;
 
-  const existingFilters = document.getElementById("guruCatFilters");
-  if (existingFilters) return;
+  let catContainer = document.getElementById("guruCatFilters");
+  const favCount = getFavorites().length;
 
-  const catContainer = document.createElement("div");
-  catContainer.id = "guruCatFilters";
-  catContainer.className = "guru-cat-filters";
-  catContainer.innerHTML = `
-    <button class="cat-pill active" data-cat="ALL">전체 100개사</button>
-    <button class="cat-pill gold" data-cat="TOP20">Top 20 메이저</button>
-  `;
+  if (!catContainer) {
+    catContainer = document.createElement("div");
+    catContainer.id = "guruCatFilters";
+    catContainer.className = "guru-cat-filters";
+    
+    // 커스텀 묶어보기 버튼 및 필터 탭
+    catContainer.innerHTML = `
+      <button class="custom-group-btn" id="btnCustomGroup">★ 즐겨찾기 ${favCount}개사 묶어보기</button>
+      <div style="display:flex; gap:4px; margin-bottom:8px;">
+        <button class="cat-pill active" data-cat="ALL">전체 100개사</button>
+        <button class="cat-pill" data-cat="FAV">★ 내 즐겨찾기 (<span id="favPillCount">${favCount}</span>)</button>
+        <button class="cat-pill gold" data-cat="TOP20">Top 20</button>
+      </div>
+    `;
 
-  const label = sidebarBox.querySelector(".section-label");
-  if (label) {
-    label.after(catContainer);
+    const label = sidebarBox.querySelector(".section-label");
+    if (label) {
+      label.after(catContainer);
+    }
+
+    const btnCustom = document.getElementById("btnCustomGroup");
+    if (btnCustom) {
+      btnCustom.onclick = () => buildCustomGroupPortfolio();
+    }
+
+    catContainer.querySelectorAll(".cat-pill").forEach(btn => {
+      btn.onclick = () => {
+        catContainer.querySelectorAll(".cat-pill").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        state.activeCategory = btn.dataset.cat;
+        renderGuruSidebar();
+      };
+    });
+  } else {
+    const fCountEl = document.getElementById("favPillCount");
+    if (fCountEl) fCountEl.innerText = favCount;
+    const btnCustom = document.getElementById("btnCustomGroup");
+    if (btnCustom) btnCustom.innerText = `★ 즐겨찾기 ${favCount}개사 묶어보기`;
   }
-
-  catContainer.querySelectorAll(".cat-pill").forEach(btn => {
-    btn.onclick = () => {
-      catContainer.querySelectorAll(".cat-pill").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      state.activeCategory = btn.dataset.cat;
-      renderGuruSidebar();
-    };
-  });
 }
 
 function renderGuruSidebar() {
@@ -477,8 +611,33 @@ function renderGuruSidebar() {
     btnGrand.classList.toggle("active", state.currentGuruKey === "__GRAND_TOTAL__");
   }
 
-  Object.keys(GURU_DATABASE).filter(k => k !== "__GRAND_TOTAL__").forEach(key => {
+  const btnCustom = document.getElementById("btnCustomGroup");
+  if (btnCustom) {
+    btnCustom.classList.toggle("active", state.currentGuruKey === "__CUSTOM_GROUP__");
+  }
+
+  const favs = getFavorites();
+
+  Object.keys(GURU_DATABASE).filter(k => k !== "__GRAND_TOTAL__" && k !== "__CUSTOM_GROUP__").forEach(key => {
     const guru = GURU_DATABASE[key];
+    const isFav = favs.includes(key);
+
+    if (state.activeCategory === "FAV" && !isFav) return;
+
+    const row = document.createElement("div");
+    row.style.display = "flex";
+    row.style.alignItems = "center";
+    row.style.gap = "4px";
+
+    const starBtn = document.createElement("button");
+    starBtn.className = `star-btn ${isFav ? 'starred' : ''}`;
+    starBtn.innerHTML = isFav ? "★" : "☆";
+    starBtn.title = isFav ? "즐겨찾기 해제" : "즐겨찾기 추가";
+    starBtn.onclick = (e) => {
+      e.stopPropagation();
+      toggleFavorite(key);
+    };
+
     const btn = document.createElement("button");
     btn.className = `guru-card-btn ${key === state.currentGuruKey ? 'active' : ''}`;
     btn.onclick = () => selectGuru(key);
@@ -490,7 +649,10 @@ function renderGuruSidebar() {
         <p>${guru.fund}</p>
       </div>
     `;
-    listEl.appendChild(btn);
+
+    row.appendChild(starBtn);
+    row.appendChild(btn);
+    listEl.appendChild(row);
   });
 }
 
@@ -534,7 +696,7 @@ function updateSummaryMetrics(guru) {
   const elAum = document.getElementById("metricTotalAum");
   if (elAum) elAum.innerText = guru.aum || "-";
 
-  const isGrandTotal = state.currentGuruKey === "__GRAND_TOTAL__";
+  const isGrandTotal = state.currentGuruKey === "__GRAND_TOTAL__" || state.currentGuruKey === "__CUSTOM_GROUP__";
   const elHoldings = document.getElementById("metricTotalHoldings");
   const elTopBuy = document.getElementById("metricTopBuy");
   const elTopBuySub = document.getElementById("metricTopBuySub");
