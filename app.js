@@ -686,31 +686,28 @@ function setupEventListeners() {
     };
   });
 
-  const btnSync = document.getElementById("btnSyncData");
-  if (btnSync) {
-    btnSync.onclick = async () => {
-      btnSync.disabled = true;
-      btnSync.classList.add("loading");
-      const sText = document.getElementById("syncText");
-      if (sText) sText.innerText = "13F 수집 및 실시간 주가 분석 중...";
+  // CSV 다운로드 기능 연동
+  const btnExport = document.getElementById("btnExportCsv");
+  if (btnExport) {
+    btnExport.onclick = () => {
+      const guru = GURU_DATABASE[state.currentGuruKey];
+      if (!guru || !guru.holdings) return;
+      
+      let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+      csvContent += "종목,티커,섹터,보유운용사수,액션,주식수,평가금액,포트비중(%),운용사공시단가($),현재시장가($),할인율(%)\n";
+      
+      guru.holdings.forEach(h => {
+        const discountPct = (((h.curPrice - h.estPrice) / h.estPrice) * 100).toFixed(1);
+        csvContent += `"${h.name}","${h.ticker}","${h.sector}","${h.holdersDisplay || '1개사'}","${h.action}","${h.shares}","${h.value}","${h.weight}%","${h.estPrice.toFixed(2)}","${h.curPrice.toFixed(2)}","${discountPct}%"\n`;
+      });
 
-      try {
-        const res = await fetch("/api/sync", { method: "POST" });
-        if (res.ok) {
-          setTimeout(async () => {
-            await loadRealSecData();
-            loadGuruData(state.currentGuruKey);
-            btnSync.disabled = false;
-            btnSync.classList.remove("loading");
-            if (sText) sText.innerText = "최신 13F 데이터 수집";
-            alert("SEC 13F 공시 및 야후 파이낸스 실시간 주가 동기화가 완료되었습니다.");
-          }, 3000);
-        }
-      } catch (err) {
-        btnSync.disabled = false;
-        btnSync.classList.remove("loading");
-        if (sText) sText.innerText = "최신 13F 데이터 수집";
-      }
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `${guru.name.replace(/[^a-zA-Z0-9가-힣]/g, "_")}_포트폴리오.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     };
   }
 }
