@@ -6,6 +6,7 @@
 
 let GURU_DATABASE = {};
 let RAW_HOLDINGS = [];
+let LIVE_PRICES = {}; // 실시간 메모리 캐시
 
 // 금액 단위 포맷팅 헬퍼 ($1,000 기준 -> $M, $B, $T)
 function formatMoney(thousandsVal) {
@@ -46,7 +47,46 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderGuruSidebar();
   loadGuruData("__GRAND_TOTAL__");
   setupEventListeners();
+
+  // 🚀 1분마다 조용히 최신 실시간 시장가 백그라운드 갱신 (야후 차단 위험 0%)
+  setInterval(() => {
+    fetchLivePricesForCurrentView();
+  }, 60000);
 });
+
+// 브라우저에서 현재 화면 종목들의 실시간 주가 온디맨드 조회
+async function fetchLivePricesForCurrentView() {
+  const guru = GURU_DATABASE[state.currentGuruKey];
+  if (!guru || !guru.holdings) return;
+
+  const topTickers = guru.holdings.slice(0, 25).map(h => h.ticker).filter(t => t && t.length <= 5 && !t.includes(" ")).join(",");
+  if (!topTickers) return;
+
+  try {
+    // 로컬 백엔드 또는 실시간 시세 조회
+    const res = await fetch(`/api/prices?tickers=${topTickers}`).catch(() => null);
+    if (res && res.ok) {
+      const data = await res.json();
+      Object.keys(data).forEach(t => {
+        LIVE_PRICES[t] = data[t];
+      });
+      // 현재 뷰 데이터 업데이트
+      applyLivePricesToHoldings(guru.holdings);
+      updateSummaryMetrics(guru);
+      renderTable();
+    }
+  } catch (e) {}
+}
+
+function applyLivePricesToHoldings(holdings) {
+  holdings.forEach(h => {
+    if (LIVE_PRICES[h.ticker]) {
+      const info = LIVE_PRICES[h.ticker];
+      h.curPrice = info.price;
+      h.priceChangePct = info.changePct;
+    }
+  });
+}
 
 async function loadRealSecData() {
   try {
@@ -58,10 +98,9 @@ async function loadRealSecData() {
     if (!holdingsRes.ok) throw new Error("13F JSON 로드 실패");
     RAW_HOLDINGS = await holdingsRes.json();
     
-    let REALTIME_PRICES = {};
     if (priceRes && priceRes.ok) {
       try {
-        REALTIME_PRICES = await priceRes.json();
+        LIVE_PRICES = await priceRes.json();
       } catch (e) {}
     }
     
@@ -134,7 +173,7 @@ async function loadRealSecData() {
         const weight = totalVal > 0 ? Number(((h.value / totalVal) * 100).toFixed(2)) : 0;
         const estP = h.shares > 0 ? (h.value / h.shares) : 100.0;
         
-        const realInfo = REALTIME_PRICES[h.ticker];
+        const realInfo = LIVE_PRICES[h.ticker];
         const curP = (realInfo && realInfo.price) ? realInfo.price : estP;
         
         let action = "HOLD";
@@ -167,7 +206,7 @@ async function loadRealSecData() {
       const weight = grandTotalAumVal > 0 ? Number(((h.value / grandTotalAumVal) * 100).toFixed(2)) : 0;
       const estP = h.shares > 0 ? (h.value / h.shares) : 100.0;
       
-      const realInfo = REALTIME_PRICES[h.ticker];
+      const realInfo = LIVE_PRICES[h.ticker];
       const curP = (realInfo && realInfo.price) ? realInfo.price : estP;
       
       let action = "HOLD";
@@ -350,6 +389,9 @@ function selectGuru(key) {
 
   renderGuruSidebar();
   loadGuruData(key);
+  
+  // 🚀 운용사 전환 시 즉시 실시간가 온디맨드 fetch
+  fetchLivePricesForCurrentView();
 }
 
 function loadGuruData(key) {

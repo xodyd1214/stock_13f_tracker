@@ -50,14 +50,42 @@ class Alpha13FHandler(SimpleHTTPRequestHandler):
             thread.daemon = True
             thread.start()
 
+    def do_GET(self):
+        # 🚀 온디맨드 실시간 주가 조회 API (브라우저 요청 시 즉시 야후 파이낸스 조회)
+        if self.path.startswith("/api/prices"):
+            from urllib.parse import urlparse, parse_qs
+            import requests
+            
+            query = parse_qs(urlparse(self.path).query)
+            tickers_raw = query.get("tickers", [""])[0]
+            tickers = [t.strip().upper() for t in tickers_raw.split(",") if t.strip()]
+            
+            results = {}
+            for ticker in tickers[:30]:
+                try:
+                    clean_t = ticker.replace(".", "-")
+                    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{clean_t}?interval=1d&range=1d"
+                    res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=2)
+                    if res.status_code == 200:
+                        meta = res.json()["chart"]["result"][0]["meta"]
+                        cur_p = meta.get("regularMarketPrice")
+                        prev_c = meta.get("chartPreviousClose") or meta.get("previousClose")
+                        chg_pct = round(((cur_p - prev_c) / prev_c) * 100, 2) if (cur_p and prev_c) else 0.0
+                        results[ticker] = {
+                            "price": round(cur_p, 2),
+                            "changePct": chg_pct
+                        }
+                except Exception:
+                    pass
+            
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
-            self.wfile.write(json.dumps({
-                "status": "started",
-                "message": "SEC 공식 13F 데이터 수집이 시작되었습니다. (약 30초 소요)"
-            }).encode("utf-8"))
+            self.wfile.write(json.dumps(results).encode("utf-8"))
             return
+
+        return super().do_GET()
 
         self.send_error(404, "Not Found")
 
