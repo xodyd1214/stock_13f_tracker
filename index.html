@@ -145,11 +145,12 @@
             <!-- 빠른 원클릭 토글 필터 -->
             <div class="filter-tabs" id="filterTabs">
               <button class="filter-tab active" data-filter="ALL">전체 보기 (<span id="countAll">0</span>)</button>
+              <button class="filter-tab" data-filter="STOCK">보통주 (<span id="countStock">0</span>)</button>
+              <button class="filter-tab" data-filter="OPTION">옵션 (CALL/PUT) (<span id="countOption">0</span>)</button>
               <button class="filter-tab" data-filter="NEW">신규 매수 (<span id="countNew">0</span>)</button>
               <button class="filter-tab" data-filter="ADD">비중 확대 (<span id="countAdd">0</span>)</button>
               <button class="filter-tab" data-filter="DISCOUNT">공시가 대비 할인 종목 (<span id="countDiscount">0</span>)</button>
               <button class="filter-tab" data-filter="CONVICTION">비중 5%+ 집중 (<span id="countConviction">0</span>)</button>
-              <button class="filter-tab" data-filter="REDUCE">비중 축소/매도</button>
             </div>
           </div>
 
@@ -170,7 +171,7 @@
                 <label><input type="checkbox" data-col="shares" checked> 보유 주식수</label>
                 <label><input type="checkbox" data-col="value" checked> 총 평가 금액 ($)</label>
                 <label><input type="checkbox" data-col="weight" checked> 통합 비중 (%)</label>
-                <label><input type="checkbox" data-col="estPrice" checked> 운용사 공시 단가</label>
+                <label><input type="checkbox" data-col="estPrice" checked> 공시 시점 기준가</label>
                 <label><input type="checkbox" data-col="curPrice" checked> 현재 실시간 주가</label>
                 <label><input type="checkbox" data-col="discount" checked> 공시가 대비 할인율 (%)</label>
               </div>
@@ -190,7 +191,7 @@
                 <th class="col-shares sortable text-right" data-sort="shares">주식 수</th>
                 <th class="col-value sortable text-right" data-sort="value">총 평가 금액 ($)</th>
                 <th class="col-weight sortable text-right" data-sort="weight">통합 비중 (%)</th>
-                <th class="col-estPrice sortable text-right" data-sort="estPrice">운용사 공시 단가</th>
+                <th class="col-estPrice sortable text-right" data-sort="estPrice">공시 시점 기준가</th>
                 <th class="col-curPrice sortable text-right" data-sort="curPrice">현재 실시간가</th>
                 <th class="col-discount sortable text-right" data-sort="discount">공시가 대비 할인율</th>
               </tr>

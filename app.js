@@ -22,6 +22,15 @@ function formatMoney(thousandsVal) {
   return `$${thousandsVal.toLocaleString()}K`;
 }
 
+// 증권 유형 판별 (보통주, CALL, PUT, NOTE)
+function detectSecType(name, ticker, titleOfClass) {
+  const text = `${name} ${ticker} ${titleOfClass || ''}`.toUpperCase();
+  if (text.includes("PUT") || text.includes(" PUT ")) return "PUT";
+  if (text.includes("CALL") || text.includes(" CALL ")) return "CALL";
+  if (text.includes("NOTE") || text.includes("PRN") || text.includes("BOND")) return "NOTE";
+  return "STOCK";
+}
+
 const state = {
   currentGuruKey: "__GRAND_TOTAL__",
   activeCategory: "ALL",
@@ -48,29 +57,26 @@ document.addEventListener("DOMContentLoaded", async () => {
   loadGuruData("__GRAND_TOTAL__");
   setupEventListeners();
 
-  // 🚀 1분마다 조용히 최신 실시간 시장가 백그라운드 갱신 (야후 차단 위험 0%)
+  // 🚀 1분마다 조용히 최신 실시간 시장가 백그라운드 갱신
   setInterval(() => {
     fetchLivePricesForCurrentView();
   }, 60000);
 });
 
-// 브라우저에서 현재 화면 종목들의 실시간 주가 온디맨드 조회
 async function fetchLivePricesForCurrentView() {
   const guru = GURU_DATABASE[state.currentGuruKey];
   if (!guru || !guru.holdings) return;
 
-  const topTickers = guru.holdings.slice(0, 25).map(h => h.ticker).filter(t => t && t.length <= 5 && !t.includes(" ")).join(",");
+  const topTickers = guru.holdings.slice(0, 25).map(h => h.baseTicker || h.ticker).filter(t => t && t.length <= 5 && !t.includes(" ")).join(",");
   if (!topTickers) return;
 
   try {
-    // 로컬 백엔드 또는 실시간 시세 조회
     const res = await fetch(`/api/prices?tickers=${topTickers}`).catch(() => null);
     if (res && res.ok) {
       const data = await res.json();
       Object.keys(data).forEach(t => {
         LIVE_PRICES[t] = data[t];
       });
-      // 현재 뷰 데이터 업데이트
       applyLivePricesToHoldings(guru.holdings);
       updateSummaryMetrics(guru);
       renderTable();
@@ -80,8 +86,9 @@ async function fetchLivePricesForCurrentView() {
 
 function applyLivePricesToHoldings(holdings) {
   holdings.forEach(h => {
-    if (LIVE_PRICES[h.ticker]) {
-      const info = LIVE_PRICES[h.ticker];
+    const baseT = h.baseTicker || h.ticker;
+    if (LIVE_PRICES[baseT]) {
+      const info = LIVE_PRICES[baseT];
       h.curPrice = info.price;
       h.priceChangePct = info.changePct;
     }
@@ -122,42 +129,54 @@ async function loadRealSecData() {
         };
       }
       
+      const secType = detectSecType(item.name, item.ticker, item.titleOfClass);
+      let baseTicker = item.ticker;
       const cusip = item.cusip || item.name;
-      const hMap = groups[guruName].holdingsMap;
-      
-      let displayTicker = item.ticker;
-      if (!displayTicker || displayTicker === cusip) {
-        displayTicker = item.name.split(" ")[0].toUpperCase().slice(0, 6);
+      if (!baseTicker || baseTicker === cusip) {
+        baseTicker = item.name.split(" ")[0].toUpperCase().slice(0, 6);
       }
 
-      if (!hMap[cusip]) {
-        hMap[cusip] = {
+      // 고유 키: CUSIP + 증권유형 (보통주와 풋/콜이 섞이지 않고 단정하게 분리)
+      const uniqueKey = `${cusip}_${secType}`;
+      const hMap = groups[guruName].holdingsMap;
+
+      let displayTicker = baseTicker;
+      if (secType === "CALL") displayTicker = `${baseTicker} (CALL)`;
+      else if (secType === "PUT") displayTicker = `${baseTicker} (PUT)`;
+
+      if (!hMap[uniqueKey]) {
+        hMap[uniqueKey] = {
           ticker: displayTicker,
+          baseTicker: baseTicker,
           name: item.name,
           sector: item.sector || "General",
+          secType: secType,
           shares: item.shares,
           value: item.value,
           cusip: cusip
         };
       } else {
-        hMap[cusip].shares += item.shares;
-        hMap[cusip].value += item.value;
+        hMap[uniqueKey].shares += item.shares;
+        hMap[uniqueKey].value += item.value;
       }
 
-      if (!grandConsensusMap[displayTicker]) {
-        grandConsensusMap[displayTicker] = {
+      // 전체 통합 맵
+      if (!grandConsensusMap[uniqueKey]) {
+        grandConsensusMap[uniqueKey] = {
           ticker: displayTicker,
+          baseTicker: baseTicker,
           name: item.name,
           sector: item.sector || "General",
+          secType: secType,
           cusip: cusip,
           shares: item.shares,
           value: item.value,
           holders: new Set([guruName])
         };
       } else {
-        grandConsensusMap[displayTicker].shares += item.shares;
-        grandConsensusMap[displayTicker].value += item.value;
-        grandConsensusMap[displayTicker].holders.add(guruName);
+        grandConsensusMap[uniqueKey].shares += item.shares;
+        grandConsensusMap[uniqueKey].value += item.value;
+        grandConsensusMap[uniqueKey].holders.add(guruName);
       }
       
       grandTotalAumVal += item.value;
@@ -173,17 +192,23 @@ async function loadRealSecData() {
         const weight = totalVal > 0 ? Number(((h.value / totalVal) * 100).toFixed(2)) : 0;
         const estP = h.shares > 0 ? (h.value / h.shares) : 100.0;
         
-        const realInfo = LIVE_PRICES[h.ticker];
+        const realInfo = LIVE_PRICES[h.baseTicker] || LIVE_PRICES[h.ticker];
         const curP = (realInfo && realInfo.price) ? realInfo.price : estP;
         
         let action = "HOLD";
         if (weight >= 8.0) action = "ADD";
         else if (weight >= 15.0) action = "NEW";
+
+        let typeDesc = "보통주 주식";
+        if (h.secType === "CALL") typeDesc = "콜옵션(상승 베팅/레버리지)";
+        else if (h.secType === "PUT") typeDesc = "풋옵션(하락 방어/헤지)";
         
         return {
           ticker: h.ticker,
+          baseTicker: h.baseTicker,
           name: h.name,
           sector: h.sector,
+          secType: h.secType,
           cusip: h.cusip,
           holdersDisplay: "1개사 (단독)",
           action: action,
@@ -194,7 +219,7 @@ async function loadRealSecData() {
           estPrice: estP,
           curPrice: curP,
           priceChangePct: realInfo ? realInfo.changePct : 0.0,
-          insight: `${h.name} (${h.ticker}) - ${g.name} 포트폴리오의 ${weight}% 차지 (실제 시장 현재가: $${curP})`
+          insight: `${h.name} [${typeDesc}] - ${g.name} 포트폴리오의 ${weight}% 차지 (기초자산 시장 현재가: $${curP})`
         };
       });
 
@@ -206,17 +231,23 @@ async function loadRealSecData() {
       const weight = grandTotalAumVal > 0 ? Number(((h.value / grandTotalAumVal) * 100).toFixed(2)) : 0;
       const estP = h.shares > 0 ? (h.value / h.shares) : 100.0;
       
-      const realInfo = LIVE_PRICES[h.ticker];
+      const realInfo = LIVE_PRICES[h.baseTicker] || LIVE_PRICES[h.ticker];
       const curP = (realInfo && realInfo.price) ? realInfo.price : estP;
       
       let action = "HOLD";
       if (h.holders.size >= 5) action = "ADD";
       if (weight >= 5.0) action = "NEW";
+
+      let typeDesc = "보통주 주식";
+      if (h.secType === "CALL") typeDesc = "콜옵션(상승 베팅)";
+      else if (h.secType === "PUT") typeDesc = "풋옵션(하락 방어)";
       
       return {
         ticker: h.ticker,
+        baseTicker: h.baseTicker,
         name: h.name,
         sector: h.sector,
+        secType: h.secType,
         cusip: h.cusip,
         holders: h.holders.size,
         holdersDisplay: `${h.holders.size}개사 보유`,
@@ -229,7 +260,7 @@ async function loadRealSecData() {
         estPrice: estP,
         curPrice: curP,
         priceChangePct: realInfo ? realInfo.changePct : 0.0,
-        insight: `미국 주요 운용사 ${h.holders.size}개사가 동시 집중 보유 중인 핵심 종목 (${Array.from(h.holders).slice(0, 3).join(", ")} 등) | 실제 시장가: $${curP}`
+        insight: `미국 주요 운용사 ${h.holders.size}개사가 집중 보유 중인 ${typeDesc} 핵심 포지션 (${Array.from(h.holders).slice(0, 3).join(", ")} 등) | 시장 현재가: $${curP}`
       };
     });
 
@@ -281,9 +312,13 @@ function renderTreemap(holdings) {
     tile.style.flex = `${flexGrow} 1 ${flexBasis}px`;
     tile.onclick = () => openStockModal(item);
 
+    let typeTag = "";
+    if (item.secType === "CALL") typeTag = '<span class="sec-type-badge call">CALL</span>';
+    else if (item.secType === "PUT") typeTag = '<span class="sec-type-badge put">PUT</span>';
+
     tile.innerHTML = `
       <div class="tile-top">
-        <span class="tile-ticker">${item.ticker}</span>
+        <span class="tile-ticker">${item.ticker}${typeTag}</span>
         <span class="tile-weight">${item.weight}%</span>
       </div>
       <div class="tile-bottom">
@@ -389,8 +424,6 @@ function selectGuru(key) {
 
   renderGuruSidebar();
   loadGuruData(key);
-  
-  // 🚀 운용사 전환 시 즉시 실시간가 온디맨드 fetch
   fetchLivePricesForCurrentView();
 }
 
@@ -428,7 +461,7 @@ function updateSummaryMetrics(guru) {
     const bestDiscount = discounts[0];
     if (bestDiscount && bestDiscount.discountPct < 0) {
       document.getElementById("metricDiscountPick").innerHTML = `${bestDiscount.ticker} <small class="text-purple">${bestDiscount.discountPct.toFixed(1)}%</small>`;
-      document.getElementById("metricDiscountSub").innerText = `운용사 공시 단가 대비 할인 상태`;
+      document.getElementById("metricDiscountSub").innerText = `공시 기준가 대비 할인 상태`;
     }
 
     const top1 = guru.holdings[0];
@@ -455,7 +488,7 @@ function updateSummaryMetrics(guru) {
     const bestDiscount = discounts[0];
     if (bestDiscount && bestDiscount.discountPct < 0) {
       document.getElementById("metricDiscountPick").innerHTML = `${bestDiscount.ticker} <small class="text-purple">${bestDiscount.discountPct.toFixed(1)}%</small>`;
-      document.getElementById("metricDiscountSub").innerText = `운용사 공시가 대비 할인`;
+      document.getElementById("metricDiscountSub").innerText = `공시 기준가 대비 할인`;
     }
 
     const top1 = guru.holdings[0];
@@ -483,9 +516,10 @@ function renderTable() {
       if (!match) return false;
     }
 
+    if (state.activeFilter === "STOCK") return item.secType === "STOCK";
+    if (state.activeFilter === "OPTION") return item.secType === "CALL" || item.secType === "PUT";
     if (state.activeFilter === "NEW") return item.action === "NEW";
     if (state.activeFilter === "ADD") return item.action === "ADD";
-    if (state.activeFilter === "REDUCE") return item.action === "REDUCE";
     if (state.activeFilter === "DISCOUNT") return item.curPrice < item.estPrice;
     if (state.activeFilter === "CONVICTION") return item.weight >= 5.0;
     return true;
@@ -493,6 +527,10 @@ function renderTable() {
 
   const cAll = document.getElementById("countAll");
   if (cAll) cAll.innerText = guru.holdings.length;
+  const cStock = document.getElementById("countStock");
+  if (cStock) cStock.innerText = guru.holdings.filter(h => h.secType === "STOCK").length;
+  const cOption = document.getElementById("countOption");
+  if (cOption) cOption.innerText = guru.holdings.filter(h => h.secType === "CALL" || h.secType === "PUT").length;
   const cNew = document.getElementById("countNew");
   if (cNew) cNew.innerText = guru.holdings.filter(h => h.action === "NEW").length;
   const cAdd = document.getElementById("countAdd");
@@ -524,11 +562,15 @@ function renderTable() {
     const discountPct = (((item.curPrice - item.estPrice) / item.estPrice) * 100).toFixed(1);
     const isDiscount = Number(discountPct) < 0;
 
+    let secBadgeHtml = "";
+    if (item.secType === "CALL") secBadgeHtml = `<span class="sec-type-badge call">CALL</span>`;
+    else if (item.secType === "PUT") secBadgeHtml = `<span class="sec-type-badge put">PUT</span>`;
+
     tr.innerHTML = `
       <td>
         <div class="ticker-cell">
           <div>
-            <div class="ticker-symbol">${item.ticker}</div>
+            <div class="ticker-symbol">${item.ticker} ${secBadgeHtml}</div>
             <div class="company-title">${item.name}</div>
           </div>
         </div>
@@ -591,14 +633,14 @@ function openStockModal(item) {
   document.getElementById("modalCurPrice").innerText = `$${item.curPrice.toFixed(2)}`;
   
   const discountTag = document.getElementById("modalDiscountTag");
-  discountTag.innerText = isDiscount ? `운용사 공시 단가 대비 ${discountPct}% 할인 상태` : `운용사 공시 단가 대비 +${discountPct}% 프리미엄`;
+  discountTag.innerText = isDiscount ? `공시 기준가 대비 ${discountPct}% 할인 상태` : `공시 기준가 대비 +${discountPct}% 프리미엄`;
   discountTag.style.color = isDiscount ? "var(--color-purple)" : "var(--color-green)";
 
   document.getElementById("modalWeight").innerText = `${item.weight}%`;
   document.getElementById("modalVal").innerText = formatMoney(item.value);
   document.getElementById("modalShares").innerText = `${item.shares} 주`;
   document.getElementById("modalEstPrice").innerText = `$${item.estPrice.toFixed(2)}`;
-  document.getElementById("modalInsightText").innerText = item.insight || "이 종목은 주요 운용사들의 장기적인 비즈니스 해자를 기반으로 포트폴리오에 편입되었습니다.";
+  document.getElementById("modalInsightText").innerText = item.insight || "이 종목은 주요 운용사들의 포트폴리오에 편입된 핵심 자산입니다.";
 
   modal.classList.add("show");
 }
@@ -686,19 +728,21 @@ function setupEventListeners() {
     };
   });
 
-  // CSV 다운로드 기능 연동
+  // CSV 다운로드 기능
   const btnExport = document.getElementById("btnExportCsv");
   if (btnExport) {
     btnExport.onclick = () => {
       const guru = GURU_DATABASE[state.currentGuruKey];
       if (!guru || !guru.holdings) return;
       
-      let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-      csvContent += "종목,티커,섹터,보유운용사수,액션,주식수,평가금액,포트비중(%),운용사공시단가($),현재시장가($),할인율(%)\n";
+      let csvContent = "data:text/csv;charset=utf-8,﻿";
+      csvContent += "종목,티커,증권유형,섹터,보유운용사수,액션,주식수,평가금액,포트비중(%),공시시점기준가($),현재시장가($),할인율(%)
+";
       
       guru.holdings.forEach(h => {
         const discountPct = (((h.curPrice - h.estPrice) / h.estPrice) * 100).toFixed(1);
-        csvContent += `"${h.name}","${h.ticker}","${h.sector}","${h.holdersDisplay || '1개사'}","${h.action}","${h.shares}","${h.value}","${h.weight}%","${h.estPrice.toFixed(2)}","${h.curPrice.toFixed(2)}","${discountPct}%"\n`;
+        csvContent += `"${h.name}","${h.ticker}","${h.secType}","${h.sector}","${h.holdersDisplay || '1개사'}","${h.action}","${h.shares}","${h.value}","${h.weight}%","${h.estPrice.toFixed(2)}","${h.curPrice.toFixed(2)}","${discountPct}%"
+`;
       });
 
       const encodedUri = encodeURI(csvContent);

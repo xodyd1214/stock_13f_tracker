@@ -726,8 +726,33 @@ body {
 .color-box.new { background: var(--spotify-green); }
 .color-box.add { background: var(--announcement-blue); }
 .color-box.hold { background: #383838; }
-.color-box.reduce { background: var(--negative-red); }
 .color-box.discount-ring { border: 1.5px solid var(--negative-red); background: transparent; }
+
+/* 증권 유형 뱃지 (보통주, CALL, PUT) */
+.sec-type-badge {
+  display: inline-block;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.sec-type-badge.call {
+  background-color: rgba(59, 130, 246, 0.18);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.sec-type-badge.put {
+  background-color: rgba(168, 85, 247, 0.18);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+.sec-type-badge.stock {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-subdued);
+}
 
 /* Interactive Treemap Tiles */
 .treemap-container {
