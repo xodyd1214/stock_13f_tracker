@@ -6,7 +6,7 @@
 
 let GURU_DATABASE = {};
 let RAW_HOLDINGS = [];
-let LIVE_PRICES = {}; // 실시간 메모리 캐시
+let LIVE_PRICES = {};
 
 // 금액 단위 포맷팅 헬퍼 ($1,000 기준 -> $M, $B, $T)
 function formatMoney(thousandsVal) {
@@ -24,7 +24,7 @@ function formatMoney(thousandsVal) {
 
 // 증권 유형 판별 (보통주, CALL, PUT, NOTE)
 function detectSecType(name, ticker, titleOfClass) {
-  const text = `${name} ${ticker} ${titleOfClass || ''}`.toUpperCase();
+  const text = `${name || ''} ${ticker || ''} ${titleOfClass || ''}`.toUpperCase();
   if (text.includes("PUT") || text.includes(" PUT ")) return "PUT";
   if (text.includes("CALL") || text.includes(" CALL ")) return "CALL";
   if (text.includes("NOTE") || text.includes("PRN") || text.includes("BOND")) return "NOTE";
@@ -51,16 +51,20 @@ const state = {
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
-  await loadRealSecData();
-  renderCategoryTabs();
-  renderGuruSidebar();
-  loadGuruData("__GRAND_TOTAL__");
-  setupEventListeners();
+  try {
+    await loadRealSecData();
+    renderCategoryTabs();
+    renderGuruSidebar();
+    loadGuruData("__GRAND_TOTAL__");
+    setupEventListeners();
 
-  // 🚀 1분마다 조용히 최신 실시간 시장가 백그라운드 갱신
-  setInterval(() => {
-    fetchLivePricesForCurrentView();
-  }, 60000);
+    // 1분마다 조용히 최신 실시간 시장가 백그라운드 갱신
+    setInterval(() => {
+      fetchLivePricesForCurrentView();
+    }, 60000);
+  } catch (err) {
+    console.error("초기화 오류:", err);
+  }
 });
 
 async function fetchLivePricesForCurrentView() {
@@ -85,6 +89,7 @@ async function fetchLivePricesForCurrentView() {
 }
 
 function applyLivePricesToHoldings(holdings) {
+  if (!holdings) return;
   holdings.forEach(h => {
     const baseT = h.baseTicker || h.ticker;
     if (LIVE_PRICES[baseT]) {
@@ -116,27 +121,26 @@ async function loadRealSecData() {
     let grandTotalAumVal = 0;
     
     RAW_HOLDINGS.forEach(item => {
-      const guruName = item.guru;
+      const guruName = item.guru || "기타 운용사";
       if (!groups[guruName]) {
         const initials = guruName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
         groups[guruName] = {
           name: guruName,
           avatar: initials || "CO",
-          fund: item.fund,
-          quarter: `${item.period} Filing`,
-          desc: `${item.fund}의 최신 13F 공식 보유 지분 공시 포트폴리오`,
+          fund: item.fund || guruName,
+          quarter: `${item.period || '2024Q2'} Filing`,
+          desc: `${item.fund || guruName}의 최신 13F 공식 보유 지분 공시 포트폴리오`,
           holdingsMap: {}
         };
       }
       
       const secType = detectSecType(item.name, item.ticker, item.titleOfClass);
       let baseTicker = item.ticker;
-      const cusip = item.cusip || item.name;
+      const cusip = item.cusip || item.name || "UNKNOWN";
       if (!baseTicker || baseTicker === cusip) {
-        baseTicker = item.name.split(" ")[0].toUpperCase().slice(0, 6);
+        baseTicker = (item.name || "STOCK").split(" ")[0].toUpperCase().slice(0, 6);
       }
 
-      // 고유 키: CUSIP + 증권유형 (보통주와 풋/콜이 섞이지 않고 단정하게 분리)
       const uniqueKey = `${cusip}_${secType}`;
       const hMap = groups[guruName].holdingsMap;
 
@@ -144,42 +148,44 @@ async function loadRealSecData() {
       if (secType === "CALL") displayTicker = `${baseTicker} (CALL)`;
       else if (secType === "PUT") displayTicker = `${baseTicker} (PUT)`;
 
+      const itemShares = Number(item.shares) || 0;
+      const itemVal = Number(item.value) || 0;
+
       if (!hMap[uniqueKey]) {
         hMap[uniqueKey] = {
           ticker: displayTicker,
           baseTicker: baseTicker,
-          name: item.name,
+          name: item.name || baseTicker,
           sector: item.sector || "General",
           secType: secType,
-          shares: item.shares,
-          value: item.value,
+          shares: itemShares,
+          value: itemVal,
           cusip: cusip
         };
       } else {
-        hMap[uniqueKey].shares += item.shares;
-        hMap[uniqueKey].value += item.value;
+        hMap[uniqueKey].shares += itemShares;
+        hMap[uniqueKey].value += itemVal;
       }
 
-      // 전체 통합 맵
       if (!grandConsensusMap[uniqueKey]) {
         grandConsensusMap[uniqueKey] = {
           ticker: displayTicker,
           baseTicker: baseTicker,
-          name: item.name,
+          name: item.name || baseTicker,
           sector: item.sector || "General",
           secType: secType,
           cusip: cusip,
-          shares: item.shares,
-          value: item.value,
+          shares: itemShares,
+          value: itemVal,
           holders: new Set([guruName])
         };
       } else {
-        grandConsensusMap[uniqueKey].shares += item.shares;
-        grandConsensusMap[uniqueKey].value += item.value;
+        grandConsensusMap[uniqueKey].shares += itemShares;
+        grandConsensusMap[uniqueKey].value += itemVal;
         grandConsensusMap[uniqueKey].holders.add(guruName);
       }
       
-      grandTotalAumVal += item.value;
+      grandTotalAumVal += itemVal;
     });
 
     Object.keys(groups).forEach(key => {
@@ -277,8 +283,9 @@ async function loadRealSecData() {
     };
 
     GURU_DATABASE = groups;
+    console.log(`✅ 13F 데이터베이스 구축 완료! (총 운용사: ${Object.keys(groups).length - 1}개사, 총 자산: ${groups["__GRAND_TOTAL__"].aum})`);
   } catch (e) {
-    console.warn("데이터 로드 실패:", e);
+    console.error("데이터 로드 실패:", e);
   }
 }
 
@@ -286,6 +293,11 @@ function renderTreemap(holdings) {
   const container = document.getElementById("treemapContainer");
   if (!container) return;
   container.innerHTML = "";
+
+  if (!holdings || holdings.length === 0) {
+    container.innerHTML = `<div style="padding:40px; color:var(--text-subdued); text-align:center; width:100%;">표시할 포트폴리오 데이터가 없습니다.</div>`;
+    return;
+  }
 
   const sorted = [...holdings].sort((a, b) => b.weight - a.weight);
   const mainHoldings = sorted.filter(h => h.weight >= 0.4).slice(0, 24);
@@ -401,7 +413,7 @@ function renderGuruSidebar() {
     btn.onclick = () => selectGuru(key);
 
     btn.innerHTML = `
-      <div class="guru-mini-avatar">${guru.avatar}</div>
+      <div class="guru-mini-avatar">${guru.avatar || 'CO'}</div>
       <div class="guru-card-info">
         <h4>${guru.name}</h4>
         <p>${guru.fund}</p>
@@ -431,10 +443,14 @@ function loadGuruData(key) {
   const guru = GURU_DATABASE[key];
   if (!guru) return;
 
-  document.getElementById("currentGuruName").innerText = guru.name;
-  document.getElementById("currentFundName").innerText = guru.fund;
-  document.getElementById("currentQuarter").innerText = guru.quarter;
-  document.getElementById("currentGuruDesc").innerText = guru.desc;
+  const elName = document.getElementById("currentGuruName");
+  if (elName) elName.innerText = guru.name;
+  const elFund = document.getElementById("currentFundName");
+  if (elFund) elFund.innerText = guru.fund;
+  const elQuarter = document.getElementById("currentQuarter");
+  if (elQuarter) elQuarter.innerText = guru.quarter;
+  const elDesc = document.getElementById("currentGuruDesc");
+  if (elDesc) elDesc.innerText = guru.desc;
 
   updateSummaryMetrics(guru);
   renderTreemap(guru.holdings);
@@ -442,59 +458,70 @@ function loadGuruData(key) {
 }
 
 function updateSummaryMetrics(guru) {
-  document.getElementById("metricTotalAum").innerText = guru.aum;
+  if (!guru) return;
+
+  const elAum = document.getElementById("metricTotalAum");
+  if (elAum) elAum.innerText = guru.aum || "-";
+
   const isGrandTotal = state.currentGuruKey === "__GRAND_TOTAL__";
+  const elHoldings = document.getElementById("metricTotalHoldings");
+  const elTopBuy = document.getElementById("metricTopBuy");
+  const elTopBuySub = document.getElementById("metricTopBuySub");
+  const elDisc = document.getElementById("metricDiscountPick");
+  const elDiscSub = document.getElementById("metricDiscountSub");
+  const elTopHold = document.getElementById("metricTopHolding");
+  const elTopHoldSub = document.getElementById("metricTopHoldingSub");
   
   if (isGrandTotal) {
-    document.getElementById("metricTotalHoldings").innerText = `총 분석 종목 ${guru.holdings.length}개`;
+    if (elHoldings) elHoldings.innerText = `총 분석 종목 ${guru.holdings.length}개`;
     
     const sortedByHolders = [...guru.holdings].sort((a, b) => (b.holders || 1) - (a.holders || 1));
     const topHolderPick = sortedByHolders[0];
-    if (topHolderPick) {
-      document.getElementById("metricTopBuy").innerHTML = `${topHolderPick.ticker} <small class="text-green">${topHolderPick.holders}개사 보유</small>`;
-      document.getElementById("metricTopBuySub").innerText = `${topHolderPick.name} (${formatMoney(topHolderPick.value)})`;
+    if (topHolderPick && elTopBuy) {
+      elTopBuy.innerHTML = `${topHolderPick.ticker} <small class="text-green">${topHolderPick.holders}개사 보유</small>`;
+      if (elTopBuySub) elTopBuySub.innerText = `${topHolderPick.name} (${formatMoney(topHolderPick.value)})`;
     }
 
     const discounts = guru.holdings
       .map(h => ({ ...h, discountPct: ((h.curPrice - h.estPrice) / h.estPrice) * 100 }))
       .sort((a, b) => a.discountPct - b.discountPct);
     const bestDiscount = discounts[0];
-    if (bestDiscount && bestDiscount.discountPct < 0) {
-      document.getElementById("metricDiscountPick").innerHTML = `${bestDiscount.ticker} <small class="text-purple">${bestDiscount.discountPct.toFixed(1)}%</small>`;
-      document.getElementById("metricDiscountSub").innerText = `공시 기준가 대비 할인 상태`;
+    if (bestDiscount && bestDiscount.discountPct < 0 && elDisc) {
+      elDisc.innerHTML = `${bestDiscount.ticker} <small class="text-purple">${bestDiscount.discountPct.toFixed(1)}%</small>`;
+      if (elDiscSub) elDiscSub.innerText = `공시 기준가 대비 할인 상태`;
     }
 
     const top1 = guru.holdings[0];
-    if (top1) {
-      document.getElementById("metricTopHolding").innerHTML = `${top1.ticker} <small>${top1.weight}%</small>`;
-      document.getElementById("metricTopHoldingSub").innerText = `${top1.name} (${formatMoney(top1.value)})`;
+    if (top1 && elTopHold) {
+      elTopHold.innerHTML = `${top1.ticker} <small>${top1.weight}%</small>`;
+      if (elTopHoldSub) elTopHoldSub.innerText = `${top1.name} (${formatMoney(top1.value)})`;
     }
   } else {
-    document.getElementById("metricTotalHoldings").innerText = `보유 종목 ${guru.holdings.length}개`;
+    if (elHoldings) elHoldings.innerText = `보유 종목 ${guru.holdings.length}개`;
 
     const buyPicks = guru.holdings.filter(h => h.action === "NEW" || h.action === "ADD");
-    if (buyPicks.length > 0) {
+    if (buyPicks.length > 0 && elTopBuy) {
       const topBuy = buyPicks[0];
-      document.getElementById("metricTopBuy").innerHTML = `${topBuy.ticker} <small class="text-green">${topBuy.action === 'NEW' ? 'NEW' : '+' + topBuy.weight + '%'}</small>`;
-      document.getElementById("metricTopBuySub").innerText = `${topBuy.name} (${formatMoney(topBuy.value)})`;
-    } else {
-      document.getElementById("metricTopBuy").innerText = "변동 없음";
-      document.getElementById("metricTopBuySub").innerText = "신규/확대 매수 없음";
+      elTopBuy.innerHTML = `${topBuy.ticker} <small class="text-green">${topBuy.action === 'NEW' ? 'NEW' : '+' + topBuy.weight + '%'}</small>`;
+      if (elTopBuySub) elTopBuySub.innerText = `${topBuy.name} (${formatMoney(topBuy.value)})`;
+    } else if (elTopBuy) {
+      elTopBuy.innerText = "변동 없음";
+      if (elTopBuySub) elTopBuySub.innerText = "신규/확대 매수 없음";
     }
 
     const discounts = guru.holdings
       .map(h => ({ ...h, discountPct: ((h.curPrice - h.estPrice) / h.estPrice) * 100 }))
       .sort((a, b) => a.discountPct - b.discountPct);
     const bestDiscount = discounts[0];
-    if (bestDiscount && bestDiscount.discountPct < 0) {
-      document.getElementById("metricDiscountPick").innerHTML = `${bestDiscount.ticker} <small class="text-purple">${bestDiscount.discountPct.toFixed(1)}%</small>`;
-      document.getElementById("metricDiscountSub").innerText = `공시 기준가 대비 할인`;
+    if (bestDiscount && bestDiscount.discountPct < 0 && elDisc) {
+      elDisc.innerHTML = `${bestDiscount.ticker} <small class="text-purple">${bestDiscount.discountPct.toFixed(1)}%</small>`;
+      if (elDiscSub) elDiscSub.innerText = `공시 기준가 대비 할인`;
     }
 
     const top1 = guru.holdings[0];
-    if (top1) {
-      document.getElementById("metricTopHolding").innerHTML = `${top1.ticker} <small>${top1.weight}%</small>`;
-      document.getElementById("metricTopHoldingSub").innerText = `${top1.name} (${formatMoney(top1.value)})`;
+    if (top1 && elTopHold) {
+      elTopHold.innerHTML = `${top1.ticker} <small>${top1.weight}%</small>`;
+      if (elTopHoldSub) elTopHoldSub.innerText = `${top1.name} (${formatMoney(top1.value)})`;
     }
   }
 }
@@ -633,14 +660,18 @@ function openStockModal(item) {
   document.getElementById("modalCurPrice").innerText = `$${item.curPrice.toFixed(2)}`;
   
   const discountTag = document.getElementById("modalDiscountTag");
-  discountTag.innerText = isDiscount ? `공시 기준가 대비 ${discountPct}% 할인 상태` : `공시 기준가 대비 +${discountPct}% 프리미엄`;
-  discountTag.style.color = isDiscount ? "var(--color-purple)" : "var(--color-green)";
+  if (discountTag) {
+    discountTag.innerText = isDiscount ? `공시 기준가 대비 ${discountPct}% 할인 상태` : `공시 기준가 대비 +${discountPct}% 프리미엄`;
+    discountTag.style.color = isDiscount ? "var(--color-purple)" : "var(--color-green)";
+  }
 
   document.getElementById("modalWeight").innerText = `${item.weight}%`;
   document.getElementById("modalVal").innerText = formatMoney(item.value);
   document.getElementById("modalShares").innerText = `${item.shares} 주`;
   document.getElementById("modalEstPrice").innerText = `$${item.estPrice.toFixed(2)}`;
-  document.getElementById("modalInsightText").innerText = item.insight || "이 종목은 주요 운용사들의 포트폴리오에 편입된 핵심 자산입니다.";
+  
+  const elInsight = document.getElementById("modalInsightText");
+  if (elInsight) elInsight.innerText = item.insight || "이 종목은 주요 운용사들의 포트폴리오에 편입된 핵심 자산입니다.";
 
   modal.classList.add("show");
 }
@@ -728,7 +759,6 @@ function setupEventListeners() {
     };
   });
 
-  // CSV 다운로드 기능
   const btnExport = document.getElementById("btnExportCsv");
   if (btnExport) {
     btnExport.onclick = () => {
