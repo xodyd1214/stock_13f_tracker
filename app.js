@@ -565,12 +565,12 @@ function renderCategoryTabs() {
     catContainer.id = "guruCatFilters";
     catContainer.className = "guru-cat-filters";
     
-    // 커스텀 묶어보기 버튼 및 필터 탭
+    // 커스텀 묶어보기 버튼 및 3단 필터 탭 (2층 구조)
     catContainer.innerHTML = `
       <button class="custom-group-btn" id="btnCustomGroup">★ 즐겨찾기 ${favCount}개사 묶어보기</button>
-      <div style="display:flex; gap:4px; margin-bottom:8px;">
-        <button class="cat-pill active" data-cat="ALL">전체 100개사</button>
-        <button class="cat-pill" data-cat="FAV">★ 내 즐겨찾기 (<span id="favPillCount">${favCount}</span>)</button>
+      <div class="cat-pill-row">
+        <button class="cat-pill active" data-cat="ALL">전체</button>
+        <button class="cat-pill" data-cat="FAV">즐겨찾기 (<span id="favPillCount">${favCount}</span>)</button>
         <button class="cat-pill gold" data-cat="TOP20">Top 20</button>
       </div>
     `;
