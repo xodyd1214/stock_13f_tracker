@@ -1,13 +1,15 @@
 /**
  * ==============================================================================
- * 🌟 Alpha13F - Interactive Application Logic (Live SEC 13F Data Connected)
+ * Alpha13F - 차세대 슈퍼인베스터 포트폴리오 인텔리전스 (프론트엔드 엔진)
  * ==============================================================================
  */
 
-// 2. 애플리케이션 상태 관리
+let GURU_DATABASE = {};
+let RAW_HOLDINGS = [];
+
 const state = {
-  currentGuruKey: "__GRAND_TOTAL__", // 기본값: 전체 대가 통합 포트폴리오
-  activeCategory: "ALL", // ALL, TOP20
+  currentGuruKey: "__GRAND_TOTAL__",
+  activeCategory: "ALL",
   activeFilter: "ALL",
   searchQuery: "",
   sortColumn: "weight",
@@ -24,31 +26,37 @@ const state = {
   }
 };
 
-// 3. 초기화 실행 (실시간 수집 JSON 로드)
 document.addEventListener("DOMContentLoaded", async () => {
   if (window.lucide) {
     lucide.createIcons();
   }
-
   await loadRealSecData();
   renderCategoryTabs();
   renderGuruSidebar();
-  
-  // 기본값: 전체 대가 통합 포트폴리오 로드
   loadGuruData("__GRAND_TOTAL__");
   setupEventListeners();
 });
 
-// 실제 SEC 수집 JSON 파일 로드 및 가공 (개별 펀드 + 전체 대가 통합 포트폴리오)
 async function loadRealSecData() {
   try {
-    const res = await fetch("latest_13f_holdings.json");
-    if (!res.ok) throw new Error("JSON 로드 실패");
-    RAW_HOLDINGS = await res.json();
+    const [holdingsRes, priceRes] = await Promise.all([
+      fetch("latest_13f_holdings.json"),
+      fetch("realtime_prices.json").catch(() => null)
+    ]);
+
+    if (!holdingsRes.ok) throw new Error("13F JSON 로드 실패");
+    RAW_HOLDINGS = await holdingsRes.json();
     
-    // 1) 펀드별 그룹화 및 개별 대가 종목 합산
+    let REALTIME_PRICES = {};
+    if (priceRes && priceRes.ok) {
+      try {
+        REALTIME_PRICES = await priceRes.json();
+        console.log("📡 [Yahoo Finance] 실제 시장 주가 연동 완료!");
+      } catch (e) {}
+    }
+    
     const groups = {};
-    const grandConsensusMap = {}; // 전체 대가 통합용
+    const grandConsensusMap = {};
     let grandTotalAumVal = 0;
     
     RAW_HOLDINGS.forEach(item => {
@@ -57,7 +65,7 @@ async function loadRealSecData() {
         const initials = guruName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
         groups[guruName] = {
           name: guruName,
-          avatar: initials,
+          avatar: initials || "GU",
           fund: item.fund,
           quarter: `${item.period} Filing`,
           desc: `${item.fund}의 최신 13F 공식 보유 지분 공시 포트폴리오`,
@@ -73,7 +81,6 @@ async function loadRealSecData() {
         displayTicker = item.name.split(" ")[0].toUpperCase().slice(0, 6);
       }
 
-      // 개별 대가 합산
       if (!hMap[cusip]) {
         hMap[cusip] = {
           ticker: displayTicker,
@@ -88,7 +95,6 @@ async function loadRealSecData() {
         hMap[cusip].value += item.value;
       }
 
-      // 🌐 전체 대가 통합 합산 (Grand Total)
       if (!grandConsensusMap[displayTicker]) {
         grandConsensusMap[displayTicker] = {
           ticker: displayTicker,
@@ -108,7 +114,6 @@ async function loadRealSecData() {
       grandTotalAumVal += item.value;
     });
 
-    // 2) 개별 대가 비중(%) 정제
     Object.keys(groups).forEach(key => {
       const g = groups[key];
       const holdingList = Object.values(g.holdingsMap);
@@ -118,8 +123,9 @@ async function loadRealSecData() {
       g.holdings = holdingList.map(h => {
         const weight = totalVal > 0 ? Number(((h.value / totalVal) * 100).toFixed(2)) : 0;
         const estP = h.shares > 0 ? (h.value / h.shares) : 100.0;
-        const isDiscountStock = weight > 2.0 && (h.ticker.length <= 4);
-        const curP = isDiscountStock ? estP * 0.88 : estP * 1.08;
+        
+        const realInfo = REALTIME_PRICES[h.ticker];
+        const curP = (realInfo && realInfo.price) ? realInfo.price : estP;
         
         let action = "HOLD";
         if (weight >= 8.0) action = "ADD";
@@ -138,20 +144,21 @@ async function loadRealSecData() {
           weight: weight,
           estPrice: estP,
           curPrice: curP,
-          insight: `${h.name} (${h.ticker}) - ${g.name} 포트폴리오의 ${weight}% 차지`
+          priceChangePct: realInfo ? realInfo.changePct : 0.0,
+          insight: `${h.name} (${h.ticker}) - ${g.name} 포트폴리오의 ${weight}% 차지 (실제 시장 현재가: $${curP})`
         };
       });
 
       g.holdings.sort((a, b) => b.weight - a.weight);
     });
 
-    // 3) 🌐 전체 대가 통합 포트폴리오 (__GRAND_TOTAL__) 구축
     const grandList = Object.values(grandConsensusMap);
     const grandHoldings = grandList.map(h => {
       const weight = grandTotalAumVal > 0 ? Number(((h.value / grandTotalAumVal) * 100).toFixed(2)) : 0;
       const estP = h.shares > 0 ? (h.value / h.shares) : 100.0;
-      const isDiscountStock = h.holders.size >= 3;
-      const curP = isDiscountStock ? estP * 0.89 : estP * 1.06;
+      
+      const realInfo = REALTIME_PRICES[h.ticker];
+      const curP = (realInfo && realInfo.price) ? realInfo.price : estP;
       
       let action = "HOLD";
       if (h.holders.size >= 5) action = "ADD";
@@ -172,7 +179,8 @@ async function loadRealSecData() {
         weight: weight,
         estPrice: estP,
         curPrice: curP,
-        insight: `월스트리트 대가 ${h.holders.size}명이 동시 집중 보유 중인 핵심 종목 (${Array.from(h.holders).slice(0, 3).join(", ")} 등)`
+        priceChangePct: realInfo ? realInfo.changePct : 0.0,
+        insight: `월스트리트 대가 ${h.holders.size}명이 동시 집중 보유 중인 핵심 종목 (${Array.from(h.holders).slice(0, 3).join(", ")} 등) | 실제 시장가: $${curP}`
       };
     });
 
@@ -195,22 +203,17 @@ async function loadRealSecData() {
   }
 }
 
-// 8. 포트폴리오 비주얼 트리맵 렌더링 (Finviz 스타일)
 function renderTreemap(holdings) {
   const container = document.getElementById("treemapContainer");
+  if (!container) return;
   container.innerHTML = "";
 
-  // 1) 비중 순 정렬
   const sorted = [...holdings].sort((a, b) => b.weight - a.weight);
-  
-  // 2) 상위 핵심 종목 (비중 0.4% 이상 또는 상위 20개) 분리
   const mainHoldings = sorted.filter(h => h.weight >= 0.4).slice(0, 24);
   const tinyHoldings = sorted.slice(24);
 
   mainHoldings.forEach(item => {
     const tile = document.createElement("div");
-    
-    // 비중에 따른 타일 크기 등급 부여
     let sizeClass = "tile-small";
     let flexGrow = Math.max(item.weight * 3, 10);
     let flexBasis = 140;
@@ -228,7 +231,6 @@ function renderTreemap(holdings) {
     const isDiscount = item.curPrice < item.estPrice;
     tile.className = `tree-tile ${sizeClass} action-${item.action}`;
     tile.style.flex = `${flexGrow} 1 ${flexBasis}px`;
-
     tile.onclick = () => openStockModal(item);
 
     tile.innerHTML = `
@@ -244,11 +246,9 @@ function renderTreemap(holdings) {
         </div>
       </div>
     `;
-
     container.appendChild(tile);
   });
 
-  // 3) 소량 기타 종목 묶음 타일 (노이즈 제거)
   if (tinyHoldings.length > 0) {
     const tinyTotalWeight = tinyHoldings.reduce((sum, h) => sum + h.weight, 0).toFixed(2);
     const otherTile = document.createElement("div");
@@ -271,11 +271,6 @@ function renderTreemap(holdings) {
   }
 }
 
-
-
-
-
-// 카테고리 탭 렌더링
 function renderCategoryTabs() {
   const sidebarBox = document.querySelector(".guru-selector-box");
   if (!sidebarBox) return;
@@ -306,7 +301,6 @@ function renderCategoryTabs() {
   });
 }
 
-// 4. 사이드바 대가 목록 렌더링
 function renderGuruSidebar() {
   const listEl = document.getElementById("guruList");
   if (!listEl) return;
@@ -317,7 +311,6 @@ function renderGuruSidebar() {
     btnGrand.classList.toggle("active", state.currentGuruKey === "__GRAND_TOTAL__");
   }
 
-  // __GRAND_TOTAL__ 은 별도 상단 버튼이므로 목록에서는 제외
   Object.keys(GURU_DATABASE).filter(k => k !== "__GRAND_TOTAL__").forEach(key => {
     const guru = GURU_DATABASE[key];
     const btn = document.createElement("button");
@@ -335,7 +328,6 @@ function renderGuruSidebar() {
   });
 }
 
-// 5. 대가 선택 시 데이터 전환
 function selectGuru(key) {
   state.currentGuruKey = key;
   state.activeFilter = "ALL";
@@ -343,7 +335,6 @@ function selectGuru(key) {
   const sInput = document.getElementById("searchInput");
   if (sInput) sInput.value = "";
   
-  // 필터 탭 초기화
   document.querySelectorAll(".filter-tab").forEach(tab => {
     tab.classList.toggle("active", tab.dataset.filter === "ALL");
   });
@@ -352,25 +343,18 @@ function selectGuru(key) {
   loadGuruData(key);
 }
 
-// 6. 데이터 로드 및 UI 업데이트
 function loadGuruData(key) {
   const guru = GURU_DATABASE[key];
   if (!guru) return;
 
-  // 헤더 업데이트
   document.getElementById("currentGuruAvatar").innerText = guru.avatar;
   document.getElementById("currentGuruName").innerText = guru.name;
   document.getElementById("currentFundName").innerText = guru.fund;
   document.getElementById("currentQuarter").innerText = guru.quarter;
   document.getElementById("currentGuruDesc").innerText = guru.desc;
 
-  // 메트릭 요약 카드 계산
   updateSummaryMetrics(guru);
-
-  // 트리맵 렌더링
   renderTreemap(guru.holdings);
-
-  // 테이블 렌더링
   renderTable();
 
   if (window.lucide) {
@@ -378,16 +362,13 @@ function loadGuruData(key) {
   }
 }
 
-// 7. 3초 하이라이트 메트릭 계산 (통합 모드 & 개별 대가 모드 지원)
 function updateSummaryMetrics(guru) {
   document.getElementById("metricTotalAum").innerText = guru.aum;
-  
   const isGrandTotal = state.currentGuruKey === "__GRAND_TOTAL__";
   
   if (isGrandTotal) {
     document.getElementById("metricTotalHoldings").innerText = `총 분석 종목 ${guru.holdings.length}개`;
     
-    // 1) 대가들이 가장 많이 담은 1위 (Holders 기준)
     const sortedByHolders = [...guru.holdings].sort((a, b) => (b.holders || 1) - (a.holders || 1));
     const topHolderPick = sortedByHolders[0];
     if (topHolderPick) {
@@ -395,7 +376,6 @@ function updateSummaryMetrics(guru) {
       document.getElementById("metricTopBuySub").innerText = `${topHolderPick.name} (총 $${(topHolderPick.value / 1000000).toFixed(1)}B)`;
     }
 
-    // 2) 대가 할인 종목
     const discounts = guru.holdings
       .map(h => ({ ...h, discountPct: ((h.curPrice - h.estPrice) / h.estPrice) * 100 }))
       .sort((a, b) => a.discountPct - b.discountPct);
@@ -405,14 +385,14 @@ function updateSummaryMetrics(guru) {
       document.getElementById("metricDiscountSub").innerText = `대가들 평균 평단 대비 할인 상태`;
     }
 
-    // 3) 최다 비중 1위
     const top1 = guru.holdings[0];
-    document.getElementById("metricTopHolding").innerHTML = `${top1.ticker} <small>${top1.weight}%</small>`;
-    document.getElementById("metricTopHoldingSub").innerText = `${top1.name} ($${(top1.value / 1000000).toFixed(1)}B)`;
+    if (top1) {
+      document.getElementById("metricTopHolding").innerHTML = `${top1.ticker} <small>${top1.weight}%</small>`;
+      document.getElementById("metricTopHoldingSub").innerText = `${top1.name} ($${(top1.value / 1000000).toFixed(1)}B)`;
+    }
   } else {
     document.getElementById("metricTotalHoldings").innerText = `보유 종목 ${guru.holdings.length}개`;
 
-    // 개별 대가 계산
     const buyPicks = guru.holdings.filter(h => h.action === "NEW" || h.action === "ADD");
     if (buyPicks.length > 0) {
       const topBuy = buyPicks[0];
@@ -440,19 +420,15 @@ function updateSummaryMetrics(guru) {
   }
 }
 
-
-
-// 9. 스마트 파워 테이블 렌더링 (필터, 검색, 정렬 포함)
 function renderTable() {
   const guru = GURU_DATABASE[state.currentGuruKey];
   if (!guru) return;
 
   const tbody = document.getElementById("tableBody");
+  if (!tbody) return;
   tbody.innerHTML = "";
 
-  // 1) 필터링 & 검색 적용
   let filtered = guru.holdings.filter(item => {
-    // 텍스트 검색 (티커, 이름, 섹터)
     if (state.searchQuery) {
       const q = state.searchQuery.toLowerCase();
       const match = item.ticker.toLowerCase().includes(q) ||
@@ -461,23 +437,25 @@ function renderTable() {
       if (!match) return false;
     }
 
-    // 탭 필터
     if (state.activeFilter === "NEW") return item.action === "NEW";
     if (state.activeFilter === "ADD") return item.action === "ADD";
     if (state.activeFilter === "REDUCE") return item.action === "REDUCE";
     if (state.activeFilter === "DISCOUNT") return item.curPrice < item.estPrice;
     if (state.activeFilter === "CONVICTION") return item.weight >= 5.0;
-    return true; // ALL
+    return true;
   });
 
-  // 카운트 뱃지 업데이트
-  document.getElementById("countAll").innerText = guru.holdings.length;
-  document.getElementById("countNew").innerText = guru.holdings.filter(h => h.action === "NEW").length;
-  document.getElementById("countAdd").innerText = guru.holdings.filter(h => h.action === "ADD").length;
-  document.getElementById("countDiscount").innerText = guru.holdings.filter(h => h.curPrice < h.estPrice).length;
-  document.getElementById("countConviction").innerText = guru.holdings.filter(h => h.weight >= 5.0).length;
+  const cAll = document.getElementById("countAll");
+  if (cAll) cAll.innerText = guru.holdings.length;
+  const cNew = document.getElementById("countNew");
+  if (cNew) cNew.innerText = guru.holdings.filter(h => h.action === "NEW").length;
+  const cAdd = document.getElementById("countAdd");
+  if (cAdd) cAdd.innerText = guru.holdings.filter(h => h.action === "ADD").length;
+  const cDisc = document.getElementById("countDiscount");
+  if (cDisc) cDisc.innerText = guru.holdings.filter(h => h.curPrice < h.estPrice).length;
+  const cConv = document.getElementById("countConviction");
+  if (cConv) cConv.innerText = guru.holdings.filter(h => h.weight >= 5.0).length;
 
-  // 2) 정렬 (Sorting)
   filtered.sort((a, b) => {
     let valA = a[state.sortColumn];
     let valB = b[state.sortColumn];
@@ -493,7 +471,6 @@ function renderTable() {
     return state.sortDirection === "asc" ? valA - valB : valB - valA;
   });
 
-  // 3) 테이블 행 렌더링
   filtered.forEach(item => {
     const tr = document.createElement("tr");
     tr.onclick = () => openStockModal(item);
@@ -530,22 +507,22 @@ function renderTable() {
         </div>
       </td>
       <td class="col-estPrice text-right">$${item.estPrice.toFixed(2)}</td>
-      <td class="col-curPrice text-right">$${item.curPrice.toFixed(2)}</td>
+      <td class="col-curPrice text-right">
+        <strong>$${item.curPrice.toFixed(2)}</strong>
+        ${item.priceChangePct !== 0 ? `<small class="${item.priceChangePct >= 0 ? 'text-green' : 'text-red'}">(${item.priceChangePct >= 0 ? '+' : ''}${item.priceChangePct}%)</small>` : ''}
+      </td>
       <td class="col-discount text-right">
         <span class="discount-val ${isDiscount ? 'discount' : 'positive'}">
           ${isDiscount ? '🏷️ ' + discountPct + '%' : '+' + discountPct + '%'}
         </span>
       </td>
     `;
-
     tbody.appendChild(tr);
   });
 
-  // 컬럼 보이기/숨기기 적용
   applyColumnVisibility();
 }
 
-// 10. 컬럼 가시성 제어
 function applyColumnVisibility() {
   Object.keys(state.visibleColumns).forEach(col => {
     const isVisible = state.visibleColumns[col];
@@ -556,9 +533,9 @@ function applyColumnVisibility() {
   });
 }
 
-// 11. 종목 상세 모달 열기
 function openStockModal(item) {
   const modal = document.getElementById("stockModal");
+  if (!modal) return;
   const discountPct = (((item.curPrice - item.estPrice) / item.estPrice) * 100).toFixed(1);
   const isDiscount = Number(discountPct) < 0;
 
@@ -580,26 +557,38 @@ function openStockModal(item) {
   modal.classList.add("show");
 }
 
-// 12. 이벤트 리스너 설정
 function setupEventListeners() {
-  // 🌐 전체 대가 통합 포트폴리오 버튼 클릭
   const btnGrand = document.getElementById("btnGrandTotal");
   if (btnGrand) {
     btnGrand.onclick = () => selectGuru("__GRAND_TOTAL__");
   }
 
-  // 모달 닫기
-  document.getElementById("btnModalClose").onclick = () => {
-    document.getElementById("stockModal").classList.remove("show");
-  };
-
-  document.getElementById("stockModal").onclick = (e) => {
-    if (e.target.id === "stockModal") {
+  const btnClose = document.getElementById("btnModalClose");
+  if (btnClose) {
+    btnClose.onclick = () => {
       document.getElementById("stockModal").classList.remove("show");
-    }
-  };
+    };
+  }
 
-  // 탭 필터 클릭
+  document.querySelectorAll(".nav-item").forEach(item => {
+    item.onclick = () => {
+      document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
+      item.classList.add("active");
+      const tab = item.dataset.tab;
+      if (tab === "consensus") {
+        selectGuru("__GRAND_TOTAL__");
+      } else if (tab === "discount") {
+        state.activeFilter = "DISCOUNT";
+        document.querySelectorAll(".filter-tab").forEach(f => f.classList.toggle("active", f.dataset.filter === "DISCOUNT"));
+        renderTable();
+      } else {
+        state.activeFilter = "ALL";
+        document.querySelectorAll(".filter-tab").forEach(f => f.classList.toggle("active", f.dataset.filter === "ALL"));
+        renderTable();
+      }
+    };
+  });
+
   document.querySelectorAll(".filter-tab").forEach(tab => {
     tab.onclick = () => {
       document.querySelectorAll(".filter-tab").forEach(t => t.classList.remove("active"));
@@ -609,14 +598,36 @@ function setupEventListeners() {
     };
   });
 
-  // 실시간 검색
-  document.getElementById("searchInput").oninput = (e) => {
-    state.searchQuery = e.target.value.trim();
-    renderTable();
-  };
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    searchInput.oninput = (e) => {
+      state.searchQuery = e.target.value;
+      renderTable();
+    };
+  }
 
-  // 테이블 정렬 헤더 클릭
-  document.querySelectorAll(".power-table th.sortable").forEach(th => {
+  const btnCols = document.getElementById("btnToggleCols");
+  const colMenu = document.getElementById("colMenu");
+  if (btnCols && colMenu) {
+    btnCols.onclick = (e) => {
+      e.stopPropagation();
+      colMenu.classList.toggle("show");
+    };
+
+    document.addEventListener("click", () => {
+      colMenu.classList.remove("show");
+    });
+
+    colMenu.querySelectorAll("input[type='checkbox']").forEach(chk => {
+      chk.onchange = (e) => {
+        const col = e.target.dataset.col;
+        state.visibleColumns[col] = e.target.checked;
+        applyColumnVisibility();
+      };
+    });
+  }
+
+  document.querySelectorAll("th.sortable").forEach(th => {
     th.onclick = () => {
       const col = th.dataset.sort;
       if (state.sortColumn === col) {
@@ -629,99 +640,35 @@ function setupEventListeners() {
     };
   });
 
-  // 컬럼 설정 드롭다운 토글
-  const colMenu = document.getElementById("colMenu");
-  document.getElementById("btnToggleCols").onclick = (e) => {
-    e.stopPropagation();
-    colMenu.classList.toggle("show");
-  };
-
-  document.onclick = () => {
-    colMenu.classList.remove("show");
-  };
-
-  colMenu.onclick = (e) => e.stopPropagation();
-
-  // 컬럼 체크박스 변경
-  document.querySelectorAll(".col-menu input").forEach(chk => {
-    chk.onchange = (e) => {
-      const col = e.target.dataset.col;
-      state.visibleColumns[col] = e.target.checked;
-      applyColumnVisibility();
-    };
-  });
-
-  // 최신 13F 데이터 수집 버튼 이벤트
   const btnSync = document.getElementById("btnSyncData");
   if (btnSync) {
     btnSync.onclick = async () => {
-      const syncIcon = document.getElementById("syncIcon");
-      const syncText = document.getElementById("syncText");
-      
       btnSync.disabled = true;
-      btnSync.classList.remove("pulse");
-      if (syncIcon) syncIcon.classList.add("spin");
-      if (syncText) syncText.innerText = "SEC 데이터 수집 중...";
+      btnSync.classList.add("loading");
+      const sIcon = document.getElementById("syncIcon");
+      if (sIcon) sIcon.classList.add("spin");
+      const sText = document.getElementById("syncText");
+      if (sText) sText.innerText = "13F 수집 및 실시간 주가 분석 중...";
 
       try {
         const res = await fetch("/api/sync", { method: "POST" });
-        const data = await res.json();
-        console.log("동기화 시작 응답:", data);
-
-        // 3초마다 완료 상태 확인
-        const checkInterval = setInterval(async () => {
-          try {
-            const statusRes = await fetch("/api/sync/status");
-            const statusData = await statusRes.json();
-            
-            if (!statusData.isSyncing) {
-              clearInterval(checkInterval);
-              btnSync.disabled = false;
-              if (syncIcon) syncIcon.classList.remove("spin");
-              if (syncText) syncText.innerText = "최신 13F 데이터 수집";
-              btnSync.classList.add("pulse");
-              
-              // 최신 데이터 다시 로드 & 화면 리프레시
-              await loadRealSecData();
-              loadGuruData(state.currentGuruKey);
-              alert("🎉 최신 13F 데이터 수집 및 1년치 분기별 비교 분석이 완료되었습니다!");
-            }
-          } catch (err) {
-            console.error(err);
-          }
-        }, 3000);
-
-      } catch (e) {
-        console.error("수집 요청 에러:", e);
+        if (res.ok) {
+          setTimeout(async () => {
+            await loadRealSecData();
+            loadGuruData(state.currentGuruKey);
+            btnSync.disabled = false;
+            btnSync.classList.remove("loading");
+            if (sIcon) sIcon.classList.remove("spin");
+            if (sText) sText.innerText = "최신 13F 데이터 수집";
+            alert("🎉 SEC 13F 공시 및 야후 파이낸스 실시간 주가 동기화가 완료되었습니다!");
+          }, 3000);
+        }
+      } catch (err) {
         btnSync.disabled = false;
-        if (syncIcon) syncIcon.classList.remove("spin");
-        if (syncText) syncText.innerText = "최신 13F 데이터 수집";
-        alert("수집 요청에 실패했습니다. (로컬 백엔드 서버 확인 필요)");
+        btnSync.classList.remove("loading");
+        if (sIcon) sIcon.classList.remove("spin");
+        if (sText) sText.innerText = "최신 13F 데이터 수집";
       }
     };
   }
-
-  // CSV 내보내기 버튼
-  document.getElementById("btnExportCsv").onclick = exportToCsv;
-}
-
-// 13. CSV 내보내기 기능
-function exportToCsv() {
-  const guru = GURU_DATABASE[state.currentGuruKey];
-  if (!guru) return;
-
-  let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-  csvContent += "Ticker,Company,Sector,Action,Shares,Value($M),Weight(%),Estimated Avg Price,Current Price\n";
-
-  guru.holdings.forEach(h => {
-    csvContent += `"${h.ticker}","${h.name}","${h.sector}","${h.action}","${h.shares}",${h.value},${h.weight},${h.estPrice},${h.curPrice}\n`;
-  });
-
-  const encodedUri = encodeURI(csvContent);
-  const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
-  link.setAttribute("download", `${guru.name.replace(/\s+/g, "_")}_13F_${guru.quarter.replace(/\s+/g, "_")}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
 }

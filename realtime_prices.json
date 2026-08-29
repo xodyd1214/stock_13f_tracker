@@ -1,0 +1,68 @@
+{
+  "AAPL": {
+    "price": 319.7,
+    "changePct": 1.63,
+    "currency": "USD",
+    "updatedAt": "2026-08-29 22:38:32"
+  },
+  "AMZN": {
+    "price": 266.43,
+    "changePct": 3.97,
+    "currency": "USD",
+    "updatedAt": "2026-08-29 22:38:32"
+  },
+  "AXP": {
+    "price": 333.2,
+    "changePct": -0.29,
+    "currency": "USD",
+    "updatedAt": "2026-08-29 22:38:33"
+  },
+  "BAC": {
+    "price": 62.32,
+    "changePct": 1.88,
+    "currency": "USD",
+    "updatedAt": "2026-08-29 22:38:33"
+  },
+  "CVX": {
+    "price": 201.86,
+    "changePct": 1.05,
+    "currency": "USD",
+    "updatedAt": "2026-08-29 22:38:33"
+  },
+  "GOOG": {
+    "price": 342.88,
+    "changePct": 1.53,
+    "currency": "USD",
+    "updatedAt": "2026-08-29 22:38:34"
+  },
+  "GOOGL": {
+    "price": 346.59,
+    "changePct": 1.74,
+    "currency": "USD",
+    "updatedAt": "2026-08-29 22:38:34"
+  },
+  "KO": {
+    "price": 89.66,
+    "changePct": 0.67,
+    "currency": "USD",
+    "updatedAt": "2026-08-29 22:38:34"
+  },
+  "MSFT": {
+    "price": 513.53,
+    "changePct": 1.68,
+    "currency": "USD",
+    "updatedAt": "2026-08-29 22:38:35"
+  },
+  "NVDA": {
+    "price": 217.55,
+    "changePct": -4.57,
+    "currency": "USD",
+    "updatedAt": "2026-08-29 22:38:35"
+  },
+  "OXY": {
+    "price": 59.1,
+    "changePct": -0.12,
+    "currency": "USD",
+    "updatedAt": "2026-08-29 22:38:36"
+  }
+}

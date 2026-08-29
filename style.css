@@ -1,41 +1,62 @@
 /* ==============================================================================
-   🌟 Alpha13F - Modern Financial Intelligence Design System
+   SPOTIFY DESIGN SYSTEM — ALPHA 13F INTELLIGENCE
+   Achromatic Dark Immersion | Spotify Green Accent | Pill & Circle Geometry
    ============================================================================== */
 
 :root {
-  --bg-main: #0b0f17;
-  --bg-sidebar: #0f172a;
-  --bg-card: rgba(30, 41, 59, 0.7);
-  --bg-card-hover: rgba(51, 65, 85, 0.8);
-  --bg-table-stripe: rgba(15, 23, 42, 0.4);
-  
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-focus: #38bdf8;
-  
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
-  
-  --color-primary: #38bdf8;
-  --color-primary-glow: rgba(56, 189, 248, 0.25);
-  
-  --color-green: #10b981;
-  --color-green-glow: rgba(16, 185, 129, 0.2);
-  --color-red: #f43f5e;
-  --color-red-glow: rgba(244, 63, 94, 0.2);
-  --color-purple: #a855f7;
-  --color-purple-glow: rgba(168, 85, 247, 0.2);
-  --color-orange: #f59e0b;
-  --color-teal: #14b8a6;
-  
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  /* Surface Palette */
+  --bg-base: #121212;
+  --bg-surface: #181818;
+  --bg-elevated: #1f1f1f;
+  --bg-highlight: #242424;
+  --bg-press: #282828;
+  --bg-card: #181818;
+  --bg-card-hover: #222222;
+
+  /* Spotify Green Brand Palette */
+  --spotify-green: #1ed760;
+  --spotify-green-hover: #1fdf64;
+  --spotify-green-press: #169c46;
+  --spotify-green-dark: #1db954;
+  --spotify-green-glow: rgba(30, 215, 96, 0.25);
+
+  /* Typography Colors */
+  --text-base: #ffffff;
+  --text-subdued: #b3b3b3;
+  --text-near-white: #cbcbcb;
+  --text-pure-white: #fdfdfd;
+  --text-muted: #7c7c7c;
+
+  /* Semantic Colors */
+  --negative-red: #f3727f;
+  --negative-red-bg: rgba(243, 114, 127, 0.15);
+  --warning-orange: #ffa42b;
+  --warning-orange-bg: rgba(255, 164, 43, 0.15);
+  --announcement-blue: #539df5;
+  --announcement-blue-bg: rgba(83, 157, 245, 0.15);
+
+  /* Borders & Shadows */
+  --border-subtle: #282828;
+  --border-light: #7c7c7c;
+  --border-card: #282828;
+  --border-focus: #ffffff;
+
+  --shadow-heavy: rgba(0, 0, 0, 0.5) 0px 8px 24px;
+  --shadow-medium: rgba(0, 0, 0, 0.3) 0px 8px 8px;
+  --shadow-inset: rgb(18, 18, 18) 0px 1px 0px, rgb(80, 80, 80) 0px 0px 0px 1px inset;
+  --shadow-inset-focus: rgb(18, 18, 18) 0px 1px 0px, rgb(255, 255, 255) 0px 0px 0px 1.5px inset;
+
+  /* Radii */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 500px;
   --radius-full: 9999px;
-  
-  --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-heading: 'Outfit', sans-serif;
+  --radius-circle: 50%;
+
+  /* Font Families */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 * {
@@ -45,343 +66,383 @@
 }
 
 body {
-  background-color: var(--bg-main);
-  color: var(--text-main);
+  background-color: var(--bg-base);
+  color: var(--text-base);
   font-family: var(--font-sans);
+  font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
-/* 레이아웃 구조 */
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-base);
+}
+::-webkit-scrollbar-thumb {
+  background: #333333;
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #555555;
+}
+
+/* Layout */
 .app-container {
   display: flex;
   min-height: 100vh;
+  background-color: var(--bg-base);
 }
 
-/* 사이드바 */
+/* ==============================================================================
+   Sidebar — Spotify Dark Navigation
+   ============================================================================== */
 .sidebar {
   width: 280px;
-  background-color: var(--bg-sidebar);
-  border-right: 1px solid var(--border-color);
+  background-color: var(--bg-base);
+  border-right: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
-  padding: 24px 16px;
+  padding: 20px 14px;
   position: sticky;
   top: 0;
   height: 100vh;
   flex-shrink: 0;
 }
 
+/* Brand */
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 28px;
-  padding: 0 8px;
+  gap: 10px;
+  margin-bottom: 22px;
+  padding: 0 10px;
 }
 
-.brand-logo {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #38bdf8 0%, #6366f1 100%);
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  box-shadow: 0 0 15px var(--color-primary-glow);
+.brand-badge {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-circle);
+  background-color: var(--spotify-green);
+  box-shadow: 0 0 12px var(--spotify-green);
 }
 
 .brand-text h1 {
-  font-family: var(--font-heading);
-  font-size: 1.4rem;
+  font-size: 18px;
   font-weight: 800;
-  letter-spacing: -0.5px;
+  letter-spacing: 0.5px;
+  color: var(--text-base);
+  text-transform: uppercase;
 }
 
 .brand-text h1 span {
-  color: var(--color-primary);
+  color: var(--spotify-green);
+  margin-left: 2px;
 }
 
 .brand-text p {
-  font-size: 0.75rem;
-  color: var(--text-dim);
+  font-size: 10.5px;
+  color: var(--text-subdued);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.4px;
+  font-weight: 600;
 }
 
-/* 🌐 전체 대가 통합 포트폴리오 메인 버튼 */
+/* Grand Total (Consensus) Button */
 .grand-total-btn-wrap {
-  margin-bottom: 18px;
-  padding: 0 4px;
+  margin-bottom: 16px;
 }
 
 .grand-total-btn {
   width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
   padding: 12px 14px;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(99, 102, 241, 0.15));
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  color: #fff;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-base);
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: background-color 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
   text-align: left;
 }
 
 .grand-total-btn:hover {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(99, 102, 241, 0.25));
-  border-color: var(--color-primary);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px var(--color-primary-glow);
+  background-color: var(--bg-highlight);
+  border-color: #3e3e3e;
 }
 
 .grand-total-btn.active {
-  background: linear-gradient(135deg, #0ea5e9, #6366f1);
-  border-color: #38bdf8;
-  box-shadow: 0 0 20px rgba(14, 165, 233, 0.5);
+  background-color: var(--bg-elevated);
+  border-color: var(--spotify-green);
+  box-shadow: 0 0 12px rgba(30, 215, 96, 0.15);
 }
 
-.grand-total-btn.active h4,
-.grand-total-btn.active p {
-  color: #fff;
-}
-
-.grand-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.15);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  flex-shrink: 0;
+.grand-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--spotify-green);
+  margin-bottom: 4px;
 }
 
 .grand-text h4 {
-  font-family: var(--font-heading);
-  font-size: 0.9rem;
+  font-size: 13.5px;
   font-weight: 700;
+  color: var(--text-base);
+  margin-bottom: 2px;
 }
 
 .grand-text p {
-  font-size: 0.72rem;
-  color: var(--text-muted);
+  font-size: 11px;
+  color: var(--text-subdued);
 }
 
+/* Navigation Menu */
 .nav-menu {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 24px;
+  gap: 4px;
+  margin-bottom: 18px;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 12px;
   padding: 10px 14px;
   background: transparent;
   border: none;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  font-weight: 500;
+  border-radius: var(--radius-pill);
+  color: var(--text-subdued);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease;
   text-align: left;
 }
 
 .nav-item:hover {
-  color: var(--text-main);
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-base);
+  background-color: var(--bg-elevated);
 }
 
 .nav-item.active {
-  color: var(--color-primary);
-  background: rgba(56, 189, 248, 0.1);
-  font-weight: 600;
+  color: var(--text-base);
+  background-color: var(--bg-press);
 }
 
-.section-label {
-  display: block;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 10px;
-  padding: 0 8px;
-}
-
+/* Guru Selector Box */
 .guru-selector-box {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+}
+
+.selector-header {
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+
+.section-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-subdued);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
 }
 
 .guru-cat-filters {
   display: flex;
   gap: 6px;
-  margin-bottom: 12px;
-  padding: 0 4px;
+  margin-bottom: 10px;
 }
 
 .cat-pill {
   flex: 1;
-  padding: 6px 8px;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-color);
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  background-color: var(--bg-elevated);
+  border: 1px solid transparent;
+  color: var(--text-subdued);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: center;
+  text-transform: uppercase;
 }
 
 .cat-pill:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  color: var(--text-base);
+  background-color: var(--bg-highlight);
 }
 
 .cat-pill.active {
-  background: var(--color-primary);
-  color: #0b0f17;
-  border-color: var(--color-primary);
-}
-
-.cat-pill.gold.active {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: #000;
-  border-color: #f59e0b;
+  background-color: var(--text-base);
+  color: var(--bg-base);
+  font-weight: 700;
 }
 
 .guru-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: 2px;
 }
 
 .guru-card-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   padding: 8px 10px;
   border-radius: var(--radius-sm);
   background: transparent;
-  border: 1px solid transparent;
-  color: var(--text-muted);
+  border: none;
+  color: var(--text-subdued);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
   text-align: left;
+  width: 100%;
 }
 
 .guru-card-btn:hover {
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text-main);
+  background-color: var(--bg-elevated);
+  color: var(--text-base);
 }
 
 .guru-card-btn.active {
-  background: rgba(56, 189, 248, 0.12);
-  border-color: rgba(56, 189, 248, 0.3);
-  color: #fff;
+  background-color: var(--bg-press);
+  color: var(--text-base);
 }
 
 .guru-mini-avatar {
   width: 32px;
   height: 32px;
-  border-radius: var(--radius-full);
-  background: #334155;
+  border-radius: var(--radius-circle);
+  background-color: #2a2a2a;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: 11px;
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--text-base);
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.guru-card-btn.active .guru-mini-avatar {
+  background-color: var(--spotify-green);
+  color: #000000;
+}
+
+.guru-card-info {
+  overflow: hidden;
 }
 
 .guru-card-info h4 {
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
+  color: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .guru-card-info p {
-  font-size: 0.75rem;
-  color: var(--text-dim);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* Sidebar Footer */
 .sidebar-footer {
-  padding-top: 16px;
-  border-top: 1px solid var(--border-color);
+  padding-top: 14px;
+  margin-top: 10px;
+  border-top: 1px solid var(--border-subtle);
 }
 
 .sync-status {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.75rem;
-  color: var(--color-green);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--spotify-green);
 }
 
 .status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--color-green);
-  box-shadow: 0 0 8px var(--color-green);
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-circle);
+  background-color: var(--spotify-green);
+  box-shadow: 0 0 8px var(--spotify-green);
 }
 
-/* 메인 컨텐츠 영역 */
+/* ==============================================================================
+   Main Content Area
+   ============================================================================== */
 .main-content {
   flex: 1;
-  padding: 32px;
+  padding: 24px 32px;
   max-width: 1440px;
   margin: 0 auto;
   overflow-y: auto;
+  background-color: var(--bg-base);
 }
 
-/* 상단 헤더 */
+/* Top Profile Header */
 .top-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 28px;
-  background: var(--bg-card);
-  backdrop-filter: blur(12px);
+  margin-bottom: 24px;
+  background-color: var(--bg-surface);
   padding: 20px 24px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-medium);
 }
 
 .guru-profile-header {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
 }
 
 .guru-avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, #1e293b, #334155);
-  border: 2px solid rgba(56, 189, 248, 0.4);
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-circle);
+  background-color: var(--bg-elevated);
+  border: 2px solid var(--spotify-green);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-heading);
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--color-primary);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--spotify-green);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
 }
 
 .guru-name-row {
@@ -389,200 +450,235 @@ body {
   align-items: center;
   gap: 10px;
   margin-bottom: 4px;
+  flex-wrap: wrap;
 }
 
 .guru-name-row h2 {
-  font-family: var(--font-heading);
-  font-size: 1.5rem;
+  font-size: 20px;
   font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--text-base);
 }
 
 .guru-desc {
-  font-size: 0.85rem;
-  color: var(--text-muted);
+  font-size: 12.5px;
+  color: var(--text-subdued);
+  max-width: 680px;
 }
 
+/* Badges */
 .badge {
   display: inline-block;
   padding: 3px 8px;
-  border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  font-weight: 600;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
 }
 
 .fund-badge {
-  background: rgba(56, 189, 248, 0.15);
-  color: var(--color-primary);
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  background-color: var(--bg-elevated);
+  color: var(--text-base);
+  border: 1px solid var(--border-subtle);
 }
 
 .quarter-badge {
-  background: rgba(168, 85, 247, 0.15);
-  color: var(--color-purple);
-  border: 1px solid rgba(168, 85, 247, 0.3);
+  background-color: rgba(30, 215, 96, 0.12);
+  color: var(--spotify-green);
+  border: 1px solid rgba(30, 215, 96, 0.3);
 }
 
+/* Header Actions & Pill Buttons */
 .header-actions {
   display: flex;
   gap: 10px;
+  align-items: center;
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 8px 14px;
-  border-radius: var(--radius-sm);
-  font-size: 0.85rem;
-  font-weight: 600;
+  padding: 10px 22px;
+  border-radius: var(--radius-full);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
   cursor: pointer;
   border: none;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.15s ease, border-color 0.2s ease;
+  user-select: none;
 }
 
+.btn:active {
+  transform: scale(0.98);
+}
+
+/* Spotify Green Pill CTA */
 .btn-sync {
-  background: linear-gradient(135deg, #0ea5e9, #6366f1);
-  color: #fff;
-  font-weight: 700;
-  box-shadow: 0 0 15px rgba(14, 165, 233, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: var(--spotify-green);
+  color: #000000;
 }
 
 .btn-sync:hover {
-  background: linear-gradient(135deg, #38bdf8, #818cf8);
-  box-shadow: 0 0 25px rgba(56, 189, 248, 0.6);
-  transform: translateY(-1px);
+  background-color: var(--spotify-green-hover);
+  transform: scale(1.02);
 }
 
 .btn-sync.pulse {
-  animation: syncPulse 2.5s infinite;
-}
-
-@keyframes syncPulse {
-  0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7); }
-  70% { box-shadow: 0 0 0 10px rgba(14, 165, 233, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
-}
-
-.spin {
-  animation: spinAnim 1s linear infinite;
-}
-
-@keyframes spinAnim {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.btn-primary {
-  background: var(--color-primary);
-  color: #0b0f17;
-}
-
-.btn-primary:hover {
-  background: #7dd3fc;
-  box-shadow: 0 0 15px var(--color-primary-glow);
+  box-shadow: 0 0 14px var(--spotify-green-glow);
 }
 
 .btn-secondary {
-  background: #334155;
-  color: #fff;
+  background-color: transparent;
+  color: var(--text-base);
+  border: 1px solid var(--border-light);
 }
 
 .btn-secondary:hover {
-  background: #475569;
+  border-color: var(--text-base);
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .btn-outline {
-  background: transparent;
-  border: 1px solid var(--border-color);
-  color: var(--text-muted);
+  background-color: transparent;
+  border: 1px solid var(--border-light);
+  color: var(--text-base);
 }
 
 .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
+  border-color: var(--text-base);
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* 3초 요약 메트릭 카드 */
+/* Pure CSS Loading Spinner for Sync */
+.sync-spinner {
+  display: none;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #000000;
+  border-top-color: transparent;
+  border-radius: var(--radius-circle);
+  animation: spin 0.75s linear infinite;
+}
+
+.sync-spinner.spin {
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==============================================================================
+   Overview Metric Cards (Dark Achromatic with Spotify Highlights)
+   ============================================================================== */
 .overview-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 28px;
+  gap: 14px;
+  margin-bottom: 24px;
 }
 
 .metric-card {
-  background: var(--bg-card);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-color);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 18px 20px;
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.2s, border-color 0.2s;
+  padding: 16px 18px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  box-shadow: var(--shadow-medium);
 }
 
 .metric-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.15);
+  background-color: var(--bg-card-hover);
+  border-color: #383838;
 }
 
 .metric-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .metric-title {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-subdued);
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-.metric-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.metric-indicator {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  text-transform: uppercase;
 }
 
-.metric-icon.blue { background: rgba(56, 189, 248, 0.15); color: var(--color-primary); }
-.metric-icon.green { background: var(--color-green-glow); color: var(--color-green); }
-.metric-icon.purple { background: var(--color-purple-glow); color: var(--color-purple); }
-.metric-icon.orange { background: rgba(245, 158, 11, 0.15); color: var(--color-orange); }
+.metric-indicator.blue {
+  background-color: var(--announcement-blue-bg);
+  color: var(--announcement-blue);
+}
+
+.metric-indicator.green {
+  background-color: rgba(30, 215, 96, 0.15);
+  color: var(--spotify-green);
+}
+
+.metric-indicator.red {
+  background-color: var(--negative-red-bg);
+  color: var(--negative-red);
+}
+
+.metric-indicator.orange {
+  background-color: var(--warning-orange-bg);
+  color: var(--warning-orange);
+}
 
 .metric-value {
-  font-family: var(--font-heading);
-  font-size: 1.6rem;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
   margin-bottom: 4px;
+  color: var(--text-base);
 }
 
 .metric-value small {
-  font-size: 0.9rem;
+  font-size: 13px;
   font-weight: 600;
-  margin-left: 4px;
+  margin-left: 6px;
+  color: var(--text-subdued);
+}
+
+.text-spotify-green {
+  color: var(--spotify-green) !important;
+}
+
+.text-negative-red {
+  color: var(--negative-red) !important;
 }
 
 .metric-sub {
-  font-size: 0.75rem;
-  color: var(--text-dim);
+  font-size: 11.5px;
+  color: var(--text-subdued);
 }
 
-.highlight-card.green .metric-value small { color: var(--color-green); }
-.highlight-card.purple .metric-value small { color: var(--color-purple); }
-
-/* 포트폴리오 비주얼 트리맵 */
+/* ==============================================================================
+   Treemap Section
+   ============================================================================== */
 .treemap-section {
-  background: var(--bg-card);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 24px;
-  margin-bottom: 28px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-medium);
 }
 
 .section-header {
@@ -594,28 +690,25 @@ body {
   gap: 12px;
 }
 
-.section-title-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .section-title-wrap h3 {
-  font-family: var(--font-heading);
-  font-size: 1.15rem;
+  font-size: 16px;
   font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--text-base);
+  margin-bottom: 2px;
 }
 
 .section-tooltip {
-  font-size: 0.75rem;
-  color: var(--text-dim);
+  font-size: 11.5px;
+  color: var(--text-subdued);
 }
 
 .treemap-legend {
   display: flex;
   gap: 14px;
-  font-size: 0.75rem;
-  color: var(--text-muted);
+  font-size: 11.5px;
+  color: var(--text-subdued);
+  flex-wrap: wrap;
 }
 
 .legend-item {
@@ -625,102 +718,92 @@ body {
 }
 
 .color-box {
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
 }
 
-.color-box.new { background: #10b981; }
-.color-box.add { background: #0f766e; }
-.color-box.hold { background: #334155; }
-.color-box.reduce { background: #e11d48; }
-.color-box.discount-ring { border: 2px solid var(--color-purple); background: transparent; }
+.color-box.new { background: var(--spotify-green); }
+.color-box.add { background: var(--announcement-blue); }
+.color-box.hold { background: #383838; }
+.color-box.reduce { background: var(--negative-red); }
+.color-box.discount-ring { border: 1.5px solid var(--negative-red); background: transparent; }
 
-/* 인터랙티브 트리맵 타일 레이아웃 (Finviz 스타일) */
+/* Interactive Treemap Tiles */
 .treemap-container {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  min-height: 380px;
+  min-height: 360px;
   width: 100%;
-  padding: 4px;
 }
 
 .tree-tile {
-  background: #1e293b;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  padding: 14px 16px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
   box-sizing: border-box;
 }
 
 .tree-tile:hover {
+  background-color: var(--bg-highlight);
+  border-color: #4a4a4a;
   transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.5);
-  border-color: rgba(56, 189, 248, 0.5);
-  z-index: 10;
+  box-shadow: var(--shadow-heavy);
+  z-index: 5;
 }
 
-/* 액션별 배경색 (더 차분하고 고급스러운 다크 톤) */
 .tree-tile.action-NEW {
-  background: linear-gradient(145deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.05));
-  border-color: rgba(16, 185, 129, 0.4);
+  border-left: 3px solid var(--spotify-green);
 }
 
 .tree-tile.action-ADD {
-  background: linear-gradient(145deg, rgba(20, 184, 166, 0.18), rgba(20, 184, 166, 0.04));
-  border-color: rgba(20, 184, 166, 0.35);
+  border-left: 3px solid var(--announcement-blue);
 }
 
 .tree-tile.action-REDUCE {
-  background: linear-gradient(145deg, rgba(225, 29, 72, 0.18), rgba(225, 29, 72, 0.04));
-  border-color: rgba(225, 29, 72, 0.35);
+  border-left: 3px solid var(--negative-red);
 }
 
 .tree-tile.action-HOLD {
-  background: #1e293b;
-  border-color: rgba(255, 255, 255, 0.08);
+  border-left: 3px solid #383838;
 }
 
-/* 대형 핵심 타일 (비중 10% 이상) */
 .tree-tile.tile-large {
-  min-height: 140px;
+  min-height: 130px;
 }
 .tree-tile.tile-large .tile-ticker {
-  font-size: 1.6rem;
+  font-size: 18px;
 }
 .tree-tile.tile-large .tile-weight {
-  font-size: 1.2rem;
+  font-size: 14px;
 }
 
-/* 중형 타일 (비중 3~10%) */
 .tree-tile.tile-medium {
-  min-height: 100px;
+  min-height: 95px;
 }
 .tree-tile.tile-medium .tile-ticker {
-  font-size: 1.2rem;
+  font-size: 14px;
 }
 .tree-tile.tile-medium .tile-weight {
-  font-size: 0.95rem;
+  font-size: 12.5px;
 }
 
-/* 소형 타일 (비중 3% 미만) */
 .tree-tile.tile-small {
-  min-height: 75px;
+  min-height: 70px;
   padding: 8px 10px;
 }
 .tree-tile.tile-small .tile-ticker {
-  font-size: 0.95rem;
+  font-size: 12px;
 }
 .tree-tile.tile-small .tile-weight {
-  font-size: 0.8rem;
+  font-size: 11px;
 }
 
 .tile-top {
@@ -731,79 +814,89 @@ body {
 }
 
 .tile-ticker {
-  font-family: var(--font-heading);
   font-weight: 800;
-  color: #fff;
-  letter-spacing: -0.5px;
+  color: var(--text-base);
+  letter-spacing: 0.2px;
 }
 
 .tile-weight {
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--spotify-green);
 }
 
 .tile-bottom {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 8px;
+  gap: 6px;
 }
 
 .tile-name {
-  font-size: 0.78rem;
-  color: var(--text-muted);
+  font-size: 11px;
+  color: var(--text-subdued);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 70%;
+  max-width: 65%;
 }
 
 .tile-tags {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .tile-action-tag {
-  font-size: 0.65rem;
+  font-size: 9px;
   font-weight: 700;
+  letter-spacing: 0.6px;
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
-.tile-action-tag.NEW { background: var(--color-green); color: #000; }
-.tile-action-tag.ADD { background: var(--color-teal); color: #fff; }
-.tile-action-tag.REDUCE { background: var(--color-red); color: #fff; }
-.tile-action-tag.HOLD { background: #334155; color: #94a3b8; }
+.tile-action-tag.NEW { background: rgba(30, 215, 96, 0.2); color: var(--spotify-green); }
+.tile-action-tag.ADD { background: var(--announcement-blue-bg); color: var(--announcement-blue); }
+.tile-action-tag.REDUCE { background: var(--negative-red-bg); color: var(--negative-red); }
+.tile-action-tag.HOLD { background: #333333; color: var(--text-subdued); }
 
 .discount-pill {
-  font-size: 0.65rem;
+  font-size: 9px;
   font-weight: 700;
-  color: #c084fc;
-  background: rgba(168, 85, 247, 0.15);
-  border: 1px solid rgba(168, 85, 247, 0.3);
-  padding: 1px 5px;
-  border-radius: 4px;
+  letter-spacing: 0.5px;
+  color: var(--negative-red);
+  background: var(--negative-red-bg);
+  padding: 2px 5px;
+  border-radius: var(--radius-xs);
+  text-transform: uppercase;
+  white-space: nowrap;
+  display: inline-block;
 }
 
-/* 스마트 커스텀 파워 테이블 섹션 */
+/* ==============================================================================
+   Power Table Section
+   ============================================================================== */
 .table-section {
-  background: var(--bg-card);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 24px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-medium);
 }
 
 .table-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
 }
 
+/* Spotify Filter Pills */
 .filter-tabs {
   display: flex;
   gap: 6px;
@@ -811,67 +904,64 @@ body {
 }
 
 .filter-tab {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-color);
-  color: var(--text-muted);
-  padding: 7px 12px;
-  border-radius: var(--radius-sm);
-  font-size: 0.8rem;
-  font-weight: 600;
+  background-color: var(--bg-elevated);
+  border: 1px solid transparent;
+  color: var(--text-subdued);
+  padding: 7px 14px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .filter-tab:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background-color: var(--bg-highlight);
+  color: var(--text-base);
 }
 
 .filter-tab.active {
-  background: var(--color-primary);
-  color: #0b0f17;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 10px var(--color-primary-glow);
+  background-color: var(--text-base);
+  color: var(--bg-base);
+  font-weight: 700;
 }
 
 .toolbar-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
+/* Spotify Search Input (Full Pill with Inset Border) */
 .search-input-wrap {
   position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.search-input-wrap i {
-  position: absolute;
-  left: 12px;
-  color: var(--text-dim);
-  width: 16px;
-  height: 16px;
 }
 
 .search-input-wrap input {
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  padding: 8px 12px 8px 36px;
-  color: #fff;
-  font-size: 0.85rem;
+  background-color: var(--bg-elevated);
+  box-shadow: var(--shadow-inset);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 9px 18px;
+  color: var(--text-base);
+  font-size: 12.5px;
+  font-family: inherit;
   outline: none;
   width: 220px;
-  transition: all 0.2s ease;
+  transition: width 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-input-wrap input::placeholder {
+  color: var(--text-muted);
 }
 
 .search-input-wrap input:focus {
-  border-color: var(--border-focus);
   width: 260px;
+  box-shadow: var(--shadow-inset-focus);
 }
 
-/* 컬럼 설정 드롭다운 */
+/* Column Customizer */
 .column-customizer {
   position: relative;
 }
@@ -879,16 +969,15 @@ body {
 .col-menu {
   display: none;
   position: absolute;
-  top: 100%;
+  top: calc(100% + 8px);
   right: 0;
-  margin-top: 8px;
-  background: #1e293b;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  padding: 12px;
-  box-shadow: var(--shadow-card);
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  box-shadow: var(--shadow-heavy);
   z-index: 50;
-  width: 180px;
+  width: 190px;
   flex-direction: column;
   gap: 8px;
 }
@@ -898,19 +987,25 @@ body {
 }
 
 .col-menu label {
-  font-size: 0.8rem;
-  color: var(--text-muted);
+  font-size: 12px;
+  color: var(--text-subdued);
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
+  user-select: none;
 }
 
 .col-menu label:hover {
-  color: #fff;
+  color: var(--text-base);
 }
 
-/* 파워 테이블 스타일 */
+.col-menu input[type="checkbox"] {
+  accent-color: var(--spotify-green);
+  cursor: pointer;
+}
+
+/* Table Style — Spotify Clean Playlist Tracklist Feel */
 .table-wrapper {
   overflow-x: auto;
 }
@@ -919,50 +1014,43 @@ body {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 0.85rem;
+  font-size: 13px;
 }
 
 .power-table th {
-  background: rgba(15, 23, 42, 0.6);
-  color: var(--text-dim);
-  font-size: 0.75rem;
-  font-weight: 600;
+  background-color: transparent;
+  color: var(--text-subdued);
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border-color);
+  letter-spacing: 1px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-subtle);
   cursor: pointer;
   user-select: none;
 }
 
 .power-table th:hover {
-  color: var(--text-main);
-}
-
-.power-table th i {
-  width: 12px;
-  height: 12px;
-  display: inline-block;
-  vertical-align: middle;
+  color: var(--text-base);
 }
 
 .power-table td {
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border-color);
-  color: var(--text-muted);
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text-subdued);
 }
 
 .power-table tbody tr {
-  transition: background 0.15s ease;
+  transition: background-color 0.15s ease;
   cursor: pointer;
 }
 
 .power-table tbody tr:hover {
-  background: rgba(56, 189, 248, 0.04);
+  background-color: var(--bg-highlight);
 }
 
-.power-table tr:nth-child(even) {
-  background: var(--bg-table-stripe);
+.power-table tbody tr:hover td {
+  color: var(--text-near-white);
 }
 
 .text-right {
@@ -972,80 +1060,86 @@ body {
 .ticker-cell {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .ticker-symbol {
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: #fff;
+  font-weight: 800;
+  font-size: 13.5px;
+  color: var(--text-base);
+  letter-spacing: 0.2px;
 }
 
 .company-title {
-  font-size: 0.75rem;
-  color: var(--text-dim);
+  font-size: 11.5px;
+  color: var(--text-muted);
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* Table Action Badges */
 .action-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  font-size: 10px;
   font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
 }
 
 .action-badge.NEW {
-  background: var(--color-green-glow);
-  color: var(--color-green);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background-color: rgba(30, 215, 96, 0.18);
+  color: var(--spotify-green);
 }
 
 .action-badge.ADD {
-  background: rgba(20, 184, 166, 0.15);
-  color: var(--color-teal);
+  background-color: var(--announcement-blue-bg);
+  color: var(--announcement-blue);
 }
 
 .action-badge.REDUCE {
-  background: var(--color-red-glow);
-  color: var(--color-red);
+  background-color: var(--negative-red-bg);
+  color: var(--negative-red);
 }
 
 .action-badge.HOLD {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-dim);
+  background-color: #2b2b2b;
+  color: var(--text-muted);
 }
 
 .discount-val.positive {
-  color: var(--color-green);
-  font-weight: 700;
+  color: var(--text-subdued);
+  font-weight: 600;
 }
 
 .discount-val.discount {
-  color: var(--color-purple);
+  color: var(--negative-red);
   font-weight: 700;
 }
 
 .weight-progress-bar {
-  width: 60px;
-  height: 6px;
-  background: #334155;
-  border-radius: 3px;
+  width: 50px;
+  height: 4px;
+  background: #333333;
+  border-radius: var(--radius-full);
   display: inline-block;
   vertical-align: middle;
-  margin-left: 8px;
+  margin-left: 6px;
   overflow: hidden;
 }
 
 .weight-progress-fill {
   height: 100%;
-  background: var(--color-primary);
-  border-radius: 3px;
+  background: var(--spotify-green);
+  border-radius: var(--radius-full);
 }
 
-/* 상세 모달 창 */
+/* ==============================================================================
+   Modal Backdrop & Dialog (Spotify Elevated Dark Surface)
+   ============================================================================== */
 .modal-backdrop {
   display: none;
   position: fixed;
@@ -1053,9 +1147,8 @@ body {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
-  z-index: 100;
+  background-color: rgba(0, 0, 0, 0.75);
+  z-index: 1000;
   align-items: center;
   justify-content: center;
 }
@@ -1065,121 +1158,146 @@ body {
 }
 
 .modal-content {
-  background: #1e293b;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
   width: 90%;
-  max-width: 560px;
-  padding: 28px;
+  max-width: 540px;
+  padding: 24px;
   position: relative;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-  animation: modalPop 0.25s ease-out;
+  box-shadow: var(--shadow-heavy);
+  animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes modalPop {
-  from { opacity: 0; transform: scale(0.95); }
+  from { opacity: 0; transform: scale(0.96); }
   to { opacity: 1; transform: scale(1); }
 }
 
 .modal-close {
   position: absolute;
-  top: 18px;
-  right: 20px;
-  background: transparent;
-  border: none;
-  color: var(--text-dim);
-  font-size: 1.5rem;
+  top: 16px;
+  right: 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-subdued);
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-circle);
+  transition: all 0.15s ease;
+  z-index: 10;
 }
 
 .modal-close:hover {
-  color: #fff;
+  color: var(--text-base);
+  background-color: var(--bg-highlight);
+  border-color: #555555;
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--border-color);
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  padding-right: 36px;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .modal-ticker {
-  font-family: var(--font-heading);
-  font-size: 1.8rem;
+  font-size: 24px;
   font-weight: 800;
-  color: #fff;
+  color: var(--text-base);
+  letter-spacing: -0.5px;
+}
+
+.modal-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-subdued);
+  margin-bottom: 6px;
 }
 
 .modal-cur-price {
-  font-family: var(--font-heading);
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-base);
   text-align: right;
 }
 
 .modal-discount-tag {
-  font-size: 0.8rem;
+  font-size: 11px;
   font-weight: 700;
-  color: var(--color-purple);
+  color: var(--negative-red);
   text-align: right;
+  margin-top: 2px;
 }
 
 .modal-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 10px;
+  margin-bottom: 18px;
 }
 
 .modal-card {
-  background: rgba(15, 23, 42, 0.6);
-  padding: 14px;
+  background-color: var(--bg-elevated);
+  padding: 12px 14px;
   border-radius: var(--radius-sm);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .modal-card .label {
-  font-size: 0.75rem;
-  color: var(--text-dim);
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
 }
 
 .modal-card .val {
-  font-size: 1.1rem;
+  font-size: 14px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-base);
 }
 
 .modal-insight {
-  background: rgba(56, 189, 248, 0.08);
-  border-left: 4px solid var(--color-primary);
+  background-color: var(--bg-elevated);
+  border-left: 3px solid var(--spotify-green);
   padding: 14px 16px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .modal-insight h4 {
-  font-size: 0.85rem;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--color-primary);
-  margin-bottom: 6px;
+  color: var(--spotify-green);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
 }
 
 .modal-insight p {
-  font-size: 0.8rem;
-  color: var(--text-muted);
+  font-size: 12px;
+  color: var(--text-subdued);
   line-height: 1.6;
 }
 
-/* 반응형 모바일 대응 */
+/* ==============================================================================
+   Responsive Behavior (Spotify Layout Principles)
+   ============================================================================== */
 @media (max-width: 1024px) {
   .app-container { flex-direction: column; }
   .sidebar { width: 100%; height: auto; position: static; }
   .overview-grid { grid-template-columns: repeat(2, 1fr); }
   .top-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .main-content { padding: 16px; }
 }
 
 @media (max-width: 640px) {

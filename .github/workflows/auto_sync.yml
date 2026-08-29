@@ -28,15 +28,16 @@ jobs:
         run: |
           pip install requests pandas
 
-      - name: 🔍 SEC EDGAR 13F 1년치 시계열 수집 및 변동 분석
+      - name: 🔍 SEC EDGAR 13F 및 야후 파이낸스 실시간 주가 일괄 수집
         run: |
           python collector_1year.py
           python sec_collector.py
+          python price_fetcher.py
 
       - name: 💾 최신 데이터 GitHub 저장소에 자동 커밋 & 푸시
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add latest_13f_holdings.csv latest_13f_holdings.json live_13f_analytics.json
-          git commit -m "chore(data): 🤖 13F 실시간 최신 공시 자동 수집 [skip ci]" || echo "No changes to commit"
+          git add latest_13f_holdings.csv latest_13f_holdings.json live_13f_analytics.json realtime_prices.json
+          git commit -m "chore(data): 🤖 13F 공시 및 실시간 시장 주가 자동 수집 [skip ci]" || echo "No changes to commit"
           git push

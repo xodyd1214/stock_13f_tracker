@@ -36,10 +36,11 @@ class Alpha13FHandler(SimpleHTTPRequestHandler):
             
             def run_sync_task():
                 global IS_SYNCING
-                print("🔄 [API] 사용자의 요청으로 13F 데이터 수집을 시작합니다...")
+                print("🔄 [API] 사용자의 요청으로 13F 데이터 및 야후 실시간 주가 수집을 시작합니다...")
                 try:
                     subprocess.run([sys.executable, "collector_1year.py"], check=True)
-                    print("✅ [API] 13F 데이터 수집 및 시계열 분석 완료!")
+                    subprocess.run([sys.executable, "price_fetcher.py"], check=True)
+                    print("✅ [API] 13F 데이터 및 야후 파이낸스 실시간 주가 수집 완료!")
                 except Exception as e:
                     print(f"❌ [API] 수집 중 에러: {e}")
                 finally:
