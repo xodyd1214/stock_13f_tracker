@@ -8,6 +8,66 @@ let GURU_DATABASE = {};
 let RAW_HOLDINGS = [];
 let LIVE_PRICES = {};
 
+// 주요 기업 공식 미국 티커 매핑 사전
+const TICKER_MAP = {
+  "MICRON TECHNOLOGY": "MU",
+  "STATE STREET": "STT",
+  "INVESCO QQQ": "QQQ",
+  "TAIWAN SEMICONDUCTOR": "TSM",
+  "BROADCOM": "AVGO",
+  "META PLATFORMS": "META",
+  "BERKSHIRE HATHAWAY": "BRK-B",
+  "COSTCO WHOLESALE": "COST",
+  "ADVANCED MICRO DEVICES": "AMD",
+  "ASML HOLDING": "ASML",
+  "ALPHABET": "GOOGL",
+  "APPLE": "AAPL",
+  "MICROSOFT": "MSFT",
+  "NVIDIA": "NVDA",
+  "AMAZON": "AMZN",
+  "TESLA": "TSLA",
+  "COCA COLA": "KO",
+  "PEPSICO": "PEP",
+  "AMERICAN EXPRESS": "AXP",
+  "BANK OF AMERICA": "BAC",
+  "JPMORGAN CHASE": "JPM",
+  "WELLS FARGO": "WFC",
+  "OCCIDENTAL PETROLEUM": "OXY",
+  "CHEVRON": "CVX",
+  "EXXON MOBIL": "XOM",
+  "ELI LILLY": "LLY",
+  "NOVO NORDISK": "NVO",
+  "WALMART": "WMT",
+  "PROCTER & GAMBLE": "PG",
+  "JOHNSON & JOHNSON": "JNJ",
+  "UNITEDHEALTH": "UNH",
+  "VISA": "V",
+  "MASTERCARD": "MA",
+  "NETFLIX": "NFLX",
+  "WALT DISNEY": "DIS",
+  "SALESFORCE": "CRM",
+  "ADOBE": "ADBE",
+  "ORACLE": "ORCL",
+  "QUALCOMM": "QCOM",
+  "INTEL": "INTC",
+  "CISCO SYSTEMS": "CSCO",
+  "TEXAS INSTRUMENTS": "TXN",
+  "SPDR S&P 500": "SPY"
+};
+
+function getMappedTicker(name, rawTicker) {
+  const upperName = (name || "").toUpperCase();
+  for (const [key, val] of Object.entries(TICKER_MAP)) {
+    if (upperName.includes(key)) {
+      return val;
+    }
+  }
+  if (rawTicker && rawTicker.length <= 5 && !rawTicker.includes(" ") && /^[A-Z]+$/.test(rawTicker)) {
+    return rawTicker;
+  }
+  return (name || "STOCK").split(" ")[0].toUpperCase().slice(0, 6);
+}
+
 // 금액 단위 포맷팅 헬퍼 ($1,000 기준 -> $M, $B, $T)
 function formatMoney(thousandsVal) {
   if (!thousandsVal || thousandsVal <= 0) return "$0";
@@ -71,7 +131,7 @@ async function fetchLivePricesForCurrentView() {
   const guru = GURU_DATABASE[state.currentGuruKey];
   if (!guru || !guru.holdings) return;
 
-  const topTickers = guru.holdings.slice(0, 25).map(h => h.baseTicker || h.ticker).filter(t => t && t.length <= 5 && !t.includes(" ")).join(",");
+  const topTickers = guru.holdings.slice(0, 30).map(h => h.baseTicker || h.ticker).filter(t => t && t.length <= 5 && !t.includes(" ")).join(",");
   if (!topTickers) return;
 
   try {
@@ -135,11 +195,8 @@ async function loadRealSecData() {
       }
       
       const secType = detectSecType(item.name, item.ticker, item.titleOfClass);
-      let baseTicker = item.ticker;
+      const baseTicker = getMappedTicker(item.name, item.ticker);
       const cusip = item.cusip || item.name || "UNKNOWN";
-      if (!baseTicker || baseTicker === cusip) {
-        baseTicker = (item.name || "STOCK").split(" ")[0].toUpperCase().slice(0, 6);
-      }
 
       const uniqueKey = `${cusip}_${secType}`;
       const hMap = groups[guruName].holdingsMap;
@@ -283,6 +340,7 @@ async function loadRealSecData() {
     };
 
     GURU_DATABASE = groups;
+    console.log(`✅ 13F 데이터베이스 구축 완료! (총 운용사: ${Object.keys(groups).length - 1}개사, 총 자산: ${groups["__GRAND_TOTAL__"].aum})`);
   } catch (e) {
     console.error("데이터 로드 실패:", e);
   }
