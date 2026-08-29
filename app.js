@@ -1,6 +1,6 @@
 /**
  * ==============================================================================
- * Alpha13F - 차세대 슈퍼인베스터 포트폴리오 인텔리전스 (프론트엔드 엔진)
+ * Alpha13F - 100대 운용사 포트폴리오 인텔리전스 (프론트엔드 엔진)
  * ==============================================================================
  */
 
@@ -65,7 +65,7 @@ async function loadRealSecData() {
         const initials = guruName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
         groups[guruName] = {
           name: guruName,
-          avatar: initials || "GU",
+          avatar: initials || "CO",
           fund: item.fund,
           quarter: `${item.period} Filing`,
           desc: `${item.fund}의 최신 13F 공식 보유 지분 공시 포트폴리오`,
@@ -136,7 +136,7 @@ async function loadRealSecData() {
           name: h.name,
           sector: h.sector,
           cusip: h.cusip,
-          holdersDisplay: "1명 (단독)",
+          holdersDisplay: "1개사 (단독)",
           action: action,
           shares: h.shares >= 1000000 ? `${(h.shares / 1000000).toFixed(2)}M` : `${(h.shares / 1000).toFixed(1)}K`,
           rawShares: h.shares,
@@ -170,7 +170,7 @@ async function loadRealSecData() {
         sector: h.sector,
         cusip: h.cusip,
         holders: h.holders.size,
-        holdersDisplay: `${h.holders.size}명 대가 보유`,
+        holdersDisplay: `${h.holders.size}개사 보유`,
         holderNames: Array.from(h.holders),
         action: action,
         shares: h.shares >= 1000000 ? `${(h.shares / 1000000).toFixed(2)}M` : `${(h.shares / 1000).toFixed(1)}K`,
@@ -180,24 +180,24 @@ async function loadRealSecData() {
         estPrice: estP,
         curPrice: curP,
         priceChangePct: realInfo ? realInfo.changePct : 0.0,
-        insight: `월스트리트 대가 ${h.holders.size}명이 동시 집중 보유 중인 핵심 종목 (${Array.from(h.holders).slice(0, 3).join(", ")} 등) | 실제 시장가: $${curP}`
+        insight: `미국 주요 운용사 ${h.holders.size}개사가 동시 집중 보유 중인 핵심 종목 (${Array.from(h.holders).slice(0, 3).join(", ")} 등) | 실제 시장가: $${curP}`
       };
     });
 
     grandHoldings.sort((a, b) => b.value - a.value);
 
     groups["__GRAND_TOTAL__"] = {
-      name: "전체 대가 통합 포트폴리오 (Grand Total)",
+      name: "전체 운용사 통합 포트폴리오 (Grand Total)",
       avatar: "🌐",
-      fund: "100인 대가 집단지성 총합",
+      fund: "100개 주요 운용사 총합",
       quarter: "최신 13F 공시 종합 분석",
-      desc: "월스트리트 최고 대가 100인의 모든 포트폴리오를 하나로 통합 분석한 거대 자금 흐름",
+      desc: "미국 1억 달러 이상 운용 자격을 갖춘 100개 주요 운용사의 포트폴리오를 하나로 통합 분석한 거대 자금 흐름",
       aum: grandTotalAumVal >= 1000000 ? `$${(grandTotalAumVal / 1000000).toFixed(1)}B` : `$${(grandTotalAumVal / 1000).toFixed(1)}M`,
       holdings: grandHoldings
     };
 
     GURU_DATABASE = groups;
-    console.log(`✅ 전체 대가 통합 포트폴리오 구축 완료! (총 자산: ${groups["__GRAND_TOTAL__"].aum})`);
+    console.log(`✅ 전체 운용사 통합 포트폴리오 구축 완료! (총 자산: ${groups["__GRAND_TOTAL__"].aum})`);
   } catch (e) {
     console.warn("데이터 로드 실패:", e);
   }
@@ -282,8 +282,8 @@ function renderCategoryTabs() {
   catContainer.id = "guruCatFilters";
   catContainer.className = "guru-cat-filters";
   catContainer.innerHTML = `
-    <button class="cat-pill active" data-cat="ALL">전체 100인</button>
-    <button class="cat-pill gold" data-cat="TOP20">🏆 폼미친 Top 20</button>
+    <button class="cat-pill active" data-cat="ALL">전체 100개사</button>
+    <button class="cat-pill gold" data-cat="TOP20">🏆 메이저 Top 20</button>
   `;
 
   const label = sidebarBox.querySelector(".section-label");
@@ -372,7 +372,7 @@ function updateSummaryMetrics(guru) {
     const sortedByHolders = [...guru.holdings].sort((a, b) => (b.holders || 1) - (a.holders || 1));
     const topHolderPick = sortedByHolders[0];
     if (topHolderPick) {
-      document.getElementById("metricTopBuy").innerHTML = `${topHolderPick.ticker} <small class="text-green">${topHolderPick.holders}명 보유</small>`;
+      document.getElementById("metricTopBuy").innerHTML = `${topHolderPick.ticker} <small class="text-green">${topHolderPick.holders}개사 보유</small>`;
       document.getElementById("metricTopBuySub").innerText = `${topHolderPick.name} (총 $${(topHolderPick.value / 1000000).toFixed(1)}B)`;
     }
 
@@ -382,7 +382,7 @@ function updateSummaryMetrics(guru) {
     const bestDiscount = discounts[0];
     if (bestDiscount && bestDiscount.discountPct < 0) {
       document.getElementById("metricDiscountPick").innerHTML = `${bestDiscount.ticker} <small class="text-purple">${bestDiscount.discountPct.toFixed(1)}%</small>`;
-      document.getElementById("metricDiscountSub").innerText = `대가들 평균 평단 대비 할인 상태`;
+      document.getElementById("metricDiscountSub").innerText = `운용사 공시 단가 대비 할인 상태`;
     }
 
     const top1 = guru.holdings[0];
@@ -409,7 +409,7 @@ function updateSummaryMetrics(guru) {
     const bestDiscount = discounts[0];
     if (bestDiscount && bestDiscount.discountPct < 0) {
       document.getElementById("metricDiscountPick").innerHTML = `${bestDiscount.ticker} <small class="text-purple">${bestDiscount.discountPct.toFixed(1)}%</small>`;
-      document.getElementById("metricDiscountSub").innerText = `대가 평단 대비 할인`;
+      document.getElementById("metricDiscountSub").innerText = `운용사 공시가 대비 할인`;
     }
 
     const top1 = guru.holdings[0];
@@ -490,7 +490,7 @@ function renderTable() {
       <td class="col-sector">${item.sector}</td>
       <td class="col-holders">
         <span class="badge ${item.holders >= 5 ? 'fund-badge' : 'quarter-badge'}">
-          ${item.holdersDisplay || '1명 보유'}
+          ${item.holdersDisplay || '1개사 보유'}
         </span>
       </td>
       <td>
@@ -545,14 +545,14 @@ function openStockModal(item) {
   document.getElementById("modalCurPrice").innerText = `$${item.curPrice.toFixed(2)}`;
   
   const discountTag = document.getElementById("modalDiscountTag");
-  discountTag.innerText = isDiscount ? `🏷️ 대가 평단 대비 ${discountPct}% 할인 상태` : `대가 평단 대비 +${discountPct}% 프리미엄`;
+  discountTag.innerText = isDiscount ? `🏷️ 운용사 공시 단가 대비 ${discountPct}% 할인 상태` : `운용사 공시 단가 대비 +${discountPct}% 프리미엄`;
   discountTag.style.color = isDiscount ? "var(--color-purple)" : "var(--color-green)";
 
   document.getElementById("modalWeight").innerText = `${item.weight}%`;
   document.getElementById("modalVal").innerText = item.value >= 1000000 ? `$${(item.value / 1000000).toFixed(2)} Billion` : `$${(item.value / 1000).toFixed(1)} Million`;
   document.getElementById("modalShares").innerText = `${item.shares} 주`;
   document.getElementById("modalEstPrice").innerText = `$${item.estPrice.toFixed(2)}`;
-  document.getElementById("modalInsightText").innerText = item.insight || "이 종목은 대가들의 장기적인 비즈니스 해자를 기반으로 포트폴리오에 편입되었습니다.";
+  document.getElementById("modalInsightText").innerText = item.insight || "이 종목은 주요 운용사들의 장기적인 비즈니스 해자를 기반으로 포트폴리오에 편입되었습니다.";
 
   modal.classList.add("show");
 }
