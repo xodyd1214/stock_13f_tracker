@@ -1,11 +1,17 @@
-name: 🚀 13F Daily Auto Sync & Deploy
+name: 🚀 Alpha13F 스마트 하이브리드 수집 엔진
 
 on:
-  # ⏰ 매일 오전 6시(KST) 자동 실행 (UTC 기준 21:00)
+  # ⏰ 1) 매일 오전 6시 (KST): 야후 파이낸스 실시간 주가만 초고속 2초 갱신
   schedule:
     - cron: '0 21 * * *'
-  # 🔘 GitHub 웹 화면에서 'Run workflow' 버튼으로 언제든 수동 실행 가능
+  # 🔘 2) GitHub 웹 화면 또는 대시보드에서 수동 실행 시: 13F 풀 데이터 + 주가 일괄 갱신
   workflow_dispatch:
+    inputs:
+      full_sync:
+        description: 'SEC 13F 전체 공시까지 풀 갱신할까요?'
+        required: true
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -13,7 +19,7 @@ permissions:
   id-token: write
 
 jobs:
-  sync-and-deploy:
+  smart-sync:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 코드 체크아웃
@@ -28,16 +34,24 @@ jobs:
         run: |
           pip install requests pandas
 
-      - name: 🔍 SEC EDGAR 13F 및 야후 파이낸스 실시간 주가 일괄 수집
+      # 🔍 수동 트리거(full_sync=true) 또는 공시 집중 시즌일 때만 무거운 13F 풀 수집 실행
+      - name: 📑 SEC EDGAR 13F 공식 공시 풀 수집 (수동/시즌 전용)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.full_sync == 'true'
         run: |
+          echo "🚀 [Full Sync] SEC 13F 전체 100인 공시 수집을 실행합니다..."
           python collector_1year.py
           python sec_collector.py
+
+      # 📈 매일 아침에는 가벼운 야후 파이낸스 실시간 주가만 2초 만에 초고속 갱신
+      - name: 📈 야후 파이낸스 실시간 주가 갱신 (데일리 실행)
+        run: |
+          echo "📡 [Daily Sync] 야후 파이낸스 실시간 시장 주가를 갱신합니다..."
           python price_fetcher.py
 
       - name: 💾 최신 데이터 GitHub 저장소에 자동 커밋 & 푸시
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add latest_13f_holdings.csv latest_13f_holdings.json live_13f_analytics.json realtime_prices.json
-          git commit -m "chore(data): 🤖 13F 공시 및 실시간 시장 주가 자동 수집 [skip ci]" || echo "No changes to commit"
+          git add realtime_prices.json latest_13f_holdings.csv latest_13f_holdings.json live_13f_analytics.json
+          git commit -m "chore(data): 🤖 실시간 시장 주가 및 13F 데이터 스마트 자동 동기화 [skip ci]" || echo "No changes to commit"
           git push
