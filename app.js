@@ -283,7 +283,6 @@ async function loadRealSecData() {
     };
 
     GURU_DATABASE = groups;
-    console.log(`✅ 13F 데이터베이스 구축 완료! (총 운용사: ${Object.keys(groups).length - 1}개사, 총 자산: ${groups["__GRAND_TOTAL__"].aum})`);
   } catch (e) {
     console.error("데이터 로드 실패:", e);
   }
@@ -765,20 +764,23 @@ function setupEventListeners() {
       const guru = GURU_DATABASE[state.currentGuruKey];
       if (!guru || !guru.holdings) return;
       
-      let csvContent = "data:text/csv;charset=utf-8,﻿";
-      csvContent += "종목,티커,증권유형,섹터,보유운용사수,액션,주식수,평가금액,포트비중(%),공시시점기준가($),현재시장가($),할인율(%)
-";
+      let rows = [
+        ["종목", "티커", "증권유형", "섹터", "보유운용사수", "액션", "주식수", "평가금액", "포트비중(%)", "공시시점기준가($)", "현재시장가($)", "할인율(%)"]
+      ];
       
       guru.holdings.forEach(h => {
         const discountPct = (((h.curPrice - h.estPrice) / h.estPrice) * 100).toFixed(1);
-        csvContent += `"${h.name}","${h.ticker}","${h.secType}","${h.sector}","${h.holdersDisplay || '1개사'}","${h.action}","${h.shares}","${h.value}","${h.weight}%","${h.estPrice.toFixed(2)}","${h.curPrice.toFixed(2)}","${discountPct}%"
-`;
+        rows.push([
+          h.name, h.ticker, h.secType, h.sector, h.holdersDisplay || '1개사', h.action,
+          h.shares, h.value, `${h.weight}%`, `$${h.estPrice.toFixed(2)}`, `$${h.curPrice.toFixed(2)}`, `${discountPct}%`
+        ]);
       });
 
-      const encodedUri = encodeURI(csvContent);
+      let csvContent = "\uFEFF" + rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `${guru.name.replace(/[^a-zA-Z0-9가-힣]/g, "_")}_포트폴리오.csv`);
+      link.href = URL.createObjectURL(blob);
+      link.download = `${guru.name.replace(/[^a-zA-Z0-9가-힣]/g, "_")}_포트폴리오.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
