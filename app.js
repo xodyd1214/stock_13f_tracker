@@ -10,6 +10,12 @@ let LIVE_PRICES = {};
 
 // 주요 기업 공식 미국 티커 매핑 사전
 const TICKER_MAP = {
+  "MICRON": "MU",
+  "STATE": "STT",
+  "INVESC": "QQQ",
+  "TAIWAN": "TSM",
+  "BERKSH": "BRK-B",
+  "ALPHAB": "GOOGL",
   "MICRON TECHNOLOGY": "MU",
   "STATE STREET": "STT",
   "INVESCO QQQ": "QQQ",
@@ -57,14 +63,22 @@ const TICKER_MAP = {
 
 function getMappedTicker(name, rawTicker) {
   const upperName = (name || "").toUpperCase();
+  const upperTicker = (rawTicker || "").toUpperCase();
+
+  // 1순위: TICKER_MAP에서 이름 또는 원본 티커로 정확한 공식 미국 티커 매핑
   for (const [key, val] of Object.entries(TICKER_MAP)) {
-    if (upperName.includes(key)) {
+    if (upperName.includes(key) || upperTicker.includes(key) || upperTicker === key) {
       return val;
     }
   }
-  if (rawTicker && rawTicker.length <= 5 && !rawTicker.includes(" ") && /^[A-Z]+$/.test(rawTicker)) {
+
+  // 2순위: 이미 정상적인 1~5자리 알파벳 티커인 경우 (예: AAPL, NVDA, TSLA)
+  // 단, STATE, INVESC, MICRON 같은 이름 잘린 문자열은 제외
+  const invalidTickers = ["STATE", "INVESC", "MICRON", "BERKSH", "TAIWAN", "ALPHAB"];
+  if (rawTicker && rawTicker.length <= 5 && !rawTicker.includes(" ") && /^[A-Z]+$/.test(rawTicker) && !invalidTickers.includes(rawTicker)) {
     return rawTicker;
   }
+
   return (name || "STOCK").split(" ")[0].toUpperCase().slice(0, 6);
 }
 
