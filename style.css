@@ -1424,6 +1424,7 @@ body {
   border-left: 3px solid var(--spotify-green);
   padding: 14px 16px;
   border-radius: var(--radius-sm);
+  margin-bottom: 14px;
 }
 
 .modal-insight h4 {
@@ -1439,6 +1440,49 @@ body {
   font-size: 12px;
   color: var(--text-subdued);
   line-height: 1.6;
+}
+
+/* 외부 차트 & 시세 바로가기 버튼 */
+.modal-links-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.btn-ext-link {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.btn-ext-link.yahoo {
+  background-color: rgba(96, 10, 255, 0.12);
+  color: #c084fc;
+  border: 1px solid rgba(192, 132, 252, 0.3);
+}
+.btn-ext-link.yahoo:hover {
+  background-color: rgba(96, 10, 255, 0.25);
+  border-color: #c084fc;
+  transform: translateY(-1px);
+}
+
+.btn-ext-link.google {
+  background-color: rgba(66, 133, 244, 0.12);
+  color: #93c5fd;
+  border: 1px solid rgba(147, 197, 253, 0.3);
+}
+.btn-ext-link.google:hover {
+  background-color: rgba(66, 133, 244, 0.25);
+  border-color: #93c5fd;
+  transform: translateY(-1px);
 }
 
 /* ==============================================================================

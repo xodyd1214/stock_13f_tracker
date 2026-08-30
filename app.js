@@ -1038,6 +1038,17 @@ function openStockModal(item) {
   const elInsight = document.getElementById("modalInsightText");
   if (elInsight) elInsight.innerText = item.insight || "이 종목은 주요 운용사들의 포트폴리오에 편입된 핵심 자산입니다.";
 
+  // 야후 파이낸스 & 구글 파이낸스 외부 링크 세팅
+  const targetTicker = (item.baseTicker || item.ticker || "").replace(/[^a-zA-Z0-9]/g, "");
+  const linkYahoo = document.getElementById("linkYahooFinance");
+  if (linkYahoo && targetTicker) {
+    linkYahoo.href = `https://finance.yahoo.com/quote/${targetTicker}`;
+  }
+  const linkGoogle = document.getElementById("linkGoogleFinance");
+  if (linkGoogle && targetTicker) {
+    linkGoogle.href = `https://www.google.com/finance/quote/${targetTicker}`;
+  }
+
   modal.classList.add("show");
 }
 
