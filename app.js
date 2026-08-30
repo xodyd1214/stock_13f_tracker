@@ -1047,14 +1047,14 @@ function openStockModal(item) {
   const linkYahoo = document.getElementById("linkYahooFinance");
   if (linkYahoo) {
     const yTicker = cleanTicker.replace(".", "-");
-    linkYahoo.href = `https://finance.yahoo.com/quote/${yTicker}`;
+    linkYahoo.href = `https://finance.yahoo.com/quote/${yTicker}/`;
     linkYahoo.onclick = (e) => e.stopPropagation();
   }
 
   const linkGoogle = document.getElementById("linkGoogleFinance");
   if (linkGoogle) {
-    const gTicker = cleanTicker.replace("-", ".");
-    linkGoogle.href = `https://www.google.com/finance/quote/${gTicker}`;
+    // 구글 파이낸스 공식 자동 검색 URL (거래소 무관 100% 정확 매칭)
+    linkGoogle.href = `https://www.google.com/finance?q=${encodeURIComponent(cleanTicker)}`;
     linkGoogle.onclick = (e) => e.stopPropagation();
   }
 
