@@ -1245,15 +1245,21 @@ body {
   margin-left: 6px;
   vertical-align: middle;
 }
-.sec-type-badge.call {
-  background-color: rgba(59, 130, 246, 0.18);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.3);
-}
-.sec-type-badge.put {
-  background-color: rgba(168, 85, 247, 0.18);
+.sec-type-badge.put,
+.tile-action.PUT,
+.badge-action.PUT {
+  background-color: rgba(168, 85, 247, 0.25);
   color: #c084fc;
-  border: 1px solid rgba(168, 85, 247, 0.3);
+  border: 1px solid rgba(168, 85, 247, 0.5);
+  font-weight: 800;
+}
+.sec-type-badge.call,
+.tile-action.CALL,
+.badge-action.CALL {
+  background-color: rgba(59, 130, 246, 0.25);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.5);
+  font-weight: 800;
 }
 .sec-type-badge.stock {
   background-color: rgba(255, 255, 255, 0.06);

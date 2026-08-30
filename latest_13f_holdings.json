@@ -1512,26 +1512,32 @@
     "fund": "Scion Asset Management",
     "period": "2025-09-30",
     "filingDate": "2025-11-03",
-    "ticker": "NVDA",
-    "name": "NVIDIA CORPORATION",
+    "ticker": "NVDA (PUT)",
+    "name": "NVIDIA CORPORATION [풋옵션(하락베팅)]",
     "cusip": "67066G104",
     "shares": 1000000.0,
     "value": 186580000.0,
     "sector": "Technology",
-    "weight": 13.51
+    "weight": 13.51,
+    "action": "PUT",
+    "isOption": true,
+    "optionType": "PUT"
   },
   {
     "guru": "Michael Burry",
     "fund": "Scion Asset Management",
     "period": "2025-09-30",
     "filingDate": "2025-11-03",
-    "ticker": "69608A108",
-    "name": "PALANTIR TECHNOLOGIES INC",
+    "ticker": "PLTR (PUT)",
+    "name": "PALANTIR TECHNOLOGIES INC [풋옵션(하락베팅)]",
     "cusip": "69608A108",
     "shares": 5000000.0,
     "value": 912100000.0,
     "sector": "Other",
-    "weight": 66.04
+    "weight": 66.04,
+    "action": "PUT",
+    "isOption": true,
+    "optionType": "PUT"
   },
   {
     "guru": "Michael Burry",

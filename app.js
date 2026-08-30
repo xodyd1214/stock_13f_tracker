@@ -1078,7 +1078,13 @@ function renderTreemap(holdings) {
     // 💡 인터랙티브 플로팅 툴팁(Toast) 이벤트
     if (tooltip) {
       tile.addEventListener("mouseenter", (e) => {
-        const actionLabel = item.action === 'NEW' ? '신규 매수' : (item.action === 'ADD' ? '비중 확대' : (item.action === 'REDUCE' ? '비중 축소' : '보유 유지'));
+        let actionLabel = '보유 유지';
+        if (item.action === 'PUT') actionLabel = '풋옵션 (하락 베팅)';
+        else if (item.action === 'CALL') actionLabel = '콜옵션 (상승 베팅)';
+        else if (item.action === 'NEW') actionLabel = '신규 매수';
+        else if (item.action === 'ADD') actionLabel = '비중 확대';
+        else if (item.action === 'REDUCE') actionLabel = '비중 축소';
+
         const diffText = isDown ? `<span style="color:var(--negative-red)">${diffPct}% 하락</span>` : `<span style="color:var(--spotify-green)">+${diffPct}% 상승</span>`;
 
         tooltip.innerHTML = `
