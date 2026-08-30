@@ -478,6 +478,7 @@ async function loadRealSecData() {
       const g = groups[key];
       const holdingList = Object.values(g.holdingsMap);
       const totalVal = holdingList.reduce((sum, h) => sum + h.value, 0);
+      g.rawAum = totalVal;
       g.aum = formatMoney(totalVal);
       
       g.holdings = holdingList.map(h => {
@@ -783,11 +784,26 @@ function renderGuruSidebar() {
 
   const favs = getFavorites();
 
-  Object.keys(GURU_DATABASE).filter(k => k !== "__GRAND_TOTAL__" && k !== "__CUSTOM_GROUP__").forEach(key => {
+  let keys = Object.keys(GURU_DATABASE).filter(k => k !== "__GRAND_TOTAL__" && k !== "__CUSTOM_GROUP__");
+
+  // 1차 기준: 총 운용자산 규모(AUM) 내림차순 정렬 (자산 많은 대형 운용사 순)
+  keys.sort((a, b) => (GURU_DATABASE[b].rawAum || 0) - (GURU_DATABASE[a].rawAum || 0));
+
+  // 카테고리 필터 및 즐겨찾기 최상단 배치
+  if (state.activeCategory === "FAV") {
+    keys = keys.filter(k => favs.includes(k));
+  } else if (state.activeCategory === "TOP20") {
+    keys = keys.slice(0, 20);
+  } else {
+    // [전체] 탭일 때는 내가 별표(★) 해둔 운용사를 최상단에 우선 배치!
+    const favKeys = keys.filter(k => favs.includes(k));
+    const nonFavKeys = keys.filter(k => !favs.includes(k));
+    keys = [...favKeys, ...nonFavKeys];
+  }
+
+  keys.forEach(key => {
     const guru = GURU_DATABASE[key];
     const isFav = favs.includes(key);
-
-    if (state.activeCategory === "FAV" && !isFav) return;
 
     const row = document.createElement("div");
     row.className = "guru-row-item";
@@ -809,7 +825,7 @@ function renderGuruSidebar() {
       <div class="guru-mini-avatar">${guru.avatar || 'CO'}</div>
       <div class="guru-card-info">
         <h4>${guru.fund || guru.name}</h4>
-        <p>${guru.name}</p>
+        <p>${guru.name} · <small class="text-green">${guru.aum || ''}</small></p>
       </div>
     `;
 
