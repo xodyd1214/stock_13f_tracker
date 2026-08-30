@@ -789,9 +789,7 @@ function renderGuruSidebar() {
     if (state.activeCategory === "FAV" && !isFav) return;
 
     const row = document.createElement("div");
-    row.style.display = "flex";
-    row.style.alignItems = "center";
-    row.style.gap = "4px";
+    row.className = "guru-row-item";
 
     const starBtn = document.createElement("button");
     starBtn.className = `star-btn ${isFav ? 'starred' : ''}`;
