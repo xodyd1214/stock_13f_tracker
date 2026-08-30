@@ -621,21 +621,23 @@ function renderCategoryTabs() {
   if (!existing) {
     existing = document.createElement("div");
     existing.id = "guruCategoryTabs";
-    existing.className = "guru-category-tabs";
+    existing.className = "guru-cat-filters";
     const lbl = container.querySelector(".section-label");
     if (lbl) lbl.after(existing);
   }
 
   const favCount = getFavorites().length;
   existing.innerHTML = `
-    <button class="guru-cat-pill ${state.activeCategory === 'ALL' ? 'active' : ''}" data-cat="ALL">전체</button>
-    <button class="guru-cat-pill ${state.activeCategory === 'FAV' ? 'active' : ''}" data-cat="FAV">즐겨찾기 (${favCount})</button>
-    <button class="guru-cat-pill ${state.activeCategory === 'TOP20' ? 'active' : ''}" data-cat="TOP20">Top 20</button>
+    <div class="cat-pill-row">
+      <button class="cat-pill ${state.activeCategory === 'ALL' ? 'active' : ''}" data-cat="ALL">전체</button>
+      <button class="cat-pill ${state.activeCategory === 'FAV' ? 'active' : ''}" data-cat="FAV">즐겨찾기 (${favCount})</button>
+      <button class="cat-pill ${state.activeCategory === 'TOP20' ? 'active' : ''}" data-cat="TOP20">Top 20</button>
+    </div>
   `;
 
-  existing.querySelectorAll(".guru-cat-pill").forEach(btn => {
+  existing.querySelectorAll(".cat-pill").forEach(btn => {
     btn.onclick = () => {
-      existing.querySelectorAll(".guru-cat-pill").forEach(b => b.classList.remove("active"));
+      existing.querySelectorAll(".cat-pill").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       state.activeCategory = btn.dataset.cat;
       renderGuruSidebar();
