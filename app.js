@@ -777,8 +777,8 @@ function updateSummaryMetrics(guru) {
       .sort((a, b) => a.discountPct - b.discountPct);
     const bestDiscount = discounts[0];
     if (bestDiscount && bestDiscount.discountPct < 0 && elDisc) {
-      elDisc.innerHTML = `${bestDiscount.ticker} <small class="text-purple">${bestDiscount.discountPct.toFixed(1)}%</small>`;
-      if (elDiscSub) elDiscSub.innerText = `공시 기준가 대비 할인 상태`;
+      elDisc.innerHTML = `${bestDiscount.ticker} <small class="text-red">${bestDiscount.discountPct.toFixed(1)}%</small>`;
+      if (elDiscSub) elDiscSub.innerText = `공시가 대비 하락 상태`;
     }
 
     const top1 = guru.holdings[0];
@@ -1126,8 +1126,10 @@ function appendNextPageRows() {
     const tr = document.createElement("tr");
     tr.onclick = () => openStockModal(item);
 
-    const discountPct = (((item.curPrice - item.estPrice) / item.estPrice) * 100).toFixed(1);
-    const isDiscount = Number(discountPct) < 0;
+    const diffVal = ((item.curPrice - item.estPrice) / item.estPrice) * 100;
+    const diffPct = diffVal.toFixed(1);
+    const isUp = diffVal > 0;
+    const isDown = diffVal < 0;
 
     tr.innerHTML = `
       <td class="text-left">
@@ -1163,8 +1165,8 @@ function appendNextPageRows() {
         ${item.priceChangePct !== 0 ? `<small class="${item.priceChangePct >= 0 ? 'text-green' : 'text-red'}">(${item.priceChangePct >= 0 ? '+' : ''}${item.priceChangePct}%)</small>` : ''}
       </td>
       <td class="col-discount text-right">
-        <span class="discount-val ${isDiscount ? 'discount' : 'positive'}">
-          ${isDiscount ? discountPct + '%' : '+' + discountPct + '%'}
+        <span class="discount-val ${isUp ? 'positive' : (isDown ? 'discount' : '')}">
+          ${isUp ? '+' : ''}${diffPct}%
         </span>
       </td>
     `;
@@ -1190,8 +1192,9 @@ function applyColumnVisibility() {
 function openStockModal(item) {
   const modal = document.getElementById("stockModal");
   if (!modal) return;
-  const discountPct = (((item.curPrice - item.estPrice) / item.estPrice) * 100).toFixed(1);
-  const isDiscount = Number(discountPct) < 0;
+  const diffVal = ((item.curPrice - item.estPrice) / item.estPrice) * 100;
+  const diffPct = diffVal.toFixed(1);
+  const isDown = diffVal < 0;
 
   document.getElementById("modalTicker").innerText = item.ticker;
   document.getElementById("modalName").innerText = item.name;
@@ -1200,8 +1203,8 @@ function openStockModal(item) {
   
   const discountTag = document.getElementById("modalDiscountTag");
   if (discountTag) {
-    discountTag.innerText = isDiscount ? `공시 기준가 대비 ${discountPct}% 할인 상태` : `공시 기준가 대비 +${discountPct}% 프리미엄`;
-    discountTag.style.color = isDiscount ? "var(--color-purple)" : "var(--color-green)";
+    discountTag.innerText = isDown ? `공시 기준가 대비 ${diffPct}% 하락 상태` : `공시 기준가 대비 +${diffPct}% 상승 상태`;
+    discountTag.style.color = isDown ? "var(--negative-red)" : "var(--spotify-green)";
   }
 
   document.getElementById("modalWeight").innerText = `${item.weight}%`;
