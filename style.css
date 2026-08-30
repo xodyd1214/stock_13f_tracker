@@ -874,10 +874,115 @@ body {
   border-radius: 2px;
 }
 
-.color-box.new { background: var(--spotify-green); }
-.color-box.add { background: var(--announcement-blue); }
-.color-box.hold { background: #383838; }
-.color-box.discount-ring { border: 1.5px solid var(--negative-red); background: transparent; }
+.treemap-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 220px;
+}
+
+.treemap-tile {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.treemap-tile:hover {
+  background-color: var(--bg-highlight);
+  border-color: #4a4a4a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+}
+
+.treemap-tile.NEW {
+  border-left: 3px solid var(--spotify-green);
+}
+
+.treemap-tile.ADD {
+  border-left: 3px solid var(--announcement-blue);
+}
+
+.treemap-tile.REDUCE {
+  border-left: 3px solid var(--negative-red);
+}
+
+.treemap-tile.HOLD {
+  border-left: 3px solid #555555;
+}
+
+.treemap-tile.discount-target {
+  box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.4);
+}
+
+.tile-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.tile-ticker {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-base);
+  letter-spacing: 0.2px;
+}
+
+.tile-action {
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 2px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.tile-action.NEW {
+  background-color: rgba(30, 215, 96, 0.2);
+  color: var(--spotify-green);
+}
+
+.tile-action.ADD {
+  background-color: rgba(46, 119, 208, 0.25);
+  color: #60a5fa;
+}
+
+.tile-action.REDUCE {
+  background-color: rgba(226, 33, 52, 0.2);
+  color: var(--negative-red);
+}
+
+.tile-action.HOLD {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-subdued);
+}
+
+.tile-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.tile-weight {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--spotify-green);
+}
+
+.tile-price {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-subdued);
+}
 
 /* 증권 유형 뱃지 (보통주, CALL, PUT) */
 .sec-type-badge {
