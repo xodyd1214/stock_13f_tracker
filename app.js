@@ -861,31 +861,131 @@ function renderSectorBreakdown(holdings) {
   });
 }
 
+// 2D Squarified Treemap 분할 알고리즘 (Finviz / Bloomberg 스타일)
+function computeSquarifiedTreemap(items, x, y, width, height) {
+  if (!items || items.length === 0) return [];
+  if (items.length === 1) {
+    return [{ item: items[0].raw, x, y, width, height }];
+  }
+
+  const totalValue = items.reduce((sum, d) => sum + d.val, 0);
+  if (totalValue <= 0) return [];
+
+  const results = [];
+  const isHorizontal = width >= height;
+
+  let bestRatio = Infinity;
+  let splitIndex = 1;
+  let currentSum = 0;
+
+  for (let i = 0; i < items.length; i++) {
+    currentSum += items[i].val;
+    const sliceFraction = currentSum / totalValue;
+    const sliceLength = isHorizontal ? width * sliceFraction : height * sliceFraction;
+    const otherLength = isHorizontal ? height : width;
+
+    let maxRatio = 0;
+    for (let j = 0; j <= i; j++) {
+      const itemDim = otherLength * (items[j].val / currentSum);
+      const ratio = Math.max(sliceLength / Math.max(itemDim, 1), itemDim / Math.max(sliceLength, 1));
+      if (ratio > maxRatio) maxRatio = ratio;
+    }
+
+    if (maxRatio <= bestRatio) {
+      bestRatio = maxRatio;
+      splitIndex = i + 1;
+    } else {
+      break;
+    }
+  }
+
+  const sliceGroup = items.slice(0, splitIndex);
+  const restGroup = items.slice(splitIndex);
+  const sliceSum = sliceGroup.reduce((s, d) => s + d.val, 0);
+  const sliceFraction = sliceSum / totalValue;
+
+  if (isHorizontal) {
+    const sliceWidth = width * sliceFraction;
+    let currY = y;
+    sliceGroup.forEach(d => {
+      const h = height * (d.val / sliceSum);
+      results.push({ item: d.raw, x, y: currY, width: sliceWidth, height: h });
+      currY += h;
+    });
+    if (restGroup.length > 0) {
+      const restResults = computeSquarifiedTreemap(restGroup, x + sliceWidth, y, width - sliceWidth, height);
+      return results.concat(restResults);
+    }
+    return results;
+  } else {
+    const sliceHeight = height * sliceFraction;
+    let currX = x;
+    sliceGroup.forEach(d => {
+      const w = width * (d.val / sliceSum);
+      results.push({ item: d.raw, x: currX, y, width: w, height: sliceHeight });
+      currX += w;
+    });
+    if (restGroup.length > 0) {
+      const restResults = computeSquarifiedTreemap(restGroup, x, y + sliceHeight, width, height - sliceHeight);
+      return results.concat(restResults);
+    }
+    return results;
+  }
+}
+
 function renderTreemap(holdings) {
   const container = document.getElementById("treemapContainer");
   if (!container || !holdings) return;
   container.innerHTML = "";
 
-  const displayHoldings = holdings.slice(0, 30);
-  const totalVal = displayHoldings.reduce((sum, h) => sum + (h.weight || 1), 0);
+  // 상위 28대 핵심 종목 선별
+  const displayHoldings = holdings.slice(0, 28);
+  if (displayHoldings.length === 0) return;
 
-  displayHoldings.forEach(item => {
+  const totalWeight = displayHoldings.reduce((sum, h) => sum + Math.max(Number(h.weight) || 0.1, 0.05), 0);
+  const items = displayHoldings.map(h => ({
+    val: Math.max(Number(h.weight) || 0.1, 0.05),
+    raw: h
+  }));
+
+  const containerWidth = container.clientWidth || 1000;
+  const containerHeight = 380;
+
+  const tiles = computeSquarifiedTreemap(items, 0, 0, containerWidth, containerHeight);
+
+  tiles.forEach(t => {
+    const item = t.item;
     const tile = document.createElement("div");
     tile.className = `treemap-tile ${item.action || 'HOLD'}`;
-    const weightShare = (item.weight / totalVal) * 100;
-    tile.style.flex = `${Math.max(weightShare * 10, 40)} 1 120px`;
+    
+    // 크기 구분 클래스
+    const area = t.width * t.height;
+    if (area > 20000 || (item.weight && item.weight >= 8.0)) {
+      tile.classList.add("tile-large");
+    } else if (area < 4500 || t.height < 45 || t.width < 60) {
+      tile.classList.add("tile-small");
+    }
+
+    // 위치 및 크기 배치 (px)
+    tile.style.left = `${t.x}px`;
+    tile.style.top = `${t.y}px`;
+    tile.style.width = `${t.width}px`;
+    tile.style.height = `${t.height}px`;
 
     const isDiscount = item.curPrice < item.estPrice;
     if (isDiscount) tile.classList.add("discount-target");
+
+    const hasRoomForName = t.height >= 75 && t.width >= 100;
 
     tile.innerHTML = `
       <div class="tile-top">
         <span class="tile-ticker">${item.ticker}</span>
         <span class="tile-action ${item.action}">${item.action === 'NEW' ? 'NEW' : item.action}</span>
       </div>
+      ${hasRoomForName ? `<div class="tile-name">${item.name}</div>` : ''}
       <div class="tile-bottom">
         <span class="tile-weight">${item.weight}%</span>
-        <span class="tile-price">$${item.curPrice.toFixed(1)}</span>
+        <span class="tile-price">$${item.curPrice ? item.curPrice.toFixed(1) : ''}</span>
       </div>
     `;
 
@@ -893,6 +993,14 @@ function renderTreemap(holdings) {
     container.appendChild(tile);
   });
 }
+
+// 윈도우 리사이즈 시 트리맵 자동 재계산
+window.addEventListener("resize", () => {
+  const guru = GURU_DATABASE[state.currentGuruKey];
+  if (guru && guru.holdings) {
+    renderTreemap(guru.holdings);
+  }
+});
 
 let CURRENT_FILTERED_ITEMS = [];
 let CURRENT_PAGE_INDEX = 1;

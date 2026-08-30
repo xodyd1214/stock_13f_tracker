@@ -875,60 +875,67 @@ body {
 }
 
 .treemap-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  min-height: 220px;
+  position: relative;
+  width: 100%;
+  height: 380px;
+  background-color: var(--bg-base);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
 }
 
 .treemap-tile {
+  position: absolute;
   background-color: var(--bg-elevated);
-  border: 1px solid var(--border-subtle);
+  border: 1.5px solid var(--bg-base);
   border-radius: var(--radius-sm);
-  padding: 10px 12px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
+  transition: transform 0.15s ease, border-color 0.15s ease, z-index 0.15s ease, box-shadow 0.15s ease;
   overflow: hidden;
   box-sizing: border-box;
 }
 
 .treemap-tile:hover {
   background-color: var(--bg-highlight);
-  border-color: #4a4a4a;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  z-index: 2;
+  border-color: var(--spotify-green);
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+  z-index: 20;
 }
 
 .treemap-tile.NEW {
-  border-left: 3px solid var(--spotify-green);
+  border-top: 3px solid var(--spotify-green);
+  background: linear-gradient(180deg, rgba(30, 215, 96, 0.12) 0%, var(--bg-elevated) 100%);
 }
 
 .treemap-tile.ADD {
-  border-left: 3px solid var(--announcement-blue);
+  border-top: 3px solid var(--announcement-blue);
+  background: linear-gradient(180deg, rgba(46, 119, 208, 0.12) 0%, var(--bg-elevated) 100%);
 }
 
 .treemap-tile.REDUCE {
-  border-left: 3px solid var(--negative-red);
+  border-top: 3px solid var(--negative-red);
+  background: linear-gradient(180deg, rgba(226, 33, 52, 0.12) 0%, var(--bg-elevated) 100%);
 }
 
 .treemap-tile.HOLD {
-  border-left: 3px solid #555555;
+  border-top: 3px solid #555555;
 }
 
 .treemap-tile.discount-target {
-  box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.4);
+  box-shadow: inset 0 0 0 1.5px rgba(239, 68, 68, 0.5);
 }
 
 .tile-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
+  gap: 4px;
+  width: 100%;
 }
 
 .tile-ticker {
@@ -936,28 +943,32 @@ body {
   font-weight: 800;
   color: var(--text-base);
   letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tile-action {
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 800;
-  padding: 2px 5px;
-  border-radius: 3px;
+  padding: 1.5px 4px;
+  border-radius: 2px;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .tile-action.NEW {
-  background-color: rgba(30, 215, 96, 0.2);
+  background-color: rgba(30, 215, 96, 0.25);
   color: var(--spotify-green);
 }
 
 .tile-action.ADD {
-  background-color: rgba(46, 119, 208, 0.25);
+  background-color: rgba(46, 119, 208, 0.3);
   color: #60a5fa;
 }
 
 .tile-action.REDUCE {
-  background-color: rgba(226, 33, 52, 0.2);
+  background-color: rgba(226, 33, 52, 0.3);
   color: var(--negative-red);
 }
 
@@ -966,22 +977,62 @@ body {
   color: var(--text-subdued);
 }
 
+.tile-name {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 2px 0;
+}
+
 .tile-bottom {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
+  gap: 4px;
+  width: 100%;
 }
 
 .tile-weight {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--spotify-green);
+  white-space: nowrap;
 }
 
 .tile-price {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 600;
   color: var(--text-subdued);
+  white-space: nowrap;
+}
+
+/* 대형 타일 타이포그래피 부스트 */
+.treemap-tile.tile-large .tile-ticker {
+  font-size: 17px;
+}
+.treemap-tile.tile-large .tile-weight {
+  font-size: 15px;
+}
+.treemap-tile.tile-large .tile-price {
+  font-size: 12px;
+}
+
+/* 소형 타일 컴팩트 모드 */
+.treemap-tile.tile-small {
+  padding: 4px 6px;
+}
+.treemap-tile.tile-small .tile-ticker {
+  font-size: 11px;
+}
+.treemap-tile.tile-small .tile-weight {
+  font-size: 10px;
+}
+.treemap-tile.tile-small .tile-action,
+.treemap-tile.tile-small .tile-price,
+.treemap-tile.tile-small .tile-name {
+  display: none;
 }
 
 /* 증권 유형 뱃지 (보통주, CALL, PUT) */
