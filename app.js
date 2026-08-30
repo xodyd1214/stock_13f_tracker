@@ -1032,7 +1032,7 @@ function renderTreemap(holdings) {
       <div class="tile-top">
         <span class="tile-ticker">${item.ticker}</span>
         <div class="tile-badges">
-          ${(isDown && hasRoomForDiscount) ? '<span class="tile-discount-badge">할인</span>' : ''}
+          ${(isDown && hasRoomForDiscount) ? '<span class="tile-discount-badge" title="공시가 대비 하락">▼</span>' : ''}
           <span class="tile-action ${item.action}">${item.action === 'NEW' ? 'NEW' : item.action}</span>
         </div>
       </div>
@@ -1047,13 +1047,13 @@ function renderTreemap(holdings) {
     if (tooltip) {
       tile.addEventListener("mouseenter", (e) => {
         const actionLabel = item.action === 'NEW' ? '신규 매수' : (item.action === 'ADD' ? '비중 확대' : (item.action === 'REDUCE' ? '비중 축소' : '보유 유지'));
-        const diffText = isDown ? `<span style="color:var(--negative-red)">${diffPct}% 하락 (할인)</span>` : `<span style="color:var(--spotify-green)">+${diffPct}% 상승</span>`;
+        const diffText = isDown ? `<span style="color:var(--negative-red)">${diffPct}% 하락</span>` : `<span style="color:var(--spotify-green)">+${diffPct}% 상승</span>`;
 
         tooltip.innerHTML = `
           <div class="tooltip-header">
             <span class="tooltip-ticker">${item.ticker}</span>
             <div class="tooltip-badges">
-              ${isDown ? '<span class="tile-discount-badge">할인</span>' : ''}
+              ${isDown ? '<span class="tile-discount-badge" title="공시가 대비 하락">▼</span>' : ''}
               <span class="tile-action ${item.action}">${item.action} (${actionLabel})</span>
             </div>
           </div>
