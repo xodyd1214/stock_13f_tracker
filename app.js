@@ -1038,25 +1038,24 @@ function openStockModal(item) {
   const elInsight = document.getElementById("modalInsightText");
   if (elInsight) elInsight.innerText = item.insight || "이 종목은 주요 운용사들의 포트폴리오에 편입된 핵심 자산입니다.";
 
-  // 야후 파이낸스 & 구글 파이낸스 외부 링크 세팅
-  const targetTicker = (item.baseTicker || item.ticker || "").split(" ")[0].replace(/[^a-zA-Z0-9\-\.]/g, "");
-  
-  const btnYahoo = document.getElementById("btnYahooFinance");
-  if (btnYahoo) {
-    btnYahoo.onclick = (e) => {
-      e.stopPropagation();
-      const cleanT = targetTicker.replace(".", "-");
-      window.open(`https://finance.yahoo.com/quote/${cleanT}`, "_blank");
-    };
+  // 야후 파이낸스 & 구글 파이낸스 공식 사이트 바로가기 세팅
+  let cleanTicker = (item.baseTicker || item.ticker || "").split(" ")[0].replace(/[^a-zA-Z0-9\-\.]/g, "");
+  if (!cleanTicker || cleanTicker === "STOCK") {
+    cleanTicker = (item.name || "").split(" ")[0].replace(/[^a-zA-Z0-9]/g, "");
   }
 
-  const btnGoogle = document.getElementById("btnGoogleFinance");
-  if (btnGoogle) {
-    btnGoogle.onclick = (e) => {
-      e.stopPropagation();
-      const cleanT = targetTicker.replace("-", ".");
-      window.open(`https://www.google.com/finance/quote/${cleanT}`, "_blank");
-    };
+  const linkYahoo = document.getElementById("linkYahooFinance");
+  if (linkYahoo) {
+    const yTicker = cleanTicker.replace(".", "-");
+    linkYahoo.href = `https://finance.yahoo.com/quote/${yTicker}`;
+    linkYahoo.onclick = (e) => e.stopPropagation();
+  }
+
+  const linkGoogle = document.getElementById("linkGoogleFinance");
+  if (linkGoogle) {
+    const gTicker = cleanTicker.replace("-", ".");
+    linkGoogle.href = `https://www.google.com/finance/quote/${gTicker}`;
+    linkGoogle.onclick = (e) => e.stopPropagation();
   }
 
   modal.classList.add("show");

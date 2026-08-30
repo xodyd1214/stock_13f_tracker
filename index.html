@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=20260830v5">
+  <link rel="stylesheet" href="style.css?v=20260830v8">
 </head>
 <body>
   <div class="app-container">
@@ -261,12 +261,12 @@
 
         <!-- 외부 실시간 시세 / 차트 바로가기 버튼 -->
         <div class="modal-links-row">
-          <button id="btnYahooFinance" type="button" class="btn-ext-link yahoo">
+          <a id="linkYahooFinance" href="https://finance.yahoo.com" target="_blank" rel="noopener noreferrer" class="btn-ext-link yahoo">
             <span>Yahoo Finance 차트 ↗</span>
-          </button>
-          <button id="btnGoogleFinance" type="button" class="btn-ext-link google">
+          </a>
+          <a id="linkGoogleFinance" href="https://www.google.com/finance" target="_blank" rel="noopener noreferrer" class="btn-ext-link google">
             <span>Google Finance ↗</span>
-          </button>
+          </a>
         </div>
       </div>
     </div>
@@ -276,6 +276,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="app.js?v=20260830v7"></script>
+  <script src="app.js?v=20260830v8"></script>
 </body>
 </html>

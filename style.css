@@ -1442,46 +1442,58 @@ body {
   line-height: 1.6;
 }
 
-/* 외부 차트 & 시세 바로가기 버튼 */
+/* 외부 차트 & 시세 바로가기 버튼 (완벽한 다크 테마 일치) */
 .modal-links-row {
   display: flex;
   gap: 10px;
   width: 100%;
+  margin-top: 14px;
 }
 
 .btn-ext-link {
   flex: 1;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  border-radius: var(--radius-full);
   font-size: 12px;
   font-weight: 700;
   text-decoration: none;
-  transition: all 0.2s ease;
-  text-align: center;
+  cursor: pointer;
+  outline: none;
+  border: 1px solid var(--border-light);
+  background-color: var(--bg-elevated);
+  color: var(--text-base);
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  user-select: none;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 .btn-ext-link.yahoo {
-  background-color: rgba(96, 10, 255, 0.12);
+  border-color: rgba(168, 85, 247, 0.4);
   color: #c084fc;
-  border: 1px solid rgba(192, 132, 252, 0.3);
+  background-color: rgba(168, 85, 247, 0.08);
 }
+
 .btn-ext-link.yahoo:hover {
-  background-color: rgba(96, 10, 255, 0.25);
-  border-color: #c084fc;
+  background-color: rgba(168, 85, 247, 0.2);
+  border-color: #a855f7;
+  color: #ffffff;
   transform: translateY(-1px);
 }
 
 .btn-ext-link.google {
-  background-color: rgba(66, 133, 244, 0.12);
+  border-color: rgba(59, 130, 246, 0.4);
   color: #93c5fd;
-  border: 1px solid rgba(147, 197, 253, 0.3);
+  background-color: rgba(59, 130, 246, 0.08);
 }
+
 .btn-ext-link.google:hover {
-  background-color: rgba(66, 133, 244, 0.25);
-  border-color: #93c5fd;
+  background-color: rgba(59, 130, 246, 0.2);
+  border-color: #3b82f6;
+  color: #ffffff;
   transform: translateY(-1px);
 }
 
