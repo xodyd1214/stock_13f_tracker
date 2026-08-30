@@ -48,16 +48,32 @@ function updateAuthUI(user) {
   const userProfile = document.getElementById("userProfile");
   const userAvatar = document.getElementById("userAvatar");
   const userName = document.getElementById("userName");
+  const btnCustomGroup = document.getElementById("btnCustomGroup");
+  const navCustomGroup = document.querySelector('.nav-item[data-tab="custom-group"]');
 
   if (user) {
     if (btnLogin) btnLogin.style.display = "none";
     if (userProfile) userProfile.style.display = "flex";
     if (userAvatar) userAvatar.src = user.photoURL || "https://www.gstatic.com/images/branding/product/1x/avatar_square_blue_512dp.png";
     if (userName) userName.innerText = user.displayName || user.email.split("@")[0];
+    if (btnCustomGroup) btnCustomGroup.style.display = "block";
+    if (navCustomGroup) navCustomGroup.style.display = "flex";
   } else {
     if (btnLogin) btnLogin.style.display = "inline-flex";
     if (userProfile) userProfile.style.display = "none";
+    if (btnCustomGroup) btnCustomGroup.style.display = "none";
+    if (navCustomGroup) navCustomGroup.style.display = "none";
+
+    if (state.currentGuruKey === "__CUSTOM_GROUP__") {
+      selectGuru("__GRAND_TOTAL__");
+    }
+    if (state.activeCategory === "FAV") {
+      state.activeCategory = "ALL";
+    }
   }
+
+  renderCategoryTabs();
+  renderGuruSidebar();
 }
 
 async function loginWithGoogle() {
@@ -82,8 +98,8 @@ async function logout() {
     unsubscribeFavsListener = null;
   }
   await auth.signOut();
-  renderCategoryTabs();
-  renderGuruSidebar();
+  CURRENT_USER = null;
+  updateAuthUI(null);
 }
 
 let unsubscribeFavsListener = null;
@@ -107,11 +123,15 @@ function setupCloudFavoritesListener(uid) {
         }
       }
     } else {
-      // 최초 사용자의 경우 로컬에 있던 초기 즐겨찾기를 클라우드에 업로드
+      // 최초 사용자의 경우 기본 5대 운용사를 클라우드에 생성
+      const initialFavs = ["Warren Buffett", "Bill Ackman", "Ray Dalio", "Michael Burry", "Stanley Druckenmiller"];
       docRef.set({
-        favorites: getFavorites(),
+        favorites: initialFavs,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
+      saveFavorites(initialFavs);
+      renderCategoryTabs();
+      renderGuruSidebar();
     }
   }, (err) => {
     console.warn("Firestore 실시간 리스너 에러:", err);
@@ -134,12 +154,10 @@ async function syncFavoritesToCloud(favs) {
   }
 }
 
-// 즐겨찾기 로컬 저장소 키
-const FAVORITES_STORAGE_KEY = "alpha13f_favorite_gurus";
-
 function getFavorites() {
+  if (!CURRENT_USER) return [];
   try {
-    const saved = localStorage.getItem(FAVORITES_STORAGE_KEY);
+    const saved = localStorage.getItem(`alpha13f_favs_${CURRENT_USER.uid}`);
     return saved ? JSON.parse(saved) : [];
   } catch (e) {
     return [];
@@ -147,12 +165,18 @@ function getFavorites() {
 }
 
 function saveFavorites(favs) {
+  if (!CURRENT_USER) return;
   try {
-    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favs));
+    localStorage.setItem(`alpha13f_favs_${CURRENT_USER.uid}`, JSON.stringify(favs));
   } catch (e) {}
 }
 
 function toggleFavorite(guruKey) {
+  if (!CURRENT_USER) {
+    alert("즐겨찾기 기능은 구글 로그인 후 이용하실 수 있습니다.");
+    loginWithGoogle();
+    return;
+  }
   let favs = getFavorites();
   if (favs.includes(guruKey)) {
     favs = favs.filter(k => k !== guruKey);
@@ -160,9 +184,7 @@ function toggleFavorite(guruKey) {
     favs.push(guruKey);
   }
   saveFavorites(favs);
-  if (CURRENT_USER) {
-    syncFavoritesToCloud(favs);
-  }
+  syncFavoritesToCloud(favs);
   renderCategoryTabs();
   renderGuruSidebar();
 }
@@ -654,13 +676,22 @@ function renderCategoryTabs() {
     subtextEl.innerText = `내가 찜한 ${favCount}개 운용사 합산`;
   }
 
-  existing.innerHTML = `
-    <div class="cat-pill-row">
-      <button class="cat-pill ${state.activeCategory === 'ALL' ? 'active' : ''}" data-cat="ALL">전체</button>
-      <button class="cat-pill ${state.activeCategory === 'FAV' ? 'active' : ''}" data-cat="FAV">즐겨찾기 (${favCount})</button>
-      <button class="cat-pill ${state.activeCategory === 'TOP20' ? 'active' : ''}" data-cat="TOP20">Top 20</button>
-    </div>
-  `;
+  if (CURRENT_USER) {
+    existing.innerHTML = `
+      <div class="cat-pill-row">
+        <button class="cat-pill ${state.activeCategory === 'ALL' ? 'active' : ''}" data-cat="ALL">전체</button>
+        <button class="cat-pill ${state.activeCategory === 'FAV' ? 'active' : ''}" data-cat="FAV">즐겨찾기 (${favCount})</button>
+        <button class="cat-pill ${state.activeCategory === 'TOP20' ? 'active' : ''}" data-cat="TOP20">Top 20</button>
+      </div>
+    `;
+  } else {
+    existing.innerHTML = `
+      <div class="cat-pill-row">
+        <button class="cat-pill ${state.activeCategory === 'ALL' ? 'active' : ''}" data-cat="ALL">전체</button>
+        <button class="cat-pill ${state.activeCategory === 'TOP20' ? 'active' : ''}" data-cat="TOP20">Top 20</button>
+      </div>
+    `;
+  }
 
   existing.querySelectorAll(".cat-pill").forEach(btn => {
     btn.onclick = () => {
@@ -698,11 +729,11 @@ function renderGuruSidebar() {
   // 1차 기준: 총 운용자산 규모(AUM) 내림차순 정렬
   keys.sort((a, b) => (GURU_DATABASE[b].rawAum || 0) - (GURU_DATABASE[a].rawAum || 0));
 
-  if (state.activeCategory === "FAV") {
+  if (CURRENT_USER && state.activeCategory === "FAV") {
     keys = keys.filter(k => favs.includes(k));
   } else if (state.activeCategory === "TOP20") {
     keys = keys.slice(0, 20);
-  } else {
+  } else if (CURRENT_USER) {
     // [전체] 탭일 때는 즐겨찾기(★) 운용사 최상단 배치
     const favKeys = keys.filter(k => favs.includes(k));
     const nonFavKeys = keys.filter(k => !favs.includes(k));
@@ -716,14 +747,17 @@ function renderGuruSidebar() {
     const row = document.createElement("div");
     row.className = "guru-row-item";
 
-    const starBtn = document.createElement("button");
-    starBtn.className = `star-btn ${isFav ? 'starred' : ''}`;
-    starBtn.innerHTML = isFav ? "★" : "☆";
-    starBtn.title = isFav ? "즐겨찾기 해제" : "즐겨찾기 추가";
-    starBtn.onclick = (e) => {
-      e.stopPropagation();
-      toggleFavorite(key);
-    };
+    if (CURRENT_USER) {
+      const starBtn = document.createElement("button");
+      starBtn.className = `star-btn ${isFav ? 'starred' : ''}`;
+      starBtn.innerHTML = isFav ? "★" : "☆";
+      starBtn.title = isFav ? "즐겨찾기 해제" : "즐겨찾기 추가";
+      starBtn.onclick = (e) => {
+        e.stopPropagation();
+        toggleFavorite(key);
+      };
+      row.appendChild(starBtn);
+    }
 
     const btn = document.createElement("button");
     btn.className = `guru-card-btn ${key === state.currentGuruKey ? 'active' : ''}`;
@@ -737,7 +771,6 @@ function renderGuruSidebar() {
       </div>
     `;
 
-    row.appendChild(starBtn);
     row.appendChild(btn);
     listEl.appendChild(row);
   });

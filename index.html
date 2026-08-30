@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=20260830v40">
+  <link rel="stylesheet" href="style.css?v=20260830v41">
 </head>
 <body>
   <div class="app-container">
@@ -31,7 +31,7 @@
             <p>100개 주요 운용사 총합</p>
           </div>
         </button>
-        <button class="grand-total-btn custom-group-btn-unified" id="btnCustomGroup">
+        <button class="grand-total-btn custom-group-btn-unified" id="btnCustomGroup" style="display: none;">
           <div class="grand-text">
             <h4>즐겨찾기 묶어보기</h4>
             <p id="customGroupSubtext">내가 찜한 운용사 합산</p>
@@ -44,7 +44,7 @@
         <button class="nav-item active" data-tab="all">
           <span>전체 운용사 통합 포트폴리오</span>
         </button>
-        <button class="nav-item" data-tab="custom-group">
+        <button class="nav-item" data-tab="custom-group" style="display: none;">
           <span>즐겨찾기 묶어보기</span>
         </button>
         <button class="nav-item" data-tab="treemap">
@@ -342,6 +342,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="app.js?v=20260830v40"></script>
+  <script src="app.js?v=20260830v41"></script>
 </body>
 </html>
