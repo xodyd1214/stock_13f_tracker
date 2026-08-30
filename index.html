@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=20260830v14">
+  <link rel="stylesheet" href="style.css?v=20260830v15">
 </head>
 <body>
   <div class="app-container">
@@ -195,7 +195,7 @@
                 <label><input type="checkbox" data-col="value" checked> 총 평가 금액 ($)</label>
                 <label><input type="checkbox" data-col="weight" checked> 통합 비중 (%)</label>
                 <label><input type="checkbox" data-col="estPrice" checked> 공시 시점 기준가</label>
-                <label><input type="checkbox" data-col="curPrice" checked> 현재 실시간 주가</label>
+                <label><input type="checkbox" data-col="curPrice" checked> 현재 실시간가 (1분)</label>
                 <label><input type="checkbox" data-col="discount" checked> 공시가 대비 할인율 (%)</label>
               </div>
             </div>
@@ -215,7 +215,7 @@
                 <th class="col-value sortable text-right" data-sort="value">총 평가 금액 ($)</th>
                 <th class="col-weight sortable text-right" data-sort="weight">통합 비중 (%)</th>
                 <th class="col-estPrice sortable text-right" data-sort="estPrice">공시 시점 기준가</th>
-                <th class="col-curPrice sortable text-right" data-sort="curPrice">현재 실시간가</th>
+                <th class="col-curPrice sortable text-right" data-sort="curPrice">현재 실시간가 (1분)</th>
                 <th class="col-discount sortable text-right" data-sort="discount">공시가 대비 할인율</th>
               </tr>
             </thead>
@@ -286,6 +286,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="app.js?v=20260830v14"></script>
+  <script src="app.js?v=20260830v15"></script>
 </body>
 </html>
