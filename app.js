@@ -149,6 +149,74 @@ function toggleFavorite(guruKey) {
 
 // 🏛️ 주요 120대 미국 기업 및 ETF 공식 티커 전수 매핑 사전
 const TICKER_MAP = {
+  // CUSIP 직접 매핑 (ETF & 주요 종목 100% 매칭)
+  "78462F103": "SPY",
+  "46090E103": "QQQ",
+  "464287200": "IVV",
+  "464287655": "IWM",
+  "78463V107": "GLD",
+  "464287432": "IWF",
+  "464288513": "IEFA",
+  "78467X109": "DIA",
+  "464286772": "EEM",
+  "81369Y605": "XLE",
+  "81369Y506": "XLF",
+  "81369Y704": "XLK",
+  "81369Y803": "XLY",
+  "81369Y407": "XLV",
+  "46428Q109": "SLV",
+  "46438F101": "IBIT",
+  "464287515": "IJR",
+  "464287523": "IJH",
+  "464286400": "IEFA",
+  "464287234": "EFA",
+  "464287242": "AGG",
+  "084670702": "BRK-B",
+  "595112103": "MU",
+  "30303M102": "META",
+  "88160R101": "TSLA",
+  "007903107": "AMD",
+  "874039100": "TSM",
+  "369604301": "GE",
+  "92826C839": "V",
+  "615369105": "MCO",
+  "11135F101": "AVGO",
+  "458140100": "INTC",
+  "H1467J104": "CB",
+  "58733R102": "MELI",
+  "512807306": "LRCX",
+  "81141R100": "SE",
+  "03831W108": "APP",
+  "038222105": "AMAT",
+  "L8681T102": "SPOT",
+  "36828A101": "GEV",
+  "64110L106": "NFLX",
+  "18915M107": "NET",
+  "500754106": "KHC",
+  "958102105": "WDC",
+  "G7997R103": "STX",
+  "G6683N103": "NU",
+  "532457108": "LLY",
+  "38141G104": "GS",
+  "82509L107": "SHOP",
+  "46625H100": "JPM",
+  "N07059210": "ASML",
+  "78409V104": "SPGI",
+  "86800U104": "SMCI",
+  // ETF 및 브랜드명 키워드 매핑
+  "SPDR S&P 500": "SPY",
+  "STATE STR SPDR S&P": "SPY",
+  "STATE STR SPDR": "SPY",
+  "STATE STREET CORP": "STT",
+  "STATE STREET": "STT",
+  "INVESCO QQQ": "QQQ",
+  "ISHARES CORE S&P": "IVV",
+  "ISHARES TR": "IVV",
+  "ISHARES INC": "EEM",
+  "ISHARES RUSSELL": "IWM",
+  "VANGUARD S&P 500": "VOO",
+  "VANGUARD TOTAL": "VTI",
+  // 개별 주식
   "APPLE": "AAPL",
   "NVIDIA": "NVDA",
   "ALPHABET": "GOOGL",
@@ -162,8 +230,6 @@ const TICKER_MAP = {
   "BANK OF AMERICA": "BAC",
   "TESLA": "TSLA",
   "MICRON TECHNOLOGY": "MU",
-  "STATE STREET": "STT",
-  "INVESCO QQQ": "QQQ",
   "ADVANCED MICRO DEVICES": "AMD",
   "TAIWAN SEMICONDUCTOR": "TSM",
   "TSMC": "TSM",
@@ -225,8 +291,6 @@ const TICKER_MAP = {
   "WELLS FARGO": "WFC",
   "PEPSICO": "PEP",
   "SPDR S&P 500": "SPY",
-  "ISHARES CORE S&P": "IVV",
-  "VANGUARD S&P 500": "VOO",
   "UBER TECHNOLOGIES": "UBER",
   "UBER": "UBER",
   "PALANTIR TECHNOLOGIES": "PLTR",
@@ -266,13 +330,22 @@ const TICKER_MAP = {
   "DOORDASH": "DASH"
 };
 
-function getMappedTicker(name, rawTicker) {
+function getMappedTicker(name, rawTicker, cusip) {
   const upperName = (name || "").toUpperCase();
   const upperTicker = (rawTicker || "").toUpperCase();
+  const cleanCusip = (cusip || "").toUpperCase().trim();
 
-  // 1순위: TICKER_MAP 사전 매칭
+  // 0순위: CUSIP 직접 매칭
+  if (cleanCusip && TICKER_MAP[cleanCusip]) {
+    return TICKER_MAP[cleanCusip];
+  }
+  if (upperTicker && TICKER_MAP[upperTicker]) {
+    return TICKER_MAP[upperTicker];
+  }
+
+  // 1순위: TICKER_MAP 이름 사전 매칭
   for (const [key, val] of Object.entries(TICKER_MAP)) {
-    if (upperName.includes(key) || upperTicker === key) {
+    if (upperName.includes(key)) {
       return val;
     }
   }
@@ -432,9 +505,17 @@ async function loadRealSecData() {
         };
       }
       
-      const baseTicker = getMappedTicker(item.name, item.ticker);
+      const baseTicker = getMappedTicker(item.name, item.ticker, item.cusip);
       const cusip = item.cusip || baseTicker || "UNKNOWN";
       const hMap = groups[guruName].holdingsMap;
+
+      let displayName = item.name || baseTicker;
+      if (baseTicker === "SPY") displayName = "SPDR S&P 500 ETF Trust";
+      else if (baseTicker === "IVV") displayName = "iShares Core S&P 500 ETF";
+      else if (baseTicker === "QQQ") displayName = "Invesco QQQ Trust";
+      else if (baseTicker === "IWM") displayName = "iShares Russell 2000 ETF";
+      else if (baseTicker === "GLD") displayName = "SPDR Gold Trust";
+      else if (baseTicker === "EEM") displayName = "iShares MSCI Emerging Markets ETF";
 
       const itemShares = Number(item.shares) || 0;
       const itemVal = Number(item.value) || 0;
@@ -443,8 +524,8 @@ async function loadRealSecData() {
         hMap[baseTicker] = {
           ticker: baseTicker,
           baseTicker: baseTicker,
-          name: item.name || baseTicker,
-          sector: item.sector || "General",
+          name: displayName,
+          sector: (baseTicker === "SPY" || baseTicker === "IVV" || baseTicker === "QQQ" || baseTicker === "IWM" || baseTicker === "GLD" || baseTicker === "EEM") ? "ETF / Index" : (item.sector || "General"),
           shares: itemShares,
           value: itemVal,
           cusip: cusip
@@ -458,8 +539,8 @@ async function loadRealSecData() {
         grandConsensusMap[baseTicker] = {
           ticker: baseTicker,
           baseTicker: baseTicker,
-          name: item.name || baseTicker,
-          sector: item.sector || "General",
+          name: displayName,
+          sector: (baseTicker === "SPY" || baseTicker === "IVV" || baseTicker === "QQQ" || baseTicker === "IWM" || baseTicker === "GLD" || baseTicker === "EEM") ? "ETF / Index" : (item.sector || "General"),
           cusip: cusip,
           shares: itemShares,
           value: itemVal,
