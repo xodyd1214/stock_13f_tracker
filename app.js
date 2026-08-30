@@ -419,14 +419,15 @@ async function loadRealSecData() {
       }
 
       const guruName = item.guru || "기타 운용사";
+      const fundName = item.fund || guruName;
       if (!groups[guruName]) {
-        const initials = guruName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+        const initials = fundName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
         groups[guruName] = {
           name: guruName,
+          fund: fundName,
           avatar: initials || "CO",
-          fund: item.fund || guruName,
           quarter: `${item.period || '2024Q2'} Filing`,
-          desc: `${item.fund || guruName}의 최신 13F 공식 보유 보통주 포트폴리오`,
+          desc: `${fundName} (${guruName} 운용)의 최신 13F 공식 보유 보통주 포트폴리오`,
           holdingsMap: {}
         };
       }
@@ -807,8 +808,8 @@ function renderGuruSidebar() {
     btn.innerHTML = `
       <div class="guru-mini-avatar">${guru.avatar || 'CO'}</div>
       <div class="guru-card-info">
-        <h4>${guru.name}</h4>
-        <p>${guru.fund}</p>
+        <h4>${guru.fund || guru.name}</h4>
+        <p>${guru.name}</p>
       </div>
     `;
 
@@ -838,10 +839,11 @@ function loadGuruData(key) {
   const guru = GURU_DATABASE[key];
   if (!guru) return;
 
+  const isSpecial = key === "__GRAND_TOTAL__" || key === "__CUSTOM_GROUP__";
   const elName = document.getElementById("currentGuruName");
-  if (elName) elName.innerText = guru.name;
+  if (elName) elName.innerText = isSpecial ? guru.name : (guru.fund || guru.name);
   const elFund = document.getElementById("currentFundName");
-  if (elFund) elFund.innerText = guru.fund;
+  if (elFund) elFund.innerText = isSpecial ? guru.fund : guru.name;
   const elQuarter = document.getElementById("currentQuarter");
   if (elQuarter) elQuarter.innerText = guru.quarter;
   const elDesc = document.getElementById("currentGuruDesc");
