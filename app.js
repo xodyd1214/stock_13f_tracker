@@ -965,6 +965,7 @@ function renderTable() {
     if (state.activeFilter === "ADD") return item.action === "ADD";
     if (state.activeFilter === "DISCOUNT") return item.curPrice < item.estPrice;
     if (state.activeFilter === "CONVICTION") return item.weight >= 5.0;
+    if (state.activeFilter === "CONSENSUS") return (item.holders || 1) >= 2;
     return true;
   });
 
@@ -1142,13 +1143,25 @@ function setupEventListeners() {
       document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
       item.classList.add("active");
       const tab = item.dataset.tab;
+      
       if (tab === "consensus") {
+        // 운용사 공통 매수: 전체 통합 뷰에서 2개사 이상 겹친 컨센서스 종목을 보유사 많은 순으로 정렬!
         selectGuru("__GRAND_TOTAL__");
+        state.sortColumn = "holders";
+        state.sortDirection = "desc";
+        state.activeFilter = "CONSENSUS";
+        renderTable();
       } else if (tab === "discount") {
+        // 공시가 대비 할인 종목: 할인율 높은 순 정렬!
+        state.sortColumn = "discount";
+        state.sortDirection = "asc";
         state.activeFilter = "DISCOUNT";
         document.querySelectorAll(".filter-tab").forEach(f => f.classList.toggle("active", f.dataset.filter === "DISCOUNT"));
         renderTable();
       } else {
+        // 포트폴리오 비중 기본 뷰: 비중 높은 순 정렬!
+        state.sortColumn = "weight";
+        state.sortDirection = "desc";
         state.activeFilter = "ALL";
         document.querySelectorAll(".filter-tab").forEach(f => f.classList.toggle("active", f.dataset.filter === "ALL"));
         renderTable();
