@@ -511,7 +511,7 @@ async function loadRealSecData() {
       "__GRAND_TOTAL__": {
         name: "전체 운용사 통합 포트폴리오",
         fund: "100개 주요 운용사 총합",
-        avatar: "🏛️",
+        avatar: "ALL",
         aum: formatMoney(grandTotalAumVal),
         rawAum: grandTotalAumVal,
         quarter: "최신 13F 공시 종합",
@@ -534,7 +534,7 @@ async function loadRealSecData() {
 function buildCustomGroupPortfolio() {
   const favs = getFavorites();
   if (favs.length === 0) {
-    alert("⭐️ 먼저 사이드바에서 관심 있는 운용사 옆의 별표(★)를 1개 이상 눌러 즐겨찾기에 등록해 주세요!");
+    alert("먼저 사이드바에서 관심 있는 운용사 옆의 별표를 1개 이상 눌러 즐겨찾기에 등록해 주세요.");
     return;
   }
 
@@ -603,11 +603,11 @@ function buildCustomGroupPortfolio() {
   GURU_DATABASE["__CUSTOM_GROUP__"] = {
     name: "즐겨찾기 묶어보기",
     fund: `선택한 ${favs.length}개 운용사 맞춤 합산`,
-    avatar: "⭐️",
+    avatar: "FAV",
     aum: formatMoney(customTotalAumVal),
     rawAum: customTotalAumVal,
     quarter: "최신 13F 맞춤 종합",
-    desc: `내가 별표(★)로 지정한 ${favs.length}개 운용사들의 포트폴리오만 묶어서 합산 분석한 VIP 맞춤형 뷰`,
+    desc: `내가 선택한 ${favs.length}개 운용사들의 포트폴리오만 묶어서 합산 분석한 맞춤형 뷰`,
     holdings: customHoldings
   };
 
@@ -1238,7 +1238,7 @@ function renderComparison() {
       overlaps.forEach(t => {
         const chip = document.createElement("span");
         chip.className = "overlap-chip";
-        chip.innerText = `🤝 ${t}`;
+        chip.innerText = t;
         overlapContainer.appendChild(chip);
       });
     }
@@ -1254,7 +1254,7 @@ function renderComparison() {
       row.className = `compare-item ${isOver ? 'is-overlap' : ''}`;
       row.innerHTML = `
         <div class="compare-item-left">
-          <span class="compare-item-ticker">${h.ticker} ${isOver ? '🤝' : ''}</span>
+          <span class="compare-item-ticker">${h.ticker}</span>
           <span class="compare-item-name">${h.name}</span>
         </div>
         <div class="compare-item-right">
@@ -1276,7 +1276,7 @@ function renderComparison() {
       row.className = `compare-item ${isOver ? 'is-overlap' : ''}`;
       row.innerHTML = `
         <div class="compare-item-left">
-          <span class="compare-item-ticker">${h.ticker} ${isOver ? '🤝' : ''}</span>
+          <span class="compare-item-ticker">${h.ticker}</span>
           <span class="compare-item-name">${h.name}</span>
         </div>
         <div class="compare-item-right">

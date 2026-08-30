@@ -1737,8 +1737,11 @@ body {
    ⚔️ 운용사 1:1 맞짱 비교 모달 스타일 (기능 2)
    ========================================================================== */
 .compare-nav-btn {
-  border-left: 3px solid #eab308 !important;
-  color: #fef08a !important;
+  color: var(--text-subdued);
+}
+
+.compare-nav-btn:hover {
+  color: var(--text-base);
 }
 
 .modal-compare-wide {

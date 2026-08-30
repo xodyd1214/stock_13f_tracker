@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=20260830v17">
+  <link rel="stylesheet" href="style.css?v=20260830v18">
 </head>
 <body>
   <div class="app-container">
@@ -17,13 +17,12 @@
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="logo-box">
-          <div class="logo-icon">📈</div>
           <h1>Alpha<span>13F</span></h1>
           <p>운용사 포트폴리오 분석</p>
         </div>
       </div>
 
-      <!-- 🌐 전체 운용사 통합 & 즐겨찾기 묶어보기 메인 버튼 그룹 -->
+      <!-- 전체 운용사 통합 & 즐겨찾기 묶어보기 메인 버튼 그룹 -->
       <div class="grand-total-btn-wrap">
         <button class="grand-total-btn active" id="btnGrandTotal">
           <div class="grand-text">
@@ -53,7 +52,7 @@
           <span>공시가 대비 할인 종목</span>
         </button>
         <button class="nav-item compare-nav-btn" id="btnOpenCompare">
-          <span>⚔️ 운용사 1:1 비교</span>
+          <span>운용사 1:1 비교</span>
         </button>
       </nav>
 
@@ -91,18 +90,12 @@
         <div class="header-actions">
           <!-- CSV 다운로드 버튼 -->
           <button class="btn-header-action" id="btnExportCsv" title="포트폴리오 CSV 다운로드">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
             <span>CSV</span>
           </button>
           
           <!-- 구글 로그인 / 프로필 영역 -->
           <div id="authContainer" class="auth-container">
             <button class="btn-google-login" id="btnGoogleLogin">
-              <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.35 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.35 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>
               <span>구글 로그인</span>
             </button>
             <div class="user-profile" id="userProfile" style="display: none;">
@@ -149,12 +142,12 @@
         </div>
       </section>
 
-      <!-- 📊 섹터(산업군) 자금 쏠림 비중 분석 위젯 (기능 3) -->
+      <!-- 섹터(산업군) 자금 쏠림 비중 분석 위젯 -->
       <section class="sector-analysis-section">
         <div class="sector-header">
           <div class="sector-title-wrap">
-            <h4>📊 섹터(산업군) 자금 쏠림 비중</h4>
-            <span class="sector-sub">포트폴리오 내 자금이 어느 산업에 집중되어 있는지 한눈에 분석합니다.</span>
+            <h4>섹터(산업군) 자금 쏠림 비중</h4>
+            <span class="sector-sub">포트폴리오 내 자금이 어느 산업에 집중되어 있는지 분석합니다.</span>
           </div>
           <div class="sector-legend" id="sectorLegend">
             <!-- JS 렌더링 -->
@@ -253,7 +246,7 @@
     </main>
   </div>
 
-  <!-- 종목 상세 모달 (클릭 시 팝업: 기능 1 & 기능 4 탑재) -->
+  <!-- 종목 상세 모달 -->
   <div class="modal-backdrop" id="stockModal">
     <div class="modal-content modal-stock-detail-expanded">
       <button class="modal-close" id="btnModalClose">&times;</button>
@@ -289,22 +282,22 @@
           </div>
         </div>
 
-        <!-- 🕒 지난 분기 비중 변천사 히스토리 타임라인 (기능 4) -->
+        <!-- 최근 분기별 비중 변천 추이 -->
         <div class="modal-history-section">
-          <h4>🕒 최근 분기별 비중 변천 추이</h4>
+          <h4>최근 분기별 비중 변천 추이</h4>
           <div class="history-timeline-bars" id="modalHistoryTimeline">
             <!-- JS 렌더링 -->
           </div>
         </div>
 
         <div class="modal-insight">
-          <h4>투자 알파 인사이트</h4>
-          <p id="modalInsightText">이 종목은 주요 운용사들의 장기적인 비즈니스 해자를 기반으로 포트폴리오에 편입되었습니다.</p>
+          <h4>투자 분석</h4>
+          <p id="modalInsightText">이 종목은 주요 운용사들의 포트폴리오에 편입된 핵심 자산입니다.</p>
         </div>
 
-        <!-- 🏢 이 종목을 보유한 운용사 전체 명단 & 평단가 리스트 (기능 1) -->
+        <!-- 이 종목을 보유한 운용사 명단 -->
         <div class="modal-holders-section">
-          <h4>🏢 이 종목을 보유한 100대 운용사 명단 (<span id="modalHoldersCount">0</span>개사)</h4>
+          <h4>이 종목을 보유한 운용사 명단 (<span id="modalHoldersCount">0</span>개사)</h4>
           <div class="modal-holders-table-wrap">
             <table class="modal-holders-table">
               <thead>
@@ -326,23 +319,23 @@
         <!-- 외부 실시간 시세 / 차트 바로가기 버튼 -->
         <div class="modal-links-row">
           <a id="linkYahooFinance" href="https://finance.yahoo.com" target="_blank" rel="noopener noreferrer" class="btn-ext-link yahoo">
-            <span>Yahoo Finance 차트 ↗</span>
+            <span>Yahoo Finance 차트</span>
           </a>
           <a id="linkGoogleFinance" href="https://www.google.com/finance" target="_blank" rel="noopener noreferrer" class="btn-ext-link google">
-            <span>Google Finance ↗</span>
+            <span>Google Finance</span>
           </a>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ⚔️ 운용사 1:1 맞짱 비교 모달 (기능 2) -->
+  <!-- 운용사 1:1 비교 모달 -->
   <div class="modal-backdrop" id="compareModal">
     <div class="modal-content modal-compare-wide">
       <button class="modal-close" id="btnCompareClose">&times;</button>
       <div class="compare-header">
-        <h3>⚔️ 운용사 1:1 맞짱 포트폴리오 비교</h3>
-        <p>두 거장의 포트폴리오를 좌우로 비교하고, 공통 보유 종목(Overlap)과 차별화 종목을 분석합니다.</p>
+        <h3>운용사 1:1 포트폴리오 비교</h3>
+        <p>두 운용사의 포트폴리오를 좌우로 비교하고, 공통 보유 종목과 차별화 종목을 분석합니다.</p>
       </div>
 
       <div class="compare-selectors-row">
@@ -357,10 +350,10 @@
         </div>
       </div>
 
-      <!-- 공통 보유 종목 (Overlaps) 하이라이트 -->
+      <!-- 공통 보유 종목 하이라이트 -->
       <div class="compare-overlap-box">
         <div class="overlap-title">
-          <span>🤝 두 운용사 공통 보유 종목 (<strong id="compareOverlapCount">0</strong>개)</span>
+          <span>두 운용사 공통 보유 종목 (<strong id="compareOverlapCount">0</strong>개)</span>
         </div>
         <div class="overlap-chips" id="compareOverlapChips">
           <!-- JS 렌더링 -->
@@ -397,6 +390,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="app.js?v=20260830v17"></script>
+  <script src="app.js?v=20260830v18"></script>
 </body>
 </html>
