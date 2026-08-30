@@ -1471,41 +1471,7 @@ function setupEventListeners() {
     };
   }
 
-  document.querySelectorAll(".nav-item").forEach(item => {
-    item.onclick = () => {
-      document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
-      item.classList.add("active");
-      const tab = item.dataset.tab;
-      
-      if (tab === "custom-group") {
-        buildCustomGroupPortfolio();
-      } else if (tab === "consensus") {
-        selectGuru("__GRAND_TOTAL__");
-        state.sortColumn = "holders";
-        state.sortDirection = "desc";
-        state.activeFilter = "CONSENSUS";
-        renderTable();
-      } else if (tab === "new_buys") {
-        selectGuru("__GRAND_TOTAL__");
-        state.activeFilter = "NEW";
-        document.querySelectorAll(".filter-tab").forEach(f => f.classList.toggle("active", f.dataset.filter === "NEW"));
-        renderTable();
-      } else if (tab === "discount") {
-        state.sortColumn = "discount";
-        state.sortDirection = "asc";
-        state.activeFilter = "DISCOUNT";
-        document.querySelectorAll(".filter-tab").forEach(f => f.classList.toggle("active", f.dataset.filter === "DISCOUNT"));
-        renderTable();
-      } else {
-        selectGuru("__GRAND_TOTAL__");
-        state.sortColumn = "weight";
-        state.sortDirection = "desc";
-        state.activeFilter = "ALL";
-        document.querySelectorAll(".filter-tab").forEach(f => f.classList.toggle("active", f.dataset.filter === "ALL"));
-        renderTable();
-      }
-    };
-  });
+
 
   document.querySelectorAll(".filter-tab").forEach(tab => {
     tab.onclick = () => {
