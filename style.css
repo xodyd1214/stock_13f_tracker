@@ -877,7 +877,7 @@ body {
 .treemap-container {
   position: relative;
   width: 100%;
-  height: 380px;
+  height: 520px;
   background-color: var(--bg-base);
   border-radius: var(--radius-sm);
   overflow: hidden;
@@ -939,7 +939,7 @@ body {
 }
 
 .tile-ticker {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 800;
   color: var(--text-base);
   letter-spacing: 0.2px;
@@ -978,12 +978,17 @@ body {
 }
 
 .tile-name {
-  font-size: 10.5px;
+  font-size: 11px;
+  line-height: 1.3;
   color: var(--text-muted);
-  white-space: nowrap;
+  word-break: break-word;
+  white-space: normal;
   overflow: hidden;
-  text-overflow: ellipsis;
-  margin: 2px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  margin: 3px 0;
+  width: 100%;
 }
 
 .tile-bottom {
@@ -995,14 +1000,14 @@ body {
 }
 
 .tile-weight {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--spotify-green);
   white-space: nowrap;
 }
 
 .tile-price {
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-subdued);
   white-space: nowrap;
@@ -1010,13 +1015,17 @@ body {
 
 /* 대형 타일 타이포그래피 부스트 */
 .treemap-tile.tile-large .tile-ticker {
-  font-size: 17px;
+  font-size: 18px;
+}
+.treemap-tile.tile-large .tile-name {
+  font-size: 12px;
+  -webkit-line-clamp: 3;
 }
 .treemap-tile.tile-large .tile-weight {
-  font-size: 15px;
+  font-size: 16px;
 }
 .treemap-tile.tile-large .tile-price {
-  font-size: 12px;
+  font-size: 12.5px;
 }
 
 /* 소형 타일 컴팩트 모드 */

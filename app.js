@@ -933,6 +933,52 @@ function computeSquarifiedTreemap(items, x, y, width, height) {
   }
 }
 
+// 대표 브랜드명 정제 매핑 (트리맵 등에서 불필요하게 잘리지 않고 깔끔하게 표기)
+const CLEAN_COMPANY_NAMES = {
+  "NVDA": "Nvidia",
+  "AAPL": "Apple",
+  "GOOGL": "Alphabet (Google)",
+  "GOOG": "Alphabet (Google)",
+  "MSFT": "Microsoft",
+  "AMZN": "Amazon",
+  "META": "Meta Platforms",
+  "TSLA": "Tesla",
+  "AMD": "AMD",
+  "MU": "Micron",
+  "AXP": "American Express",
+  "BAC": "Bank of America",
+  "KO": "Coca-Cola",
+  "SPY": "SPDR S&P 500 ETF",
+  "QQQ": "Invesco QQQ ETF",
+  "IVV": "iShares S&P 500",
+  "AVGO": "Broadcom",
+  "TSM": "TSMC",
+  "NFLX": "Netflix",
+  "BABA": "Alibaba",
+  "INTC": "Intel",
+  "CVX": "Chevron",
+  "OXY": "Occidental",
+  "CB": "Chubb",
+  "IWM": "iShares Russell 2000",
+  "SANDI": "SanDisk",
+  "SPACE": "Space Exploration",
+  "VANEC": "VanEck Bitcoin ETF",
+  "MCO": "Moody's",
+  "V": "Visa",
+  "MELI": "MercadoLibre",
+  "LRCX": "Lam Research",
+  "GE": "GE Aerospace"
+};
+
+function getCleanCompanyName(ticker, rawName) {
+  if (CLEAN_COMPANY_NAMES[ticker]) return CLEAN_COMPANY_NAMES[ticker];
+  if (!rawName) return ticker;
+  // 법인 접미사 깔끔하게 정돈
+  return rawName
+    .replace(/\s+(CORP|CORPORATION|INC|CO|LTD|LLC|PLC|LP|HOLDINGS|HOLDING)\b.*$/i, '')
+    .trim();
+}
+
 function renderTreemap(holdings) {
   const container = document.getElementById("treemapContainer");
   if (!container || !holdings) return;
@@ -949,7 +995,7 @@ function renderTreemap(holdings) {
   }));
 
   const containerWidth = container.clientWidth || 1000;
-  const containerHeight = 380;
+  const containerHeight = 520;
 
   const tiles = computeSquarifiedTreemap(items, 0, 0, containerWidth, containerHeight);
 
@@ -960,9 +1006,9 @@ function renderTreemap(holdings) {
     
     // 크기 구분 클래스
     const area = t.width * t.height;
-    if (area > 20000 || (item.weight && item.weight >= 8.0)) {
+    if (area > 24000 || (item.weight && item.weight >= 8.0)) {
       tile.classList.add("tile-large");
-    } else if (area < 4500 || t.height < 45 || t.width < 60) {
+    } else if (area < 4000 || t.height < 45 || t.width < 55) {
       tile.classList.add("tile-small");
     }
 
@@ -975,14 +1021,15 @@ function renderTreemap(holdings) {
     const isDiscount = item.curPrice < item.estPrice;
     if (isDiscount) tile.classList.add("discount-target");
 
-    const hasRoomForName = t.height >= 75 && t.width >= 100;
+    const hasRoomForName = t.height >= 50 && t.width >= 65;
+    const cleanName = getCleanCompanyName(item.ticker, item.name);
 
     tile.innerHTML = `
       <div class="tile-top">
         <span class="tile-ticker">${item.ticker}</span>
         <span class="tile-action ${item.action}">${item.action === 'NEW' ? 'NEW' : item.action}</span>
       </div>
-      ${hasRoomForName ? `<div class="tile-name">${item.name}</div>` : ''}
+      ${hasRoomForName ? `<div class="tile-name" title="${item.name}">${cleanName}</div>` : ''}
       <div class="tile-bottom">
         <span class="tile-weight">${item.weight}%</span>
         <span class="tile-price">$${item.curPrice ? item.curPrice.toFixed(1) : ''}</span>
