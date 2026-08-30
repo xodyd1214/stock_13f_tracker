@@ -656,11 +656,12 @@ body {
 }
 
 .google-icon {
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   display: inline-block;
   flex-shrink: 0;
   vertical-align: middle;
+  shape-rendering: geometricPrecision;
 }
 
 .user-profile {
