@@ -77,29 +77,49 @@ async function loginWithGoogle() {
 
 async function logout() {
   if (!auth) return;
+  if (unsubscribeFavsListener) {
+    unsubscribeFavsListener();
+    unsubscribeFavsListener = null;
+  }
   await auth.signOut();
   renderCategoryTabs();
   renderGuruSidebar();
 }
 
-async function syncFavoritesFromCloud(uid) {
+let unsubscribeFavsListener = null;
+
+function setupCloudFavoritesListener(uid) {
   if (!db || !uid) return;
-  try {
-    const docRef = db.collection("users").doc(uid);
-    const doc = await docRef.get();
+  if (unsubscribeFavsListener) {
+    unsubscribeFavsListener();
+  }
+
+  const docRef = db.collection("users").doc(uid);
+  unsubscribeFavsListener = docRef.onSnapshot((doc) => {
     if (doc.exists) {
       const data = doc.data();
       if (data && Array.isArray(data.favorites)) {
         saveFavorites(data.favorites);
         renderCategoryTabs();
         renderGuruSidebar();
+        if (state.currentGuruKey === "__CUSTOM_GROUP__") {
+          selectGuru("__CUSTOM_GROUP__");
+        }
       }
     } else {
-      await docRef.set({ favorites: getFavorites() }, { merge: true });
+      // 최초 사용자의 경우 로컬에 있던 초기 즐겨찾기를 클라우드에 업로드
+      docRef.set({
+        favorites: getFavorites(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
     }
-  } catch (e) {
-    console.warn("Firestore 동기화 실패:", e);
-  }
+  }, (err) => {
+    console.warn("Firestore 실시간 리스너 에러:", err);
+  });
+}
+
+async function syncFavoritesFromCloud(uid) {
+  setupCloudFavoritesListener(uid);
 }
 
 async function syncFavoritesToCloud(favs) {
