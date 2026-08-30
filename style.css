@@ -1223,7 +1223,31 @@ body {
 }
 
 .text-right {
-  text-align: right;
+  text-align: right !important;
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+.text-left {
+  text-align: left !important;
+}
+
+.power-table th.text-right,
+.power-table td.text-right {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.power-table th.text-center,
+.power-table td.text-center {
+  text-align: center !important;
+}
+
+.power-table th.text-left,
+.power-table td.text-left {
+  text-align: left !important;
 }
 
 .ticker-cell {

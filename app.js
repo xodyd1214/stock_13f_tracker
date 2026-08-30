@@ -1098,7 +1098,7 @@ function appendNextPageRows() {
     const isDiscount = Number(discountPct) < 0;
 
     tr.innerHTML = `
-      <td>
+      <td class="text-left">
         <div class="ticker-cell">
           <div>
             <div class="ticker-symbol">${item.ticker}</div>
@@ -1106,13 +1106,13 @@ function appendNextPageRows() {
           </div>
         </div>
       </td>
-      <td class="col-sector">${item.sector}</td>
-      <td class="col-holders">
+      <td class="col-sector text-left">${item.sector}</td>
+      <td class="col-holders text-center">
         <span class="badge ${item.holders >= 5 ? 'fund-badge' : 'quarter-badge'}">
           ${item.holdersDisplay || '1개사 보유'}
         </span>
       </td>
-      <td>
+      <td class="text-center">
         <span class="action-badge ${item.action}">
           ${item.action === 'NEW' ? 'NEW' : item.action}
         </span>
