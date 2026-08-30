@@ -574,5 +574,101 @@
     "changePct": -0.95,
     "currency": "USD",
     "marketTime": 1787947200
+  },
+  "EEM": {
+    "price": 67.14,
+    "changePct": -0.7,
+    "currency": "USD",
+    "marketTime": 1787947200
+  },
+  "IJH": {
+    "price": 75.76,
+    "changePct": -1.16,
+    "currency": "USD",
+    "marketTime": 1787947200
+  },
+  "EFA": {
+    "price": 107.72,
+    "changePct": -0.28,
+    "currency": "USD",
+    "marketTime": 1787947200
+  },
+  "XLE": {
+    "price": 62.68,
+    "changePct": 0.63,
+    "currency": "USD",
+    "marketTime": 1787947200
+  },
+  "XLY": {
+    "price": 117.21,
+    "changePct": 1.15,
+    "currency": "USD",
+    "marketTime": 1787947200
+  },
+  "SLV": {
+    "price": 60.02,
+    "changePct": -4.38,
+    "currency": "USD",
+    "marketTime": 1787947200
+  },
+  "IJR": {
+    "price": 145.58,
+    "changePct": -0.82,
+    "currency": "USD",
+    "marketTime": 1787947200
+  },
+  "IWF": {
+    "price": 122.75,
+    "changePct": -0.92,
+    "currency": "USD",
+    "marketTime": 1787947200
+  },
+  "IBIT": {
+    "price": 43.9,
+    "changePct": -3.07,
+    "currency": "USD",
+    "marketTime": 1787947201
+  },
+  "IWM": {
+    "price": 295.75,
+    "changePct": -1.35,
+    "currency": "USD",
+    "marketTime": 1787947200
+  },
+  "AGG": {
+    "price": 97.49,
+    "changePct": -0.35,
+    "currency": "USD",
+    "marketTime": 1787947200
+  },
+  "IEFA": {
+    "price": 100.49,
+    "changePct": -0.28,
+    "currency": "USD",
+    "marketTime": 1787947200
+  },
+  "DIA": {
+    "price": 535.06,
+    "changePct": -0.03,
+    "currency": "USD",
+    "marketTime": 1787947200
+  },
+  "XLV": {
+    "price": 171.16,
+    "changePct": -0.24,
+    "currency": "USD",
+    "marketTime": 1787947200
+  },
+  "XLK": {
+    "price": 185.69,
+    "changePct": -1.55,
+    "currency": "USD",
+    "marketTime": 1787947200
+  },
+  "XLF": {
+    "price": 58.1,
+    "changePct": 0.38,
+    "currency": "USD",
+    "marketTime": 1787947200
   }
 }
