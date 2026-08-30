@@ -759,6 +759,10 @@ function updateSummaryMetrics(guru) {
   }
 }
 
+let CURRENT_FILTERED_ITEMS = [];
+let CURRENT_PAGE_INDEX = 1;
+const PAGE_SIZE = 60;
+
 function renderTable() {
   const guru = GURU_DATABASE[state.currentGuruKey];
   if (!guru) return;
@@ -766,8 +770,9 @@ function renderTable() {
   const tbody = document.getElementById("tableBody");
   if (!tbody) return;
   tbody.innerHTML = "";
+  CURRENT_PAGE_INDEX = 1;
 
-  let filtered = guru.holdings.filter(item => {
+  CURRENT_FILTERED_ITEMS = guru.holdings.filter(item => {
     if (state.searchQuery) {
       const q = state.searchQuery.toLowerCase();
       const match = item.ticker.toLowerCase().includes(q) ||
@@ -800,7 +805,7 @@ function renderTable() {
   const cConv = document.getElementById("countConviction");
   if (cConv) cConv.innerText = guru.holdings.filter(h => h.weight >= 5.0).length;
 
-  filtered.sort((a, b) => {
+  CURRENT_FILTERED_ITEMS.sort((a, b) => {
     let valA = a[state.sortColumn];
     let valB = b[state.sortColumn];
 
@@ -815,7 +820,21 @@ function renderTable() {
     return state.sortDirection === "asc" ? valA - valB : valB - valA;
   });
 
-  filtered.forEach(item => {
+  appendNextPageRows();
+}
+
+function appendNextPageRows() {
+  const tbody = document.getElementById("tableBody");
+  if (!tbody) return;
+
+  const start = (CURRENT_PAGE_INDEX - 1) * PAGE_SIZE;
+  const end = Math.min(start + PAGE_SIZE, CURRENT_FILTERED_ITEMS.length);
+  if (start >= CURRENT_FILTERED_ITEMS.length) return;
+
+  const chunk = CURRENT_FILTERED_ITEMS.slice(start, end);
+  const fragment = document.createDocumentFragment();
+
+  chunk.forEach(item => {
     const tr = document.createElement("tr");
     tr.onclick = () => openStockModal(item);
 
@@ -865,10 +884,12 @@ function renderTable() {
         </span>
       </td>
     `;
-    tbody.appendChild(tr);
+    fragment.appendChild(tr);
   });
 
+  tbody.appendChild(fragment);
   applyColumnVisibility();
+  CURRENT_PAGE_INDEX++;
 }
 
 function applyColumnVisibility() {
@@ -950,13 +971,24 @@ function setupEventListeners() {
     };
   });
 
+  let searchDebounce = null;
   const searchInput = document.getElementById("searchInput");
   if (searchInput) {
     searchInput.oninput = (e) => {
-      state.searchQuery = e.target.value;
-      renderTable();
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => {
+        state.searchQuery = e.target.value;
+        renderTable();
+      }, 100);
     };
   }
+
+  // 윈도우 무한 스크롤: 스크롤이 하단 400px에 도달하면 다음 60개 즉시 로드
+  window.addEventListener("scroll", () => {
+    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 400) {
+      appendNextPageRows();
+    }
+  }, { passive: true });
 
   const btnCols = document.getElementById("btnToggleCols");
   const colMenu = document.getElementById("colMenu");
