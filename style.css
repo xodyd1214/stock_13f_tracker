@@ -537,25 +537,21 @@ body {
   border: 1px solid rgba(30, 215, 96, 0.3);
 }
 
-/* Header Actions & Pill Buttons */
+/* Header Actions & Pill Buttons (완벽한 규격 일치) */
 .header-actions {
   display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-/* 구글 로그인 & 유저 프로필 */
-.auth-container {
-  display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
 }
 
+.btn-header-action,
 .btn-google-login {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
   border-radius: var(--radius-full);
   background-color: var(--bg-elevated);
   border: 1px solid var(--border-light);
@@ -563,14 +559,29 @@ body {
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
+  outline: none;
   transition: all 0.2s ease;
+  user-select: none;
+  box-sizing: border-box;
 }
 
+.btn-header-action:hover,
 .btn-google-login:hover {
   background-color: #ffffff;
   color: #000000;
   border-color: #ffffff;
   transform: translateY(-1px);
+}
+
+.btn-header-action svg {
+  stroke: currentColor;
+}
+
+/* 구글 로그인 & 유저 프로필 */
+.auth-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .user-profile {
