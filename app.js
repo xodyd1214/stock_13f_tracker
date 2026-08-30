@@ -646,7 +646,14 @@ function renderCategoryTabs() {
     if (lbl) lbl.after(existing);
   }
 
-  const favCount = getFavorites().length;
+  const favs = getFavorites();
+  const favCount = favs.length;
+
+  const subtextEl = document.getElementById("customGroupSubtext");
+  if (subtextEl) {
+    subtextEl.innerText = `내가 찜한 ${favCount}개 운용사 합산`;
+  }
+
   existing.innerHTML = `
     <div class="cat-pill-row">
       <button class="cat-pill ${state.activeCategory === 'ALL' ? 'active' : ''}" data-cat="ALL">전체</button>
@@ -670,6 +677,12 @@ function renderGuruSidebar() {
   if (!listEl) return;
   listEl.innerHTML = "";
 
+  const favs = getFavorites();
+  const subtextEl = document.getElementById("customGroupSubtext");
+  if (subtextEl) {
+    subtextEl.innerText = `내가 찜한 ${favs.length}개 운용사 합산`;
+  }
+
   const btnGrand = document.getElementById("btnGrandTotal");
   if (btnGrand) {
     btnGrand.classList.toggle("active", state.currentGuruKey === "__GRAND_TOTAL__");
@@ -680,7 +693,6 @@ function renderGuruSidebar() {
     btnCustom.classList.toggle("active", state.currentGuruKey === "__CUSTOM_GROUP__");
   }
 
-  const favs = getFavorites();
   let keys = Object.keys(GURU_DATABASE).filter(k => k !== "__GRAND_TOTAL__" && k !== "__CUSTOM_GROUP__");
 
   // 1차 기준: 총 운용자산 규모(AUM) 내림차순 정렬
@@ -1426,7 +1438,9 @@ function setupEventListeners() {
       item.classList.add("active");
       const tab = item.dataset.tab;
       
-      if (tab === "consensus") {
+      if (tab === "custom-group") {
+        buildCustomGroupPortfolio();
+      } else if (tab === "consensus") {
         selectGuru("__GRAND_TOTAL__");
         state.sortColumn = "holders";
         state.sortDirection = "desc";
@@ -1444,6 +1458,7 @@ function setupEventListeners() {
         document.querySelectorAll(".filter-tab").forEach(f => f.classList.toggle("active", f.dataset.filter === "DISCOUNT"));
         renderTable();
       } else {
+        selectGuru("__GRAND_TOTAL__");
         state.sortColumn = "weight";
         state.sortDirection = "desc";
         state.activeFilter = "ALL";
