@@ -8,6 +8,112 @@ let GURU_DATABASE = {};
 let RAW_HOLDINGS = [];
 let LIVE_PRICES = {};
 
+// Firebase 설정 & 클라우드 동기화 엔진
+const firebaseConfig = {
+  apiKey: "AIzaSyBCxnvGWZBXtJKwvsaSs2P2xCOVa82tXvg",
+  authDomain: "alpha13f-e9be4.firebaseapp.com",
+  projectId: "alpha13f-e9be4",
+  storageBucket: "alpha13f-e9be4.firebasestorage.app",
+  messagingSenderId: "940351126278",
+  appId: "1:940351126278:web:e2ec48dd2138c854023c87",
+  measurementId: "G-XCGQPV83D8"
+};
+
+let CURRENT_USER = null;
+let db = null;
+let auth = null;
+
+function initFirebase() {
+  try {
+    if (window.firebase) {
+      firebase.initializeApp(firebaseConfig);
+      auth = firebase.auth();
+      db = firebase.firestore();
+
+      auth.onAuthStateChanged(async (user) => {
+        CURRENT_USER = user;
+        updateAuthUI(user);
+        if (user) {
+          await syncFavoritesFromCloud(user.uid);
+        }
+      });
+    }
+  } catch (e) {
+    console.error("Firebase 초기화 에러:", e);
+  }
+}
+
+function updateAuthUI(user) {
+  const btnLogin = document.getElementById("btnGoogleLogin");
+  const userProfile = document.getElementById("userProfile");
+  const userAvatar = document.getElementById("userAvatar");
+  const userName = document.getElementById("userName");
+
+  if (user) {
+    if (btnLogin) btnLogin.style.display = "none";
+    if (userProfile) userProfile.style.display = "flex";
+    if (userAvatar) userAvatar.src = user.photoURL || "https://www.gstatic.com/images/branding/product/1x/avatar_square_blue_512dp.png";
+    if (userName) userName.innerText = user.displayName || user.email.split("@")[0];
+  } else {
+    if (btnLogin) btnLogin.style.display = "inline-flex";
+    if (userProfile) userProfile.style.display = "none";
+  }
+}
+
+async function loginWithGoogle() {
+  if (!auth) return;
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    await auth.signInWithPopup(provider);
+  } catch (err) {
+    console.warn("Popup 로그인 실패, redirect 시도:", err);
+    try {
+      await auth.signInWithRedirect(provider);
+    } catch (e) {
+      alert("구글 로그인 중 오류가 발생했습니다: " + e.message);
+    }
+  }
+}
+
+async function logout() {
+  if (!auth) return;
+  await auth.signOut();
+  renderCategoryTabs();
+  renderGuruSidebar();
+}
+
+async function syncFavoritesFromCloud(uid) {
+  if (!db || !uid) return;
+  try {
+    const docRef = db.collection("users").doc(uid);
+    const doc = await docRef.get();
+    if (doc.exists) {
+      const data = doc.data();
+      if (data && Array.isArray(data.favorites)) {
+        saveFavorites(data.favorites);
+        renderCategoryTabs();
+        renderGuruSidebar();
+      }
+    } else {
+      await docRef.set({ favorites: getFavorites() }, { merge: true });
+    }
+  } catch (e) {
+    console.warn("Firestore 동기화 실패:", e);
+  }
+}
+
+async function syncFavoritesToCloud(favs) {
+  if (!db || !CURRENT_USER) return;
+  try {
+    await db.collection("users").doc(CURRENT_USER.uid).set({
+      favorites: favs,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  } catch (e) {
+    console.warn("클라우드 저장 실패:", e);
+  }
+}
+
 // 즐겨찾기 로컬 저장소 키
 const FAVORITES_STORAGE_KEY = "alpha13f_favorite_gurus";
 
@@ -34,6 +140,9 @@ function toggleFavorite(guruKey) {
     favs.push(guruKey);
   }
   saveFavorites(favs);
+  if (CURRENT_USER) {
+    syncFavoritesToCloud(favs);
+  }
   renderCategoryTabs();
   renderGuruSidebar();
 }
@@ -153,6 +262,8 @@ const state = {
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
+    initFirebase();
+
     // 초기 접속 시 즐겨찾기 기본값 (버핏, 애크먼, 달리오, 버리, 드러켄밀러)
     if (!localStorage.getItem(FAVORITES_STORAGE_KEY)) {
       saveFavorites(["Warren Buffett", "Bill Ackman", "Ray Dalio", "Michael Burry", "Stanley Druckenmiller"]);
@@ -1051,5 +1162,15 @@ function setupEventListeners() {
       link.click();
       document.body.removeChild(link);
     };
+  }
+
+  const btnGoogle = document.getElementById("btnGoogleLogin");
+  if (btnGoogle) {
+    btnGoogle.onclick = () => loginWithGoogle();
+  }
+
+  const btnLogout = document.getElementById("btnLogout");
+  if (btnLogout) {
+    btnLogout.onclick = () => logout();
   }
 }
