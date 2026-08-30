@@ -999,16 +999,18 @@ function renderTreemap(holdings) {
 
   const tiles = computeSquarifiedTreemap(items, 0, 0, containerWidth, containerHeight);
 
+  const tooltip = document.getElementById("treemapTooltip");
+
   tiles.forEach(t => {
     const item = t.item;
     const tile = document.createElement("div");
     tile.className = `treemap-tile ${item.action || 'HOLD'}`;
     
-    // 크기 구분 클래스
+    // 크기 구분 클래스 (폭 85px 미만 또는 높이 65px 미만 시 소형 모드)
     const area = t.width * t.height;
     if (area > 24000 || (item.weight && item.weight >= 8.0)) {
       tile.classList.add("tile-large");
-    } else if (area < 4000 || t.height < 45 || t.width < 55) {
+    } else if (t.width < 90 || t.height < 65 || area < 6500) {
       tile.classList.add("tile-small");
     }
 
@@ -1018,9 +1020,11 @@ function renderTreemap(holdings) {
     tile.style.width = `${t.width}px`;
     tile.style.height = `${t.height}px`;
 
-    const isDiscount = item.curPrice < item.estPrice;
+    const diffVal = ((item.curPrice - item.estPrice) / item.estPrice) * 100;
+    const diffPct = diffVal.toFixed(1);
+    const isDown = diffVal < 0;
 
-    const hasRoomForName = t.height >= 50 && t.width >= 65;
+    const hasRoomForName = t.height >= 60 && t.width >= 85;
     const hasRoomForDiscount = t.width >= 90;
     const cleanName = getCleanCompanyName(item.ticker, item.name);
 
@@ -1028,7 +1032,7 @@ function renderTreemap(holdings) {
       <div class="tile-top">
         <span class="tile-ticker">${item.ticker}</span>
         <div class="tile-badges">
-          ${(isDiscount && hasRoomForDiscount) ? '<span class="tile-discount-badge">할인</span>' : ''}
+          ${(isDown && hasRoomForDiscount) ? '<span class="tile-discount-badge">할인</span>' : ''}
           <span class="tile-action ${item.action}">${item.action === 'NEW' ? 'NEW' : item.action}</span>
         </div>
       </div>
@@ -1039,7 +1043,59 @@ function renderTreemap(holdings) {
       </div>
     `;
 
-    tile.onclick = () => openStockModal(item);
+    // 💡 인터랙티브 플로팅 툴팁(Toast) 이벤트
+    if (tooltip) {
+      tile.addEventListener("mouseenter", (e) => {
+        const actionLabel = item.action === 'NEW' ? '신규 매수' : (item.action === 'ADD' ? '비중 확대' : (item.action === 'REDUCE' ? '비중 축소' : '보유 유지'));
+        const diffText = isDown ? `<span style="color:var(--negative-red)">${diffPct}% 하락 (할인)</span>` : `<span style="color:var(--spotify-green)">+${diffPct}% 상승</span>`;
+
+        tooltip.innerHTML = `
+          <div class="tooltip-header">
+            <span class="tooltip-ticker">${item.ticker}</span>
+            <div class="tooltip-badges">
+              ${isDown ? '<span class="tile-discount-badge">할인</span>' : ''}
+              <span class="tile-action ${item.action}">${item.action} (${actionLabel})</span>
+            </div>
+          </div>
+          <div class="tooltip-name">${item.name || cleanName}</div>
+          <div class="tooltip-grid">
+            <div class="tooltip-row">
+              <span class="tooltip-label">포트폴리오 비중</span>
+              <span class="tooltip-val" style="color:var(--spotify-green)">${item.weight}%</span>
+            </div>
+            <div class="tooltip-row">
+              <span class="tooltip-label">총 평가 금액</span>
+              <span class="tooltip-val">${formatMoney(item.value)}</span>
+            </div>
+            <div class="tooltip-row">
+              <span class="tooltip-label">현재 실시간가</span>
+              <span class="tooltip-val">$${item.curPrice.toFixed(2)}</span>
+            </div>
+            <div class="tooltip-row">
+              <span class="tooltip-label">공시가 대비</span>
+              <span class="tooltip-val">${diffText}</span>
+            </div>
+          </div>
+        `;
+        tooltip.style.left = `${e.clientX}px`;
+        tooltip.style.top = `${e.clientY}px`;
+        tooltip.classList.add("show");
+      });
+
+      tile.addEventListener("mousemove", (e) => {
+        tooltip.style.left = `${e.clientX}px`;
+        tooltip.style.top = `${e.clientY}px`;
+      });
+
+      tile.addEventListener("mouseleave", () => {
+        tooltip.classList.remove("show");
+      });
+    }
+
+    tile.onclick = () => {
+      if (tooltip) tooltip.classList.remove("show");
+      openStockModal(item);
+    };
     container.appendChild(tile);
   });
 }
