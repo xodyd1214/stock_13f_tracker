@@ -1019,15 +1019,18 @@ function renderTreemap(holdings) {
     tile.style.height = `${t.height}px`;
 
     const isDiscount = item.curPrice < item.estPrice;
-    if (isDiscount) tile.classList.add("discount-target");
 
     const hasRoomForName = t.height >= 50 && t.width >= 65;
+    const hasRoomForDiscount = t.width >= 90;
     const cleanName = getCleanCompanyName(item.ticker, item.name);
 
     tile.innerHTML = `
       <div class="tile-top">
         <span class="tile-ticker">${item.ticker}</span>
-        <span class="tile-action ${item.action}">${item.action === 'NEW' ? 'NEW' : item.action}</span>
+        <div class="tile-badges">
+          ${(isDiscount && hasRoomForDiscount) ? '<span class="tile-discount-badge">할인</span>' : ''}
+          <span class="tile-action ${item.action}">${item.action === 'NEW' ? 'NEW' : item.action}</span>
+        </div>
       </div>
       ${hasRoomForName ? `<div class="tile-name" title="${item.name}">${cleanName}</div>` : ''}
       <div class="tile-bottom">
