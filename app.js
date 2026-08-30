@@ -1039,14 +1039,24 @@ function openStockModal(item) {
   if (elInsight) elInsight.innerText = item.insight || "이 종목은 주요 운용사들의 포트폴리오에 편입된 핵심 자산입니다.";
 
   // 야후 파이낸스 & 구글 파이낸스 외부 링크 세팅
-  const targetTicker = (item.baseTicker || item.ticker || "").replace(/[^a-zA-Z0-9]/g, "");
-  const linkYahoo = document.getElementById("linkYahooFinance");
-  if (linkYahoo && targetTicker) {
-    linkYahoo.href = `https://finance.yahoo.com/quote/${targetTicker}`;
+  const targetTicker = (item.baseTicker || item.ticker || "").split(" ")[0].replace(/[^a-zA-Z0-9\-\.]/g, "");
+  
+  const btnYahoo = document.getElementById("btnYahooFinance");
+  if (btnYahoo) {
+    btnYahoo.onclick = (e) => {
+      e.stopPropagation();
+      const cleanT = targetTicker.replace(".", "-");
+      window.open(`https://finance.yahoo.com/quote/${cleanT}`, "_blank");
+    };
   }
-  const linkGoogle = document.getElementById("linkGoogleFinance");
-  if (linkGoogle && targetTicker) {
-    linkGoogle.href = `https://www.google.com/finance/quote/${targetTicker}`;
+
+  const btnGoogle = document.getElementById("btnGoogleFinance");
+  if (btnGoogle) {
+    btnGoogle.onclick = (e) => {
+      e.stopPropagation();
+      const cleanT = targetTicker.replace("-", ".");
+      window.open(`https://www.google.com/finance/quote/${cleanT}`, "_blank");
+    };
   }
 
   modal.classList.add("show");
