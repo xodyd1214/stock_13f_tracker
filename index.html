@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=20260830v18">
+  <link rel="stylesheet" href="style.css?v=20260830v19">
 </head>
 <body>
   <div class="app-container">
@@ -50,9 +50,6 @@
         </button>
         <button class="nav-item" data-tab="discount">
           <span>공시가 대비 할인 종목</span>
-        </button>
-        <button class="nav-item compare-nav-btn" id="btnOpenCompare">
-          <span>운용사 1:1 비교</span>
         </button>
       </nav>
 
@@ -329,67 +326,10 @@
     </div>
   </div>
 
-  <!-- 운용사 1:1 비교 모달 -->
-  <div class="modal-backdrop" id="compareModal">
-    <div class="modal-content modal-compare-wide">
-      <button class="modal-close" id="btnCompareClose">&times;</button>
-      <div class="compare-header">
-        <h3>운용사 1:1 포트폴리오 비교</h3>
-        <p>두 운용사의 포트폴리오를 좌우로 비교하고, 공통 보유 종목과 차별화 종목을 분석합니다.</p>
-      </div>
-
-      <div class="compare-selectors-row">
-        <div class="compare-select-box">
-          <label>운용사 A</label>
-          <select id="selectGuruA" class="compare-select"></select>
-        </div>
-        <div class="compare-vs-badge">VS</div>
-        <div class="compare-select-box">
-          <label>운용사 B</label>
-          <select id="selectGuruB" class="compare-select"></select>
-        </div>
-      </div>
-
-      <!-- 공통 보유 종목 하이라이트 -->
-      <div class="compare-overlap-box">
-        <div class="overlap-title">
-          <span>두 운용사 공통 보유 종목 (<strong id="compareOverlapCount">0</strong>개)</span>
-        </div>
-        <div class="overlap-chips" id="compareOverlapChips">
-          <!-- JS 렌더링 -->
-        </div>
-      </div>
-
-      <div class="compare-columns-grid">
-        <!-- 운용사 A 컬럼 -->
-        <div class="compare-col" id="colGuruA">
-          <div class="compare-col-header">
-            <h4 id="colGuruAName">-</h4>
-            <span class="compare-col-aum" id="colGuruAAum">-</span>
-          </div>
-          <div class="compare-holdings-list" id="listGuruA">
-            <!-- JS 렌더링 -->
-          </div>
-        </div>
-
-        <!-- 운용사 B 컬럼 -->
-        <div class="compare-col" id="colGuruB">
-          <div class="compare-col-header">
-            <h4 id="colGuruBName">-</h4>
-            <span class="compare-col-aum" id="colGuruBAum">-</span>
-          </div>
-          <div class="compare-holdings-list" id="listGuruB">
-            <!-- JS 렌더링 -->
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Firebase SDK (v10 compat) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="app.js?v=20260830v18"></script>
+  <script src="app.js?v=20260830v19"></script>
 </body>
 </html>

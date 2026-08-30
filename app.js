@@ -524,7 +524,6 @@ async function loadRealSecData() {
     renderCategoryTabs();
     renderGuruSidebar();
     selectGuru("__GRAND_TOTAL__");
-    populateCompareSelects();
 
   } catch (err) {
     console.error("데이터 로드 실패:", err);
@@ -1164,131 +1163,6 @@ function renderStockHoldersTable(ticker) {
   });
 }
 
-// ⚔️ 기능 2: 운용사 1:1 맞짱 비교 엔진
-function populateCompareSelects() {
-  const selA = document.getElementById("selectGuruA");
-  const selB = document.getElementById("selectGuruB");
-  if (!selA || !selB) return;
-
-  selA.innerHTML = "";
-  selB.innerHTML = "";
-
-  const keys = Object.keys(GURU_DATABASE).filter(k => k !== "__GRAND_TOTAL__" && k !== "__CUSTOM_GROUP__");
-  keys.sort((a, b) => (GURU_DATABASE[b].rawAum || 0) - (GURU_DATABASE[a].rawAum || 0));
-
-  keys.forEach(k => {
-    const g = GURU_DATABASE[k];
-    const optA = new Option(`${g.fund || g.name} (${g.name})`, k);
-    const optB = new Option(`${g.fund || g.name} (${g.name})`, k);
-    selA.appendChild(optA);
-    selB.appendChild(optB);
-  });
-
-  // 기본값 세팅: 1위 버크셔 vs 2위 퍼싱스퀘어/사이온
-  if (keys.length >= 2) {
-    selA.value = keys[0];
-    selB.value = keys[1];
-  }
-
-  selA.onchange = () => renderComparison();
-  selB.onchange = () => renderComparison();
-}
-
-function openCompareModal() {
-  const modal = document.getElementById("compareModal");
-  if (!modal) return;
-  modal.classList.add("show");
-  renderComparison();
-}
-
-function renderComparison() {
-  const selA = document.getElementById("selectGuruA");
-  const selB = document.getElementById("selectGuruB");
-  if (!selA || !selB) return;
-
-  const keyA = selA.value;
-  const keyB = selB.value;
-  const guruA = GURU_DATABASE[keyA];
-  const guruB = GURU_DATABASE[keyB];
-
-  if (!guruA || !guruB) return;
-
-  document.getElementById("colGuruAName").innerText = guruA.fund || guruA.name;
-  document.getElementById("colGuruAAum").innerText = guruA.aum || "$0";
-  document.getElementById("colGuruBName").innerText = guruB.fund || guruB.name;
-  document.getElementById("colGuruBAum").innerText = guruB.aum || "$0";
-
-  const holdingsA = guruA.holdings || [];
-  const holdingsB = guruB.holdings || [];
-
-  const setA = new Set(holdingsA.map(h => h.baseTicker || h.ticker));
-  const setB = new Set(holdingsB.map(h => h.baseTicker || h.ticker));
-
-  // 공통 보유 종목 (Overlaps)
-  const overlaps = [...setA].filter(t => setB.has(t));
-  const overlapContainer = document.getElementById("compareOverlapChips");
-  const overlapCountEl = document.getElementById("compareOverlapCount");
-
-  if (overlapCountEl) overlapCountEl.innerText = overlaps.length;
-  if (overlapContainer) {
-    overlapContainer.innerHTML = "";
-    if (overlaps.length === 0) {
-      overlapContainer.innerHTML = `<span style="font-size: 11.5px; color: var(--text-muted);">공통 보유 종목이 없습니다.</span>`;
-    } else {
-      overlaps.forEach(t => {
-        const chip = document.createElement("span");
-        chip.className = "overlap-chip";
-        chip.innerText = t;
-        overlapContainer.appendChild(chip);
-      });
-    }
-  }
-
-  // 컬럼 A 렌더링
-  const listA = document.getElementById("listGuruA");
-  if (listA) {
-    listA.innerHTML = "";
-    holdingsA.slice(0, 15).forEach(h => {
-      const isOver = overlaps.includes(h.baseTicker || h.ticker);
-      const row = document.createElement("div");
-      row.className = `compare-item ${isOver ? 'is-overlap' : ''}`;
-      row.innerHTML = `
-        <div class="compare-item-left">
-          <span class="compare-item-ticker">${h.ticker}</span>
-          <span class="compare-item-name">${h.name}</span>
-        </div>
-        <div class="compare-item-right">
-          <span class="compare-item-weight">${h.weight}%</span>
-          <div class="compare-item-val">${formatMoney(h.value)}</div>
-        </div>
-      `;
-      listA.appendChild(row);
-    });
-  }
-
-  // 컬럼 B 렌더링
-  const listB = document.getElementById("listGuruB");
-  if (listB) {
-    listB.innerHTML = "";
-    holdingsB.slice(0, 15).forEach(h => {
-      const isOver = overlaps.includes(h.baseTicker || h.ticker);
-      const row = document.createElement("div");
-      row.className = `compare-item ${isOver ? 'is-overlap' : ''}`;
-      row.innerHTML = `
-        <div class="compare-item-left">
-          <span class="compare-item-ticker">${h.ticker}</span>
-          <span class="compare-item-name">${h.name}</span>
-        </div>
-        <div class="compare-item-right">
-          <span class="compare-item-weight">${h.weight}%</span>
-          <div class="compare-item-val">${formatMoney(h.value)}</div>
-        </div>
-      `;
-      listB.appendChild(row);
-    });
-  }
-}
-
 function setupEventListeners() {
   const btnGrand = document.getElementById("btnGrandTotal");
   if (btnGrand) {
@@ -1307,20 +1181,7 @@ function setupEventListeners() {
     };
   }
 
-  const btnOpenCompare = document.getElementById("btnOpenCompare");
-  if (btnOpenCompare) {
-    btnOpenCompare.onclick = () => openCompareModal();
-  }
-
-  const btnCompareClose = document.getElementById("btnCompareClose");
-  if (btnCompareClose) {
-    btnCompareClose.onclick = () => {
-      document.getElementById("compareModal").classList.remove("show");
-    };
-  }
-
   document.querySelectorAll(".nav-item").forEach(item => {
-    if (item.id === "btnOpenCompare") return;
     item.onclick = () => {
       document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
       item.classList.add("active");
@@ -1333,7 +1194,6 @@ function setupEventListeners() {
         state.activeFilter = "CONSENSUS";
         renderTable();
       } else if (tab === "new_buys") {
-        // 🔥 기능 5: 신규 매수 (NEW) VIP 랭킹 전용 뷰
         selectGuru("__GRAND_TOTAL__");
         state.activeFilter = "NEW";
         document.querySelectorAll(".filter-tab").forEach(f => f.classList.toggle("active", f.dataset.filter === "NEW"));
