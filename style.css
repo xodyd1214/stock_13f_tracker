@@ -153,8 +153,11 @@ body {
   font-weight: 600;
 }
 
-/* Grand Total (Consensus) Button */
+/* Grand Total & Custom Group Buttons */
 .grand-total-btn-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   margin-bottom: 16px;
 }
 
@@ -179,6 +182,20 @@ body {
   background-color: var(--bg-elevated);
   border-color: var(--spotify-green);
   box-shadow: 0 0 12px rgba(30, 215, 96, 0.15);
+}
+
+/* 즐겨찾기 묶어보기 버튼 (높이 콤팩트 버전) */
+.grand-total-btn.custom-group-btn-unified {
+  padding: 9px 14px;
+}
+
+.grand-total-btn.custom-group-btn-unified h4 {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.grand-total-btn.custom-group-btn-unified p {
+  font-size: 10.5px;
 }
 
 .grand-tag {
@@ -358,31 +375,6 @@ body {
 }
 .star-btn.starred {
   color: #fbbf24;
-}
-
-/* 커스텀 그룹 버튼 */
-.custom-group-btn {
-  width: 100%;
-  padding: 10px 12px;
-  margin-bottom: 8px;
-  border-radius: var(--radius-sm);
-  background-color: rgba(99, 102, 241, 0.12);
-  border: 1px dashed rgba(99, 102, 241, 0.4);
-  color: #a5b4fc;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  text-align: center;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-.custom-group-btn:hover {
-  background-color: rgba(99, 102, 241, 0.22);
-  border-color: #818cf8;
-}
-.custom-group-btn.active {
-  background-color: #4f46e5;
-  color: #ffffff;
-  border-style: solid;
 }
 
 .guru-mini-avatar {

@@ -727,14 +727,18 @@ function renderCategoryTabs() {
   let catContainer = document.getElementById("guruCatFilters");
   const favCount = getFavorites().length;
 
+  const subtextEl = document.getElementById("customGroupSubtext");
+  if (subtextEl) {
+    subtextEl.innerText = `선택한 운용사 ${favCount}개사 맞춤 합산`;
+  }
+
   if (!catContainer) {
     catContainer = document.createElement("div");
     catContainer.id = "guruCatFilters";
     catContainer.className = "guru-cat-filters";
     
-    // 커스텀 묶어보기 버튼 및 3단 필터 탭 (2층 구조)
+    // 개별 운용사 선택 상단 3단 필터 탭 (전체, 즐겨찾기, Top 20)
     catContainer.innerHTML = `
-      <button class="custom-group-btn" id="btnCustomGroup">★ 즐겨찾기 ${favCount}개사 묶어보기</button>
       <div class="cat-pill-row">
         <button class="cat-pill active" data-cat="ALL">전체</button>
         <button class="cat-pill" data-cat="FAV">즐겨찾기 (<span id="favPillCount">${favCount}</span>)</button>
@@ -745,11 +749,6 @@ function renderCategoryTabs() {
     const label = sidebarBox.querySelector(".section-label");
     if (label) {
       label.after(catContainer);
-    }
-
-    const btnCustom = document.getElementById("btnCustomGroup");
-    if (btnCustom) {
-      btnCustom.onclick = () => buildCustomGroupPortfolio();
     }
 
     catContainer.querySelectorAll(".cat-pill").forEach(btn => {
@@ -763,8 +762,6 @@ function renderCategoryTabs() {
   } else {
     const fCountEl = document.getElementById("favPillCount");
     if (fCountEl) fCountEl.innerText = favCount;
-    const btnCustom = document.getElementById("btnCustomGroup");
-    if (btnCustom) btnCustom.innerText = `★ 즐겨찾기 ${favCount}개사 묶어보기`;
   }
 }
 
@@ -1110,6 +1107,11 @@ function setupEventListeners() {
   const btnGrand = document.getElementById("btnGrandTotal");
   if (btnGrand) {
     btnGrand.onclick = () => selectGuru("__GRAND_TOTAL__");
+  }
+
+  const btnCustom = document.getElementById("btnCustomGroup");
+  if (btnCustom) {
+    btnCustom.onclick = () => buildCustomGroupPortfolio();
   }
 
   const btnClose = document.getElementById("btnModalClose");
