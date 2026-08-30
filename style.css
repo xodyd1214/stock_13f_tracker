@@ -605,19 +605,79 @@ body {
   gap: 8px;
 }
 
-.user-profile {
+.top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.header-actions {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 10px 4px 6px;
+  flex-shrink: 0;
+}
+
+.btn-header-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 16px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  color: var(--text-base);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  line-height: 1;
+  user-select: none;
+}
+
+.btn-header-action:hover {
+  background-color: var(--bg-highlight);
+  border-color: #4a4a4a;
+  transform: translateY(-1px);
+}
+
+.btn-header-action:active {
+  transform: scale(0.98);
+}
+
+.btn-header-action span {
+  display: inline-block;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.google-icon {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.user-profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 10px 0 4px;
   background-color: var(--bg-elevated);
-  border-radius: var(--radius-full);
+  border-radius: 16px;
   border: 1px solid var(--border-subtle);
+  box-sizing: border-box;
 }
 
 .user-avatar {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   border-radius: var(--radius-circle);
   object-fit: cover;
 }
