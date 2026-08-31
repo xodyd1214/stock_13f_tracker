@@ -10,7 +10,8 @@
     "shares": 12561737.0,
     "value": 577211815.0,
     "sector": "Other",
-    "weight": 0.19
+    "weight": 0.19,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -23,7 +24,8 @@
     "shares": 2803875.0,
     "value": 128838056.0,
     "sector": "Other",
-    "weight": 0.04
+    "weight": 0.04,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -36,7 +38,8 @@
     "shares": 4228200.0,
     "value": 194285790.0,
     "sector": "Other",
-    "weight": 0.06
+    "weight": 0.06,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -49,7 +52,8 @@
     "shares": 1707580.0,
     "value": 78463301.0,
     "sector": "Other",
-    "weight": 0.03
+    "weight": 0.03,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -62,7 +66,8 @@
     "shares": 4423608.0,
     "value": 203264788.0,
     "sector": "Other",
-    "weight": 0.07
+    "weight": 0.07,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -75,7 +80,8 @@
     "shares": 1275000.0,
     "value": 58586250.0,
     "sector": "Other",
-    "weight": 0.02
+    "weight": 0.02,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -88,7 +94,8 @@
     "shares": 27188433.0,
     "value": 9606489032.0,
     "sector": "Technology",
-    "weight": 3.21
+    "weight": 3.21,
+    "action": "ADD"
   },
   {
     "guru": "Warren Buffett",
@@ -101,7 +108,8 @@
     "shares": 16700.0,
     "value": 5968079.0,
     "sector": "Technology",
-    "weight": 0.0
+    "weight": 0.0,
+    "action": "ADD"
   },
   {
     "guru": "Warren Buffett",
@@ -114,7 +122,8 @@
     "shares": 6700000.0,
     "value": 2394379000.0,
     "sector": "Technology",
-    "weight": 0.8
+    "weight": 0.8,
+    "action": "ADD"
   },
   {
     "guru": "Warren Buffett",
@@ -127,7 +136,8 @@
     "shares": 6250000.0,
     "value": 2233562500.0,
     "sector": "Technology",
-    "weight": 0.75
+    "weight": 0.75,
+    "action": "ADD"
   },
   {
     "guru": "Warren Buffett",
@@ -140,7 +150,8 @@
     "shares": 65824467.0,
     "value": 23523689772.0,
     "sector": "Technology",
-    "weight": 7.86
+    "weight": 7.86,
+    "action": "ADD"
   },
   {
     "guru": "Warren Buffett",
@@ -153,7 +164,8 @@
     "shares": 1149942.0,
     "value": 388967882.0,
     "sector": "Financials",
-    "weight": 0.13
+    "weight": 0.13,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -166,7 +178,8 @@
     "shares": 149061045.0,
     "value": 50419898471.0,
     "sector": "Financials",
-    "weight": 16.85
+    "weight": 16.85,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -179,7 +192,8 @@
     "shares": 1399713.0,
     "value": 473452922.0,
     "sector": "Financials",
-    "weight": 0.16
+    "weight": 0.16,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -192,7 +206,8 @@
     "shares": 692000.0,
     "value": 200237120.0,
     "sector": "Technology",
-    "weight": 0.07
+    "weight": 0.07,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -205,7 +220,8 @@
     "shares": 3840000.0,
     "value": 1111142400.0,
     "sector": "Technology",
-    "weight": 0.37
+    "weight": 0.37,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -218,7 +234,8 @@
     "shares": 34000.0,
     "value": 9838240.0,
     "sector": "Technology",
-    "weight": 0.0
+    "weight": 0.0,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -231,7 +248,8 @@
     "shares": 34724000.0,
     "value": 10047736640.0,
     "sector": "Technology",
-    "weight": 3.36
+    "weight": 3.36,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -244,7 +262,8 @@
     "shares": 2724000.0,
     "value": 788216640.0,
     "sector": "Technology",
-    "weight": 0.26
+    "weight": 0.26,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -257,7 +276,8 @@
     "shares": 15532000.0,
     "value": 4494339520.0,
     "sector": "Technology",
-    "weight": 1.5
+    "weight": 1.5,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -270,7 +290,8 @@
     "shares": 61542988.0,
     "value": 17808079008.0,
     "sector": "Technology",
-    "weight": 5.95
+    "weight": 5.95,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -283,7 +304,8 @@
     "shares": 7204000.0,
     "value": 2084549440.0,
     "sector": "Technology",
-    "weight": 0.7
+    "weight": 0.7,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -296,7 +318,8 @@
     "shares": 14472000.0,
     "value": 4187617920.0,
     "sector": "Technology",
-    "weight": 1.4
+    "weight": 1.4,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -309,7 +332,8 @@
     "shares": 80664820.0,
     "value": 23341172315.0,
     "sector": "Technology",
-    "weight": 7.8
+    "weight": 7.8,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -322,7 +346,8 @@
     "shares": 2712000.0,
     "value": 784744320.0,
     "sector": "Technology",
-    "weight": 0.26
+    "weight": 0.26,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -335,7 +360,8 @@
     "shares": 3776000.0,
     "value": 1092623360.0,
     "sector": "Technology",
-    "weight": 0.37
+    "weight": 0.37,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -348,7 +374,8 @@
     "shares": 3920000.0,
     "value": 223361600.0,
     "sector": "Financials",
-    "weight": 0.07
+    "weight": 0.07,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -361,7 +388,8 @@
     "shares": 11900000.0,
     "value": 678062000.0,
     "sector": "Financials",
-    "weight": 0.23
+    "weight": 0.23,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -374,7 +402,8 @@
     "shares": 145500.0,
     "value": 8290590.0,
     "sector": "Financials",
-    "weight": 0.0
+    "weight": 0.0,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -387,7 +416,8 @@
     "shares": 2100000.0,
     "value": 119658000.0,
     "sector": "Financials",
-    "weight": 0.04
+    "weight": 0.04,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -400,7 +430,8 @@
     "shares": 21000000.0,
     "value": 1196580000.0,
     "sector": "Financials",
-    "weight": 0.4
+    "weight": 0.4,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -413,7 +444,8 @@
     "shares": 308808515.0,
     "value": 17595909185.0,
     "sector": "Financials",
-    "weight": 5.88
+    "weight": 5.88,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -426,7 +458,8 @@
     "shares": 125720000.0,
     "value": 7163525600.0,
     "sector": "Financials",
-    "weight": 2.39
+    "weight": 2.39,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -439,7 +472,8 @@
     "shares": 9800000.0,
     "value": 558404000.0,
     "sector": "Financials",
-    "weight": 0.19
+    "weight": 0.19,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -452,7 +486,8 @@
     "shares": 1138112.0,
     "value": 228328029.0,
     "sector": "Other",
-    "weight": 0.08
+    "weight": 0.08,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -465,7 +500,8 @@
     "shares": 1861888.0,
     "value": 373531971.0,
     "sector": "Other",
-    "weight": 0.12
+    "weight": 0.12,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -478,7 +514,8 @@
     "shares": 3454258.0,
     "value": 572577806.0,
     "sector": "Energy",
-    "weight": 0.19
+    "weight": 0.19,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -491,7 +528,8 @@
     "shares": 9192171.0,
     "value": 1523694265.0,
     "sector": "Energy",
-    "weight": 0.51
+    "weight": 0.51,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -504,7 +542,8 @@
     "shares": 13477678.0,
     "value": 2234059905.0,
     "sector": "Energy",
-    "weight": 0.75
+    "weight": 0.75,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -517,7 +556,8 @@
     "shares": 58251749.0,
     "value": 9655809914.0,
     "sector": "Energy",
-    "weight": 3.23
+    "weight": 3.23,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -530,7 +570,8 @@
     "shares": 800000.0,
     "value": 65016000.0,
     "sector": "Consumer Defensive",
-    "weight": 0.02
+    "weight": 0.02,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -543,7 +584,8 @@
     "shares": 371471.0,
     "value": 30189448.0,
     "sector": "Consumer Defensive",
-    "weight": 0.01
+    "weight": 0.01,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -556,7 +598,8 @@
     "shares": 85000.0,
     "value": 6907950.0,
     "sector": "Consumer Defensive",
-    "weight": 0.0
+    "weight": 0.0,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -569,7 +612,8 @@
     "shares": 80283200.0,
     "value": 6524615664.0,
     "sector": "Consumer Defensive",
-    "weight": 2.18
+    "weight": 2.18,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -582,7 +626,8 @@
     "shares": 1824000.0,
     "value": 148236480.0,
     "sector": "Consumer Defensive",
-    "weight": 0.05
+    "weight": 0.05,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -595,7 +640,8 @@
     "shares": 14411200.0,
     "value": 1171198224.0,
     "sector": "Consumer Defensive",
-    "weight": 0.39
+    "weight": 0.39,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -608,7 +654,8 @@
     "shares": 14990400.0,
     "value": 1218269808.0,
     "sector": "Consumer Defensive",
-    "weight": 0.41
+    "weight": 0.41,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -621,7 +668,8 @@
     "shares": 282722729.0,
     "value": 22976876186.0,
     "sector": "Consumer Defensive",
-    "weight": 7.68
+    "weight": 7.68,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -634,7 +682,8 @@
     "shares": 3552000.0,
     "value": 288671040.0,
     "sector": "Consumer Defensive",
-    "weight": 0.1
+    "weight": 0.1,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -647,7 +696,8 @@
     "shares": 960000.0,
     "value": 78019200.0,
     "sector": "Consumer Defensive",
-    "weight": 0.03
+    "weight": 0.03,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -660,7 +710,8 @@
     "shares": 3564.0,
     "value": 580504.0,
     "sector": "Other",
-    "weight": 0.0
+    "weight": 0.0,
+    "action": "NEW"
   },
   {
     "guru": "Warren Buffett",
@@ -673,7 +724,8 @@
     "shares": 14973608.0,
     "value": 3331328308.0,
     "sector": "Other",
-    "weight": 1.11
+    "weight": 1.11,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -686,7 +738,8 @@
     "shares": 13906601.0,
     "value": 3093940590.0,
     "sector": "Other",
-    "weight": 1.03
+    "weight": 1.03,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -699,7 +752,8 @@
     "shares": 57320000.0,
     "value": 5368591200.0,
     "sector": "Other",
-    "weight": 1.79
+    "weight": 1.79,
+    "action": "ADD"
   },
   {
     "guru": "Warren Buffett",
@@ -712,7 +766,8 @@
     "shares": 433558.0,
     "value": 21669229.0,
     "sector": "Other",
-    "weight": 0.01
+    "weight": 0.01,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -725,7 +780,8 @@
     "shares": 325634818.0,
     "value": 7691494401.0,
     "sector": "Other",
-    "weight": 2.57
+    "weight": 2.57,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -738,7 +794,8 @@
     "shares": 5607090.0,
     "value": 311361708.0,
     "sector": "Other",
-    "weight": 0.1
+    "weight": 0.1,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -751,7 +808,8 @@
     "shares": 768531.0,
     "value": 42676526.0,
     "sector": "Other",
-    "weight": 0.01
+    "weight": 0.01,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -764,7 +822,8 @@
     "shares": 5367119.0,
     "value": 298036118.0,
     "sector": "Other",
-    "weight": 0.1
+    "weight": 0.1,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -777,7 +836,8 @@
     "shares": 27257260.0,
     "value": 1513595648.0,
     "sector": "Other",
-    "weight": 0.51
+    "weight": 0.51,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -790,7 +850,8 @@
     "shares": 745392.0,
     "value": 67450522.0,
     "sector": "Other",
-    "weight": 0.02
+    "weight": 0.02,
+    "action": "ADD"
   },
   {
     "guru": "Warren Buffett",
@@ -803,7 +864,8 @@
     "shares": 12366349.0,
     "value": 1119030921.0,
     "sector": "Other",
-    "weight": 0.37
+    "weight": 0.37,
+    "action": "ADD"
   },
   {
     "guru": "Warren Buffett",
@@ -816,7 +878,8 @@
     "shares": 298117.0,
     "value": 26445959.0,
     "sector": "Other",
-    "weight": 0.01
+    "weight": 0.01,
+    "action": "ADD"
   },
   {
     "guru": "Warren Buffett",
@@ -829,7 +892,8 @@
     "shares": 1011698.0,
     "value": 102444539.0,
     "sector": "Other",
-    "weight": 0.03
+    "weight": 0.03,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -842,7 +906,8 @@
     "shares": 3284775.0,
     "value": 332616317.0,
     "sector": "Other",
-    "weight": 0.11
+    "weight": 0.11,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -855,7 +920,8 @@
     "shares": 233347.0,
     "value": 23628717.0,
     "sector": "Other",
-    "weight": 0.01
+    "weight": 0.01,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -868,7 +934,8 @@
     "shares": 456768.0,
     "value": 46252328.0,
     "sector": "Other",
-    "weight": 0.02
+    "weight": 0.02,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -881,7 +948,8 @@
     "shares": 3479651.0,
     "value": 367590332.0,
     "sector": "Other",
-    "weight": 0.12
+    "weight": 0.12,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -894,7 +962,8 @@
     "shares": 5507583.0,
     "value": 581821068.0,
     "sector": "Other",
-    "weight": 0.19
+    "weight": 0.19,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -907,7 +976,8 @@
     "shares": 162620.0,
     "value": 17179177.0,
     "sector": "Other",
-    "weight": 0.01
+    "weight": 0.01,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -920,7 +990,8 @@
     "shares": 1437289.0,
     "value": 151835210.0,
     "sector": "Other",
-    "weight": 0.05
+    "weight": 0.05,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -933,7 +1004,8 @@
     "shares": 1319884.0,
     "value": 103822075.0,
     "sector": "Other",
-    "weight": 0.03
+    "weight": 0.03,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -946,7 +1018,8 @@
     "shares": 4344909.0,
     "value": 341770542.0,
     "sector": "Other",
-    "weight": 0.11
+    "weight": 0.11,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -959,7 +1032,8 @@
     "shares": 443799.0,
     "value": 10451466.0,
     "sector": "Other",
-    "weight": 0.0
+    "weight": 0.0,
+    "action": "ADD"
   },
   {
     "guru": "Warren Buffett",
@@ -972,7 +1046,8 @@
     "shares": 1376226.0,
     "value": 32410122.0,
     "sector": "Other",
-    "weight": 0.01
+    "weight": 0.01,
+    "action": "ADD"
   },
   {
     "guru": "Warren Buffett",
@@ -985,7 +1060,8 @@
     "shares": 5527401.0,
     "value": 130170294.0,
     "sector": "Other",
-    "weight": 0.04
+    "weight": 0.04,
+    "action": "ADD"
   },
   {
     "guru": "Warren Buffett",
@@ -998,7 +1074,8 @@
     "shares": 72100.0,
     "value": 32655532.0,
     "sector": "Other",
-    "weight": 0.01
+    "weight": 0.01,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -1011,7 +1088,8 @@
     "shares": 11973928.0,
     "value": 5423231470.0,
     "sector": "Other",
-    "weight": 1.81
+    "weight": 1.81,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -1024,7 +1102,8 @@
     "shares": 12623750.0,
     "value": 5717548850.0,
     "sector": "Other",
-    "weight": 1.91
+    "weight": 1.91,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -1037,7 +1116,8 @@
     "shares": 11112.0,
     "value": 75710501.0,
     "sector": "Other",
-    "weight": 0.03
+    "weight": 0.03,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -1050,7 +1130,8 @@
     "shares": 1400000.0,
     "value": 97972000.0,
     "sector": "Other",
-    "weight": 0.03
+    "weight": 0.03,
+    "action": "ADD"
   },
   {
     "guru": "Warren Buffett",
@@ -1063,7 +1144,8 @@
     "shares": 14300000.0,
     "value": 1000714000.0,
     "sector": "Other",
-    "weight": 0.33
+    "weight": 0.33,
+    "action": "ADD"
   },
   {
     "guru": "Warren Buffett",
@@ -1076,7 +1158,8 @@
     "shares": 1857752.0,
     "value": 413814258.0,
     "sector": "Other",
-    "weight": 0.14
+    "weight": 0.14,
+    "action": "REDUCE"
   },
   {
     "guru": "Warren Buffett",
@@ -1089,7 +1172,8 @@
     "shares": 264941431.0,
     "value": 12868205304.0,
     "sector": "Energy",
-    "weight": 4.3
+    "weight": 4.3,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -1102,7 +1186,8 @@
     "shares": 15984890.0,
     "value": 472193651.0,
     "sector": "Other",
-    "weight": 0.16
+    "weight": 0.16,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -1115,7 +1200,8 @@
     "shares": 108822227.0,
     "value": 3214608586.0,
     "sector": "Other",
-    "weight": 1.07
+    "weight": 1.07,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -1128,7 +1214,8 @@
     "shares": 972947.0,
     "value": 244754547.0,
     "sector": "Other",
-    "weight": 0.08
+    "weight": 0.08,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -1141,7 +1228,8 @@
     "shares": 8016933.0,
     "value": 2016739665.0,
     "sector": "Other",
-    "weight": 0.67
+    "weight": 0.67,
+    "action": "HOLD"
   },
   {
     "guru": "Warren Buffett",
@@ -1154,7 +1242,8 @@
     "shares": 34249183.0,
     "value": 11670066615.0,
     "sector": "Other",
-    "weight": 3.9
+    "weight": 3.9,
+    "action": "HOLD"
   },
   {
     "guru": "Charlie Munger (Legacy)",

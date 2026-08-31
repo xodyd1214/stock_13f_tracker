@@ -466,7 +466,7 @@ async function loadRealSecData() {
       } else {
         hMap[baseTicker].shares += itemShares;
         hMap[baseTicker].value += itemVal;
-        if (item.action && item.action !== "HOLD") {
+        if (item.action && item.action !== "None" && item.action !== "HOLD") {
           hMap[baseTicker].action = item.action;
         }
       }
@@ -2051,3 +2051,5 @@ function render13DTable() {
     tbody.appendChild(tr);
   });
 }
+
+function fetchLivePricesForCurrentView() {}
