@@ -1618,6 +1618,25 @@ function setupEventListeners() {
       render13DTable();
     };
   }
+
+  // 내부자 거래 모달 닫기 이벤트
+  const btnCloseInsider = document.getElementById("btnInsiderModalClose");
+  if (btnCloseInsider) {
+    btnCloseInsider.onclick = () => closeInsiderModal();
+  }
+
+  const insiderModal = document.getElementById("insiderModal");
+  if (insiderModal) {
+    insiderModal.onclick = (e) => {
+      if (e.target === insiderModal) closeInsiderModal();
+    };
+  }
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeInsiderModal();
+    }
+  });
 }
 
 // ==============================================================================
@@ -1810,6 +1829,8 @@ function renderForm4Table() {
   list.forEach(item => {
     const tr = document.createElement("tr");
     const isBuy = item.txTypeCode === "P";
+    tr.style.cursor = "pointer";
+    tr.title = `${item.ticker} 전체 내부자 거래 히스토리 보기`;
     
     tr.innerHTML = `
       <td>${item.filingDate}</td>
@@ -1831,11 +1852,99 @@ function renderForm4Table() {
       <td class="text-right text-green"><strong>${formatMoney(item.totalValue)}</strong></td>
       <td class="text-right">${item.postShares.toLocaleString()} 주</td>
       <td class="text-center">
-        <a href="${item.secUrl || '#'}" target="_blank" class="sec-doc-link">SEC 공시 ↗</a>
+        <a href="${item.secUrl || '#'}" target="_blank" class="sec-doc-link" onclick="event.stopPropagation()">SEC 공시 ↗</a>
       </td>
     `;
+
+    tr.onclick = () => {
+      openInsiderModal(item.ticker);
+    };
+
     tbody.appendChild(tr);
   });
+}
+
+function openInsiderModal(ticker) {
+  const modal = document.getElementById("insiderModal");
+  if (!modal) return;
+
+  const tickerItems = FORM4_DATA.filter(item => item.ticker === ticker);
+  if (tickerItems.length === 0) return;
+
+  const first = tickerItems[0];
+  const elTicker = document.getElementById("insiderModalTicker");
+  const elName = document.getElementById("insiderModalName");
+  const elSector = document.getElementById("insiderModalSector");
+
+  if (elTicker) elTicker.innerText = first.ticker;
+  if (elName) elName.innerText = first.companyName;
+  if (elSector) elSector.innerText = `${first.sector} · Form 4 내부자 거래 전수 히스토리`;
+
+  // 통계 계산
+  const buyItems = tickerItems.filter(item => item.txTypeCode === "P");
+  const saleItems = tickerItems.filter(item => item.txTypeCode === "S");
+  const totalVal = tickerItems.reduce((sum, item) => sum + (item.totalValue || 0), 0);
+
+  const elCount = document.getElementById("insiderModalCount");
+  if (elCount) elCount.innerText = `${tickerItems.length}건`;
+
+  const elBuyCount = document.getElementById("insiderModalBuyCount");
+  if (elBuyCount) elBuyCount.innerText = `${buyItems.length}건 (${formatMoney(buyItems.reduce((s, i) => s + i.totalValue, 0))})`;
+
+  const elSaleCount = document.getElementById("insiderModalSaleCount");
+  if (elSaleCount) elSaleCount.innerText = `${saleItems.length}건 (${formatMoney(saleItems.reduce((s, i) => s + i.totalValue, 0))})`;
+
+  const elTotalVal = document.getElementById("insiderModalTotalVal");
+  if (elTotalVal) elTotalVal.innerText = formatMoney(totalVal);
+
+  // 테이블 렌더링
+  const tbody = document.getElementById("insiderModalTableBody");
+  if (tbody) {
+    tbody.innerHTML = "";
+    // 날짜순 내림차순 정렬
+    const sorted = [...tickerItems].sort((a, b) => new Date(b.filingDate) - new Date(a.filingDate));
+    
+    sorted.forEach(item => {
+      const isBuy = item.txTypeCode === "P";
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${item.filingDate}</td>
+        <td><strong>${item.insiderName}</strong></td>
+        <td><span style="font-size: 12px; color: var(--text-subdued);">${item.officerTitle}</span></td>
+        <td class="text-center">
+          <span class="badge-tx ${isBuy ? 'badge-tx-buy' : 'badge-tx-sale'}">
+            ${isBuy ? '장내 매수 (P)' : '장내 매도 (S)'}
+          </span>
+        </td>
+        <td class="text-right">${item.shares.toLocaleString()} 주</td>
+        <td class="text-right">$${item.price.toFixed(2)}</td>
+        <td class="text-right text-green"><strong>${formatMoney(item.totalValue)}</strong></td>
+        <td class="text-right">${item.postShares.toLocaleString()} 주</td>
+        <td class="text-center">
+          <a href="${item.secUrl || '#'}" target="_blank" class="sec-doc-link">SEC 공시 ↗</a>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // 외부 링크
+  const secLink = document.getElementById("insiderModalSecLink");
+  if (secLink) secLink.href = first.secUrl || `https://www.sec.gov/edgar/searchedgar/companysearch`;
+
+  const yahooLink = document.getElementById("insiderModalYahooLink");
+  if (yahooLink) yahooLink.href = `https://finance.yahoo.com/quote/${first.ticker}/insider-roster`;
+
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeInsiderModal() {
+  const modal = document.getElementById("insiderModal");
+  if (modal) {
+    modal.classList.remove("active");
+    document.body.style.overflow = "";
+  }
 }
 
 async function loadAndRender13D() {

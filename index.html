@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=20260830v48">
+  <link rel="stylesheet" href="style.css?v=20260830v51">
 </head>
 <body>
   <div class="app-container">
@@ -482,6 +482,79 @@
     </div>
   </div>
 
+  <!-- [NEW] Form 4 티커별 내부자 거래 히스토리 전용 모달 팝업 -->
+  <div class="modal-backdrop" id="insiderModal">
+    <div class="modal-content modal-stock-detail-expanded" style="max-width: 960px;">
+      <button class="modal-close" id="btnInsiderModalClose">&times;</button>
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-ticker-pill" id="insiderModalTicker">NVDA</div>
+          <div>
+            <h2 id="insiderModalName" class="modal-company-title">NVIDIA Corp</h2>
+            <p id="insiderModalSector" class="modal-sector-desc">Technology · Form 4 내부자 거래 히스토리</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <!-- 내부자 거래 핵심 요약 통계 -->
+        <div class="modal-stats-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
+          <div class="modal-stat-box">
+            <span class="stat-label">공시 거래 건수</span>
+            <span class="stat-val" id="insiderModalCount">0건</span>
+          </div>
+          <div class="modal-stat-box">
+            <span class="stat-label">장내 직접 매수 (P)</span>
+            <span class="stat-val text-green" id="insiderModalBuyCount">0건</span>
+          </div>
+          <div class="modal-stat-box">
+            <span class="stat-label">장내 매도 (S)</span>
+            <span class="stat-val text-red" id="insiderModalSaleCount">0건</span>
+          </div>
+          <div class="modal-stat-box">
+            <span class="stat-label">총 거래 대금</span>
+            <span class="stat-val text-blue" id="insiderModalTotalVal">$0</span>
+          </div>
+        </div>
+
+        <!-- 내부자 거래 타임라인 테이블 -->
+        <div class="modal-holders-section">
+          <h4>최근 공시된 내부자 거래 타임라인 (최신순)</h4>
+          <div class="table-wrapper" style="max-height: 420px; overflow-y: auto;">
+            <table class="power-table" id="insiderModalTable" style="min-width: 100%;">
+              <thead>
+                <tr>
+                  <th class="text-left">공시일자</th>
+                  <th class="text-left">내부자 성명</th>
+                  <th class="text-left">직책 / 자격</th>
+                  <th class="text-center">거래 유형</th>
+                  <th class="text-right">거래 수량</th>
+                  <th class="text-right">거래 단가 ($)</th>
+                  <th class="text-right">총 거래 대금 ($)</th>
+                  <th class="text-right">거래 후 보유수량</th>
+                  <th class="text-center">SEC 원문</th>
+                </tr>
+              </thead>
+              <tbody id="insiderModalTableBody">
+                <!-- JS 렌더링 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 외부 링크 바로가기 -->
+        <div class="modal-links-row" style="margin-top: 18px;">
+          <a id="insiderModalSecLink" href="#" target="_blank" rel="noopener noreferrer" class="btn-ext-link yahoo" style="background-color: #242424;">
+            <span>SEC EDGAR 공시 시스템 전체 내역 ↗</span>
+          </a>
+          <a id="insiderModalYahooLink" href="#" target="_blank" rel="noopener noreferrer" class="btn-ext-link google">
+            <span>Yahoo Finance 기업 시세 차트 ↗</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 트리맵 인터랙티브 플로팅 툴팁 (최상위 레이어) -->
   <div class="treemap-tooltip" id="treemapTooltip"></div>
 
@@ -489,6 +562,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="app.js?v=20260830v45"></script>
+  <script src="app.js?v=20260830v50"></script>
 </body>
 </html>

@@ -1751,8 +1751,9 @@ body {
   justify-content: center;
 }
 
-.modal-backdrop.show {
-  display: flex;
+.modal-backdrop.show,
+.modal-backdrop.active {
+  display: flex !important;
 }
 
 .modal-content {
@@ -1765,6 +1766,45 @@ body {
   position: relative;
   box-shadow: var(--shadow-heavy);
   animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#insiderModal .modal-content,
+#stockModal .modal-content {
+  max-width: 1140px !important;
+  width: 92% !important;
+  max-height: 92vh;
+  overflow-y: auto;
+}
+
+.modal-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.modal-stat-box {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.modal-stat-box .stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.modal-stat-box .stat-val {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-base);
 }
 
 @keyframes modalPop {

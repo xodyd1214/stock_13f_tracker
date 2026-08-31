@@ -42,16 +42,18 @@ jobs:
           python collector_1year.py
           python sec_collector.py
 
-      # 📈 매일 아침에는 가벼운 야후 파이낸스 실시간 주가만 2초 만에 초고속 갱신
-      - name: 📈 야후 파이낸스 실시간 주가 갱신 (데일리 실행)
+      # 📈 매일 아침(한국시간 오전 6시 / 미국 장마감 직후): 주가 및 Form 4 내부자/13D 공시 자동 갱신
+      - name: 📈 야후 실시간 주가 + SEC Form 4 내부자 + 13D 공시 데일리 갱신
         run: |
-          echo "📡 [Daily Sync] 야후 파이낸스 실시간 시장 주가를 갱신합니다..."
+          echo "📡 [Daily Sync] 실시간 주가 및 SEC Form 4 / 13D 공시 데이터를 갱신합니다..."
           python price_fetcher.py
+          python sec_insider_collector.py
+          python sec_13d_collector.py
 
       - name: 💾 최신 데이터 GitHub 저장소에 자동 커밋 & 푸시
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add realtime_prices.json latest_13f_holdings.csv latest_13f_holdings.json live_13f_analytics.json
-          git commit -m "chore(data): 🤖 실시간 시장 주가 및 13F 데이터 스마트 자동 동기화 [skip ci]" || echo "No changes to commit"
+          git add realtime_prices.json latest_13f_holdings.csv latest_13f_holdings.json live_13f_analytics.json latest_form4_insiders.json latest_13d_filings.json
+          git commit -m "chore(data): 🤖 실시간 주가 및 Form 4/13D 공시 스마트 자동 동기화 [skip ci]" || echo "No changes to commit"
           git push
