@@ -340,25 +340,30 @@ function getMappedTicker(name, rawTicker, cusip) {
   return cleanWord.slice(0, 5) || "STOCK";
 }
 
-function formatMoney(thousandsVal) {
-  if (!thousandsVal || thousandsVal <= 0) return "$0";
-  const actualUsd = thousandsVal * 1000;
+function formatMoney(val) {
+  if (!val || val <= 0) return "$0";
+  const actualUsd = Number(val);
   if (actualUsd >= 1e12) {
     return `$${(actualUsd / 1e12).toFixed(2)}T`;
   } else if (actualUsd >= 1e9) {
     return `$${(actualUsd / 1e9).toFixed(2)}B`;
   } else if (actualUsd >= 1e6) {
     return `$${(actualUsd / 1e6).toFixed(1)}M`;
-  } else {
+  } else if (actualUsd >= 1e3) {
     return `$${(actualUsd / 1e3).toFixed(1)}K`;
+  } else {
+    return `$${actualUsd.toFixed(0)}`;
   }
 }
 
 function isDerivativeOrOption(name, ticker, titleOfClass) {
   const checkStr = `${name || ''} ${ticker || ''} ${titleOfClass || ''}`.toUpperCase();
+  // 보통주 회사명 예외 처리 (Option Care Health 등)
+  if (checkStr.includes("OPTION CARE HEALTH")) return false;
+
   if (checkStr.includes(" CALL") || checkStr.includes(" PUT") || checkStr.endsWith("CALL") || checkStr.endsWith("PUT")) return true;
   if (checkStr.includes("/CALL") || checkStr.includes("/PUT") || checkStr.includes("-CALL") || checkStr.includes("-PUT")) return true;
-  if (checkStr.includes("OPTION") || checkStr.includes("WARRANT") || checkStr.includes("PRN") || checkStr.includes("NOTE") || checkStr.includes("BOND") || checkStr.includes("DEBENTURE")) return true;
+  if (checkStr.includes("WARRANT") || checkStr.includes(" WTS") || checkStr.includes("PRN") || checkStr.includes("NOTE") || checkStr.includes("BOND") || checkStr.includes("DEBENTURE")) return true;
   return false;
 }
 
@@ -394,6 +399,14 @@ async function loadRealSecData() {
       RAW_HOLDINGS = await res.json();
     }
     
+    try {
+      const tickerRes = await fetch("ticker_map.json");
+      if (tickerRes.ok) {
+        const extMap = await tickerRes.json();
+        Object.assign(TICKER_MAP, extMap);
+      }
+    } catch (e) {}
+
     try {
       const priceRes = await fetch("realtime_prices.json");
       if (priceRes.ok) {
