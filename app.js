@@ -806,7 +806,6 @@ function selectGuru(key) {
 
   renderGuruSidebar();
   loadGuruData(key);
-  fetchLivePricesForCurrentView();
 }
 
 function loadGuruData(key) {

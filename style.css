@@ -65,7 +65,14 @@
   box-sizing: border-box;
 }
 
+html {
+  width: 100%;
+  height: 100%;
+}
+
 body {
+  width: 100%;
+  min-height: 100%;
   background-color: var(--bg-base);
   color: var(--text-base);
   font-family: var(--font-sans);
@@ -74,6 +81,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  margin: 0;
+  padding: 0;
 }
 
 /* Custom Sleek Scrollbar */
@@ -95,8 +104,23 @@ body {
 /* Layout */
 .app-container {
   display: flex;
+  width: 100%;
   min-height: 100vh;
   background-color: var(--bg-base);
+  margin: 0;
+  padding: 0;
+}
+
+.main-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: calc(100% - 280px);
+  padding: 24px 32px;
+  background-color: var(--bg-base);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  box-sizing: border-box;
 }
 
 /* ==============================================================================
@@ -1544,11 +1568,14 @@ body {
 
 /* Table Style — Spotify Clean Playlist Tracklist Feel */
 .table-wrapper {
+  width: 100%;
   overflow-x: auto;
+  padding-bottom: 8px;
 }
 
 .power-table {
   width: 100%;
+  min-width: 1100px;
   border-collapse: collapse;
   text-align: left;
   font-size: 13px;
@@ -1560,8 +1587,8 @@ body {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  padding: 12px 16px;
+  letter-spacing: 0.8px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--border-subtle);
   cursor: pointer;
   user-select: none;
@@ -1573,10 +1600,18 @@ body {
 }
 
 .power-table td {
-  padding: 12px 16px;
+  padding: 10px 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   color: var(--text-subdued);
   white-space: nowrap;
+}
+
+.power-table th:last-child,
+.power-table td:last-child {
+  min-width: 110px;
+  width: 110px;
+  text-align: center;
+  padding-right: 16px;
 }
 
 .power-table tbody tr {
@@ -2198,15 +2233,20 @@ body {
 }
 
 .sec-doc-link {
-  display: inline-block;
-  padding: 4px 10px;
-  background-color: var(--bg-card);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background-color: var(--bg-highlight);
   border: 1px solid var(--border-subtle);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: var(--text-base);
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   text-decoration: none;
+  white-space: nowrap;
+  min-width: 90px;
   transition: all 0.15s ease;
 }
 
@@ -2214,6 +2254,7 @@ body {
   background-color: var(--spotify-green);
   color: #000;
   border-color: var(--spotify-green);
+  box-shadow: 0 0 10px rgba(30, 215, 96, 0.3);
 }
 
 /* ==============================================================================
