@@ -446,11 +446,16 @@ async function loadRealSecData() {
           sector: accurateSector,
           shares: itemShares,
           value: itemVal,
-          cusip: cusip
+          cusip: cusip,
+          action: item.action || "HOLD",
+          isOption: item.isOption || false
         };
       } else {
         hMap[baseTicker].shares += itemShares;
         hMap[baseTicker].value += itemVal;
+        if (item.action && item.action !== "HOLD") {
+          hMap[baseTicker].action = item.action;
+        }
       }
 
       if (!grandConsensusMap[baseTicker]) {
@@ -487,9 +492,10 @@ async function loadRealSecData() {
         const realInfo = LIVE_PRICES[h.baseTicker] || LIVE_PRICES[h.ticker];
         const curP = (realInfo && realInfo.price) ? realInfo.price : estP;
         
-        let action = "HOLD";
-        if (weight >= 12.0) action = "NEW";
-        else if (weight >= 5.0) action = "ADD";
+        let action = h.action || "HOLD";
+        if (h.isOption || action === "PUT") {
+          action = "PUT";
+        }
 
         return {
           ticker: h.ticker,
@@ -522,9 +528,7 @@ async function loadRealSecData() {
       const curP = (realInfo && realInfo.price) ? realInfo.price : estP;
       
       const holderCount = h.holders.size;
-      let action = "HOLD";
-      if (holderCount >= 20) action = "ADD";
-      else if (holderCount >= 5) action = "ADD";
+      let action = h.action || "HOLD";
 
       return {
         ticker: h.ticker,
