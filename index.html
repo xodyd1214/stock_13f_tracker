@@ -9,17 +9,30 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=20260830v44">
+  <link rel="stylesheet" href="style.css?v=20260830v45">
 </head>
 <body>
   <div class="app-container">
     <!-- 사이드바: 100대 운용사 셀렉터 & 통합 브리핑 -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="appSidebar">
       <div class="brand">
         <div class="brand-badge"></div>
         <div class="brand-text">
-          <h1>Alpha<span>13F</span></h1>
-          <p>운용사 포트폴리오 분석</p>
+          <h1 id="brandTitle">ALPHA <span>13F</span></h1>
+          <p id="brandSubtitle">운용사 포트폴리오 분석</p>
+        </div>
+      </div>
+
+      <!-- 공시 전환 드롭다운 메뉴 -->
+      <div class="filing-dropdown-box">
+        <label class="filing-select-label">SEC 공식 공시 모드</label>
+        <div class="select-wrapper">
+          <select id="filingSelector" class="filing-select">
+            <option value="13F" selected>Form 13F (기관 포트폴리오)</option>
+            <option value="FORM4">Form 4 (내부자 거래 추적)</option>
+            <option value="13D">Schedule 13D (행동주의 5%)</option>
+            <option value="13G">Schedule 13G (단순 대량보유)</option>
+          </select>
         </div>
       </div>
 
@@ -91,142 +104,298 @@
         </div>
       </header>
 
-      <!-- 요약 하이라이트 카드 (Overview Cards) -->
-      <section class="overview-grid">
-        <div class="metric-card">
-          <div class="metric-header">
-            <span class="metric-title">총 운용 자산 (AUM)</span>
+      <!-- [VIEW 1] Form 13F 운용사 포트폴리오 대시보드 -->
+      <div id="view13F" class="filing-view-container active">
+        <!-- 요약 하이라이트 카드 (Overview Cards) -->
+        <section class="overview-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">총 운용 자산 (AUM)</span>
+            </div>
+            <div class="metric-value text-green" id="metricTotalAum">-</div>
+            <div class="metric-sub" id="metricTotalHoldings">-</div>
           </div>
-          <div class="metric-value text-green" id="metricTotalAum">-</div>
-          <div class="metric-sub" id="metricTotalHoldings">-</div>
-        </div>
 
-        <div class="metric-card">
-          <div class="metric-header">
-            <span class="metric-title">최대 집중 매수 종목</span>
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">최대 집중 매수 종목</span>
+            </div>
+            <div class="metric-value" id="metricTopBuy">-</div>
+            <div class="metric-sub" id="metricTopBuySub">-</div>
           </div>
-          <div class="metric-value" id="metricTopBuy">-</div>
-          <div class="metric-sub" id="metricTopBuySub">-</div>
-        </div>
 
-        <div class="metric-card">
-          <div class="metric-header">
-            <span class="metric-title">공시가 대비 하락 종목</span>
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">공시가 대비 하락 종목</span>
+            </div>
+            <div class="metric-value" id="metricDiscountPick">-</div>
+            <div class="metric-sub" id="metricDiscountSub">-</div>
           </div>
-          <div class="metric-value" id="metricDiscountPick">-</div>
-          <div class="metric-sub" id="metricDiscountSub">-</div>
-        </div>
 
-        <div class="metric-card">
-          <div class="metric-header">
-            <span class="metric-title">최다 합산 비중 종목</span>
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">최다 합산 비중 종목</span>
+            </div>
+            <div class="metric-value" id="metricTopHolding">-</div>
+            <div class="metric-sub" id="metricTopHoldingSub">-</div>
           </div>
-          <div class="metric-value" id="metricTopHolding">-</div>
-          <div class="metric-sub" id="metricTopHoldingSub">-</div>
-        </div>
-      </section>
+        </section>
 
-      <!-- 섹터(산업군) 자금 쏠림 비중 분석 위젯 -->
-      <section class="sector-analysis-section">
-        <div class="sector-header">
-          <div class="sector-title-wrap">
-            <h4>섹터(산업군) 자금 쏠림 비중</h4>
-            <span class="sector-sub">포트폴리오 내 자금이 어느 산업에 집중되어 있는지 분석합니다.</span>
+        <!-- 섹터(산업군) 자금 쏠림 비중 분석 위젯 -->
+        <section class="sector-analysis-section">
+          <div class="sector-header">
+            <div class="sector-title-wrap">
+              <h4>섹터(산업군) 자금 쏠림 비중</h4>
+              <span class="sector-sub">포트폴리오 내 자금이 어느 산업에 집중되어 있는지 분석합니다.</span>
+            </div>
+            <div class="sector-legend" id="sectorLegend">
+              <!-- JS 렌더링 -->
+            </div>
           </div>
-          <div class="sector-legend" id="sectorLegend">
-            <!-- JS 렌더링 -->
+          <div class="sector-bar-wrapper">
+            <div class="sector-stacked-bar" id="sectorStackedBar">
+              <!-- JS 렌더링 -->
+            </div>
           </div>
-        </div>
-        <div class="sector-bar-wrapper">
-          <div class="sector-stacked-bar" id="sectorStackedBar">
-            <!-- JS 렌더링 -->
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- 포트폴리오 비주얼 트리맵 (Treemap Section) -->
-      <section class="treemap-section">
-        <div class="section-header">
-          <div class="section-title-wrap">
-            <h3>포트폴리오 비중 트리맵</h3>
-            <span class="section-tooltip">타일 크기는 포트폴리오 내 비중(%)을 나타냅니다. 클릭 시 상세 정보를 확인하세요.</span>
-          </div>
-          <div class="treemap-legend">
-            <span class="legend-item"><span class="color-box new"></span>신규 매수 (NEW)</span>
-            <span class="legend-item"><span class="color-box add"></span>비중 확대 (ADD)</span>
-            <span class="legend-item"><span class="color-box hold"></span>유지 (HOLD)</span>
-            <span class="legend-item"><span class="color-box reduce"></span>비중 축소 (REDUCE)</span>
-            <span class="legend-item"><span class="color-box discount-badge"></span>공시가 대비 하락</span>
-          </div>
-        </div>
-
-        <div class="treemap-container" id="treemapContainer">
-          <!-- JS로 동적 타일 렌더링 -->
-        </div>
-      </section>
-
-      <!-- 스마트 커스텀 파워 테이블 (Power Table) -->
-      <section class="table-section">
-        <div class="table-toolbar">
-          <div class="toolbar-left">
-            <!-- 빠른 원클릭 토글 필터 -->
-            <div class="filter-tabs" id="filterTabs">
-              <button class="filter-tab active" data-filter="ALL">전체 보기 (<span id="countAll">0</span>)</button>
-              <button class="filter-tab" data-filter="NEW">신규 매수 (<span id="countNew">0</span>)</button>
-              <button class="filter-tab" data-filter="ADD">비중 확대 (<span id="countAdd">0</span>)</button>
-              <button class="filter-tab" data-filter="DISCOUNT">공시가 대비 하락 종목 (<span id="countDiscount">0</span>)</button>
-              <button class="filter-tab" data-filter="CONVICTION">비중 5%+ 집중 (<span id="countConviction">0</span>)</button>
+        <!-- 포트폴리오 비주얼 트리맵 (Treemap Section) -->
+        <section class="treemap-section">
+          <div class="section-header">
+            <div class="section-title-wrap">
+              <h3>포트폴리오 비중 트리맵</h3>
+              <span class="section-tooltip">타일 크기는 포트폴리오 내 비중(%)을 나타냅니다. 클릭 시 상세 정보를 확인하세요.</span>
+            </div>
+            <div class="treemap-legend">
+              <span class="legend-item"><span class="color-box new"></span>신규 매수 (NEW)</span>
+              <span class="legend-item"><span class="color-box add"></span>비중 확대 (ADD)</span>
+              <span class="legend-item"><span class="color-box hold"></span>유지 (HOLD)</span>
+              <span class="legend-item"><span class="color-box reduce"></span>비중 축소 (REDUCE)</span>
+              <span class="legend-item"><span class="color-box discount-badge"></span>공시가 대비 하락</span>
             </div>
           </div>
 
-          <div class="toolbar-right">
-            <!-- 실시간 검색바 -->
-            <div class="search-input-wrap">
-              <input type="text" id="searchInput" placeholder="티커, 종목명, 섹터 검색...">
+          <div class="treemap-container" id="treemapContainer">
+            <!-- JS로 동적 타일 렌더링 -->
+          </div>
+        </section>
+
+        <!-- 스마트 커스텀 파워 테이블 (Power Table) -->
+        <section class="table-section">
+          <div class="table-toolbar">
+            <div class="toolbar-left">
+              <!-- 빠른 원클릭 토글 필터 -->
+              <div class="filter-tabs" id="filterTabs">
+                <button class="filter-tab active" data-filter="ALL">전체 보기 (<span id="countAll">0</span>)</button>
+                <button class="filter-tab" data-filter="NEW">신규 매수 (<span id="countNew">0</span>)</button>
+                <button class="filter-tab" data-filter="ADD">비중 확대 (<span id="countAdd">0</span>)</button>
+                <button class="filter-tab" data-filter="DISCOUNT">공시가 대비 하락 종목 (<span id="countDiscount">0</span>)</button>
+                <button class="filter-tab" data-filter="CONVICTION">비중 5%+ 집중 (<span id="countConviction">0</span>)</button>
+              </div>
             </div>
 
-            <!-- 컬럼 커스터마이징 토글 버튼 -->
-            <div class="column-customizer">
-              <button class="btn btn-outline" id="btnToggleCols">
-                <span>컬럼 설정</span>
-              </button>
-              <div class="col-menu" id="colMenu">
-                <label><input type="checkbox" data-col="sector" checked> 섹터</label>
-                <label><input type="checkbox" data-col="holders" checked> 보유 운용사 수</label>
-                <label><input type="checkbox" data-col="shares" checked> 보유 주식수</label>
-                <label><input type="checkbox" data-col="value" checked> 총 평가 금액 ($)</label>
-                <label><input type="checkbox" data-col="weight" checked> 통합 비중 (%)</label>
-                <label><input type="checkbox" data-col="estPrice" checked> 공시 시점 기준가</label>
-                <label><input type="checkbox" data-col="curPrice" checked> 현재 실시간가 (1분)</label>
-                <label><input type="checkbox" data-col="discount" checked> 공시가 대비 (%)</label>
+            <div class="toolbar-right">
+              <!-- 실시간 검색바 -->
+              <div class="search-input-wrap">
+                <input type="text" id="searchInput" placeholder="티커, 종목명, 섹터 검색...">
+              </div>
+
+              <!-- 컬럼 커스터마이징 토글 버튼 -->
+              <div class="column-customizer">
+                <button class="btn btn-outline" id="btnToggleCols">
+                  <span>컬럼 설정</span>
+                </button>
+                <div class="col-menu" id="colMenu">
+                  <label><input type="checkbox" data-col="sector" checked> 섹터</label>
+                  <label><input type="checkbox" data-col="holders" checked> 보유 운용사 수</label>
+                  <label><input type="checkbox" data-col="shares" checked> 보유 주식수</label>
+                  <label><input type="checkbox" data-col="value" checked> 총 평가 금액 ($)</label>
+                  <label><input type="checkbox" data-col="weight" checked> 통합 비중 (%)</label>
+                  <label><input type="checkbox" data-col="estPrice" checked> 공시 시점 기준가</label>
+                  <label><input type="checkbox" data-col="curPrice" checked> 현재 실시간가 (1분)</label>
+                  <label><input type="checkbox" data-col="discount" checked> 공시가 대비 (%)</label>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- 메인 데이터 테이블 -->
-        <div class="table-wrapper">
-          <table class="power-table" id="holdingsTable">
-            <thead>
-              <tr>
-                <th class="sortable text-left" data-sort="ticker">종목 / 티커</th>
-                <th class="col-sector sortable text-left" data-sort="sector">섹터</th>
-                <th class="col-holders sortable text-center" data-sort="holders">보유 운용사</th>
-                <th class="sortable text-center" data-sort="action">매매 액션</th>
-                <th class="col-shares sortable text-right" data-sort="shares">주식 수</th>
-                <th class="col-value sortable text-right" data-sort="value">총 평가 금액 ($)</th>
-                <th class="col-weight sortable text-right" data-sort="weight">통합 비중 (%)</th>
-                <th class="col-estPrice sortable text-right" data-sort="estPrice">공시 시점 기준가</th>
-                <th class="col-curPrice sortable text-right" data-sort="curPrice">현재 실시간가 (1분)</th>
-                <th class="col-discount sortable text-right" data-sort="discount">공시가 대비</th>
-              </tr>
-            </thead>
-            <tbody id="tableBody">
-              <!-- JS 렌더링 -->
-            </tbody>
-          </table>
-        </div>
-      </section>
+          <!-- 메인 데이터 테이블 -->
+          <div class="table-wrapper">
+            <table class="power-table" id="holdingsTable">
+              <thead>
+                <tr>
+                  <th class="sortable text-left" data-sort="ticker">종목 / 티커</th>
+                  <th class="col-sector sortable text-left" data-sort="sector">섹터</th>
+                  <th class="col-holders sortable text-center" data-sort="holders">보유 운용사</th>
+                  <th class="sortable text-center" data-sort="action">매매 액션</th>
+                  <th class="col-shares sortable text-right" data-sort="shares">주식 수</th>
+                  <th class="col-value sortable text-right" data-sort="value">총 평가 금액 ($)</th>
+                  <th class="col-weight sortable text-right" data-sort="weight">통합 비중 (%)</th>
+                  <th class="col-estPrice sortable text-right" data-sort="estPrice">공시 시점 기준가</th>
+                  <th class="col-curPrice sortable text-right" data-sort="curPrice">현재 실시간가 (1분)</th>
+                  <th class="col-discount sortable text-right" data-sort="discount">공시가 대비</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody">
+                <!-- JS 렌더링 -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- [VIEW 2] Form 4 실시간 내부자 거래(Insider Trading) 대시보드 -->
+      <div id="viewForm4" class="filing-view-container" style="display: none;">
+        <!-- Form 4 상단 4대 통계 카드 -->
+        <section class="overview-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">최근 내부자 거래 총액</span>
+            </div>
+            <div class="metric-value text-green" id="f4MetricTotalVal">$0</div>
+            <div class="metric-sub" id="f4MetricTotalCount">총 0건 거래</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">최다 거래 종목</span>
+            </div>
+            <div class="metric-value" id="f4MetricTopTicker">-</div>
+            <div class="metric-sub" id="f4MetricTopTickerSub">-</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">임원 장내 직접 매수(P)</span>
+            </div>
+            <div class="metric-value text-blue" id="f4MetricBuyCount">0건</div>
+            <div class="metric-sub" id="f4MetricBuySub">자사주 순매수 시그널</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">최대 단일 거래</span>
+            </div>
+            <div class="metric-value" id="f4MetricMaxTrade">-</div>
+            <div class="metric-sub" id="f4MetricMaxTradeSub">-</div>
+          </div>
+        </section>
+
+        <!-- Form 4 전용 테이블 섹션 -->
+        <section class="table-section">
+          <div class="table-toolbar">
+            <div class="toolbar-left">
+              <div class="filter-tabs" id="f4FilterTabs">
+                <button class="filter-tab active" data-f4filter="ALL">전체 거래 (<span id="f4CountAll">0</span>)</button>
+                <button class="filter-tab" data-f4filter="BUY">장내 매수 (P) (<span id="f4CountBuy">0</span>)</button>
+                <button class="filter-tab" data-f4filter="SALE">장내 매도 (S) (<span id="f4CountSale">0</span>)</button>
+                <button class="filter-tab" data-f4filter="OFFICER">경영진/CEO 거래 (<span id="f4CountOfficer">0</span>)</button>
+              </div>
+            </div>
+            <div class="toolbar-right">
+              <div class="search-input-wrap">
+                <input type="text" id="f4SearchInput" placeholder="티커, 회사명, 내부자 성명 검색...">
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="power-table" id="f4Table">
+              <thead>
+                <tr>
+                  <th class="text-left">공시일자</th>
+                  <th class="text-left">종목 / 티커</th>
+                  <th class="text-left">내부자 성명</th>
+                  <th class="text-left">직책 / 자격</th>
+                  <th class="text-center">거래 유형</th>
+                  <th class="text-right">거래 수량</th>
+                  <th class="text-right">거래 단가 ($)</th>
+                  <th class="text-right">총 거래 대금 ($)</th>
+                  <th class="text-right">거래 후 보유수량</th>
+                  <th class="text-center">SEC 원문</th>
+                </tr>
+              </thead>
+              <tbody id="f4TableBody">
+                <!-- JS 렌더링 -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- [VIEW 3] Schedule 13D / 13G 행동주의 & 대량 지분 공시 대시보드 -->
+      <div id="view13D" class="filing-view-container" style="display: none;">
+        <!-- 13D 상단 4대 통계 카드 -->
+        <section class="overview-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">공시 건수</span>
+            </div>
+            <div class="metric-value text-purple" id="d13MetricCount">0건</div>
+            <div class="metric-sub">지분 5% 이상 공시</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">행동주의 (13D) 공시</span>
+            </div>
+            <div class="metric-value text-green" id="d13MetricActivistCount">0건</div>
+            <div class="metric-sub">경영 참여 / 주주 제안 목적</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">단순 투자 (13G) 공시</span>
+            </div>
+            <div class="metric-value text-blue" id="d13MetricPassiveCount">0건</div>
+            <div class="metric-sub">패시브 대량 보유</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">최다 공시 투자자</span>
+            </div>
+            <div class="metric-value" id="d13MetricTopInvestor">-</div>
+            <div class="metric-sub" id="d13MetricTopInvestorSub">-</div>
+          </div>
+        </section>
+
+        <!-- 13D 전용 테이블 섹션 -->
+        <section class="table-section">
+          <div class="table-toolbar">
+            <div class="toolbar-left">
+              <div class="filter-tabs" id="d13FilterTabs">
+                <button class="filter-tab active" data-d13filter="ALL">전체 공시 (<span id="d13CountAll">0</span>)</button>
+                <button class="filter-tab" data-d13filter="13D">행동주의 13D (<span id="d13Count13D">0</span>)</button>
+                <button class="filter-tab" data-d13filter="13G">대량보유 13G (<span id="d13Count13G">0</span>)</button>
+              </div>
+            </div>
+            <div class="toolbar-right">
+              <div class="search-input-wrap">
+                <input type="text" id="d13SearchInput" placeholder="투자자, 펀드명, 대상 기업 검색...">
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="power-table" id="d13Table">
+              <thead>
+                <tr>
+                  <th class="text-left">공시일자</th>
+                  <th class="text-left">공시 서식</th>
+                  <th class="text-left">공시 주체 (투자자 / 펀드)</th>
+                  <th class="text-left">대상 상장 기업 / 문서</th>
+                  <th class="text-center">공시 성격</th>
+                  <th class="text-center">SEC 공식 원문</th>
+                </tr>
+              </thead>
+              <tbody id="d13TableBody">
+                <!-- JS 렌더링 -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
     </main>
   </div>
 
@@ -320,6 +489,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="app.js?v=20260830v44"></script>
+  <script src="app.js?v=20260830v45"></script>
 </body>
 </html>

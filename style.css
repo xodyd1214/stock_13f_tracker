@@ -2102,6 +2102,119 @@ body {
 }
 
 /* ==============================================================================
+   SEC Multi-Filing Dropdown & Multi-Dashboard Styling
+   ============================================================================== */
+.filing-dropdown-box {
+  margin-top: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.filing-select-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.filing-select {
+  width: 100%;
+  background-color: var(--bg-card);
+  color: var(--spotify-green);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 12px;
+  border: 1px solid rgba(29, 185, 84, 0.3);
+  border-radius: var(--radius-sm);
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.filing-select:hover, .filing-select:focus {
+  border-color: var(--spotify-green);
+  background-color: var(--bg-highlight);
+  box-shadow: 0 0 12px rgba(29, 185, 84, 0.25);
+}
+
+.filing-select option {
+  background-color: #181818;
+  color: var(--text-base);
+  font-weight: 600;
+  padding: 8px;
+}
+
+.filing-view-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Form 4 및 13D 전용 뱃지 */
+.badge-tx {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.badge-tx-buy {
+  background-color: rgba(29, 185, 84, 0.15);
+  color: var(--spotify-green);
+  border: 1px solid rgba(29, 185, 84, 0.3);
+}
+
+.badge-tx-sale {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: var(--negative-red);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-activist {
+  background-color: rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+}
+
+.badge-passive {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
+.sec-doc-link {
+  display: inline-block;
+  padding: 4px 10px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  color: var(--text-base);
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.sec-doc-link:hover {
+  background-color: var(--spotify-green);
+  color: #000;
+  border-color: var(--spotify-green);
+}
+
+/* ==============================================================================
    Responsive Behavior (Spotify Layout Principles)
    ============================================================================== */
 @media (max-width: 1024px) {
@@ -2117,3 +2230,4 @@ body {
   .table-toolbar { flex-direction: column; align-items: flex-start; }
   .search-input-wrap input { width: 100%; }
 }
+

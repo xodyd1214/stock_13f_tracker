@@ -1573,6 +1573,373 @@ function setupEventListeners() {
 
   const btnLogout = document.getElementById("btnLogout");
   if (btnLogout) btnLogout.onclick = () => logout();
+
+  // SEC 공식 공시 드롭다운 셀렉터 이벤트
+  const filingSelector = document.getElementById("filingSelector");
+  if (filingSelector) {
+    filingSelector.onchange = (e) => {
+      switchFilingMode(e.target.value);
+    };
+  }
+
+  // Form 4 전용 필터 탭
+  document.querySelectorAll("#f4FilterTabs .filter-tab").forEach(tab => {
+    tab.onclick = () => {
+      document.querySelectorAll("#f4FilterTabs .filter-tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      state.f4Filter = tab.dataset.f4filter;
+      renderForm4Table();
+    };
+  });
+
+  // Form 4 검색바
+  const f4Search = document.getElementById("f4SearchInput");
+  if (f4Search) {
+    f4Search.oninput = (e) => {
+      state.f4Query = e.target.value.trim().toLowerCase();
+      renderForm4Table();
+    };
+  }
+
+  // 13D 전용 필터 탭
+  document.querySelectorAll("#d13FilterTabs .filter-tab").forEach(tab => {
+    tab.onclick = () => {
+      document.querySelectorAll("#d13FilterTabs .filter-tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      state.d13Filter = tab.dataset.d13filter;
+      render13DTable();
+    };
+  });
+
+  // 13D 검색바
+  const d13Search = document.getElementById("d13SearchInput");
+  if (d13Search) {
+    d13Search.oninput = (e) => {
+      state.d13Query = e.target.value.trim().toLowerCase();
+      render13DTable();
+    };
+  }
 }
 
-async function fetchLivePricesForCurrentView() {}
+// ==============================================================================
+// SEC Multi-Filing Suite Engine (Form 13F / Form 4 / Schedule 13D / 13G)
+// ==============================================================================
+
+let FORM4_DATA = [];
+let FILING_13D_DATA = [];
+
+state.currentFilingType = "13F";
+state.f4Filter = "ALL";
+state.f4Query = "";
+state.d13Filter = "ALL";
+state.d13Query = "";
+
+async function switchFilingMode(filingType) {
+  state.currentFilingType = filingType;
+  
+  const brandTitle = document.getElementById("brandTitle");
+  const brandSubtitle = document.getElementById("brandSubtitle");
+  const headerName = document.getElementById("currentGuruName");
+  const headerFund = document.getElementById("currentFundName");
+  const headerQuarter = document.getElementById("currentQuarter");
+  const headerDesc = document.getElementById("currentGuruDesc");
+  const grandWrap = document.querySelector(".grand-total-btn-wrap");
+  const guruBox = document.querySelector(".guru-selector-box");
+
+  const v13F = document.getElementById("view13F");
+  const vF4 = document.getElementById("viewForm4");
+  const v13D = document.getElementById("view13D");
+
+  if (v13F) v13F.style.display = "none";
+  if (vF4) vF4.style.display = "none";
+  if (v13D) v13D.style.display = "none";
+
+  if (filingType === "13F") {
+    if (brandTitle) brandTitle.innerHTML = 'ALPHA <span>13F</span>';
+    if (brandSubtitle) brandSubtitle.innerText = '운용사 포트폴리오 분석';
+    if (grandWrap) grandWrap.style.display = "flex";
+    if (guruBox) guruBox.style.display = "block";
+    if (v13F) v13F.style.display = "flex";
+    selectGuru(state.currentGuruKey || "__GRAND_TOTAL__");
+  } else if (filingType === "FORM4") {
+    if (brandTitle) brandTitle.innerHTML = 'ALPHA <span>INSIDER</span>';
+    if (brandSubtitle) brandSubtitle.innerText = '실시간 내부자 거래 추적 (Form 4)';
+    if (headerName) headerName.innerText = 'Form 4 실시간 내부자 거래 (Insider Trading)';
+    if (headerFund) headerFund.innerText = '미국 상장사 CEO·임원 장내 거래';
+    if (headerQuarter) headerQuarter.innerText = '거래 후 2영업일 이내 공시';
+    if (headerDesc) headerDesc.innerText = '경영진 및 이사회, 10% 이상 대주주의 법적 의무 공시 Form 4 장내 직접 매수·매도 실시간 추적';
+    if (grandWrap) grandWrap.style.display = "none";
+    if (guruBox) guruBox.style.display = "none";
+    if (vF4) vF4.style.display = "flex";
+    await loadAndRenderForm4();
+  } else if (filingType === "13D") {
+    if (brandTitle) brandTitle.innerHTML = 'ALPHA <span>13D</span>';
+    if (brandSubtitle) brandSubtitle.innerText = '행동주의 5% 지분 공시 (Schedule 13D)';
+    if (headerName) headerName.innerText = 'Schedule 13D 행동주의 지분 취득 공시';
+    if (headerFund) headerFund.innerText = '지분 5% 이상 적극적 경영 참여';
+    if (headerQuarter) headerQuarter.innerText = '취득 후 10일 이내 공시';
+    if (headerDesc) headerDesc.innerText = '거물 헤지펀드(칼 아이칸, 빌 애크먼, 넬슨 펠츠 등)의 경영권 분쟁, 주주 제안, M&A 압박 지분 포착';
+    if (grandWrap) grandWrap.style.display = "none";
+    if (guruBox) guruBox.style.display = "none";
+    if (v13D) v13D.style.display = "flex";
+    state.d13Filter = "13D";
+    const tab13D = document.querySelector('[data-d13filter="13D"]');
+    if (tab13D) {
+      document.querySelectorAll("#d13FilterTabs .filter-tab").forEach(t => t.classList.remove("active"));
+      tab13D.classList.add("active");
+    }
+    await loadAndRender13D();
+  } else if (filingType === "13G") {
+    if (brandTitle) brandTitle.innerHTML = 'ALPHA <span>13G</span>';
+    if (brandSubtitle) brandSubtitle.innerText = '단순 대량 보유 5% 공시 (Schedule 13G)';
+    if (headerName) headerName.innerText = 'Schedule 13G 단순 대량 보유 공시';
+    if (headerFund) headerFund.innerText = '지분 5% 이상 패시브 투자';
+    if (headerQuarter) headerQuarter.innerText = '패시브 기관 대량 지분 공시';
+    if (headerDesc) headerDesc.innerText = '블랙록, 뱅가드 등 초대형 기관 투자자의 5% 이상 단순 수동적 지분 보유 내역 추적';
+    if (grandWrap) grandWrap.style.display = "none";
+    if (guruBox) guruBox.style.display = "none";
+    if (v13D) v13D.style.display = "flex";
+    state.d13Filter = "13G";
+    const tab13G = document.querySelector('[data-d13filter="13G"]');
+    if (tab13G) {
+      document.querySelectorAll("#d13FilterTabs .filter-tab").forEach(t => t.classList.remove("active"));
+      tab13G.classList.add("active");
+    }
+    await loadAndRender13D();
+  }
+}
+
+async function loadAndRenderForm4() {
+  if (FORM4_DATA.length === 0) {
+    try {
+      const res = await fetch("latest_form4_insiders.json");
+      if (res.ok) {
+        FORM4_DATA = await res.json();
+      }
+    } catch (e) {
+      console.warn("Form 4 로드 실패:", e);
+    }
+  }
+
+  // 상단 4대 통계 카드 계산
+  const totalVal = FORM4_DATA.reduce((sum, item) => sum + (item.totalValue || 0), 0);
+  const buyItems = FORM4_DATA.filter(item => item.txTypeCode === "P");
+  const saleItems = FORM4_DATA.filter(item => item.txTypeCode === "S");
+  const officerItems = FORM4_DATA.filter(item => item.isOfficer);
+
+  const tickerMap = {};
+  FORM4_DATA.forEach(item => {
+    tickerMap[item.ticker] = (tickerMap[item.ticker] || 0) + (item.totalValue || 0);
+  });
+  let topTicker = "-";
+  let maxTickerVal = 0;
+  for (const [t, v] of Object.entries(tickerMap)) {
+    if (v > maxTickerVal) {
+      maxTickerVal = v;
+      topTicker = t;
+    }
+  }
+
+  const maxTradeItem = FORM4_DATA.reduce((max, item) => (item.totalValue > (max ? max.totalValue : 0) ? item : max), null);
+
+  const elTotVal = document.getElementById("f4MetricTotalVal");
+  if (elTotVal) elTotVal.innerText = formatMoney(totalVal);
+
+  const elTotCount = document.getElementById("f4MetricTotalCount");
+  if (elTotCount) elTotCount.innerText = `총 ${FORM4_DATA.length}건 공시 거래`;
+
+  const elTopTicker = document.getElementById("f4MetricTopTicker");
+  if (elTopTicker) elTopTicker.innerText = topTicker;
+
+  const elTopTickerSub = document.getElementById("f4MetricTopTickerSub");
+  if (elTopTickerSub) elTopTickerSub.innerText = `거래 대금 ${formatMoney(maxTickerVal)}`;
+
+  const elBuyCount = document.getElementById("f4MetricBuyCount");
+  if (elBuyCount) elBuyCount.innerText = `${buyItems.length}건 매수`;
+
+  const elMaxTrade = document.getElementById("f4MetricMaxTrade");
+  if (elMaxTrade && maxTradeItem) {
+    elMaxTrade.innerText = `${maxTradeItem.ticker} (${formatMoney(maxTradeItem.totalValue)})`;
+  }
+
+  const elMaxTradeSub = document.getElementById("f4MetricMaxTradeSub");
+  if (elMaxTradeSub && maxTradeItem) {
+    elMaxTradeSub.innerText = `${maxTradeItem.insiderName} (${maxTradeItem.officerTitle})`;
+  }
+
+  // 필터 카운트
+  const elCntAll = document.getElementById("f4CountAll");
+  if (elCntAll) elCntAll.innerText = FORM4_DATA.length;
+  const elCntBuy = document.getElementById("f4CountBuy");
+  if (elCntBuy) elCntBuy.innerText = buyItems.length;
+  const elCntSale = document.getElementById("f4CountSale");
+  if (elCntSale) elCntSale.innerText = saleItems.length;
+  const elCntOff = document.getElementById("f4CountOfficer");
+  if (elCntOff) elCntOff.innerText = officerItems.length;
+
+  renderForm4Table();
+}
+
+function renderForm4Table() {
+  const tbody = document.getElementById("f4TableBody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  let list = [...FORM4_DATA];
+
+  if (state.f4Filter === "BUY") {
+    list = list.filter(item => item.txTypeCode === "P");
+  } else if (state.f4Filter === "SALE") {
+    list = list.filter(item => item.txTypeCode === "S");
+  } else if (state.f4Filter === "OFFICER") {
+    list = list.filter(item => item.isOfficer);
+  }
+
+  if (state.f4Query) {
+    list = list.filter(item => 
+      item.ticker.toLowerCase().includes(state.f4Query) ||
+      item.companyName.toLowerCase().includes(state.f4Query) ||
+      item.insiderName.toLowerCase().includes(state.f4Query)
+    );
+  }
+
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10" class="text-center" style="padding: 40px; color: var(--text-muted);">조건에 일치하는 Form 4 내부자 거래 공시가 없습니다.</td></tr>`;
+    return;
+  }
+
+  list.forEach(item => {
+    const tr = document.createElement("tr");
+    const isBuy = item.txTypeCode === "P";
+    
+    tr.innerHTML = `
+      <td>${item.filingDate}</td>
+      <td>
+        <div class="stock-name-cell">
+          <span class="stock-ticker">${item.ticker}</span>
+          <span class="stock-company">${item.companyName}</span>
+        </div>
+      </td>
+      <td><strong>${item.insiderName}</strong></td>
+      <td><span style="font-size: 12px; color: var(--text-subdued);">${item.officerTitle}</span></td>
+      <td class="text-center">
+        <span class="badge-tx ${isBuy ? 'badge-tx-buy' : 'badge-tx-sale'}">
+          ${isBuy ? '장내 매수 (P)' : '장내 매도 (S)'}
+        </span>
+      </td>
+      <td class="text-right">${item.shares.toLocaleString()} 주</td>
+      <td class="text-right">$${item.price.toFixed(2)}</td>
+      <td class="text-right text-green"><strong>${formatMoney(item.totalValue)}</strong></td>
+      <td class="text-right">${item.postShares.toLocaleString()} 주</td>
+      <td class="text-center">
+        <a href="${item.secUrl || '#'}" target="_blank" class="sec-doc-link">SEC 공시 ↗</a>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function loadAndRender13D() {
+  if (FILING_13D_DATA.length === 0) {
+    try {
+      const res = await fetch("latest_13d_filings.json");
+      if (res.ok) {
+        FILING_13D_DATA = await res.json();
+      }
+    } catch (e) {
+      console.warn("13D 로드 실패:", e);
+    }
+  }
+
+  const activistItems = FILING_13D_DATA.filter(item => item.isActivist);
+  const passiveItems = FILING_13D_DATA.filter(item => !item.isActivist);
+
+  const elCnt = document.getElementById("d13MetricCount");
+  if (elCnt) elCnt.innerText = `${FILING_13D_DATA.length}건`;
+
+  const elActCnt = document.getElementById("d13MetricActivistCount");
+  if (elActCnt) elActCnt.innerText = `${activistItems.length}건`;
+
+  const elPassCnt = document.getElementById("d13MetricPassiveCount");
+  if (elPassCnt) elPassCnt.innerText = `${passiveItems.length}건`;
+
+  // 최다 공시 투자자
+  const invMap = {};
+  FILING_13D_DATA.forEach(item => {
+    invMap[item.investorName] = (invMap[item.investorName] || 0) + 1;
+  });
+  let topInv = "-";
+  let maxInvCnt = 0;
+  for (const [k, v] of Object.entries(invMap)) {
+    if (v > maxInvCnt) {
+      maxInvCnt = v;
+      topInv = k;
+    }
+  }
+  const elTopInv = document.getElementById("d13MetricTopInvestor");
+  if (elTopInv) elTopInv.innerText = topInv;
+
+  const elTopInvSub = document.getElementById("d13MetricTopInvestorSub");
+  if (elTopInvSub) elTopInvSub.innerText = `총 ${maxInvCnt}건 지분 공시 제출`;
+
+  // 필터 카운트
+  const elCntAll = document.getElementById("d13CountAll");
+  if (elCntAll) elCntAll.innerText = FILING_13D_DATA.length;
+  const elCnt13D = document.getElementById("d13Count13D");
+  if (elCnt13D) elCnt13D.innerText = activistItems.length;
+  const elCnt13G = document.getElementById("d13Count13G");
+  if (elCnt13G) elCnt13G.innerText = passiveItems.length;
+
+  render13DTable();
+}
+
+function render13DTable() {
+  const tbody = document.getElementById("d13TableBody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  let list = [...FILING_13D_DATA];
+
+  if (state.d13Filter === "13D") {
+    list = list.filter(item => item.isActivist);
+  } else if (state.d13Filter === "13G") {
+    list = list.filter(item => !item.isActivist);
+  }
+
+  if (state.d13Query) {
+    list = list.filter(item =>
+      item.investorName.toLowerCase().includes(state.d13Query) ||
+      item.fundName.toLowerCase().includes(state.d13Query) ||
+      item.targetCompany.toLowerCase().includes(state.d13Query)
+    );
+  }
+
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center" style="padding: 40px; color: var(--text-muted);">조건에 일치하는 13D/13G 공시가 없습니다.</td></tr>`;
+    return;
+  }
+
+  list.forEach(item => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${item.filingDate}</td>
+      <td><strong style="color: var(--text-base);">${item.formType}</strong></td>
+      <td>
+        <div class="stock-name-cell">
+          <span class="stock-ticker" style="font-size: 13px;">${item.investorName}</span>
+          <span class="stock-company">${item.fundName}</span>
+        </div>
+      </td>
+      <td>${item.targetCompany}</td>
+      <td class="text-center">
+        <span class="badge-tx ${item.isActivist ? 'badge-activist' : 'badge-passive'}">
+          ${item.isActivist ? '행동주의 13D' : '단순 대량 13G'}
+        </span>
+      </td>
+      <td class="text-center">
+        <a href="${item.docUrl}" target="_blank" class="sec-doc-link">SEC 원문 ↗</a>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
