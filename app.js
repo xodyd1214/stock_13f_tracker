@@ -2036,21 +2036,21 @@ function renderForm4Table() {
 
     tr.innerHTML = `
       <td class="text-left font-mono" style="font-size: 12px; color: var(--text-secondary);">${item.filingDate}</td>
-      <td class="text-left font-semibold">
-        <div style="display: flex; align-items: baseline; gap: 8px;">
-          <span style="color: #fff; font-weight: 800; font-size: 13px;">${item.ticker}</span>
-          <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">${item.companyName}</span>
+      <td class="text-left font-semibold" title="${item.ticker} - ${item.companyName}">
+        <div style="display: flex; align-items: baseline; gap: 6px; overflow: hidden;">
+          <span style="color: #fff; font-weight: 800; font-size: 13px; flex-shrink: 0;">${item.ticker}</span>
+          <span style="font-size: 11.5px; color: var(--text-muted); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.companyName}</span>
         </div>
       </td>
-      <td class="text-left font-medium" style="color: var(--accent-blue);">${item.insiderName}</td>
-      <td class="text-left" style="font-size: 12px; color: var(--text-secondary);">${item.officerTitle}</td>
+      <td class="text-left font-medium" style="color: var(--accent-blue);" title="${item.insiderName}">${item.insiderName}</td>
+      <td class="text-left" style="font-size: 12px; color: var(--text-secondary);" title="${item.officerTitle}">${item.officerTitle}</td>
       <td class="text-center"><span class="${txBadgeClass}">${item.txType}</span></td>
       <td class="text-right font-mono font-medium">${formattedShares} 주</td>
       <td class="text-right font-mono">${formattedPrice}</td>
       <td class="text-right font-mono font-bold" style="color: ${item.txTypeCode === 'P' ? '#00E676' : (item.txTypeCode === 'S' ? '#FF5252' : '#fff')};">${formattedVal}</td>
       <td class="text-right font-mono" style="color: var(--text-muted); font-size: 12px;">${formattedPost}</td>
       <td class="text-center">
-        <a href="${item.secUrl}" target="_blank" rel="noopener noreferrer" class="sec-link-btn" title="SEC 공식 원문 공시 보기" onclick="event.stopPropagation();" style="display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 4px; background: rgba(255,255,255,0.06); color: #00E676; font-size: 11px; text-decoration: none; border: 1px solid rgba(0,230,118,0.2);">
+        <a href="${item.secUrl}" target="_blank" rel="noopener noreferrer" class="sec-link-btn" title="SEC 공식 원문 공시 보기" onclick="event.stopPropagation();" style="display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.06); color: #00E676; font-size: 11px; text-decoration: none; border: 1px solid rgba(0,230,118,0.2);">
           원문 ↗
         </a>
       </td>
