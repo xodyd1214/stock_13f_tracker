@@ -505,13 +505,15 @@ body {
 }
 
 /* ==============================================================================
-   Main Content Area
+   Main Content Area (대화면 100% 풀와이드 확장)
    ============================================================================== */
 .main-content {
   flex: 1;
+  width: calc(100% - 290px);
+  min-width: 0;
+  max-width: 100% !important;
+  margin: 0 !important;
   padding: 24px 32px;
-  max-width: 1440px;
-  margin: 0 auto;
   overflow-y: auto;
   background-color: var(--bg-base);
 }
