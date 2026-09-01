@@ -1687,50 +1687,61 @@ body {
   white-space: nowrap;
 }
 
-.action-badge.NEW, .action-badge.new,
+/* Form 4 내부자 거래 유형 — 박스 없이 깔끔한 폰트 색상만 적용 */
 .badge-f4-buy {
-  background-color: rgba(30, 215, 96, 0.18);
-  color: var(--spotify-green);
-  border: 1px solid rgba(30, 215, 96, 0.4);
+  color: #00E676 !important;
+  font-weight: 700;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
 }
 
-.action-badge.ADD, .action-badge.add,
-.badge-f4-option {
-  background-color: var(--announcement-blue-bg);
-  color: var(--announcement-blue);
-  border: 1px solid rgba(83, 157, 245, 0.4);
-}
-
-.action-badge.REDUCE, .action-badge.reduce,
 .badge-f4-sale {
-  background-color: var(--negative-red-bg);
-  color: var(--negative-red);
-  border: 1px solid rgba(243, 114, 127, 0.4);
+  color: #FF5252 !important;
+  font-weight: 700;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
 }
 
-.action-badge.HOLD, .action-badge.hold,
-.badge-f4-etc {
-  background-color: #2b2b2b;
-  color: var(--text-muted);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+.badge-f4-option {
+  color: #539df5 !important;
+  font-weight: 700;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
 }
 
 .badge-f4-award {
-  background-color: rgba(192, 132, 252, 0.18);
-  color: #c084fc;
-  border: 1px solid rgba(192, 132, 252, 0.4);
+  color: #c084fc !important;
+  font-weight: 700;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
 }
 
 .badge-f4-gift {
-  background-color: rgba(251, 191, 36, 0.18);
-  color: #fbbf24;
-  border: 1px solid rgba(251, 191, 36, 0.4);
+  color: #fbbf24 !important;
+  font-weight: 700;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
 }
 
 .badge-f4-tax {
-  background-color: rgba(161, 161, 170, 0.15);
-  color: #d4d4d8;
-  border: 1px solid rgba(161, 161, 170, 0.3);
+  color: #a1a1aa !important;
+  font-weight: 600;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.badge-f4-etc {
+  color: var(--text-muted) !important;
+  font-weight: 600;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
 }
 
 .discount-val.positive {
