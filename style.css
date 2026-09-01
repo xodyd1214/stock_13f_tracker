@@ -2226,6 +2226,31 @@ body {
   padding: 8px;
 }
 
+/* Form 4 전용 사이드바 기업 아이템 스타일 */
+.f4-comp-item {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+}
+.f4-comp-item:hover {
+  background-color: var(--bg-highlight);
+  border-color: rgba(255, 255, 255, 0.08);
+  transform: translateX(2px);
+}
+.f4-comp-item.active {
+  background: linear-gradient(135deg, rgba(30, 215, 96, 0.15), rgba(30, 215, 96, 0.05));
+  border: 1px solid rgba(30, 215, 96, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.f4-fav-btn:hover {
+  transform: scale(1.2);
+}
+.sidebar-search-input:focus {
+  outline: none;
+  border-color: var(--spotify-green) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 0 0 2px rgba(30, 215, 96, 0.2);
+}
+
 .filing-view-container {
   display: flex;
   flex-direction: column;

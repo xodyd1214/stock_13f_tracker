@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=55">
+  <link rel="stylesheet" href="style.css?v=56">
 </head>
 <body>
   <div class="app-container">
@@ -36,27 +36,58 @@
         </div>
       </div>
 
-      <!-- 전체 운용사 통합 & 즐겨찾기 묶어보기 메인 버튼 그룹 -->
-      <div class="grand-total-btn-wrap">
-        <button class="grand-total-btn active" id="btnGrandTotal">
-          <div class="grand-text">
-            <h4>전체 운용사 통합 포트폴리오</h4>
-            <p>100개 주요 운용사 총합</p>
+      <!-- 13F 전용 사이드바 컨트롤 영역 -->
+      <div id="sidebarControls13F">
+        <!-- 전체 운용사 통합 & 즐겨찾기 묶어보기 메인 버튼 그룹 -->
+        <div class="grand-total-btn-wrap">
+          <button class="grand-total-btn active" id="btnGrandTotal">
+            <div class="grand-text">
+              <h4>전체 운용사 통합 포트폴리오</h4>
+              <p>100개 주요 운용사 총합</p>
+            </div>
+          </button>
+          <button class="grand-total-btn custom-group-btn-unified" id="btnCustomGroup" style="display: none;">
+            <div class="grand-text">
+              <h4>즐겨찾기 묶어보기</h4>
+              <p id="customGroupSubtext">내가 찜한 운용사 합산</p>
+            </div>
+          </button>
+        </div>
+
+        <!-- 개별 운용사 선택 리스트 -->
+        <div class="guru-selector-box">
+          <label class="section-label">개별 운용사 선택</label>
+          <div class="guru-list" id="guruList">
+            <!-- JS로 동적 렌더링 -->
           </div>
-        </button>
-        <button class="grand-total-btn custom-group-btn-unified" id="btnCustomGroup" style="display: none;">
-          <div class="grand-text">
-            <h4>즐겨찾기 묶어보기</h4>
-            <p id="customGroupSubtext">내가 찜한 운용사 합산</p>
-          </div>
-        </button>
+        </div>
       </div>
 
-      <!-- 개별 운용사 선택 리스트 -->
-      <div class="guru-selector-box">
-        <label class="section-label">개별 운용사 선택</label>
-        <div class="guru-list" id="guruList">
-          <!-- JS로 동적 렌더링 -->
+      <!-- Form 4 전용 사이드바 컨트롤 영역 (상장사 리스트 & 즐겨찾기) -->
+      <div id="sidebarControlsForm4" style="display: none;">
+        <div class="grand-total-btn-wrap">
+          <button class="grand-total-btn active" id="btnF4AllCompanies">
+            <div class="grand-text">
+              <h4>전체 기업 통합 내부자 거래</h4>
+              <p>105개 주요 상장사 총합</p>
+            </div>
+          </button>
+          <button class="grand-total-btn custom-group-btn-unified" id="btnF4FavCompanies" style="display: none;">
+            <div class="grand-text">
+              <h4>즐겨찾기 기업 묶어보기</h4>
+              <p id="f4FavGroupSubtext">내가 찜한 기업 거래 모아보기</p>
+            </div>
+          </button>
+        </div>
+
+        <div class="guru-selector-box">
+          <div class="f4-company-search-box" style="padding: 0 0 10px 0;">
+            <input type="text" id="f4SidebarSearch" placeholder="기업명 / 티커 검색..." class="sidebar-search-input" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; font-size: 12px;">
+          </div>
+          <label class="section-label">개별 기업 선택 (105개사)</label>
+          <div class="guru-list" id="f4CompanyList">
+            <!-- JS로 동적 렌더링 -->
+          </div>
         </div>
       </div>
 
@@ -562,6 +593,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="app.js?v=55"></script>
+  <script src="app.js?v=56"></script>
 </body>
 </html>
