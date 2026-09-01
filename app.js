@@ -1684,7 +1684,7 @@ async function switchFilingMode(filingType) {
   if (filingType === "13F") {
     if (brandTitle) brandTitle.innerHTML = 'ALPHA <span>13F</span>';
     if (brandSubtitle) brandSubtitle.innerText = '운용사 포트폴리오 분석';
-    if (ctrl13F) ctrl13F.style.display = "block";
+    if (ctrl13F) ctrl13F.style.display = "flex";
     if (ctrlF4) ctrlF4.style.display = "none";
     if (v13F) v13F.style.display = "flex";
     selectGuru(state.currentGuruKey || "__GRAND_TOTAL__");
@@ -1692,7 +1692,7 @@ async function switchFilingMode(filingType) {
     if (brandTitle) brandTitle.innerHTML = 'ALPHA <span>INSIDER</span>';
     if (brandSubtitle) brandSubtitle.innerText = '실시간 내부자 거래 추적 (Form 4)';
     if (ctrl13F) ctrl13F.style.display = "none";
-    if (ctrlF4) ctrlF4.style.display = "block";
+    if (ctrlF4) ctrlF4.style.display = "flex";
     if (vF4) vF4.style.display = "flex";
     await loadAndRenderForm4();
   } else if (filingType === "13D") {
@@ -1702,7 +1702,7 @@ async function switchFilingMode(filingType) {
     if (headerFund) headerFund.innerText = '지분 5% 이상 적극적 경영 참여';
     if (headerQuarter) headerQuarter.innerText = '취득 후 10일 이내 공시';
     if (headerDesc) headerDesc.innerText = '거물 헤지펀드(칼 아이칸, 빌 애크먼, 넬슨 펠츠 등)의 경영권 분쟁, 주주 제안, M&A 압박 지분 포착';
-    if (ctrl13F) ctrl13F.style.display = "block";
+    if (ctrl13F) ctrl13F.style.display = "flex";
     if (ctrlF4) ctrlF4.style.display = "none";
     if (v13D) v13D.style.display = "flex";
     state.d13Filter = "13D";
@@ -1719,7 +1719,7 @@ async function switchFilingMode(filingType) {
     if (headerFund) headerFund.innerText = '지분 5% 이상 패시브 투자';
     if (headerQuarter) headerQuarter.innerText = '패시브 기관 대량 지분 공시';
     if (headerDesc) headerDesc.innerText = '블랙록, 뱅가드 등 초대형 기관 투자자의 5% 이상 단순 수동적 지분 보유 내역 추적';
-    if (ctrl13F) ctrl13F.style.display = "block";
+    if (ctrl13F) ctrl13F.style.display = "flex";
     if (ctrlF4) ctrlF4.style.display = "none";
     if (v13D) v13D.style.display = "flex";
     state.d13Filter = "13G";
@@ -1934,62 +1934,57 @@ function renderF4SidebarCompanyList() {
     };
   }
 
-  // 개별 기업 렌더링
+  // 개별 기업 렌더링 (운용사와 동일하게 좌측 별표, 우측 카드 버튼 구조로 1:1 완벽 일치)
   comps.forEach(c => {
     const isSelected = state.selectedF4Ticker === c.ticker;
     const isFav = state.f4FavCompanies.includes(c.ticker);
 
-    const div = document.createElement("div");
-    div.className = `guru-item f4-comp-item ${isSelected ? "active" : ""}`;
-    div.style.display = "flex";
-    div.style.alignItems = "center";
-    div.style.justifyContent = "space-between";
-    div.style.padding = "10px 12px";
-    div.style.borderRadius = "8px";
-    div.style.cursor = "pointer";
-    div.style.marginBottom = "4px";
-    div.style.transition = "all 0.2s ease";
+    const row = document.createElement("div");
+    row.className = "guru-row-item";
 
-    div.innerHTML = `
-      <div class="guru-info-block" style="flex: 1; min-width: 0;">
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="font-weight: 700; color: #fff; font-size: 13px;">${c.ticker}</span>
-          <span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(0, 230, 118, 0.15); color: #00E676; font-weight: 600;">${c.count}건</span>
-        </div>
-        <div style="font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px;">${c.name}</div>
-      </div>
-      <button class="f4-fav-btn" title="즐겨찾기" style="background: none; border: none; cursor: pointer; font-size: 16px; color: ${isFav ? '#FFD700' : 'rgba(255,255,255,0.2)'}; padding: 4px; transition: color 0.2s ease;">
-        ${isFav ? '★' : '☆'}
-      </button>
-    `;
+    // 좌측 즐겨찾기 별표 버튼
+    const starBtn = document.createElement("button");
+    starBtn.className = `star-btn ${isFav ? 'starred' : ''}`;
+    starBtn.innerHTML = isFav ? "★" : "☆";
+    starBtn.title = isFav ? "즐겨찾기 해제" : "즐겨찾기 추가";
+    starBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (state.f4FavCompanies.includes(c.ticker)) {
+        state.f4FavCompanies = state.f4FavCompanies.filter(t => t !== c.ticker);
+      } else {
+        state.f4FavCompanies.push(c.ticker);
+      }
+      saveF4Favs();
+      renderF4SidebarCompanyList();
+      if (state.isF4FavGroupActive) {
+        loadAndRenderForm4();
+      }
+    };
+    row.appendChild(starBtn);
 
-    // 기업 클릭
-    div.onclick = (e) => {
-      if (e.target.closest(".f4-fav-btn")) return;
+    // 우측 기업 카드 버튼
+    const btn = document.createElement("button");
+    btn.className = `guru-card-btn ${isSelected ? 'active' : ''}`;
+    btn.onclick = () => {
       state.selectedF4Ticker = c.ticker;
       state.isF4FavGroupActive = false;
       loadAndRenderForm4();
     };
 
-    // 즐겨찾기 별 클릭
-    const favBtn = div.querySelector(".f4-fav-btn");
-    if (favBtn) {
-      favBtn.onclick = (e) => {
-        e.stopPropagation();
-        if (state.f4FavCompanies.includes(c.ticker)) {
-          state.f4FavCompanies = state.f4FavCompanies.filter(t => t !== c.ticker);
-        } else {
-          state.f4FavCompanies.push(c.ticker);
-        }
-        saveF4Favs();
-        renderF4SidebarCompanyList();
-        if (state.isF4FavGroupActive) {
-          loadAndRenderForm4();
-        }
-      };
-    }
+    const initials = c.ticker.slice(0, 2);
+    btn.innerHTML = `
+      <div class="guru-mini-avatar">${initials}</div>
+      <div class="guru-card-info" style="flex: 1; min-width: 0;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px;">
+          <h4 style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text-base);">${c.ticker}</h4>
+          <span style="font-size: 10px; padding: 1px 5px; border-radius: 4px; background: rgba(0, 230, 118, 0.15); color: #00E676; font-weight: 700;">${c.count}건</span>
+        </div>
+        <p style="margin: 2px 0 0 0; font-size: 11px; color: var(--text-subdued); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${c.name}</p>
+      </div>
+    `;
 
-    container.appendChild(div);
+    row.appendChild(btn);
+    container.appendChild(row);
   });
 }
 
