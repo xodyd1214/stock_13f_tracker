@@ -31,10 +31,22 @@ with open("sec_cik_master.json", "r", encoding="utf-8") as f:
     ticker_to_cik = json.load(f)
 
 KEY_TICKERS = [
-    "NVDA", "AAPL", "MSFT", "AMZN", "GOOGL", "GOOG", "META", "TSLA", "PLTR", "AMD",
-    "AVGO", "JPM", "LLY", "WMT", "XOM", "COIN", "NFLX", "CRM", "COST", "ORCL",
-    "UBER", "DIS", "INTC", "MU", "NOW", "PANW", "TXN", "UNH", "V", "MA",
-    "HD", "PG", "JNJ", "ABBV", "MRK", "CAT", "GE", "GS", "MS", "BAC"
+    # 빅테크 & 메가캡
+    "NVDA", "AAPL", "MSFT", "AMZN", "GOOGL", "GOOG", "META", "TSLA", "BRK-B", "AVGO",
+    # 반도체 & AI & 하드웨어
+    "AMD", "INTC", "QCOM", "TXN", "MU", "AMAT", "LRCX", "ADI", "ARM", "SMCI", "DELL", "HPQ", "ASML", "TSM",
+    # 소프트웨어 & 클라우드 & 사이버보안
+    "PLTR", "CRM", "ORCL", "NOW", "PANW", "SNOW", "CRWD", "DDOG", "ADBE", "INTU", "WDAY", "ZS", "FTNT", "NET",
+    # 금융 & 결제
+    "JPM", "BAC", "WFC", "C", "GS", "MS", "V", "MA", "AXP", "PYPL", "COIN", "SCHW", "BLK", "PNC",
+    # 헬스케어 & 제약 & 바이오
+    "LLY", "UNH", "JNJ", "ABBV", "MRK", "PFE", "TMO", "ABT", "DHR", "ISRG", "AMGN", "BMY", "GILD", "VRTX",
+    # 소비재 & 유통 & 이커머스
+    "WMT", "COST", "HD", "PG", "KO", "PEP", "MCD", "NKE", "SBUX", "TGT", "LOW", "PM", "MO", "EL",
+    # 산업 & 항공 & 물류 & 에너지
+    "CAT", "GE", "BA", "HON", "UPS", "FDX", "UNP", "DE", "RTX", "LMT", "XOM", "CVX", "COP", "SLB",
+    # 미디어 & 통신 & 모빌리티
+    "NFLX", "DIS", "CMCSA", "TMUS", "VZ", "T", "UBER", "ABNB", "DASH", "BKNG", "SPOT"
 ]
 
 def parse_form4_xml(xml_content, comp_ticker, comp_name, comp_cik, acc_num, filing_date):
@@ -177,8 +189,8 @@ for idx, ticker in enumerate(KEY_TICKERS):
 
         f4_indices = [i for i, f in enumerate(forms) if f == "4"]
         
-        # 최신 10개 공시 대상 파싱
-        for f_idx in f4_indices[:10]:
+        # 최신 15개 공시 대상 파싱
+        for f_idx in f4_indices[:15]:
             filing_date = recent["filingDate"][f_idx]
             acc = recent["accessionNumber"][f_idx]
             acc_clean = acc.replace("-", "")
