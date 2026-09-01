@@ -2037,9 +2037,9 @@ function renderForm4Table() {
     tr.innerHTML = `
       <td class="text-left font-mono" style="font-size: 12px; color: var(--text-secondary);">${item.filingDate}</td>
       <td class="text-left font-semibold">
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="color: #fff;">${item.ticker}</span>
-          <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">${item.companyName.length > 15 ? item.companyName.slice(0, 15) + '...' : item.companyName}</span>
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <span style="color: #fff; font-weight: 800; font-size: 13px;">${item.ticker}</span>
+          <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">${item.companyName}</span>
         </div>
       </td>
       <td class="text-left font-medium" style="color: var(--accent-blue);">${item.insiderName}</td>
