@@ -121,10 +121,10 @@ def parse_form4_xml(xml_content, comp_ticker, comp_name, comp_cik, acc_num, fili
         post_shares_elem = tx.find(".//postTransactionAmounts/sharesOwnedFollowingTransaction/value")
         post_shares = float(post_shares_elem.text.strip()) if post_shares_elem is not None and post_shares_elem.text else 0.0
 
-        if tx_code == "P" or (acq_disp == "A" and price > 0 and tx_code in ["P", "I"]):
+        if tx_code == "P":
             tx_type = "장내 매수 (P)"
             tx_type_code = "P"
-        elif tx_code == "S" or acq_disp == "D":
+        elif tx_code == "S":
             tx_type = "장내 매도 (S)"
             tx_type_code = "S"
         elif tx_code in ["M", "C"]:
@@ -136,6 +136,15 @@ def parse_form4_xml(xml_content, comp_ticker, comp_name, comp_cik, acc_num, fili
         elif tx_code == "G":
             tx_type = "증여/기부 (G)"
             tx_type_code = "G"
+        elif tx_code == "F":
+            tx_type = "세금 납부 반납 (F)"
+            tx_type_code = "F"
+        elif acq_disp == "A":
+            tx_type = f"주식 취득 ({tx_code})"
+            tx_type_code = tx_code
+        elif acq_disp == "D":
+            tx_type = f"주식 처분 ({tx_code})"
+            tx_type_code = tx_code
         else:
             tx_type = f"기타 거래 ({tx_code})"
             tx_type_code = tx_code
