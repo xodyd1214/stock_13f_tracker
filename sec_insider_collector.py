@@ -97,6 +97,13 @@ def parse_form4_xml(xml_content, comp_ticker, comp_name, comp_cik, acc_num, fili
         elif is_other:
             officer_title = "주요 관계자 (Other)"
 
+    # Footnote 맵 구성
+    footnote_map = {}
+    for fn in root.findall(".//footnotes/footnote"):
+        fn_id = fn.attrib.get("id")
+        if fn_id and fn.text:
+            footnote_map[fn_id] = fn.text
+
     # 2) Table I 거래 파싱
     non_deriv_txs = root.findall(".//nonDerivativeTransaction")
     if not non_deriv_txs:
@@ -117,6 +124,21 @@ def parse_form4_xml(xml_content, comp_ticker, comp_name, comp_cik, acc_num, fili
 
         price_elem = tx.find(".//transactionAmounts/transactionPricePerShare/value")
         price = float(price_elem.text.strip()) if price_elem is not None and price_elem.text else 0.0
+
+        # 주석(Footnote)에 가격 범위가 적힌 경우 단가 복원
+        if price == 0.0:
+            fn_elem = tx.find(".//transactionAmounts/transactionPricePerShare/footnoteId")
+            if fn_elem is not None:
+                fn_id = fn_elem.attrib.get("id")
+                fn_text = footnote_map.get(fn_id, "")
+                if fn_text:
+                    m_range = re.search(r'ranging\s+from\s+\$([0-9\.]+)\s+to\s+\$([0-9\.]+)', fn_text, re.IGNORECASE)
+                    if m_range:
+                        price = round((float(m_range.group(1)) + float(m_range.group(2))) / 2, 2)
+                    else:
+                        m_price = re.search(r'\$([0-9\.]+)', fn_text)
+                        if m_price:
+                            price = float(m_price.group(1))
 
         post_shares_elem = tx.find(".//postTransactionAmounts/sharesOwnedFollowingTransaction/value")
         post_shares = float(post_shares_elem.text.strip()) if post_shares_elem is not None and post_shares_elem.text else 0.0
