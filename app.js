@@ -2024,10 +2024,13 @@ function renderForm4Table() {
       openInsiderModal(item.ticker, item.companyName);
     };
 
-    let txBadgeClass = "action-badge hold";
-    if (item.txTypeCode === "P") txBadgeClass = "action-badge new";
-    else if (item.txTypeCode === "S") txBadgeClass = "action-badge reduce";
-    else if (item.txTypeCode === "M" || item.txTypeCode === "C") txBadgeClass = "action-badge add";
+    let txBadgeClass = "action-badge badge-f4-etc";
+    if (item.txTypeCode === "P") txBadgeClass = "action-badge badge-f4-buy";
+    else if (item.txTypeCode === "S") txBadgeClass = "action-badge badge-f4-sale";
+    else if (item.txTypeCode === "M" || item.txTypeCode === "C") txBadgeClass = "action-badge badge-f4-option";
+    else if (item.txTypeCode === "A") txBadgeClass = "action-badge badge-f4-award";
+    else if (item.txTypeCode === "G") txBadgeClass = "action-badge badge-f4-gift";
+    else if (item.txTypeCode === "F") txBadgeClass = "action-badge badge-f4-tax";
 
     const formattedShares = item.shares ? Number(item.shares).toLocaleString(undefined, { maximumFractionDigits: 1 }) : "-";
     const formattedPrice = item.price > 0 ? `$${Number(item.price).toFixed(2)}` : "$0.00";
