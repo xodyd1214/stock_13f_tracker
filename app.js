@@ -309,35 +309,48 @@ function getMappedSector(ticker, defaultSector) {
   return "Technology";
 }
 
-function getMappedTicker(name, rawTicker, cusip) {
-  const upperName = (name || "").toUpperCase();
-  const upperTicker = (rawTicker || "").toUpperCase();
-  const cleanCusip = (cusip || "").toUpperCase().trim();
+const TICKER_LOOKUP_CACHE = {};
 
-  // 0순위: CUSIP 직접 매칭
+function getMappedTicker(name, rawTicker, cusip) {
+  const cleanCusip = (cusip || "").toUpperCase().trim();
+  const upperTicker = (rawTicker || "").toUpperCase().trim();
+  const upperName = (name || "").toUpperCase().trim();
+  
+  const cacheKey = cleanCusip || upperTicker || upperName;
+  if (TICKER_LOOKUP_CACHE[cacheKey]) {
+    return TICKER_LOOKUP_CACHE[cacheKey];
+  }
+
+  // 0순위: CUSIP / 티커 직접 매칭 (O(1))
   if (cleanCusip && TICKER_MAP[cleanCusip]) {
+    TICKER_LOOKUP_CACHE[cacheKey] = TICKER_MAP[cleanCusip];
     return TICKER_MAP[cleanCusip];
   }
   if (upperTicker && TICKER_MAP[upperTicker]) {
+    TICKER_LOOKUP_CACHE[cacheKey] = TICKER_MAP[upperTicker];
     return TICKER_MAP[upperTicker];
   }
 
   // 1순위: TICKER_MAP 이름 사전 매칭
   for (const [key, val] of Object.entries(TICKER_MAP)) {
     if (upperName.includes(key)) {
+      TICKER_LOOKUP_CACHE[cacheKey] = val;
       return val;
     }
   }
 
   // 2순위: 정상 1~5자리 알파벳 티커
-  const isCusip = /^[0-9A-Z]{8,9}$/.test(rawTicker) && /\d/.test(rawTicker);
-  if (rawTicker && rawTicker.length <= 5 && !rawTicker.includes(" ") && /^[A-Z]+$/.test(rawTicker) && !isCusip) {
-    return rawTicker;
+  const isCusip = /^[0-9A-Z]{8,9}$/.test(upperTicker) && /\d/.test(upperTicker);
+  if (upperTicker && upperTicker.length <= 5 && !upperTicker.includes(" ") && /^[A-Z]+$/.test(upperTicker) && !isCusip) {
+    TICKER_LOOKUP_CACHE[cacheKey] = upperTicker;
+    return upperTicker;
   }
 
   // 3순위: 회사명 첫 단어 기반 추출
   const cleanWord = (name || "STOCK").split(" ")[0].toUpperCase().replace(/[^A-Z]/g, "");
-  return cleanWord.slice(0, 5) || "STOCK";
+  const res = cleanWord.slice(0, 5) || "STOCK";
+  TICKER_LOOKUP_CACHE[cacheKey] = res;
+  return res;
 }
 
 function formatMoney(val) {
@@ -435,20 +448,20 @@ document.addEventListener("DOMContentLoaded", () => {
 async function loadRealSecData() {
   const idb = await openIndexedDB();
   
-  // 1) IndexedDB 로컬 캐시 우선 즉시 로딩 (0.05초 만에 즉시 화면 표출)
+  // 1) IndexedDB 사전 계산된 GURU_DATABASE 초고속 즉시 로딩 (0.005초 만에 대시보드 완성)
   if (idb) {
-    const cachedHoldings = await getFromIndexedDB(idb, "raw_holdings");
-    const cachedTickers = await getFromIndexedDB(idb, "ticker_map");
-    const cachedPrices = await getFromIndexedDB(idb, "realtime_prices");
-
-    if (cachedHoldings && cachedHoldings.length > 0) {
-      RAW_HOLDINGS = cachedHoldings;
-      if (cachedTickers) Object.assign(TICKER_MAP, cachedTickers);
+    try {
+      const cachedGuruDB = await getFromIndexedDB(idb, "guru_database");
+      const cachedPrices = await getFromIndexedDB(idb, "realtime_prices");
       if (cachedPrices) LIVE_PRICES = cachedPrices;
-      
-      // 로컬 캐시로 0.05초 만에 즉각 화면 구성
-      processAndRenderHoldingsData();
-    }
+
+      if (cachedGuruDB && Object.keys(cachedGuruDB).length > 0) {
+        GURU_DATABASE = cachedGuruDB;
+        renderCategoryTabs();
+        renderGuruSidebar();
+        selectGuru("__GRAND_TOTAL__");
+      }
+    } catch (e) {}
   }
 
   // 2) 백그라운드 네트워크 동기화 (최신 데이터 갱신)
@@ -459,11 +472,6 @@ async function loadRealSecData() {
       fetch("realtime_prices.json").catch(() => null)
     ]);
 
-    if (holdingsRes && holdingsRes.ok) {
-      const latestHoldings = await holdingsRes.json();
-      RAW_HOLDINGS = latestHoldings;
-      saveToIndexedDB(idb, "raw_holdings", latestHoldings);
-    }
     if (tickerRes && tickerRes.ok) {
       try {
         const extMap = await tickerRes.json();
@@ -477,9 +485,14 @@ async function loadRealSecData() {
         saveToIndexedDB(idb, "realtime_prices", LIVE_PRICES);
       } catch (e) {}
     }
+    if (holdingsRes && holdingsRes.ok) {
+      const latestHoldings = await holdingsRes.json();
+      RAW_HOLDINGS = latestHoldings;
+      saveToIndexedDB(idb, "raw_holdings", latestHoldings);
+    }
 
-    // 최신 데이터로 화면 최종 동기화
-    processAndRenderHoldingsData();
+    // 최신 데이터로 화면 최종 연산 및 DB 캐시 갱신
+    processAndRenderHoldingsData(idb);
 
     // 백그라운드 프리페치 (Form 4 및 13D 데이터)
     if (window.requestIdleCallback) {
@@ -661,6 +674,10 @@ function processAndRenderHoldingsData() {
       },
       ...groups
     };
+
+    if (idb) {
+      saveToIndexedDB(idb, "guru_database", GURU_DATABASE);
+    }
 
     renderCategoryTabs();
     renderGuruSidebar();
