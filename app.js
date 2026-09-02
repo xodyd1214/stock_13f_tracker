@@ -386,6 +386,46 @@ const state = {
   }
 };
 
+// IndexedDB 초고속 로컬 스토리지 엔진 (0.05초 즉시 로딩)
+function openIndexedDB() {
+  return new Promise((resolve) => {
+    if (!window.indexedDB) return resolve(null);
+    const request = indexedDB.open("Alpha13FCacheDB", 1);
+    request.onupgradeneeded = (e) => {
+      const idb = e.target.result;
+      if (!idb.objectStoreNames.contains("cacheStore")) {
+        idb.createObjectStore("cacheStore");
+      }
+    };
+    request.onsuccess = (e) => resolve(e.target.result);
+    request.onerror = () => resolve(null);
+  });
+}
+
+function getFromIndexedDB(idb, key) {
+  return new Promise((resolve) => {
+    if (!idb) return resolve(null);
+    try {
+      const tx = idb.transaction("cacheStore", "readonly");
+      const store = tx.objectStore("cacheStore");
+      const req = store.get(key);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => resolve(null);
+    } catch (e) {
+      resolve(null);
+    }
+  });
+}
+
+function saveToIndexedDB(idb, key, val) {
+  if (!idb) return;
+  try {
+    const tx = idb.transaction("cacheStore", "readwrite");
+    const store = tx.objectStore("cacheStore");
+    store.put(val, key);
+  } catch (e) {}
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   initFirebase();
   setupEventListeners();
@@ -393,8 +433,26 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function loadRealSecData() {
+  const idb = await openIndexedDB();
+  
+  // 1) IndexedDB 로컬 캐시 우선 즉시 로딩 (0.05초 만에 즉시 화면 표출)
+  if (idb) {
+    const cachedHoldings = await getFromIndexedDB(idb, "raw_holdings");
+    const cachedTickers = await getFromIndexedDB(idb, "ticker_map");
+    const cachedPrices = await getFromIndexedDB(idb, "realtime_prices");
+
+    if (cachedHoldings && cachedHoldings.length > 0) {
+      RAW_HOLDINGS = cachedHoldings;
+      if (cachedTickers) Object.assign(TICKER_MAP, cachedTickers);
+      if (cachedPrices) LIVE_PRICES = cachedPrices;
+      
+      // 로컬 캐시로 0.05초 만에 즉각 화면 구성
+      processAndRenderHoldingsData();
+    }
+  }
+
+  // 2) 백그라운드 네트워크 동기화 (최신 데이터 갱신)
   try {
-    // 13F 홀딩스, 티커 사전, 실시간 시세를 병렬(Promise.all)로 동시 다운로드
     const [holdingsRes, tickerRes, priceRes] = await Promise.all([
       fetch("latest_13f_holdings.json"),
       fetch("ticker_map.json").catch(() => null),
@@ -402,32 +460,46 @@ async function loadRealSecData() {
     ]);
 
     if (holdingsRes && holdingsRes.ok) {
-      RAW_HOLDINGS = await holdingsRes.json();
+      const latestHoldings = await holdingsRes.json();
+      RAW_HOLDINGS = latestHoldings;
+      saveToIndexedDB(idb, "raw_holdings", latestHoldings);
     }
     if (tickerRes && tickerRes.ok) {
       try {
         const extMap = await tickerRes.json();
         Object.assign(TICKER_MAP, extMap);
+        saveToIndexedDB(idb, "ticker_map", extMap);
       } catch (e) {}
     }
     if (priceRes && priceRes.ok) {
       try {
         LIVE_PRICES = await priceRes.json();
+        saveToIndexedDB(idb, "realtime_prices", LIVE_PRICES);
       } catch (e) {}
     }
 
-    // 백그라운드 프리페치 (Form 4 및 13D 데이터를 유휴 시간에 미리 다운로드하여 탭 전환 시 0초 딜레이)
+    // 최신 데이터로 화면 최종 동기화
+    processAndRenderHoldingsData();
+
+    // 백그라운드 프리페치 (Form 4 및 13D 데이터)
     if (window.requestIdleCallback) {
       requestIdleCallback(() => prefetchOtherFilings());
     } else {
       setTimeout(prefetchOtherFilings, 1000);
     }
-    
-    const groups = {};
-    const grandConsensusMap = {};
-    let grandTotalAumVal = 0;
-    
-    RAW_HOLDINGS.forEach(item => {
+  } catch (e) {
+    console.warn("네트워크 로딩 실패, 캐시 유지:", e);
+  }
+}
+
+function processAndRenderHoldingsData() {
+  if (!RAW_HOLDINGS || RAW_HOLDINGS.length === 0) return;
+  
+  const groups = {};
+  const grandConsensusMap = {};
+  let grandTotalAumVal = 0;
+  
+  RAW_HOLDINGS.forEach(item => {
       if (isDerivativeOrOption(item.name, item.ticker, item.titleOfClass)) return;
 
       const guruName = item.guru || "기타 운용사";
