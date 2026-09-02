@@ -495,11 +495,12 @@ async function loadRealSecData() {
 function processAndRenderHoldingsData() {
   if (!RAW_HOLDINGS || RAW_HOLDINGS.length === 0) return;
   
-  const groups = {};
-  const grandConsensusMap = {};
-  let grandTotalAumVal = 0;
-  
-  RAW_HOLDINGS.forEach(item => {
+  try {
+    const groups = {};
+    const grandConsensusMap = {};
+    let grandTotalAumVal = 0;
+    
+    RAW_HOLDINGS.forEach(item => {
       if (isDerivativeOrOption(item.name, item.ticker, item.titleOfClass)) return;
 
       const guruName = item.guru || "기타 운용사";
