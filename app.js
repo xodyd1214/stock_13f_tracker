@@ -394,25 +394,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function loadRealSecData() {
   try {
-    const res = await fetch("latest_13f_holdings.json");
-    if (res.ok) {
-      RAW_HOLDINGS = await res.json();
+    // 13F 홀딩스, 티커 사전, 실시간 시세를 병렬(Promise.all)로 동시 다운로드
+    const [holdingsRes, tickerRes, priceRes] = await Promise.all([
+      fetch("latest_13f_holdings.json"),
+      fetch("ticker_map.json").catch(() => null),
+      fetch("realtime_prices.json").catch(() => null)
+    ]);
+
+    if (holdingsRes && holdingsRes.ok) {
+      RAW_HOLDINGS = await holdingsRes.json();
     }
-    
-    try {
-      const tickerRes = await fetch("ticker_map.json");
-      if (tickerRes.ok) {
+    if (tickerRes && tickerRes.ok) {
+      try {
         const extMap = await tickerRes.json();
         Object.assign(TICKER_MAP, extMap);
-      }
-    } catch (e) {}
-
-    try {
-      const priceRes = await fetch("realtime_prices.json");
-      if (priceRes.ok) {
+      } catch (e) {}
+    }
+    if (priceRes && priceRes.ok) {
+      try {
         LIVE_PRICES = await priceRes.json();
-      }
-    } catch (e) {}
+      } catch (e) {}
+    }
+
+    // 백그라운드 프리페치 (Form 4 및 13D 데이터를 유휴 시간에 미리 다운로드하여 탭 전환 시 0초 딜레이)
+    if (window.requestIdleCallback) {
+      requestIdleCallback(() => prefetchOtherFilings());
+    } else {
+      setTimeout(prefetchOtherFilings, 1000);
+    }
     
     const groups = {};
     const grandConsensusMap = {};
@@ -2248,6 +2257,22 @@ function render13DTable() {
     `;
     tbody.appendChild(tr);
   });
+}
+
+// 백그라운드 프리페치 (탭 클릭 시 지연 없이 즉시 전환)
+async function prefetchOtherFilings() {
+  if (FORM4_DATA.length === 0) {
+    try {
+      const res = await fetch("latest_form4_insiders.json");
+      if (res.ok) FORM4_DATA = await res.json();
+    } catch (e) {}
+  }
+  if (FILING_13D_DATA.length === 0) {
+    try {
+      const res = await fetch("latest_13d_filings.json");
+      if (res.ok) FILING_13D_DATA = await res.json();
+    } catch (e) {}
+  }
 }
 
 function fetchLivePricesForCurrentView() {}
