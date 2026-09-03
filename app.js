@@ -1669,6 +1669,28 @@ function setupEventListeners() {
       closeInsiderModal();
     }
   });
+
+  // 13F 및 Form 4 무한 스크롤(Infinite Scroll) 통합 핸들러
+  const handleTableInfiniteScroll = () => {
+    const mc = document.querySelector(".main-content");
+    const isBottom = mc 
+      ? (mc.scrollTop + mc.clientHeight >= mc.scrollHeight - 400)
+      : (window.innerHeight + window.scrollY >= document.body.offsetHeight - 400);
+
+    if (isBottom) {
+      if (state.currentFilingType === "13F") {
+        appendNextPageRows();
+      } else if (state.currentFilingType === "FORM4") {
+        appendNextF4PageRows();
+      }
+    }
+  };
+
+  const mainContentEl = document.querySelector(".main-content");
+  if (mainContentEl) {
+    mainContentEl.addEventListener("scroll", handleTableInfiniteScroll);
+  }
+  window.addEventListener("scroll", handleTableInfiniteScroll);
 }
 
 // ==============================================================================
@@ -2020,10 +2042,15 @@ function renderF4SidebarCompanyList() {
   });
 }
 
+let CURRENT_F4_FILTERED_ITEMS = [];
+let CURRENT_F4_PAGE_INDEX = 1;
+const F4_PAGE_SIZE = 80;
+
 function renderForm4Table() {
   const tbody = document.getElementById("f4TableBody");
   if (!tbody) return;
   tbody.innerHTML = "";
+  CURRENT_F4_PAGE_INDEX = 1;
 
   let list = getF4ActiveDataset();
 
@@ -2048,7 +2075,22 @@ function renderForm4Table() {
     return;
   }
 
-  list.forEach(item => {
+  CURRENT_F4_FILTERED_ITEMS = list;
+  appendNextF4PageRows();
+}
+
+function appendNextF4PageRows() {
+  const tbody = document.getElementById("f4TableBody");
+  if (!tbody || !CURRENT_F4_FILTERED_ITEMS || CURRENT_F4_FILTERED_ITEMS.length === 0) return;
+
+  const start = (CURRENT_F4_PAGE_INDEX - 1) * F4_PAGE_SIZE;
+  const end = Math.min(start + F4_PAGE_SIZE, CURRENT_F4_FILTERED_ITEMS.length);
+  if (start >= CURRENT_F4_FILTERED_ITEMS.length) return;
+
+  const chunk = CURRENT_F4_FILTERED_ITEMS.slice(start, end);
+  const fragment = document.createDocumentFragment();
+
+  chunk.forEach(item => {
     const tr = document.createElement("tr");
     tr.style.cursor = "pointer";
     tr.onclick = (e) => {
@@ -2090,8 +2132,11 @@ function renderForm4Table() {
         </a>
       </td>
     `;
-    tbody.appendChild(tr);
+    fragment.appendChild(tr);
   });
+
+  tbody.appendChild(fragment);
+  CURRENT_F4_PAGE_INDEX++;
 }
 
 function openInsiderModal(ticker) {
