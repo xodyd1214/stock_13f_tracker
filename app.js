@@ -399,46 +399,6 @@ const state = {
   }
 };
 
-// IndexedDB 초고속 로컬 스토리지 엔진 (0.05초 즉시 로딩)
-function openIndexedDB() {
-  return new Promise((resolve) => {
-    if (!window.indexedDB) return resolve(null);
-    const request = indexedDB.open("Alpha13FCacheDB", 1);
-    request.onupgradeneeded = (e) => {
-      const idb = e.target.result;
-      if (!idb.objectStoreNames.contains("cacheStore")) {
-        idb.createObjectStore("cacheStore");
-      }
-    };
-    request.onsuccess = (e) => resolve(e.target.result);
-    request.onerror = () => resolve(null);
-  });
-}
-
-function getFromIndexedDB(idb, key) {
-  return new Promise((resolve) => {
-    if (!idb) return resolve(null);
-    try {
-      const tx = idb.transaction("cacheStore", "readonly");
-      const store = tx.objectStore("cacheStore");
-      const req = store.get(key);
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => resolve(null);
-    } catch (e) {
-      resolve(null);
-    }
-  });
-}
-
-function saveToIndexedDB(idb, key, val) {
-  if (!idb) return;
-  try {
-    const tx = idb.transaction("cacheStore", "readwrite");
-    const store = tx.objectStore("cacheStore");
-    store.put(val, key);
-  } catch (e) {}
-}
-
 document.addEventListener("DOMContentLoaded", () => {
   initFirebase();
   setupEventListeners();
@@ -446,25 +406,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function loadRealSecData() {
-  const idb = await openIndexedDB();
-  
-  // 1) IndexedDB 사전 계산된 GURU_DATABASE 초고속 즉시 로딩 (0.005초 만에 대시보드 완성)
-  if (idb) {
-    try {
-      const cachedGuruDB = await getFromIndexedDB(idb, "guru_database");
-      const cachedPrices = await getFromIndexedDB(idb, "realtime_prices");
-      if (cachedPrices) LIVE_PRICES = cachedPrices;
-
-      if (cachedGuruDB && Object.keys(cachedGuruDB).length > 0) {
-        GURU_DATABASE = cachedGuruDB;
-        renderCategoryTabs();
-        renderGuruSidebar();
-        selectGuru("__GRAND_TOTAL__");
-      }
-    } catch (e) {}
-  }
-
-  // 2) 백그라운드 네트워크 동기화 (최신 데이터 갱신)
   try {
     const [holdingsRes, tickerRes, priceRes] = await Promise.all([
       fetch("latest_13f_holdings.json"),
@@ -476,23 +417,19 @@ async function loadRealSecData() {
       try {
         const extMap = await tickerRes.json();
         Object.assign(TICKER_MAP, extMap);
-        saveToIndexedDB(idb, "ticker_map", extMap);
       } catch (e) {}
     }
     if (priceRes && priceRes.ok) {
       try {
         LIVE_PRICES = await priceRes.json();
-        saveToIndexedDB(idb, "realtime_prices", LIVE_PRICES);
       } catch (e) {}
     }
     if (holdingsRes && holdingsRes.ok) {
-      const latestHoldings = await holdingsRes.json();
-      RAW_HOLDINGS = latestHoldings;
-      saveToIndexedDB(idb, "raw_holdings", latestHoldings);
+      RAW_HOLDINGS = await holdingsRes.json();
     }
 
-    // 최신 데이터로 화면 최종 연산 및 DB 캐시 갱신
-    processAndRenderHoldingsData(idb);
+    // 최신 데이터로 화면 연산 및 렌더링
+    processAndRenderHoldingsData();
 
     // 백그라운드 프리페치 (Form 4 및 13D 데이터)
     if (window.requestIdleCallback) {
@@ -501,7 +438,7 @@ async function loadRealSecData() {
       setTimeout(prefetchOtherFilings, 1000);
     }
   } catch (e) {
-    console.warn("네트워크 로딩 실패, 캐시 유지:", e);
+    console.error("데이터 로드 실패:", e);
   }
 }
 
@@ -674,10 +611,6 @@ function processAndRenderHoldingsData() {
       },
       ...groups
     };
-
-    if (idb) {
-      saveToIndexedDB(idb, "guru_database", GURU_DATABASE);
-    }
 
     renderCategoryTabs();
     renderGuruSidebar();
