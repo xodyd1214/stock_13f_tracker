@@ -2290,20 +2290,31 @@ function render13DTable() {
   }
 
   if (state.d13Query) {
+    const q = state.d13Query.toLowerCase().trim();
     list = list.filter(item =>
-      item.investorName.toLowerCase().includes(state.d13Query) ||
-      item.fundName.toLowerCase().includes(state.d13Query) ||
-      item.targetCompany.toLowerCase().includes(state.d13Query)
+      (item.investorName && item.investorName.toLowerCase().includes(q)) ||
+      (item.fundName && item.fundName.toLowerCase().includes(q)) ||
+      (item.targetCompany && item.targetCompany.toLowerCase().includes(q)) ||
+      (item.targetTicker && item.targetTicker.toLowerCase().includes(q))
     );
   }
 
   if (list.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center" style="padding: 40px; color: var(--text-muted);">조건에 일치하는 13D/13G 공시가 없습니다.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding: 40px; color: var(--text-muted);">조건에 일치하는 13D/13G 공시가 없습니다.</td></tr>`;
     return;
   }
 
   list.forEach(item => {
     const tr = document.createElement("tr");
+    
+    // 지분율 포맷팅
+    let pctDisplay = `<span style="color: var(--text-muted); font-size: 12px;">5%+</span>`;
+    if (item.percentOwned !== null && item.percentOwned !== undefined) {
+      const pctVal = typeof item.percentOwned === "number" ? item.percentOwned.toFixed(1) : item.percentOwned;
+      const pctColor = item.isActivist ? '#c084fc' : '#60a5fa';
+      pctDisplay = `<span style="font-size: 13px; font-weight: 700; color: ${pctColor};">${pctVal}%</span>`;
+    }
+
     tr.innerHTML = `
       <td>${item.filingDate}</td>
       <td><strong style="color: var(--text-base);">${item.formType}</strong></td>
@@ -2313,7 +2324,15 @@ function render13DTable() {
           <span class="stock-company">${item.fundName}</span>
         </div>
       </td>
-      <td>${item.targetCompany}</td>
+      <td>
+        <div class="stock-name-cell">
+          ${item.targetTicker ? `<span class="stock-ticker" style="font-size: 13px; color: var(--spotify-green);">${item.targetTicker}</span>` : ''}
+          <span class="stock-company" style="font-weight: 600; color: var(--text-base);">${item.targetCompany}</span>
+        </div>
+      </td>
+      <td class="text-center">
+        ${pctDisplay}
+      </td>
       <td class="text-center">
         <span class="badge-tx ${item.isActivist ? 'badge-activist' : 'badge-passive'}">
           ${item.isActivist ? '행동주의 13D' : '단순 대량 13G'}

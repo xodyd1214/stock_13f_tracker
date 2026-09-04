@@ -11,3 +11,5 @@ venv/
 # Temporary / OS
 .DS_Store
 Thumbs.db
+scratch/
+company_tickers.json
