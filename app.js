@@ -886,6 +886,7 @@ function updateSummaryMetrics(guru) {
     }
 
     const discounts = guru.holdings
+      .filter(h => h.action !== 'PUT' && h.action !== 'CALL' && !h.isOption)
       .map(h => ({ ...h, discountPct: ((h.curPrice - h.estPrice) / h.estPrice) * 100 }))
       .sort((a, b) => a.discountPct - b.discountPct);
     const bestDiscount = discounts[0];
@@ -910,6 +911,7 @@ function updateSummaryMetrics(guru) {
     }
 
     const discounts = guru.holdings
+      .filter(h => h.action !== 'PUT' && h.action !== 'CALL' && !h.isOption)
       .map(h => ({ ...h, discountPct: ((h.curPrice - h.estPrice) / h.estPrice) * 100 }))
       .sort((a, b) => a.discountPct - b.discountPct);
     const bestDiscount = discounts[0];
@@ -1133,6 +1135,7 @@ function renderTreemap(holdings) {
     tile.style.width = `${t.width}px`;
     tile.style.height = `${t.height}px`;
 
+    const isOption = item.action === 'PUT' || item.action === 'CALL' || item.isOption;
     const diffVal = ((item.curPrice - item.estPrice) / item.estPrice) * 100;
     const diffPct = diffVal.toFixed(1);
     const isDown = diffVal < 0;
@@ -1145,7 +1148,7 @@ function renderTreemap(holdings) {
       <div class="tile-top">
         <span class="tile-ticker">${item.ticker}</span>
         <div class="tile-badges">
-          ${(isDown && hasRoomForDiscount) ? '<span class="tile-discount-badge" title="공시가 대비 하락">▼</span>' : ''}
+          ${(isDown && hasRoomForDiscount && !isOption) ? '<span class="tile-discount-badge" title="공시가 대비 하락">▼</span>' : ''}
           <span class="tile-action ${item.action}">${item.action === 'NEW' ? 'NEW' : item.action}</span>
         </div>
       </div>
@@ -1166,13 +1169,23 @@ function renderTreemap(holdings) {
         else if (item.action === 'ADD') actionLabel = '비중 확대';
         else if (item.action === 'REDUCE') actionLabel = '비중 축소';
 
-        const diffText = isDown ? `<span style="color:var(--negative-red)">${diffPct}% 하락</span>` : `<span style="color:var(--spotify-green)">+${diffPct}% 상승</span>`;
+        const diffRow = isOption ? `
+          <div class="tooltip-row">
+            <span class="tooltip-label">기초자산 변동</span>
+            <span class="tooltip-val" style="color:var(--text-subdued)">${isDown ? diffPct + '% 하락' : '+' + diffPct + '% 상승'} (옵션 비교 제외)</span>
+          </div>
+        ` : `
+          <div class="tooltip-row">
+            <span class="tooltip-label">공시가 대비</span>
+            <span class="tooltip-val">${isDown ? `<span style="color:var(--negative-red)">${diffPct}% 하락</span>` : `<span style="color:var(--spotify-green)">+${diffPct}% 상승</span>`}</span>
+          </div>
+        `;
 
         tooltip.innerHTML = `
           <div class="tooltip-header">
             <span class="tooltip-ticker">${item.ticker}</span>
             <div class="tooltip-badges">
-              ${isDown ? '<span class="tile-discount-badge" title="공시가 대비 하락">▼</span>' : ''}
+              ${(isDown && !isOption) ? '<span class="tile-discount-badge" title="공시가 대비 하락">▼</span>' : ''}
               <span class="tile-action ${item.action}">${item.action} (${actionLabel})</span>
             </div>
           </div>
@@ -1187,13 +1200,10 @@ function renderTreemap(holdings) {
               <span class="tooltip-val">${formatMoney(item.value)}</span>
             </div>
             <div class="tooltip-row">
-              <span class="tooltip-label">현재 실시간가</span>
+              <span class="tooltip-label">${isOption ? '기초자산 현재가' : '현재 실시간가'}</span>
               <span class="tooltip-val">$${item.curPrice.toFixed(2)}</span>
             </div>
-            <div class="tooltip-row">
-              <span class="tooltip-label">공시가 대비</span>
-              <span class="tooltip-val">${diffText}</span>
-            </div>
+            ${diffRow}
           </div>
         `;
         tooltip.style.left = `${e.clientX}px`;
@@ -1251,7 +1261,10 @@ function renderTable() {
 
     if (state.activeFilter === "NEW") return item.action === "NEW";
     if (state.activeFilter === "ADD") return item.action === "ADD";
-    if (state.activeFilter === "DISCOUNT") return item.curPrice < item.estPrice;
+    if (state.activeFilter === "DISCOUNT") {
+      const isOption = item.action === "PUT" || item.action === "CALL" || item.isOption;
+      return !isOption && item.curPrice < item.estPrice;
+    }
     if (state.activeFilter === "CONVICTION") return item.weight >= 5.0;
     if (state.activeFilter === "CONSENSUS") return (item.holders || 1) >= 2;
     return true;
@@ -1264,7 +1277,7 @@ function renderTable() {
   const cAdd = document.getElementById("countAdd");
   if (cAdd) cAdd.innerText = guru.holdings.filter(h => h.action === "ADD").length;
   const cDisc = document.getElementById("countDiscount");
-  if (cDisc) cDisc.innerText = guru.holdings.filter(h => h.curPrice < h.estPrice).length;
+  if (cDisc) cDisc.innerText = guru.holdings.filter(h => !(h.action === "PUT" || h.action === "CALL" || h.isOption) && h.curPrice < h.estPrice).length;
   const cConv = document.getElementById("countConviction");
   if (cConv) cConv.innerText = guru.holdings.filter(h => h.weight >= 5.0).length;
 
@@ -1273,8 +1286,10 @@ function renderTable() {
     let valB = b[state.sortColumn];
 
     if (state.sortColumn === "discount") {
-      valA = ((a.curPrice - a.estPrice) / a.estPrice) * 100;
-      valB = ((b.curPrice - b.estPrice) / b.estPrice) * 100;
+      const isOptionA = a.action === "PUT" || a.action === "CALL" || a.isOption;
+      const isOptionB = b.action === "PUT" || b.action === "CALL" || b.isOption;
+      valA = isOptionA ? 999999 : ((a.curPrice - a.estPrice) / a.estPrice) * 100;
+      valB = isOptionB ? 999999 : ((b.curPrice - b.estPrice) / b.estPrice) * 100;
     }
 
     if (typeof valA === "string") {
@@ -1340,9 +1355,13 @@ function appendNextPageRows() {
         ${item.priceChangePct !== 0 ? `<small class="${item.priceChangePct >= 0 ? 'text-green' : 'text-red'}">(${item.priceChangePct >= 0 ? '+' : ''}${item.priceChangePct}%)</small>` : ''}
       </td>
       <td class="col-discount text-right">
-        <span class="discount-val ${isUp ? 'positive' : (isDown ? 'discount' : '')}">
-          ${isUp ? '+' : ''}${diffPct}%
-        </span>
+        ${(item.action === 'PUT' || item.action === 'CALL' || item.isOption) ? `
+          <span class="discount-val" style="color: var(--text-subdued);" title="옵션 파생상품은 공시단가 비교 대상이 아닙니다">-</span>
+        ` : `
+          <span class="discount-val ${isUp ? 'positive' : (isDown ? 'discount' : '')}">
+            ${isUp ? '+' : ''}${diffPct}%
+          </span>
+        `}
       </td>
     `;
     fragment.appendChild(tr);
@@ -1367,6 +1386,7 @@ function applyColumnVisibility() {
 function openStockModal(item) {
   const modal = document.getElementById("stockModal");
   if (!modal) return;
+  const isOption = item.action === 'PUT' || item.action === 'CALL' || item.isOption;
   const diffVal = ((item.curPrice - item.estPrice) / item.estPrice) * 100;
   const diffPct = diffVal.toFixed(1);
   const isDown = diffVal < 0;
@@ -1378,8 +1398,13 @@ function openStockModal(item) {
   
   const discountTag = document.getElementById("modalDiscountTag");
   if (discountTag) {
-    discountTag.innerText = isDown ? `공시 기준가 대비 ${diffPct}% 하락 상태` : `공시 기준가 대비 +${diffPct}% 상승 상태`;
-    discountTag.style.color = isDown ? "var(--negative-red)" : "var(--spotify-green)";
+    if (isOption) {
+      discountTag.innerText = `옵션 파생상품 (공시단가 비교 제외)`;
+      discountTag.style.color = "var(--text-subdued)";
+    } else {
+      discountTag.innerText = isDown ? `공시 기준가 대비 ${diffPct}% 하락 상태` : `공시 기준가 대비 +${diffPct}% 상승 상태`;
+      discountTag.style.color = isDown ? "var(--negative-red)" : "var(--spotify-green)";
+    }
   }
 
   document.getElementById("modalWeight").innerText = `${item.weight}%`;
