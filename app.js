@@ -892,7 +892,7 @@ function updateSummaryMetrics(guru) {
     const bestDiscount = discounts[0];
     if (bestDiscount && bestDiscount.discountPct < 0 && elDisc) {
       elDisc.innerHTML = `${bestDiscount.ticker} <small class="text-red">${bestDiscount.discountPct.toFixed(1)}%</small>`;
-      if (elDiscSub) elDiscSub.innerText = `공시가 대비 하락 상태`;
+      if (elDiscSub) elDiscSub.innerText = `분기말 종가 대비 하락`;
     }
 
     const top1 = guru.holdings[0];
@@ -917,7 +917,7 @@ function updateSummaryMetrics(guru) {
     const bestDiscount = discounts[0];
     if (bestDiscount && bestDiscount.discountPct < 0 && elDisc) {
       elDisc.innerHTML = `${bestDiscount.ticker} <small class="text-purple">${bestDiscount.discountPct.toFixed(1)}%</small>`;
-      if (elDiscSub) elDiscSub.innerText = `공시 기준가 대비 할인`;
+      if (elDiscSub) elDiscSub.innerText = `분기말 종가 대비 하락`;
     }
 
     const top1 = guru.holdings[0];
@@ -1148,7 +1148,7 @@ function renderTreemap(holdings) {
       <div class="tile-top">
         <span class="tile-ticker">${item.ticker}</span>
         <div class="tile-badges">
-          ${(isDown && hasRoomForDiscount && !isOption) ? '<span class="tile-discount-badge" title="공시가 대비 하락">▼</span>' : ''}
+          ${(isDown && hasRoomForDiscount && !isOption) ? '<span class="tile-discount-badge" title="분기말 대비 하락">▼</span>' : ''}
           <span class="tile-action ${item.action}">${item.action === 'NEW' ? 'NEW' : item.action}</span>
         </div>
       </div>
@@ -1176,7 +1176,7 @@ function renderTreemap(holdings) {
           </div>
         ` : `
           <div class="tooltip-row">
-            <span class="tooltip-label">공시가 대비</span>
+            <span class="tooltip-label">분기말 대비</span>
             <span class="tooltip-val">${isDown ? `<span style="color:var(--negative-red)">${diffPct}% 하락</span>` : `<span style="color:var(--spotify-green)">+${diffPct}% 상승</span>`}</span>
           </div>
         `;
@@ -1185,7 +1185,7 @@ function renderTreemap(holdings) {
           <div class="tooltip-header">
             <span class="tooltip-ticker">${item.ticker}</span>
             <div class="tooltip-badges">
-              ${(isDown && !isOption) ? '<span class="tile-discount-badge" title="공시가 대비 하락">▼</span>' : ''}
+              ${(isDown && !isOption) ? '<span class="tile-discount-badge" title="분기말 대비 하락">▼</span>' : ''}
               <span class="tile-action ${item.action}">${item.action} (${actionLabel})</span>
             </div>
           </div>
@@ -1402,7 +1402,7 @@ function openStockModal(item) {
       discountTag.innerText = `옵션 파생상품 (공시단가 비교 제외)`;
       discountTag.style.color = "var(--text-subdued)";
     } else {
-      discountTag.innerText = isDown ? `공시 기준가 대비 ${diffPct}% 하락 상태` : `공시 기준가 대비 +${diffPct}% 상승 상태`;
+      discountTag.innerText = isDown ? `분기말 종가 대비 ${diffPct}% 하락 상태` : `분기말 종가 대비 +${diffPct}% 상승 상태`;
       discountTag.style.color = isDown ? "var(--negative-red)" : "var(--spotify-green)";
     }
   }
@@ -1604,7 +1604,7 @@ function setupEventListeners() {
       if (!guru || !guru.holdings) return;
       
       let rows = [
-        ["종목", "티커", "섹터", "보유운용사수", "액션", "주식수", "평가금액", "포트비중(%)", "공시시점기준가($)", "현재시장가(1분)($)", "할인율(%)"]
+        ["종목", "티커", "섹터", "보유운용사수", "액션", "주식수", "평가금액", "포트비중(%)", "분기말종가($)", "현재시장가(1분)($)", "분기말대비등락(%)"]
       ];
       
       guru.holdings.forEach(h => {
