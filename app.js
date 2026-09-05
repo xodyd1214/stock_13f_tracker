@@ -1824,7 +1824,7 @@ function getF4ActiveDataset() {
 async function loadAndRenderForm4() {
   if (FORM4_DATA.length === 0) {
     try {
-      const res = await fetch("latest_form4_insiders.json");
+      const res = await fetch("latest_form4_insiders.json?v=" + Date.now());
       if (res.ok) {
         FORM4_DATA = await res.json();
       }
@@ -1948,21 +1948,17 @@ function renderF4SidebarCompanyList() {
 
   let comps = Object.values(compMap);
 
+  // 상단 레이블 카운트 동기화
+  const labelEl = document.getElementById("f4CompanyListLabel");
+  if (labelEl) {
+    labelEl.innerText = `개별 기업 선택 (${comps.length}개사)`;
+  }
+
   // 검색어 필터
   if (state.f4SidebarSearchQuery) {
     const q = state.f4SidebarSearchQuery.toLowerCase();
     comps = comps.filter(c => c.ticker.toLowerCase().includes(q) || c.name.toLowerCase().includes(q));
   }
-
-  // 정렬: 즐겨찾기 최상단 -> 거래 건수 많은 순 -> 티커 순
-  comps.sort((a, b) => {
-    const aFav = state.f4FavCompanies.includes(a.ticker);
-    const bFav = state.f4FavCompanies.includes(b.ticker);
-    if (aFav && !bFav) return -1;
-    if (!aFav && bFav) return 1;
-    if (b.count !== a.count) return b.count - a.count;
-    return a.ticker.localeCompare(b.ticker);
-  });
 
   // 메인 상단 버튼 상태 동기화
   const btnAll = document.getElementById("btnF4AllCompanies");
@@ -2013,8 +2009,8 @@ function renderF4SidebarCompanyList() {
     };
   }
 
-  // 개별 기업 렌더링 (운용사와 동일하게 좌측 별표, 우측 카드 버튼 구조로 1:1 완벽 일치)
-  comps.forEach(c => {
+  // 개별 기업 렌더링 헬퍼 함수
+  const renderRow = (c) => {
     const isSelected = state.selectedF4Ticker === c.ticker;
     const isFav = state.f4FavCompanies.includes(c.ticker);
 
@@ -2064,7 +2060,36 @@ function renderF4SidebarCompanyList() {
 
     row.appendChild(btn);
     container.appendChild(row);
-  });
+  };
+
+  // 즐겨찾기 목록과 일반 목록 분리
+  const favList = comps.filter(c => state.f4FavCompanies.includes(c.ticker));
+  const otherList = comps.filter(c => !state.f4FavCompanies.includes(c.ticker));
+
+  favList.sort((a, b) => b.count - a.count || a.ticker.localeCompare(b.ticker));
+  otherList.sort((a, b) => b.count - a.count || a.ticker.localeCompare(b.ticker));
+
+  if (!state.f4SidebarSearchQuery && favList.length > 0) {
+    // 1) 즐겨찾기 섹션 서브헤더
+    const favHeader = document.createElement("div");
+    favHeader.style.cssText = "font-size: 11px; font-weight: 700; color: #ffb300; padding: 6px 8px 4px; display: flex; align-items: center; gap: 5px;";
+    favHeader.innerHTML = `<span>★ 즐겨찾기 기업</span> <span style="font-size: 10px; opacity: 0.8; font-weight: 600;">(${favList.length}개)</span>`;
+    container.appendChild(favHeader);
+
+    favList.forEach(renderRow);
+
+    // 2) 전체 상장사 섹션 서브헤더
+    const otherHeader = document.createElement("div");
+    otherHeader.style.cssText = "font-size: 11px; font-weight: 700; color: var(--text-subdued); padding: 12px 8px 4px; border-top: 1px dashed rgba(255,255,255,0.08); margin-top: 6px; display: flex; align-items: center; gap: 5px;";
+    otherHeader.innerHTML = `<span>🏢 전체 상장사</span> <span style="font-size: 10px; opacity: 0.8; font-weight: 600;">(${otherList.length}개)</span>`;
+    container.appendChild(otherHeader);
+
+    otherList.forEach(renderRow);
+  } else {
+    // 검색 중이거나 즐겨찾기가 없는 경우
+    const sorted = [...favList, ...otherList];
+    sorted.forEach(renderRow);
+  }
 }
 
 let CURRENT_F4_FILTERED_ITEMS = [];
@@ -2375,13 +2400,13 @@ function render13DTable() {
 async function prefetchOtherFilings() {
   if (FORM4_DATA.length === 0) {
     try {
-      const res = await fetch("latest_form4_insiders.json");
+      const res = await fetch("latest_form4_insiders.json?v=" + Date.now());
       if (res.ok) FORM4_DATA = await res.json();
     } catch (e) {}
   }
   if (FILING_13D_DATA.length === 0) {
     try {
-      const res = await fetch("latest_13d_filings.json");
+      const res = await fetch("latest_13d_filings.json?v=" + Date.now());
       if (res.ok) FILING_13D_DATA = await res.json();
     } catch (e) {}
   }
