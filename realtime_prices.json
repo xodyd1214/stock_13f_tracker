@@ -345,7 +345,7 @@
     "price": 1978.36,
     "changePct": -0.64,
     "currency": "USD",
-    "marketTime": 1788552000
+    "marketTime": 1788552001
   },
   "SE": {
     "price": 112.09,
@@ -501,7 +501,7 @@
     "price": 542.43,
     "changePct": -3.16,
     "currency": "USD",
-    "marketTime": 1788552002
+    "marketTime": 1788552003
   },
   "ABNB": {
     "price": 181.94,
@@ -672,10 +672,10 @@
     "marketTime": 1787947200
   },
   "TCEHY": {
-    "price": 56.57,
-    "changePct": -3.55,
+    "price": 56.6,
+    "changePct": 1.34,
     "currency": "USD",
-    "marketTime": 1788551990
+    "marketTime": 1788552000
   },
   "XYZ": {
     "price": 82.76,
