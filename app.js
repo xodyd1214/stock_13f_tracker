@@ -2582,7 +2582,7 @@ async function loadAndRenderMacro() {
   if (fedEl) fedEl.innerText = fed.targetRange || "3.50% ~ 3.75%";
   if (fedSubEl) {
     const fedGap = b.fedRate ? b.fedRate.gapToNeutral : "+0.73%p";
-    fedSubEl.innerText = `연준 공식 중립선(2.90%) 대비 ${fedGap} · 완만한 긴축 영역`;
+    fedSubEl.innerText = `공식 중립금리(2.90%) 대비 ${fedGap} · 실효금리(EFFR) ${fed.effr || "3.63%"}`;
   }
 
   const cpiEl = document.getElementById("macroCpiVal");
@@ -2590,37 +2590,34 @@ async function loadAndRenderMacro() {
   if (cpiEl) cpiEl.innerText = cpi.cpiYoY || "+3.4%";
   if (cpiSubEl) {
     const cpiGap = b.inflation ? b.inflation.gapToTarget : "+1.40%p";
-    cpiSubEl.innerText = `연준 법정 물가목표(2.00%) 대비 ${cpiGap} 상회 잔존`;
+    cpiSubEl.innerText = `연준 법정 물가목표(2.00%) 대비 ${cpiGap} 상회`;
   }
 
   const unempEl = document.getElementById("macroUnemploymentVal");
   const unempSubEl = document.getElementById("macroUnemploymentSub");
   if (unempEl) unempEl.innerText = labor.unemploymentRate || "4.1%";
-  if (unempSubEl) unempSubEl.innerText = `미국 완전고용 추정선(4.0%~4.2%) 범위 내 유지`;
+  if (unempSubEl) unempSubEl.innerText = `미국 완전고용 추정선(4.0%~4.2%) 범위 내 위치`;
 
   const spreadEl = document.getElementById("macroSpreadVal");
   const spreadSubEl = document.getElementById("macroSpreadSub");
-  const spreadVal = spread.spread !== undefined ? spread.spread : 1.02;
+  const spreadVal = spread.spread !== undefined ? spread.spread : 1.03;
   if (spreadEl) {
     spreadEl.innerText = spreadVal >= 0 ? `+${spreadVal.toFixed(2)}%p` : `${spreadVal.toFixed(2)}%p`;
     spreadEl.className = `metric-value ${spreadVal >= 0 ? 'text-green' : 'text-red'}`;
   }
   if (spreadSubEl) {
     spreadSubEl.innerText = spreadVal >= 0 
-      ? "뉴욕 연준 침체 역전선(0.00%p) 상회 회복 · 정상 곡선" 
-      : "침체 역전선(0.00%p) 하회 (경기침체 경고 구간)";
+      ? `뉴욕 연준 침체 역전선(0.00%p) 상회 (+${spreadVal.toFixed(2)}%p)` 
+      : `침체 역전선(0.00%p) 하회 (경기침체 경고 구간)`;
   }
 
-  // 2. 공식 기준선 팩트 판정 카드 렌더링
+  // 2. 공식 기준선 팩트 대조 카드 렌더링
   renderMacroBenchmarks();
 
   // 3. 시장 프록시 그리드 렌더링
   renderMacroMarketProxies();
 
-  // 4. 13F 전략 인사이트 박스 렌더링
-  renderMacro13FInsights();
-
-  // 5. 거시경제 캘린더 & D-Day 렌더링
+  // 4. 거시경제 캘린더 & D-Day 렌더링
   renderMacroCalendar();
 }
 
@@ -2633,6 +2630,9 @@ function renderMacroBenchmarks() {
   const inflation = b.inflation || {};
   const yieldCurve = b.yieldCurve || {};
   const cash = b.cashRiskFree || {};
+  const fed = MACRO_DATA.fedRate || {};
+  const labor = MACRO_DATA.labor || {};
+  const treasury = MACRO_DATA.treasury || {};
 
   container.innerHTML = `
     <div class="benchmark-card">
@@ -2640,7 +2640,7 @@ function renderMacroBenchmarks() {
         <div class="benchmark-card-title">
           <span>연준 기준금리 (Fed Funds)</span>
         </div>
-        <span class="benchmark-badge amber">${fedRate.zone || '중립선 상회 (완만한 긴축)'}</span>
+        <span class="benchmark-badge amber">${fedRate.zone || '중립선 상회 (제약적 긴축 영역)'}</span>
       </div>
       <div class="benchmark-metric-row">
         <div class="benchmark-metric-item">
@@ -2656,8 +2656,23 @@ function renderMacroBenchmarks() {
           <span class="benchmark-gap-val text-yellow">${fedRate.gapToNeutral || '+0.73%p'}</span>
         </div>
       </div>
-      <div class="benchmark-fact-explanation">
-        <strong>복합 지표 정량 판정:</strong> 소비자물가(+3.4%)가 법정목표(2.0%)를 +1.40%p 초과하고 실업률(4.1%)이 완전고용을 유지하여 <strong>금리 인하 명분이 차단</strong>된 반면, 실질 정책금리(+0.23%)와 중립선 격차(+0.73%p)를 통해 경제에 실질 긴축이 이미 작동하고 있어 <strong>[현행 금리 동결(Hold) 유지]</strong>가 정량적으로 우세한 상태입니다.
+      <div class="benchmark-composite-grid">
+        <div class="composite-item">
+          <span class="composite-label">실효금리(EFFR)</span>
+          <span class="composite-val">${fed.effr || '3.63%'}</span>
+        </div>
+        <div class="composite-item">
+          <span class="composite-label">실질 정책금리</span>
+          <span class="composite-val text-green">${fedRate.realRate || '+0.23%p'}</span>
+        </div>
+        <div class="composite-item">
+          <span class="composite-label">CPI 물가상승률</span>
+          <span class="composite-val" style="color: #c084fc;">+3.4%</span>
+        </div>
+        <div class="composite-item">
+          <span class="composite-label">실업률</span>
+          <span class="composite-val text-blue">${labor.unemploymentRate || '4.1%'}</span>
+        </div>
       </div>
     </div>
 
@@ -2666,7 +2681,7 @@ function renderMacroBenchmarks() {
         <div class="benchmark-card-title">
           <span>미국 CPI 소비자물가지수 (YoY)</span>
         </div>
-        <span class="benchmark-badge purple">${inflation.zone || '법정 목표 2.0% 상회 잔존'}</span>
+        <span class="benchmark-badge purple">${inflation.zone || '법정 목표 2.0% 상회'}</span>
       </div>
       <div class="benchmark-metric-row">
         <div class="benchmark-metric-item">
@@ -2682,8 +2697,23 @@ function renderMacroBenchmarks() {
           <span class="benchmark-gap-val" style="color: #c084fc;">${inflation.gapToTarget || '+1.40%p'}</span>
         </div>
       </div>
-      <div class="benchmark-fact-explanation">
-        <strong>복합 지표 정량 판정:</strong> 현재 소비자물가상승률(+3.4%)이 법정 목표치(2.0%)를 <strong>+1.40%p 지속 초과</strong>하고 있습니다. 물가상승률이 연준 공약 밴드에 안착하지 못한 상태에서 섣부른 조기 완화는 인플레이션 재확산 위험을 초래하므로, 통화 당국의 조기 금리 인하를 구조적으로 제약하는 직접적 근거입니다.
+      <div class="benchmark-composite-grid">
+        <div class="composite-item">
+          <span class="composite-label">직전월 발표치</span>
+          <span class="composite-val" style="color: #c084fc;">${inflation.prevRate || '+3.4%'}</span>
+        </div>
+        <div class="composite-item">
+          <span class="composite-label">시장 예상치 (8월)</span>
+          <span class="composite-val" style="color: #ffa42b;">${inflation.forecast || '+3.2%'}</span>
+        </div>
+        <div class="composite-item">
+          <span class="composite-label">목표 초과폭</span>
+          <span class="composite-val" style="color: #c084fc;">+1.40%p</span>
+        </div>
+        <div class="composite-item">
+          <span class="composite-label">차기 발표일</span>
+          <span class="composite-val text-green">09-11 (D-3)</span>
+        </div>
       </div>
     </div>
 
@@ -2692,12 +2722,12 @@ function renderMacroBenchmarks() {
         <div class="benchmark-card-title">
           <span>국채 장단기 금리차 (10Y-3M)</span>
         </div>
-        <span class="benchmark-badge green">${yieldCurve.status || '정상 우상향 (역전선 회복)'}</span>
+        <span class="benchmark-badge green">${yieldCurve.status || '정상 우상향 (역전선 0%p 상회)'}</span>
       </div>
       <div class="benchmark-metric-row">
         <div class="benchmark-metric-item">
           <span class="benchmark-metric-label">현재 스프레드</span>
-          <span class="benchmark-metric-val text-green">${yieldCurve.currentSpread !== undefined ? (yieldCurve.currentSpread >= 0 ? `+${yieldCurve.currentSpread.toFixed(2)}%p` : `${yieldCurve.currentSpread.toFixed(2)}%p`) : '+1.02%p'}</span>
+          <span class="benchmark-metric-val text-green">${yieldCurve.currentSpread !== undefined ? (yieldCurve.currentSpread >= 0 ? `+${yieldCurve.currentSpread.toFixed(2)}%p` : `${yieldCurve.currentSpread.toFixed(2)}%p`) : '+1.03%p'}</span>
         </div>
         <div class="benchmark-metric-item" style="text-align: center;">
           <span class="benchmark-metric-label">뉴욕연준 침체판정선</span>
@@ -2705,11 +2735,26 @@ function renderMacroBenchmarks() {
         </div>
         <div class="benchmark-metric-item" style="text-align: right;">
           <span class="benchmark-metric-label">역전선 대비 위치</span>
-          <span class="benchmark-gap-val text-green">+1.02%p (정상)</span>
+          <span class="benchmark-gap-val text-green">+1.03%p (정상)</span>
         </div>
       </div>
-      <div class="benchmark-fact-explanation">
-        <strong>복합 지표 정량 판정:</strong> 10년물 장기 국채금리(4.78%)가 3개월물(3.76%)을 <strong>+1.03%p 상회하는 정상 우상향 곡선</strong>입니다. 채권 시장의 단기 침체 역전 신호는 해소되었으나, 4%대 후반의 높은 장기 국채금리는 주식 미래 현금흐름의 할인율을 높여 주식 시장 밸류에이션(PER)을 지속적으로 압박합니다.
+      <div class="benchmark-composite-grid">
+        <div class="composite-item">
+          <span class="composite-label">10년물 장기 국채</span>
+          <span class="composite-val">${treasury.yield10Y ? `${treasury.yield10Y.val.toFixed(2)}%` : '4.80%'}</span>
+        </div>
+        <div class="composite-item">
+          <span class="composite-label">3개월물 T-Bill</span>
+          <span class="composite-val">${treasury.yield13W ? `${treasury.yield13W.val.toFixed(2)}%` : '3.77%'}</span>
+        </div>
+        <div class="composite-item">
+          <span class="composite-label">5년물 중기 국채</span>
+          <span class="composite-val">${treasury.yield5Y ? `${treasury.yield5Y.val.toFixed(2)}%` : '4.57%'}</span>
+        </div>
+        <div class="composite-item">
+          <span class="composite-label">역전 여부</span>
+          <span class="composite-val text-green">비역전 (정상)</span>
+        </div>
       </div>
     </div>
 
@@ -2718,12 +2763,12 @@ function renderMacroBenchmarks() {
         <div class="benchmark-card-title">
           <span>단기국채(T-Bill) 무위험 현금 수익률</span>
         </div>
-        <span class="benchmark-badge blue">무위험 현금 매력도 3.76%</span>
+        <span class="benchmark-badge blue">무위험 현금 매력도 3.77%</span>
       </div>
       <div class="benchmark-metric-row">
         <div class="benchmark-metric-item">
           <span class="benchmark-metric-label">3개월물 국채 금리</span>
-          <span class="benchmark-metric-val text-blue">연 ${cash.rate || 3.76}%</span>
+          <span class="benchmark-metric-val text-blue">연 ${cash.rate || 3.77}%</span>
         </div>
         <div class="benchmark-metric-item" style="text-align: center;">
           <span class="benchmark-metric-label">S&P 500 배당수익률</span>
@@ -2731,11 +2776,26 @@ function renderMacroBenchmarks() {
         </div>
         <div class="benchmark-metric-item" style="text-align: right;">
           <span class="benchmark-metric-label">주식 배당 대비</span>
-          <span class="benchmark-gap-val text-blue">+2.46%p 상회</span>
+          <span class="benchmark-gap-val text-blue">+2.47%p 상회</span>
         </div>
       </div>
-      <div class="benchmark-fact-explanation">
-        <strong>13F 구루 포지션 팩트:</strong> 단기국채 금리(연 3.76%)가 S&P 배당수익률을 <strong>+2.46%p 상회</strong>하여 주식의 위험 프리미엄(ERP)이 구조적으로 위축되었습니다. 워런 버핏(버크셔 해서웨이)이 무리한 고PER 주식 추격을 멈추고 3천억 달러를 T-Bill 현금성 자산에 배분한 핵심 계량 근거입니다.
+      <div class="benchmark-composite-grid">
+        <div class="composite-item">
+          <span class="composite-label">T-Bill 확정수익</span>
+          <span class="composite-val text-blue">연 ${cash.rate || 3.77}%</span>
+        </div>
+        <div class="composite-item">
+          <span class="composite-label">S&P 배당수익률</span>
+          <span class="composite-val" style="color: #9ca3af;">연 1.30%</span>
+        </div>
+        <div class="composite-item">
+          <span class="composite-label">무위험 스프레드</span>
+          <span class="composite-val text-blue">+2.47%p</span>
+        </div>
+        <div class="composite-item">
+          <span class="composite-label">10년물 금리 대비</span>
+          <span class="composite-val" style="color: #9ca3af;">-1.03%p</span>
+        </div>
       </div>
     </div>
   `;
@@ -2751,38 +2811,38 @@ function renderMacroMarketProxies() {
   const items = [
     {
       label: "미국 10년물 국채",
-      val: treasury.yield10Y ? `${treasury.yield10Y.val.toFixed(2)}%` : "4.78%",
-      chg: treasury.yield10Y ? treasury.yield10Y.change : 0,
+      val: treasury.yield10Y ? `${treasury.yield10Y.val.toFixed(2)}%` : "4.80%",
+      chg: treasury.yield10Y ? treasury.yield10Y.change : 0.29,
       desc: "글로벌 자산 가격 할인율(무위험 수익률 척도)"
     },
     {
       label: "미국 3개월물 T-Bill",
-      val: treasury.yield13W ? `${treasury.yield13W.val.toFixed(2)}%` : "3.76%",
-      chg: treasury.yield13W ? treasury.yield13W.change : 0,
+      val: treasury.yield13W ? `${treasury.yield13W.val.toFixed(2)}%` : "3.77%",
+      chg: treasury.yield13W ? treasury.yield13W.change : 0.48,
       desc: "단기 기준금리 및 현금성 자산 벤치마크"
     },
     {
       label: "미국 5년물 국채",
-      val: treasury.yield5Y ? `${treasury.yield5Y.val.toFixed(2)}%` : "4.55%",
-      chg: treasury.yield5Y ? treasury.yield5Y.change : 0,
+      val: treasury.yield5Y ? `${treasury.yield5Y.val.toFixed(2)}%` : "4.57%",
+      chg: treasury.yield5Y ? treasury.yield5Y.change : 0.40,
       desc: "중기 경제 성장 및 인플레이션 기대치"
     },
     {
       label: "달러 인덱스 (DXY)",
-      val: cm.dxy ? `${cm.dxy.val.toFixed(2)}` : "98.97",
-      chg: cm.dxy ? cm.dxy.change : -0.21,
+      val: cm.dxy ? `${cm.dxy.val.toFixed(2)}` : "98.92",
+      chg: cm.dxy ? cm.dxy.change : -0.26,
       desc: "주요 6개 통화 대비 달러화 가치 (글로벌 유동성)"
     },
     {
       label: "WTI 국제유가",
-      val: cm.wtiOil ? `$${cm.wtiOil.val.toFixed(2)}` : "$93.69",
-      chg: cm.wtiOil ? cm.wtiOil.change : 2.42,
+      val: cm.wtiOil ? `$${cm.wtiOil.val.toFixed(2)}` : "$92.36",
+      chg: cm.wtiOil ? cm.wtiOil.change : 0.96,
       desc: "원유 배럴당 가격 (헤드라인 물가 직결)"
     },
     {
       label: "국제 금 시세",
-      val: cm.gold ? `$${cm.gold.val.toLocaleString()}` : "$4,445.50",
-      chg: cm.gold ? cm.gold.change : -0.69,
+      val: cm.gold ? `$${cm.gold.val.toLocaleString()}` : "$4,430.80",
+      chg: cm.gold ? cm.gold.change : -1.02,
       desc: "대표 안전자산 및 통화가치 하락 헷지 수단"
     }
   ];
@@ -2801,38 +2861,6 @@ function renderMacroMarketProxies() {
       </div>
     `;
   }).join("");
-}
-
-function renderMacro13FInsights() {
-  const container = document.getElementById("macroInsightBox");
-  if (!container || !MACRO_DATA) return;
-
-  const fed = MACRO_DATA.fedRate || {};
-  const cpi = MACRO_DATA.inflation || {};
-  const spread = (MACRO_DATA.treasury && MACRO_DATA.treasury.spread10Y_13W) || {};
-
-  container.innerHTML = `
-    <div class="insight-point">
-      <div class="point-content">
-        <h5>연준 기준금리 (${fed.targetRange || '3.50%~3.75%'})와 기관의 단기국채(현금) 비중</h5>
-        <p>기준금리가 중립선(2.90%)을 상회하는 긴축 영역에 머무는 가운데, 워런 버핏(Berkshire Hathaway) 등 가치투자 구루들은 무위험 T-Bill 확정 이자(연 3.76%)를 수취하며 주식 밸류에이션 부담 완화를 기다리는 막대한 현금 탄약을 유지하고 있습니다.</p>
-      </div>
-    </div>
-
-    <div class="insight-point">
-      <div class="point-content">
-        <h5>수익률 곡선 스프레드 (${spread.spread >= 0 ? `+${spread.spread.toFixed(2)}%p 정상` : `${spread.spread.toFixed(2)}%p 역전`})와 경기 국면</h5>
-        <p>장단기 금리차가 정상 우상향(+1.03%p)으로 회복되어 단기 침체 공포는 해소되었으나, 높은 실질금리 환경이 지속됨에 따라 기관들은 고평가 성장주 대신 현금창출력이 확고한 빅테크 및 금리 수혜 금융주로 포트폴리오를 선별 압축하고 있습니다.</p>
-      </div>
-    </div>
-
-    <div class="insight-point">
-      <div class="point-content">
-        <h5>물가 둔화 정체(${cpi.cpiYoY || '+3.4%'})와 방어주 헷지 전략</h5>
-        <p>소비자물가가 목표치(2.0%)를 상회한 채 3%대에서 하방 경직성을 보이고 '금리 동결 vs 재인상' 논쟁이 이어짐에 따라, 메이저 기관들은 가격 전가력과 배당 방어력이 검증된 헬스케어 및 필수소비재를 포트폴리오 안전판으로 편입하고 있습니다.</p>
-      </div>
-    </div>
-  `;
 }
 
 function renderMacroCalendar() {
@@ -2916,8 +2944,6 @@ function renderMacroCalendar() {
         </div>
 
         <div class="cal-card-desc">${ev.description}</div>
-        
-        ${ev.ruleFact ? `<div class="cal-rule-fact"><strong>팩트 판독 가이드:</strong> ${ev.ruleFact}</div>` : ''}
       </div>
     `;
   }).join("");
@@ -2941,9 +2967,9 @@ function openMacroModal() {
         <h4>연준 기준금리 & 물가 공식 기준선</h4>
         <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
           <div><strong>기준금리 목표치:</strong> <span class="text-green">${fed.targetRange || "3.50% ~ 3.75%"}</span></div>
-          <div><strong>공식 중립금리선:</strong> 2.90% <span style="color: #ffa42b; font-weight: 700;">(대비 +0.73%p 긴축)</span></div>
+          <div><strong>공식 중립금리선:</strong> 2.90% <span style="color: #ffa42b; font-weight: 700;">(대비 +0.73%p)</span></div>
           <div><strong>CPI 물가상승률(YoY):</strong> <span style="color: #c084fc; font-weight: 700;">${cpi.cpiYoY || "+3.4%"}</span></div>
-          <div><strong>법정 물가목표선:</strong> 2.00% <span style="color: #c084fc; font-weight: 700;">(대비 +1.40%p 상회)</span></div>
+          <div><strong>법정 물가목표선:</strong> 2.00% <span style="color: #c084fc; font-weight: 700;">(대비 +1.40%p)</span></div>
         </div>
       </div>
 
@@ -2951,8 +2977,8 @@ function openMacroModal() {
         <h4>국채 수익률 & 무위험 현금 수익률</h4>
         <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
           <div><strong>10Y-3M 스프레드:</strong> <span class="${spread.spread >= 0 ? 'text-green' : 'text-red'} font-weight: 700;">${spread.spread >= 0 ? `+${spread.spread.toFixed(2)}%p` : `${spread.spread.toFixed(2)}%p`}</span></div>
-          <div><strong>침체 역전 판정선:</strong> 0.00%p <span class="text-green font-weight: 700;">(정상 곡선 회복)</span></div>
-          <div><strong>단기국채(3M) 확정 이자:</strong> <span class="text-blue font-weight: 700;">연 ${MACRO_DATA.treasury?.yield13W?.val || 3.76}%</span></div>
+          <div><strong>침체 역전 기준선:</strong> 0.00%p <span class="text-green font-weight: 700;">(정상 우상향 유지)</span></div>
+          <div><strong>단기국채(3M) 확정 이자:</strong> <span class="text-blue font-weight: 700;">연 ${MACRO_DATA.treasury?.yield13W?.val || 3.77}%</span></div>
           <div><strong>실업률:</strong> ${labor.unemploymentRate || "4.1%"} (완전고용 4.0~4.2% 범위)</div>
         </div>
       </div>

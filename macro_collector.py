@@ -157,36 +157,44 @@ macro_data["treasury"]["spread10Y_13W"] = {
 }
 
 # 4. 공식 정책/경제학 기준선 (Ground Truth Benchmarks)
+effr_val = float(macro_data["fedRate"].get("effr", "3.63%").replace("%", ""))
+cpi_yoy_val = float(macro_data["inflation"].get("cpiYoY", "+3.4%").replace("%", "").replace("+", ""))
+real_rate_val = round(effr_val - cpi_yoy_val, 2)
+
 macro_data["benchmarks"] = {
     "fedRate": {
-        "current": "3.50% ~ 3.75%",
+        "current": macro_data["fedRate"]["targetRange"],
         "currentMid": 3.625,
+        "effr": macro_data["fedRate"]["effr"],
+        "sofr": macro_data["fedRate"]["sofr"],
         "neutralRate": "2.90%",  # 연준 FOMC 점도표상 장기 중립금리 중간값
         "neutralVal": 2.90,
-        "peakRate": "5.50%",     # 사이클 최고 금리
-        "peakVal": 5.50,
         "gapToNeutral": "+0.73%p",
-        "zone": "완만한 긴축 영역 (중립선 대비 상회)"
+        "realRate": f"{real_rate_val:+.2f}%p",
+        "zone": "중립선 상회 (제약적 긴축 영역)"
     },
     "inflation": {
-        "current": "+3.4%",
-        "currentVal": 3.4,
+        "current": macro_data["inflation"]["cpiYoY"],
+        "currentVal": cpi_yoy_val,
         "fedTarget": "2.0%",     # 미 연방준비법 법정 물가목표
         "targetVal": 2.0,
-        "peakRate": "9.1%",      # 2022년 6월 최고점
-        "peakVal": 9.1,
-        "gapToTarget": "+1.40%p",
-        "zone": "공식 목표치(2.0%) 상회 잔존 (완만한 둔화)"
+        "gapToTarget": f"+{cpi_yoy_val - 2.0:.2f}%p",
+        "prevRate": "+3.4%",
+        "forecast": "+3.2%",
+        "zone": "법정 목표 2.0% 상회"
     },
     "yieldCurve": {
         "currentSpread": spread,
+        "yield10Y": y10,
+        "yield13W": y13w,
         "recessionThreshold": 0.00, # 뉴욕 연준 침체 역전선 (0%p 이하)
-        "lowestSpread": -1.89,      # 2023년 역전 최저점
-        "status": "정상 우상향 곡선 (역전 기준선 0%p 상회 회복)"
+        "status": "정상 우상향 (역전선 0%p 상회)"
     },
     "cashRiskFree": {
         "rate": y13w,
-        "desc": f"단기국채 무위험 확정 이자 수익률 (연 {y13w}%)"
+        "sp500Dividend": 1.30,
+        "spreadToEquity": round(y13w - 1.30, 2),
+        "desc": f"단기국채 무위험 확정 수익률 (연 {y13w}%)"
     }
 }
 
@@ -202,8 +210,7 @@ raw_events = [
         "previous": "+2.2% (7월)",
         "forecast": "+2.3%",
         "actual": "발표 대기",
-        "description": "기업 도매 원가 물가 지표. CPI의 선행 지표 역할을 하며 생산 비용 압력 측정.",
-        "ruleFact": "전월(+2.2%) 대비 소폭 반등 예상 여부 확인."
+        "description": "미 노동통계국(BLS) 공식 발표 생산자물가지수 (도매 물가 측정)."
     },
     {
         "name": "미국 8월 CPI 소비자물가지수",
@@ -213,8 +220,7 @@ raw_events = [
         "previous": "+3.4% (7월)",
         "forecast": "+3.2%",
         "actual": "발표 대기",
-        "description": "연준 법정 목표(2.0%)를 향한 둔화 추세 검증. 예상치(3.2%) 하회 시 인하 속도 지지, 상회 시 금리 인하 신중론 지속.",
-        "ruleFact": "예상치(3.2%)보다 낮으면 물가 둔화 확인, 높으면 물가 재상승 경계."
+        "description": "미 노동통계국(BLS) 공식 발표 소비자물가지수 (연방준비법 법정 물가목표: 2.00%)."
     },
     {
         "name": "미국 8월 소매판매 지수",
@@ -224,8 +230,7 @@ raw_events = [
         "previous": "+1.0% (7월)",
         "forecast": "+0.3%",
         "actual": "발표 대기",
-        "description": "미국 GDP의 70%를 차지하는 가계 소비 체력 척도. 경기 침체 여부 판정의 핵심 팩트.",
-        "ruleFact": "양수(+) 유지 시 가계 소비 지출 견조 확인."
+        "description": "미 인구조사국(Census Bureau) 공식 발표 소매판매 지수 (가계 소비 지출 측정)."
     },
     {
         "name": "FOMC 정례회의 (9월 15일~16일)",
@@ -234,10 +239,9 @@ raw_events = [
         "category": "FED",
         "impact": "CRITICAL",
         "previous": "3.50% ~ 3.75% (7월)",
-        "forecast": "추가 인하 vs 동결 팽팽",
+        "forecast": "기준금리 및 SEP 점도표",
         "actual": "발표 대기",
-        "description": "9월 15일 개막하여 16일 오후 2시(미 동부시간) 최종 기준금리 결정 및 분기 점도표(SEP)가 공식 발표됩니다.",
-        "ruleFact": "물가(CPI) 재상승 경계 속 동결 지속 여부 및 점도표(SEP) 금리 경로 팩트 확인."
+        "description": "연방공개시장위원회(FOMC) 정례회의. 기준금리 목표 범위 및 분기 경제전망(SEP 점도표) 공식 발표."
     },
     {
         "name": "미국 9월 비농업 고용보고서 (NFP)",
@@ -247,8 +251,7 @@ raw_events = [
         "previous": "14.2만 건 (8월)",
         "forecast": "15.5만 건 (실업률 4.1%)",
         "actual": "발표 대기",
-        "description": "미국 노동 시장 냉각 여부 판정. 비농업 신규 일자리 15만 건 내외는 완만한 균형 성장 영역.",
-        "ruleFact": "실업률이 완전고용선(4.0~4.2%) 내에 머무는지 팩트 확인."
+        "description": "미 노동통계국(BLS) 공식 발표 비농업 부문 신규 일자리 수 및 실업률."
     }
 ]
 

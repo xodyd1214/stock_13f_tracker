@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=85">
+  <link rel="stylesheet" href="style.css?v=86">
 </head>
 <body>
   <div class="app-container">
@@ -546,12 +546,12 @@
           </div>
         </section>
 
-        <!-- 공식 정책 기준선 대비 팩트 판정 섹션 (Benchmark Analysis) -->
+        <!-- 공식 정책 기준선 대비 팩트 대조 섹션 (Benchmark Analysis) -->
         <section class="macro-benchmark-section">
           <div class="benchmark-header">
             <div class="section-title-wrap">
-              <h4>공식 정책 기준선(Benchmark) 대비 현재 자금 환경 판정</h4>
-              <span class="section-tooltip">추측을 배제하고 미국 법정 물가 목표(2.0%), 연준 공식 중립선(2.9%), 뉴욕 연준 역전선(0.0%p)과 현재 데이터를 1:1 대조한 객관적 팩트 지표입니다.</span>
+              <h4>공식 정책 기준선(Benchmark) 대비 거시 지표 대조</h4>
+              <span class="section-tooltip">주관적 해석과 서술을 배제하고 법정 물가목표(2.0%), 공식 중립선(2.90%), 침체 역전 기준선(0.00%p)과 현재 계량 데이터를 1:1 대조한 객관적 지표입니다.</span>
             </div>
           </div>
           <div class="benchmark-grid" id="macroBenchmarkGrid">
@@ -559,24 +559,14 @@
           </div>
         </section>
 
-        <!-- 거시 지표 2열 심층 분석 섹션 (시장 프록시 & 금리 곡선) -->
+        <!-- 거시 시장 실시간 프록시 (채권 금리 · 달러 · 원자재) -->
         <section class="macro-deep-grid">
-          <div class="macro-deep-card">
+          <div class="macro-deep-card" style="grid-column: 1 / -1;">
             <div class="card-title-wrap">
               <h4>채권 금리 & 달러 / 원자재 실시간 프록시</h4>
-              <span class="card-sub">수익률 곡선(Yield Curve) 및 통화/상품 동향</span>
+              <span class="card-sub">실시간 수익률 곡선(Yield Curve) 및 주요 통화·원자재 글로벌 유동성 지표</span>
             </div>
             <div class="market-proxy-grid" id="macroMarketProxyGrid">
-              <!-- JS 렌더링 -->
-            </div>
-          </div>
-
-          <div class="macro-deep-card">
-            <div class="card-title-wrap">
-              <h4>13F 기관 포트폴리오 거시경제 연계 브리핑</h4>
-              <span class="card-sub">금리와 유동성 환경이 100대 운용사 포지션에 미치는 영향</span>
-            </div>
-            <div class="macro-insight-box" id="macroInsightBox">
               <!-- JS 렌더링 -->
             </div>
           </div>
@@ -788,6 +778,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="app.js?v=85"></script>
+  <script src="app.js?v=86"></script>
 </body>
 </html>
