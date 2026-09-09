@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=87">
+  <link rel="stylesheet" href="style.css?v=88">
 </head>
 <body>
   <div class="app-container">
@@ -559,33 +559,58 @@
           </div>
         </section>
 
-        <!-- 거시 시각화 차트 섹션 (수익률 곡선 SVG 차트 & 5대 기준선 계량 갭 차트) -->
+        <!-- 거시 시계열(Time-Series) 동학 분석 차트 섹션 -->
         <section class="macro-charts-grid">
-          <!-- 좌측: 미국 국채 수익률 곡선 (Yield Curve) 인터랙티브 SVG 차트 -->
+          <!-- 좌측: 미국 국채 만기별 금리 시계열 추이 (3M vs 5Y vs 10Y) -->
           <div class="macro-chart-card">
             <div class="card-title-wrap">
-              <div class="title-with-pill">
-                <h4>미국 국채 수익률 곡선 (Yield Curve)</h4>
-                <span class="benchmark-badge green" id="yieldCurveBadge">정상 우상향 (+1.03%p)</span>
+              <div class="title-with-controls">
+                <div>
+                  <h4>미국 국채 만기별 금리 시계열 추이 (3M · 5Y · 10Y)</h4>
+                  <span class="card-sub">단기(3M) · 중기(5Y) · 장기(10Y) 국채 금리의 일별 변동 궤적</span>
+                </div>
+                <div class="chart-period-tabs" id="yieldPeriodTabs">
+                  <button class="period-btn" data-period="1M">1M</button>
+                  <button class="period-btn" data-period="3M">3M</button>
+                  <button class="period-btn active" data-period="6M">6M</button>
+                  <button class="period-btn" data-period="1Y">1Y</button>
+                </div>
               </div>
-              <span class="card-sub">만기별 국채 금리(3M · 5Y · 10Y) 실시간 곡선 및 침체 역전 기준선 대조</span>
             </div>
-            <div class="yield-curve-chart-wrap" id="yieldCurveChartContainer">
-              <!-- JS SVG 차트 렌더링 -->
+            <!-- 범례 및 실시간 수치 -->
+            <div class="chart-legend-row" id="yieldChartLegend">
+              <div class="legend-item"><span class="legend-dot blue"></span> 3개월물: <strong id="legendY3M">3.81%</strong></div>
+              <div class="legend-item"><span class="legend-dot amber"></span> 5년물: <strong id="legendY5Y">4.62%</strong></div>
+              <div class="legend-item"><span class="legend-dot green"></span> 10년물: <strong id="legendY10Y">4.85%</strong></div>
+            </div>
+            <div class="time-series-chart-wrap" id="yieldTimeSeriesContainer">
+              <!-- JS SVG 시계열 라인 차트 렌더링 -->
             </div>
           </div>
 
-          <!-- 우측: 5대 복합 정책 기준선(Ground Truth) 갭 계량 차트 -->
+          <!-- 우측: 10Y-3M 장단기 금리차(스프레드) 시계열 궤적 & 침체 역전선 -->
           <div class="macro-chart-card">
             <div class="card-title-wrap">
-              <div class="title-with-pill">
-                <h4>5대 거시 정책 기준선(Ground Truth) 계량 갭 차트</h4>
-                <span class="benchmark-badge amber">복합 실질 긴축 유지</span>
+              <div class="title-with-controls">
+                <div>
+                  <h4>10Y-3M 장단기 금리차 시계열 궤적</h4>
+                  <span class="card-sub">뉴욕 연준 침체 역전 기준선(0.00%p) 대조 일별 스프레드 궤적</span>
+                </div>
+                <div class="chart-period-tabs" id="spreadPeriodTabs">
+                  <button class="period-btn" data-period="1M">1M</button>
+                  <button class="period-btn" data-period="3M">3M</button>
+                  <button class="period-btn active" data-period="6M">6M</button>
+                  <button class="period-btn" data-period="1Y">1Y</button>
+                </div>
               </div>
-              <span class="card-sub">공식 법정·학술 기준선 대비 현재 수치의 편차(Gap) 100% 정량 시각화</span>
             </div>
-            <div class="benchmark-gap-bars-wrap" id="benchmarkGapBarsContainer">
-              <!-- JS 바 차트 렌더링 -->
+            <!-- 범례 및 현재 스프레드 -->
+            <div class="chart-legend-row">
+              <div class="legend-item"><span class="legend-dot green"></span> 현재 스프레드: <strong id="legendSpreadVal">+1.04%p</strong></div>
+              <div class="legend-item"><span class="legend-dot red"></span> 침체 역전 기준선: <strong>0.00%p</strong></div>
+            </div>
+            <div class="time-series-chart-wrap" id="spreadTimeSeriesContainer">
+              <!-- JS SVG 스프레드 시계열 차트 렌더링 -->
             </div>
           </div>
         </section>
@@ -809,6 +834,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="app.js?v=87"></script>
+  <script src="app.js?v=88"></script>
 </body>
 </html>

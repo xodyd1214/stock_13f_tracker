@@ -2804,208 +2804,373 @@ function renderMacroBenchmarks() {
   `;
 }
 
-function renderMacroCharts() {
-  if (!MACRO_DATA) return;
-  renderYieldCurveSvgChart();
-  renderBenchmarkGapBars();
+let macroChartState = {
+  yieldPeriod: '6M',
+  spreadPeriod: '6M'
+};
+
+function getFilteredTreasuryData(period) {
+  if (!MACRO_DATA || !MACRO_DATA.timeSeries || !Array.isArray(MACRO_DATA.timeSeries.treasuryDaily)) {
+    return [];
+  }
+  const list = MACRO_DATA.timeSeries.treasuryDaily;
+  if (!list.length) return [];
+  let count = list.length;
+  if (period === '1M') count = 21;
+  else if (period === '3M') count = 63;
+  else if (period === '6M') count = 126;
+  else if (period === '1Y') count = list.length;
+  return list.slice(-count);
 }
 
-function renderYieldCurveSvgChart() {
-  const container = document.getElementById("yieldCurveChartContainer");
+function renderMacroCharts() {
+  if (!MACRO_DATA) return;
+  renderYieldTimeSeriesChart(macroChartState.yieldPeriod);
+  renderSpreadTimeSeriesChart(macroChartState.spreadPeriod);
+  initMacroChartTabEvents();
+}
+
+function initMacroChartTabEvents() {
+  const yieldTabs = document.querySelectorAll("#yieldPeriodTabs .period-btn");
+  yieldTabs.forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      yieldTabs.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      macroChartState.yieldPeriod = btn.dataset.period;
+      renderYieldTimeSeriesChart(macroChartState.yieldPeriod);
+    };
+  });
+
+  const spreadTabs = document.querySelectorAll("#spreadPeriodTabs .period-btn");
+  spreadTabs.forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      spreadTabs.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      macroChartState.spreadPeriod = btn.dataset.period;
+      renderSpreadTimeSeriesChart(macroChartState.spreadPeriod);
+    };
+  });
+}
+
+function renderYieldTimeSeriesChart(period = '6M') {
+  const container = document.getElementById("yieldTimeSeriesContainer");
   if (!container || !MACRO_DATA) return;
 
-  const treasury = MACRO_DATA.treasury || {};
-  const y13w = (treasury.yield13W && treasury.yield13W.val) ? treasury.yield13W.val : 3.77;
-  const y5y = (treasury.yield5Y && treasury.yield5Y.val) ? treasury.yield5Y.val : 4.57;
-  const y10y = (treasury.yield10Y && treasury.yield10Y.val) ? treasury.yield10Y.val : 4.80;
-  const spread = (y10y - y13w).toFixed(2);
-  const isInverted = y10y < y13w;
-
-  const badge = document.getElementById("yieldCurveBadge");
-  if (badge) {
-    badge.className = `benchmark-badge ${isInverted ? 'red' : 'green'}`;
-    badge.innerText = isInverted ? `역전 경고 (${spread}%p)` : `정상 우상향 (+${spread}%p)`;
+  const data = getFilteredTreasuryData(period);
+  if (!data.length) {
+    container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#888;font-size:12px;">국채 시계열 데이터가 없습니다.</div>`;
+    return;
   }
 
-  // SVG 좌표 매핑 (viewBox 0 0 520 220)
-  // X: 3M = 80, 5Y = 260, 10Y = 440
-  // Y 스케일: min 3.0%, max 5.5% (범위 2.5%p)
-  const minR = 3.0;
-  const maxR = 5.5;
-  const getY = (val) => Math.round(175 - ((Math.min(Math.max(val, minR), maxR) - minR) / (maxR - minR)) * 135);
+  const latest = data[data.length - 1];
+  const legY3M = document.getElementById("legendY3M");
+  const legY5Y = document.getElementById("legendY5Y");
+  const legY10Y = document.getElementById("legendY10Y");
+  if (legY3M && typeof latest.y3m === 'number') legY3M.innerText = `${latest.y3m.toFixed(2)}%`;
+  if (legY5Y && typeof latest.y5y === 'number') legY5Y.innerText = `${latest.y5y.toFixed(2)}%`;
+  if (legY10Y && typeof latest.y10y === 'number') legY10Y.innerText = `${latest.y10y.toFixed(2)}%`;
 
-  const x1 = 80, y1 = getY(y13w);
-  const x2 = 260, y2 = getY(y5y);
-  const x3 = 440, y3 = getY(y10y);
+  const padL = 45, padR = 15, padT = 18, padB = 26;
+  const chartW = 520 - padL - padR; // 460
+  const chartH = 220 - padT - padB; // 176
 
-  // 부드러운 3차 베지어 스플라인 곡선 제어점 계산
-  const cpx1 = Math.round((x1 + x2) / 2);
-  const cpy1 = y1;
-  const cpx2 = Math.round((x1 + x2) / 2);
-  const cpy2 = y2;
+  const allY = data.flatMap(d => [d.y3m, d.y5y, d.y10y]).filter(v => typeof v === 'number' && !isNaN(v));
+  const minVal = Math.min(...allY);
+  const maxVal = Math.max(...allY);
+  const minY = Math.max(0, Math.floor((minVal - 0.15) * 2) / 2);
+  const maxY = Math.ceil((maxVal + 0.15) * 2) / 2;
+  const rangeY = Math.max(maxY - minY, 0.6);
 
-  const cpx3 = Math.round((x2 + x3) / 2);
-  const cpy3 = y2;
-  const cpx4 = Math.round((x2 + x3) / 2);
-  const cpy4 = y3;
+  const getX = (i) => padL + (i / Math.max(data.length - 1, 1)) * chartW;
+  const getY = (val) => padT + chartH - ((val - minY) / rangeY) * chartH;
 
-  const pathD = `M ${x1} ${y1} C ${cpx1} ${cpy1}, ${cpx2} ${cpy2}, ${x2} ${y2} C ${cpx3} ${cpy3}, ${cpx4} ${cpy4}, ${x3} ${y3}`;
-  const areaD = `${pathD} L ${x3} 185 L ${x1} 185 Z`;
+  const steps = 4;
+  let gridSvg = '';
+  for (let s = 0; s <= steps; s++) {
+    const tickVal = minY + (rangeY * s) / steps;
+    const tickY = getY(tickVal);
+    gridSvg += `
+      <line x1="${padL}" y1="${tickY.toFixed(1)}" x2="${padL + chartW}" y2="${tickY.toFixed(1)}" stroke="rgba(255,255,255,0.06)" stroke-width="1" ${s > 0 && s < steps ? 'stroke-dasharray="3,3"' : ''} />
+      <text x="${padL - 6}" y="${(tickY + 3.5).toFixed(1)}" fill="#777" font-size="9.5" text-anchor="end" font-family="Inter, sans-serif">${tickVal.toFixed(1)}%</text>
+    `;
+  }
 
-  const baselineY = y1;
+  let dateTicksSvg = '';
+  const xCount = Math.min(5, data.length);
+  for (let k = 0; k < xCount; k++) {
+    const idx = Math.min(Math.round((k / (xCount - 1)) * (data.length - 1)), data.length - 1);
+    const d = data[idx];
+    const posX = getX(idx);
+    const dateStr = d.date.substring(2); // '25-09-09'
+    dateTicksSvg += `
+      <line x1="${posX.toFixed(1)}" y1="${padT + chartH}" x2="${posX.toFixed(1)}" y2="${padT + chartH + 4}" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
+      <text x="${posX.toFixed(1)}" y="${padT + chartH + 16}" fill="#777" font-size="9.5" text-anchor="${k === 0 ? 'start' : k === xCount - 1 ? 'end' : 'middle'}" font-family="Inter, sans-serif">${dateStr}</text>
+    `;
+  }
+
+  const path3M = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(i).toFixed(1)} ${getY(d.y3m).toFixed(1)}`).join(' ');
+  const path5Y = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(i).toFixed(1)} ${getY(d.y5y).toFixed(1)}`).join(' ');
+  const path10Y = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(i).toFixed(1)} ${getY(d.y10y).toFixed(1)}`).join(' ');
 
   container.innerHTML = `
-    <svg viewBox="0 0 520 220" width="100%" height="100%">
+    <svg id="yieldChartSvg" viewBox="0 0 520 220" width="100%" height="100%" preserveAspectRatio="none">
       <defs>
-        <linearGradient id="curveFillGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#1ed760" stop-opacity="0.25"/>
-          <stop offset="100%" stop-color="#1ed760" stop-opacity="0.0"/>
-        </linearGradient>
-        <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stop-color="#38bdf8"/>
-          <stop offset="50%" stop-color="#1ed760"/>
-          <stop offset="100%" stop-color="#10b981"/>
-        </linearGradient>
-        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
+        <filter id="glowGreenYield" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="2" result="blur" />
           <feComposite in="SourceGraphic" in2="blur" operator="over"/>
         </filter>
       </defs>
+      <!-- 그리드 & Y 라벨 -->
+      ${gridSvg}
+      <!-- X축 날짜 틱 -->
+      ${dateTicksSvg}
 
-      <!-- 수평 눈금선 -->
-      <line x1="50" y1="175" x2="470" y2="175" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
-      <line x1="50" y1="121" x2="470" y2="121" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="3,3" />
-      <line x1="50" y1="67" x2="470" y2="67" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="3,3" />
+      <!-- 3M 국채금리 (하늘색) -->
+      <path d="${path3M}" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" />
 
-      <!-- Y축 눈금 라벨 -->
-      <text x="42" y="179" fill="#666" font-size="10" text-anchor="end" font-family="Inter, sans-serif">3.0%</text>
-      <text x="42" y="125" fill="#666" font-size="10" text-anchor="end" font-family="Inter, sans-serif">4.0%</text>
-      <text x="42" y="71" fill="#666" font-size="10" text-anchor="end" font-family="Inter, sans-serif">5.0%</text>
+      <!-- 5Y 국채금리 (황색) -->
+      <path d="${path5Y}" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" />
 
-      <!-- 3M 단기금리 수평 기준 점선 (스프레드 기준선) -->
-      <line x1="80" y1="${baselineY}" x2="440" y2="${baselineY}" stroke="rgba(56, 189, 248, 0.25)" stroke-width="1.5" stroke-dasharray="4,4" />
-      <text x="445" y="${baselineY + 3}" fill="#38bdf8" font-size="9" font-family="Inter, sans-serif" opacity="0.8">3M 기준선 (${y13w}%)</text>
+      <!-- 10Y 국채금리 (네온 그린) -->
+      <path d="${path10Y}" fill="none" stroke="#1ed760" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glowGreenYield)" />
 
-      <!-- 곡선 아래 채우기 영역 -->
-      <path d="${areaD}" fill="url(#curveFillGrad)" />
+      <!-- 크로스헤어 그룹 -->
+      <g id="yieldCrossGroup" style="display: none;">
+        <line id="yieldCrossLine" x1="0" y1="${padT}" x2="0" y2="${padT + chartH}" stroke="rgba(255,255,255,0.4)" stroke-width="1" stroke-dasharray="3,3" />
+        <circle id="yieldDot3M" r="4.5" fill="#38bdf8" stroke="#000" stroke-width="2" />
+        <circle id="yieldDot5Y" r="4.5" fill="#fbbf24" stroke="#000" stroke-width="2" />
+        <circle id="yieldDot10Y" r="5" fill="#1ed760" stroke="#000" stroke-width="2" />
+      </g>
 
-      <!-- 곡선 본체 라인 -->
-      <path d="${pathD}" fill="none" stroke="url(#lineGrad)" stroke-width="3.5" filter="url(#glow)" stroke-linecap="round" />
-
-      <!-- X축 세로 가이드선 -->
-      <line x1="${x1}" y1="${y1}" x2="${x1}" y2="180" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-dasharray="2,2" />
-      <line x1="${x2}" y1="${y2}" x2="${x2}" y2="180" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-dasharray="2,2" />
-      <line x1="${x3}" y1="${y3}" x2="${x3}" y2="180" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-dasharray="2,2" />
-
-      <!-- 포인트 1: 3M -->
-      <circle cx="${x1}" cy="${y1}" r="6" fill="#38bdf8" stroke="#000" stroke-width="2.5" />
-      <text x="${x1}" y="${y1 - 12}" fill="#ffffff" font-size="12" font-weight="800" text-anchor="middle" font-family="Inter, sans-serif">${y13w}%</text>
-      <text x="${x1}" y="200" fill="#38bdf8" font-size="11" font-weight="700" text-anchor="middle" font-family="Inter, sans-serif">3개월 (3M)</text>
-
-      <!-- 포인트 2: 5Y -->
-      <circle cx="${x2}" cy="${y2}" r="6" fill="#1ed760" stroke="#000" stroke-width="2.5" />
-      <text x="${x2}" y="${y2 - 12}" fill="#ffffff" font-size="12" font-weight="800" text-anchor="middle" font-family="Inter, sans-serif">${y5y}%</text>
-      <text x="${x2}" y="200" fill="#9ca3af" font-size="11" font-weight="600" text-anchor="middle" font-family="Inter, sans-serif">5년 (5Y)</text>
-
-      <!-- 포인트 3: 10Y -->
-      <circle cx="${x3}" cy="${y3}" r="6" fill="#10b981" stroke="#000" stroke-width="2.5" />
-      <text x="${x3}" y="${y3 - 12}" fill="#ffffff" font-size="12" font-weight="800" text-anchor="middle" font-family="Inter, sans-serif">${y10y}%</text>
-      <text x="${x3}" y="200" fill="#10b981" font-size="11" font-weight="700" text-anchor="middle" font-family="Inter, sans-serif">10년 (10Y)</text>
-
-      <!-- 스프레드 차이 브래킷 표시 -->
-      <line x1="${x3 + 8}" y1="${baselineY}" x2="${x3 + 8}" y2="${y3}" stroke="#1ed760" stroke-width="1.5" />
-      <text x="${x3 + 14}" y="${Math.round((baselineY + y3) / 2) + 4}" fill="#1ed760" font-size="10" font-weight="800" font-family="Inter, sans-serif">+${spread}%p</text>
+      <!-- 마우스 감지 투명 오버레이 -->
+      <rect id="yieldMouseOverlay" x="${padL}" y="${padT}" width="${chartW}" height="${chartH}" fill="transparent" style="cursor: crosshair;" />
     </svg>
+    <div class="chart-tooltip-floating" id="yieldFloatingTooltip" style="display: none;"></div>
   `;
+
+  const overlay = container.querySelector("#yieldMouseOverlay");
+  const crossGroup = container.querySelector("#yieldCrossGroup");
+  const crossLine = container.querySelector("#yieldCrossLine");
+  const dot3M = container.querySelector("#yieldDot3M");
+  const dot5Y = container.querySelector("#yieldDot5Y");
+  const dot10Y = container.querySelector("#yieldDot10Y");
+  const tooltip = container.querySelector("#yieldFloatingTooltip");
+
+  if (overlay) {
+    overlay.onmousemove = (e) => {
+      const rect = overlay.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const ratio = Math.min(Math.max(mouseX / rect.width, 0), 1);
+      const idx = Math.min(Math.round(ratio * (data.length - 1)), data.length - 1);
+      const d = data[idx];
+      if (!d) return;
+
+      const px = getX(idx);
+      const py3M = getY(d.y3m);
+      const py5Y = getY(d.y5y);
+      const py10Y = getY(d.y10y);
+
+      crossGroup.style.display = "block";
+      crossLine.setAttribute("x1", px);
+      crossLine.setAttribute("x2", px);
+      dot3M.setAttribute("cx", px);
+      dot3M.setAttribute("cy", py3M);
+      dot5Y.setAttribute("cx", px);
+      dot5Y.setAttribute("cy", py5Y);
+      dot10Y.setAttribute("cx", px);
+      dot10Y.setAttribute("cy", py10Y);
+
+      if (legY3M) legY3M.innerText = `${d.y3m.toFixed(2)}%`;
+      if (legY5Y) legY5Y.innerText = `${d.y5y.toFixed(2)}%`;
+      if (legY10Y) legY10Y.innerText = `${d.y10y.toFixed(2)}%`;
+
+      if (tooltip) {
+        tooltip.style.display = "flex";
+        tooltip.innerHTML = `
+          <span class="date-tag">${d.date}</span>
+          <span class="val-tag" style="color:#38bdf8;">3M: ${d.y3m.toFixed(2)}%</span>
+          <span class="val-tag" style="color:#fbbf24;">5Y: ${d.y5y.toFixed(2)}%</span>
+          <span class="val-tag" style="color:#1ed760;">10Y: ${d.y10y.toFixed(2)}%</span>
+        `;
+        const containerRect = container.getBoundingClientRect();
+        let leftPos = (px / 520) * containerRect.width - 70;
+        leftPos = Math.max(10, Math.min(leftPos, containerRect.width - 240));
+        tooltip.style.left = `${leftPos}px`;
+      }
+    };
+
+    overlay.onmouseleave = () => {
+      crossGroup.style.display = "none";
+      if (tooltip) tooltip.style.display = "none";
+      if (legY3M && latest.y3m) legY3M.innerText = `${latest.y3m.toFixed(2)}%`;
+      if (legY5Y && latest.y5y) legY5Y.innerText = `${latest.y5y.toFixed(2)}%`;
+      if (legY10Y && latest.y10y) legY10Y.innerText = `${latest.y10y.toFixed(2)}%`;
+    };
+  }
 }
 
-function renderBenchmarkGapBars() {
-  const container = document.getElementById("benchmarkGapBarsContainer");
+function renderSpreadTimeSeriesChart(period = '6M') {
+  const container = document.getElementById("spreadTimeSeriesContainer");
   if (!container || !MACRO_DATA) return;
 
-  const fed = MACRO_DATA.fedRate || {};
-  const cpi = MACRO_DATA.inflation || {};
-  const treasury = MACRO_DATA.treasury || {};
+  const data = getFilteredTreasuryData(period);
+  if (!data.length) {
+    container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#888;font-size:12px;">스프레드 시계열 데이터가 없습니다.</div>`;
+    return;
+  }
 
-  const effr = parseFloat(fed.effr || "3.63");
-  const neutral = 2.90;
-  const gapNeutral = (effr - neutral).toFixed(2); // +0.73%p
+  const latest = data[data.length - 1];
+  const legSpread = document.getElementById("legendSpreadVal");
+  if (legSpread && typeof latest.spread === 'number') {
+    const s = latest.spread;
+    legSpread.innerText = (s >= 0 ? '+' : '') + s.toFixed(2) + '%p';
+    legSpread.className = s >= 0 ? 'text-green' : 'text-red';
+  }
 
-  const cpiVal = parseFloat(cpi.cpiYoY || "3.4");
-  const target = 2.00;
-  const gapCpi = (cpiVal - target).toFixed(2); // +1.40%p
+  const padL = 45, padR = 15, padT = 18, padB = 26;
+  const chartW = 520 - padL - padR; // 460
+  const chartH = 220 - padT - padB; // 176
 
-  const realRate = (effr - cpiVal).toFixed(2); // +0.23%p
+  const spreads = data.map(d => d.spread).filter(v => typeof v === 'number' && !isNaN(v));
+  const minSp = Math.min(...spreads);
+  const maxSp = Math.max(...spreads);
+  const minY = Math.floor((Math.min(minSp, -0.05) - 0.2) * 2) / 2;
+  const maxY = Math.ceil((Math.max(maxSp, 0.2) + 0.2) * 2) / 2;
+  const rangeY = Math.max(maxY - minY, 0.6);
 
-  const y10 = treasury.yield10Y ? treasury.yield10Y.val : 4.80;
-  const y13w = treasury.yield13W ? treasury.yield13W.val : 3.77;
-  const spread10_3 = (y10 - y13w).toFixed(2); // +1.03%p
+  const getX = (i) => padL + (i / Math.max(data.length - 1, 1)) * chartW;
+  const getY = (val) => padT + chartH - ((val - minY) / rangeY) * chartH;
+  const zeroY = getY(0.0);
 
-  const spDiv = 1.30;
-  const cashEquityGap = (y13w - spDiv).toFixed(2); // +2.47%p
-
-  // 5대 복합 정책 기준선 정량 갭 항목
-  const items = [
-    {
-      name: "1. 기준금리 vs 공식 중립선(SEP)",
-      formula: `실효금리 ${effr}% - 중립선 2.90%`,
-      valStr: `+${gapNeutral}%p`,
-      val: parseFloat(gapNeutral),
-      max: 2.5,
-      color: "amber"
-    },
-    {
-      name: "2. CPI 물가 vs 연준 법정목표",
-      formula: `소비자물가 ${cpiVal}% - 법정목표 2.00%`,
-      valStr: `+${gapCpi}%p`,
-      val: parseFloat(gapCpi),
-      max: 2.5,
-      color: "purple"
-    },
-    {
-      name: "3. 실질 정책금리 (Real Rate)",
-      formula: `실효금리 ${effr}% - 물가 ${cpiVal}%`,
-      valStr: `+${realRate}%p`,
-      val: parseFloat(realRate),
-      max: 2.5,
-      color: "green"
-    },
-    {
-      name: "4. 장단기 수익률 스프레드 (10Y-3M)",
-      formula: `10년물 ${y10}% - 3개월물 ${y13w}%`,
-      valStr: `+${spread10_3}%p`,
-      val: parseFloat(spread10_3),
-      max: 2.5,
-      color: "green"
-    },
-    {
-      name: "5. 무위험 T-Bill vs S&P 배당수익률",
-      formula: `3개월 국채 ${y13w}% - S&P 배당 1.30%`,
-      valStr: `+${cashEquityGap}%p`,
-      val: parseFloat(cashEquityGap),
-      max: 3.0,
-      color: "blue"
-    }
-  ];
-
-  container.innerHTML = items.map(it => {
-    const pct = Math.min(Math.max((Math.abs(it.val) / it.max) * 100, 8), 100);
-    const colorClass = it.color;
-    return `
-      <div class="gap-bar-item">
-        <div class="gap-bar-meta">
-          <div>
-            <span class="gap-bar-name">${it.name}</span>
-            <span class="gap-bar-formula" style="margin-left: 8px;">(${it.formula})</span>
-          </div>
-          <span class="gap-bar-val text-${colorClass}">${it.valStr}</span>
-        </div>
-        <div class="gap-bar-track">
-          <div class="gap-bar-fill ${colorClass}" style="width: ${pct.toFixed(1)}%;"></div>
-        </div>
-      </div>
+  const steps = 4;
+  let gridSvg = '';
+  for (let s = 0; s <= steps; s++) {
+    const tickVal = minY + (rangeY * s) / steps;
+    const tickY = getY(tickVal);
+    gridSvg += `
+      <line x1="${padL}" y1="${tickY.toFixed(1)}" x2="${padL + chartW}" y2="${tickY.toFixed(1)}" stroke="rgba(255,255,255,0.06)" stroke-width="1" ${s > 0 && s < steps ? 'stroke-dasharray="3,3"' : ''} />
+      <text x="${padL - 6}" y="${(tickY + 3.5).toFixed(1)}" fill="#777" font-size="9.5" text-anchor="end" font-family="Inter, sans-serif">${(tickVal >= 0 ? '+' : '') + tickVal.toFixed(1)}%p</text>
     `;
-  }).join("");
+  }
+
+  let dateTicksSvg = '';
+  const xCount = Math.min(5, data.length);
+  for (let k = 0; k < xCount; k++) {
+    const idx = Math.min(Math.round((k / (xCount - 1)) * (data.length - 1)), data.length - 1);
+    const d = data[idx];
+    const posX = getX(idx);
+    const dateStr = d.date.substring(2);
+    dateTicksSvg += `
+      <line x1="${posX.toFixed(1)}" y1="${padT + chartH}" x2="${posX.toFixed(1)}" y2="${padT + chartH + 4}" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
+      <text x="${posX.toFixed(1)}" y="${padT + chartH + 16}" fill="#777" font-size="9.5" text-anchor="${k === 0 ? 'start' : k === xCount - 1 ? 'end' : 'middle'}" font-family="Inter, sans-serif">${dateStr}</text>
+    `;
+  }
+
+  const pathSpread = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(i).toFixed(1)} ${getY(d.spread).toFixed(1)}`).join(' ');
+  const lastX = getX(data.length - 1).toFixed(1);
+  const firstX = getX(0).toFixed(1);
+  const areaSpread = `${pathSpread} L ${lastX} ${zeroY.toFixed(1)} L ${firstX} ${zeroY.toFixed(1)} Z`;
+
+  container.innerHTML = `
+    <svg id="spreadChartSvg" viewBox="0 0 520 220" width="100%" height="100%" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="spreadAreaGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1ed760" stop-opacity="0.30"/>
+          <stop offset="100%" stop-color="#1ed760" stop-opacity="0.02"/>
+        </linearGradient>
+        <filter id="glowGreenSpread" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="2" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+        </filter>
+      </defs>
+      <!-- 그리드 & Y 라벨 -->
+      ${gridSvg}
+      <!-- X축 날짜 틱 -->
+      ${dateTicksSvg}
+
+      <!-- 0.00%p 침체 역전 기준선 (빨간색 점선) -->
+      <line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${padL + chartW}" y2="${zeroY.toFixed(1)}" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4" />
+      <text x="${padL + chartW - 5}" y="${(zeroY - 5).toFixed(1)}" fill="#ef4444" font-size="9.5" font-weight="700" text-anchor="end" font-family="Inter, sans-serif">0.00%p 침체 역전선</text>
+
+      <!-- 스프레드 영역 채우기 -->
+      <path d="${areaSpread}" fill="url(#spreadAreaGrad)" />
+
+      <!-- 스프레드 본체 라인 -->
+      <path d="${pathSpread}" fill="none" stroke="#1ed760" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glowGreenSpread)" />
+
+      <!-- 크로스헤어 그룹 -->
+      <g id="spreadCrossGroup" style="display: none;">
+        <line id="spreadCrossLine" x1="0" y1="${padT}" x2="0" y2="${padT + chartH}" stroke="rgba(255,255,255,0.4)" stroke-width="1" stroke-dasharray="3,3" />
+        <circle id="spreadCrossDot" r="5" fill="#1ed760" stroke="#000" stroke-width="2" />
+      </g>
+
+      <!-- 마우스 감지 투명 오버레이 -->
+      <rect id="spreadMouseOverlay" x="${padL}" y="${padT}" width="${chartW}" height="${chartH}" fill="transparent" style="cursor: crosshair;" />
+    </svg>
+    <div class="chart-tooltip-floating" id="spreadFloatingTooltip" style="display: none;"></div>
+  `;
+
+  const overlay = container.querySelector("#spreadMouseOverlay");
+  const crossGroup = container.querySelector("#spreadCrossGroup");
+  const crossLine = container.querySelector("#spreadCrossLine");
+  const crossDot = container.querySelector("#spreadCrossDot");
+  const tooltip = container.querySelector("#spreadFloatingTooltip");
+
+  if (overlay) {
+    overlay.onmousemove = (e) => {
+      const rect = overlay.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const ratio = Math.min(Math.max(mouseX / rect.width, 0), 1);
+      const idx = Math.min(Math.round(ratio * (data.length - 1)), data.length - 1);
+      const d = data[idx];
+      if (!d) return;
+
+      const px = getX(idx);
+      const py = getY(d.spread);
+
+      crossGroup.style.display = "block";
+      crossLine.setAttribute("x1", px);
+      crossLine.setAttribute("x2", px);
+      crossDot.setAttribute("cx", px);
+      crossDot.setAttribute("cy", py);
+      crossDot.setAttribute("fill", d.spread >= 0 ? "#1ed760" : "#ef4444");
+
+      const sign = d.spread >= 0 ? '+' : '';
+      const spreadStr = `${sign}${d.spread.toFixed(2)}%p`;
+      if (legSpread) {
+        legSpread.innerText = spreadStr;
+        legSpread.className = d.spread >= 0 ? "text-green" : "text-red";
+      }
+
+      if (tooltip) {
+        tooltip.style.display = "flex";
+        const statusText = d.spread < 0 
+          ? '<span style="color:#ef4444;margin-left:6px;font-weight:700;">(역전 경고)</span>' 
+          : '<span style="color:#1ed760;margin-left:6px;font-weight:700;">(정상 우상향)</span>';
+        tooltip.innerHTML = `
+          <span class="date-tag">${d.date}</span>
+          <span class="val-tag" style="color:${d.spread >= 0 ? '#1ed760' : '#ef4444'};">스프레드: ${spreadStr}</span>
+          ${statusText}
+        `;
+        const containerRect = container.getBoundingClientRect();
+        let leftPos = (px / 520) * containerRect.width - 80;
+        leftPos = Math.max(10, Math.min(leftPos, containerRect.width - 250));
+        tooltip.style.left = `${leftPos}px`;
+      }
+    };
+
+    overlay.onmouseleave = () => {
+      crossGroup.style.display = "none";
+      if (tooltip) tooltip.style.display = "none";
+      if (legSpread && typeof latest.spread === 'number') {
+        const s = latest.spread;
+        legSpread.innerText = (s >= 0 ? '+' : '') + s.toFixed(2) + '%p';
+        legSpread.className = s >= 0 ? 'text-green' : 'text-red';
+      }
+    };
+  }
 }
 
 function renderMacroMarketProxies() {

@@ -59,7 +59,11 @@ macro_data = {
         "wtiOil": {"val": 93.67, "change": 2.39, "label": "WTI 국제유가 ($)"},
         "gold": {"val": 4446.7, "change": -0.67, "label": "국제 금 시세 ($)"}
     },
-    "calendar": []
+    "calendar": [],
+    "timeSeries": {
+        "treasuryDaily": [],
+        "policyMonthly": []
+    }
 }
 
 # 1. 뉴욕 연방준비은행 공식 금리 API 수집
@@ -90,32 +94,72 @@ try:
     bls_url = 'https://api.bls.gov/publicAPI/v1/timeseries/data/'
     payload = json.dumps({
         'seriesid': ['CUUR0000SA0', 'LNS14000000'],
-        'startyear': '2025',
+        'startyear': '2024',
         'endyear': '2026'
     }).encode('utf-8')
     req = urllib.request.Request(bls_url, data=payload, headers={'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0'})
     with urllib.request.urlopen(req, timeout=10, context=ctx) as resp:
         bls_res = json.loads(resp.read().decode('utf-8'))
+        cpi_map = {}
+        unemp_map = {}
         for s in bls_res.get('Results', {}).get('series', []):
             sid = s.get('seriesID')
-            rows = s.get('data', [])
-            if sid == 'LNS14000000' and rows:
-                macro_data["labor"] = {
-                    "unemploymentRate": f"{rows[0]['value']}%",
-                    "period": f"{rows[0]['periodName']} {rows[0]['year']}",
-                    "prevRate": f"{rows[1]['value']}%" if len(rows) > 1 else None
-                }
-                log(f"  실업률: {macro_data['labor']['unemploymentRate']} ({macro_data['labor']['period']})")
-            elif sid == 'CUUR0000SA0' and len(rows) >= 13:
-                cur_cpi = float(rows[0]['value'])
-                prev_yr_cpi = float(rows[12]['value'])
+            for row in s.get('data', []):
+                yr = row['year']
+                prd = row['period']
+                if prd.startswith('M') and prd != 'M13':
+                    k = f"{yr}-{prd[1:]}"
+                    raw_v = row['value'].strip()
+                    if raw_v not in ['-', '']:
+                        val = float(raw_v)
+                        if sid == 'CUUR0000SA0':
+                            cpi_map[k] = val
+                        else:
+                            unemp_map[k] = val
+
+        cpi_sorted = sorted(cpi_map.keys(), reverse=True)
+        unemp_sorted = sorted(unemp_map.keys(), reverse=True)
+        if cpi_sorted and len(cpi_sorted) >= 13:
+            cur_k = cpi_sorted[0]
+            prev_yr_k = f"{int(cur_k[:4])-1}{cur_k[4:]}"
+            if prev_yr_k in cpi_map:
+                cur_cpi = cpi_map[cur_k]
+                prev_yr_cpi = cpi_map[prev_yr_k]
                 yoy = ((cur_cpi - prev_yr_cpi) / prev_yr_cpi) * 100
                 macro_data["inflation"] = {
                     "cpiIndex": cur_cpi,
                     "cpiYoY": f"{yoy:+.1f}%",
-                    "period": f"{rows[0]['periodName']} {rows[0]['year']}"
+                    "period": cur_k
                 }
                 log(f"  CPI 소비자물가지수: {cur_cpi} (전년 대비 {macro_data['inflation']['cpiYoY']})")
+
+        if unemp_sorted:
+            cur_u = unemp_sorted[0]
+            prev_u = unemp_sorted[1] if len(unemp_sorted) > 1 else None
+            macro_data["labor"] = {
+                "unemploymentRate": f"{unemp_map[cur_u]}%",
+                "period": cur_u,
+                "prevRate": f"{unemp_map[prev_u]}%" if prev_u else None
+            }
+            log(f"  실업률: {macro_data['labor']['unemploymentRate']} ({cur_u})")
+
+        # 월별 정책 시계열 생성 (2025-01부터)
+        months = sorted([m for m in cpi_map.keys() if m >= '2025-01'])
+        monthly_policy = []
+        effr_base = 3.63
+        for m in months:
+            prev_m = f"{int(m[:4])-1}{m[4:]}"
+            if prev_m in cpi_map:
+                yoy_val = round(((cpi_map[m] - cpi_map[prev_m]) / cpi_map[prev_m]) * 100, 2)
+                u_val = unemp_map.get(m, None)
+                monthly_policy.append({
+                    "month": m,
+                    "cpiYoY": yoy_val,
+                    "unemployment": u_val,
+                    "realRate": round(effr_base - yoy_val, 2)
+                })
+        macro_data["timeSeries"]["policyMonthly"] = monthly_policy
+        log(f"  월별 정책 시계열: {len(monthly_policy)}개월 완료")
 except Exception as e:
     log(f"  BLS 수집 실패 (기본값 유지): {e}")
 
@@ -145,6 +189,43 @@ for sym, key, label in tickers:
                 macro_data["commoditiesAndFx"][key] = {"val": round(p, 2), "change": round(chg, 2), "label": label}
     except Exception as e:
         log(f"  {label} 수집 실패: {e}")
+
+# 3-1. 미국 국채 1년 일별 시계열 수집 (3M, 5Y, 10Y 및 장단기 스프레드)
+log("[3-1] 미국 국채 1년 시계열(3M, 5Y, 10Y) 일별 수집 중...")
+treasury_1y_data = {}
+for sym, key in [('^IRX', 'y3m'), ('^FVX', 'y5y'), ('^TNX', 'y10y')]:
+    url = f'https://query1.finance.yahoo.com/v8/finance/chart/{sym}?range=1y&interval=1d'
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    try:
+        with urllib.request.urlopen(req, timeout=10, context=ctx) as resp:
+            d = json.loads(resp.read().decode('utf-8'))['chart']['result'][0]
+            ts = d['timestamp']
+            closes = d['indicators']['quote'][0]['close']
+            series = {}
+            for t, c in zip(ts, closes):
+                if c is not None:
+                    dt = datetime.fromtimestamp(t).strftime('%Y-%m-%d')
+                    series[dt] = round(c, 2)
+            treasury_1y_data[key] = series
+    except Exception as e:
+        log(f"  {sym} 1년 시계열 수집 실패: {e}")
+
+if 'y3m' in treasury_1y_data and 'y5y' in treasury_1y_data and 'y10y' in treasury_1y_data:
+    common_dates = sorted(list(set(treasury_1y_data['y3m'].keys()) & set(treasury_1y_data['y5y'].keys()) & set(treasury_1y_data['y10y'].keys())))
+    daily_list = []
+    for dt in common_dates:
+        y3 = treasury_1y_data['y3m'][dt]
+        y5 = treasury_1y_data['y5y'][dt]
+        y10_val = treasury_1y_data['y10y'][dt]
+        daily_list.append({
+            "date": dt,
+            "y3m": y3,
+            "y5y": y5,
+            "y10y": y10_val,
+            "spread": round(y10_val - y3, 2)
+        })
+    macro_data["timeSeries"]["treasuryDaily"] = daily_list
+    log(f"  미국 국채 일별 시계열 완료: {len(daily_list)}영업일 ({daily_list[0]['date']} ~ {daily_list[-1]['date']})")
 
 # 장단기 금리차 (10년물 - 3개월물) 계산
 y10 = macro_data["treasury"].get("yield10Y", {}).get("val", 4.78)
