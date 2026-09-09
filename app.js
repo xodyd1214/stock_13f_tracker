@@ -189,7 +189,7 @@ function toggleFavorite(guruKey) {
   renderGuruSidebar();
 }
 
-// 🏛️ 주요 120대 미국 기업 및 ETF 공식 티커 전수 매핑 사전
+// 주요 120대 미국 기업 및 ETF 공식 티커 전수 매핑 사전
 const TICKER_MAP = {
   "78462F103": "SPY", "46090E103": "QQQ", "464287200": "IVV", "464287655": "IWM",
   "78463V107": "GLD", "464287432": "IWF", "464288513": "IEFA", "78467X109": "DIA",
@@ -244,7 +244,7 @@ const TICKER_MAP = {
   "DUOLINGO": "DUOL", "DOORDASH": "DASH"
 };
 
-// 📊 120대 주요 종목 공식 GICS 섹터 매핑 사전 (기능 3)
+// 120대 주요 종목 공식 GICS 섹터 매핑 사전 (기능 3)
 const SECTOR_MAP = {
   // 정보기술 (Technology)
   "AAPL": "Technology", "MSFT": "Technology", "NVDA": "Technology", "AVGO": "Technology",
@@ -407,10 +407,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function loadRealSecData() {
   try {
-    const [holdingsRes, tickerRes, priceRes] = await Promise.all([
+    const [holdingsRes, tickerRes, priceRes, macroRes] = await Promise.all([
       fetch("latest_13f_holdings.json"),
       fetch("ticker_map.json").catch(() => null),
-      fetch("realtime_prices.json").catch(() => null)
+      fetch("realtime_prices.json").catch(() => null),
+      fetch("latest_macro_indicators.json?_t=" + Date.now()).catch(() => null)
     ]);
 
     if (tickerRes && tickerRes.ok) {
@@ -422,6 +423,12 @@ async function loadRealSecData() {
     if (priceRes && priceRes.ok) {
       try {
         LIVE_PRICES = await priceRes.json();
+      } catch (e) {}
+    }
+    if (macroRes && macroRes.ok) {
+      try {
+        MACRO_DATA = await macroRes.json();
+        renderMacroPulseBar();
       } catch (e) {}
     }
     if (holdingsRes && holdingsRes.ok) {
@@ -928,7 +935,7 @@ function updateSummaryMetrics(guru) {
   }
 }
 
-// 📊 기능 3: 섹터(산업군) 자금 쏠림 비중 분석 위젯 렌더링
+// 기능 3: 섹터(산업군) 자금 쏠림 비중 분석 위젯 렌더링
 function renderSectorBreakdown(holdings) {
   const barContainer = document.getElementById("sectorStackedBar");
   const legendContainer = document.getElementById("sectorLegend");
@@ -1159,7 +1166,7 @@ function renderTreemap(holdings) {
       </div>
     `;
 
-    // 💡 인터랙티브 플로팅 툴팁(Toast) 이벤트
+    // 인터랙티브 플로팅 툴팁(Toast) 이벤트
     if (tooltip) {
       tile.addEventListener("mouseenter", (e) => {
         let actionLabel = '보유 유지';
@@ -1382,7 +1389,7 @@ function applyColumnVisibility() {
   });
 }
 
-// 🏢 기능 1 & 기능 4: 확장 종목 상세 모달 (보유 운용사 전체 명단 + 1년 변천사)
+// 기능 1 & 기능 4: 확장 종목 상세 모달 (보유 운용사 전체 명단 + 1년 변천사)
 function openStockModal(item) {
   const modal = document.getElementById("stockModal");
   if (!modal) return;
@@ -1415,10 +1422,10 @@ function openStockModal(item) {
   const elInsight = document.getElementById("modalInsightText");
   if (elInsight) elInsight.innerText = item.insight || "이 종목은 주요 운용사들의 포트폴리오에 편입된 핵심 자산입니다.";
 
-  // 🕒 기능 4: 1년 비중 변천사 타임라인 렌더링
+  // 기능 4: 1년 비중 변천사 타임라인 렌더링
   renderStockHistoryTimeline(item);
 
-  // 🏢 기능 1: 100대 운용사 중 이 종목을 보유한 전체 명단 추출 & 렌더링
+  // 기능 1: 100대 운용사 중 이 종목을 보유한 전체 명단 추출 & 렌더링
   renderStockHoldersTable(item.ticker);
 
   // 외부 파이낸스 링크 세팅
@@ -1630,7 +1637,17 @@ function setupEventListeners() {
   const btnLogout = document.getElementById("btnLogout");
   if (btnLogout) btnLogout.onclick = () => logout();
 
-  // SEC 공식 공시 드롭다운 셀렉터 이벤트
+  // SEC 공식 공시 모드 선택 리스트 클릭 이벤트 (원클릭 전환)
+  document.querySelectorAll(".filing-mode-item").forEach(btn => {
+    btn.onclick = () => {
+      const mode = btn.dataset.mode;
+      if (mode) {
+        switchFilingMode(mode);
+      }
+    };
+  });
+
+  // 하위 호환용 레거시 셀렉터 이벤트
   const filingSelector = document.getElementById("filingSelector");
   if (filingSelector) {
     filingSelector.onchange = (e) => {
@@ -1689,9 +1706,38 @@ function setupEventListeners() {
     };
   }
 
+  // 거시경제 펄스 바 & 모달 이벤트
+  const pulseBar = document.getElementById("macroPulseBar");
+  if (pulseBar) {
+    pulseBar.onclick = () => openMacroModal();
+  }
+
+  const btnCloseMacro = document.getElementById("btnMacroModalClose");
+  if (btnCloseMacro) {
+    btnCloseMacro.onclick = () => closeMacroModal();
+  }
+
+  const macroModal = document.getElementById("macroModal");
+  if (macroModal) {
+    macroModal.onclick = (e) => {
+      if (e.target === macroModal) closeMacroModal();
+    };
+  }
+
+  // 거시경제 캘린더 필터 탭 이벤트
+  document.querySelectorAll("#macroCalFilterWrap .filter-tab").forEach(tab => {
+    tab.onclick = () => {
+      document.querySelectorAll("#macroCalFilterWrap .filter-tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      state.macroCalFilter = tab.dataset.calfilter;
+      renderMacroCalendar();
+    };
+  });
+
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       closeInsiderModal();
+      closeMacroModal();
     }
   });
 
@@ -1741,6 +1787,19 @@ function saveF4Favs() {
 
 async function switchFilingMode(filingType) {
   state.currentFilingType = filingType;
+
+  // 사이드바 공시 모드 리스트 활성화 상태 UI 동기화
+  document.querySelectorAll(".filing-mode-item").forEach(btn => {
+    const isActive = (btn.dataset.mode === filingType);
+    btn.classList.toggle("active", isActive);
+    btn.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+
+  // 하위 호환용 숨김 셀렉트 값 동기화
+  const legacySel = document.getElementById("filingSelector");
+  if (legacySel && legacySel.value !== filingType) {
+    legacySel.value = filingType;
+  }
   
   const brandTitle = document.getElementById("brandTitle");
   const brandSubtitle = document.getElementById("brandSubtitle");
@@ -1755,10 +1814,12 @@ async function switchFilingMode(filingType) {
   const v13F = document.getElementById("view13F");
   const vF4 = document.getElementById("viewForm4");
   const v13D = document.getElementById("view13D");
+  const vMacro = document.getElementById("viewMacro");
 
   if (v13F) v13F.style.display = "none";
   if (vF4) vF4.style.display = "none";
   if (v13D) v13D.style.display = "none";
+  if (vMacro) vMacro.style.display = "none";
 
   if (filingType === "13F") {
     if (brandTitle) brandTitle.innerHTML = 'ALPHA <span>13F</span>';
@@ -1808,6 +1869,17 @@ async function switchFilingMode(filingType) {
       tab13G.classList.add("active");
     }
     await loadAndRender13D();
+  } else if (filingType === "MACRO") {
+    if (brandTitle) brandTitle.innerHTML = 'ALPHA <span>MACRO</span>';
+    if (brandSubtitle) brandSubtitle.innerText = '거시경제 & FOMC 나침반';
+    if (headerName) headerName.innerText = 'Macro Compass (거시경제 & FOMC 캘린더)';
+    if (headerFund) headerFund.innerText = '연준 금리 · 물가(CPI) · 고용(NFP) · 국채 수익률';
+    if (headerQuarter) headerQuarter.innerText = '실시간 공식 데이터 연동';
+    if (headerDesc) headerDesc.innerText = '미 뉴욕 연준(FRBNY), 미 노동통계국(BLS) 공식 지표 및 국채 수익률 곡선을 100대 운용사의 13F 기관 포트폴리오와 입체적으로 연계 분석합니다.';
+    if (ctrl13F) ctrl13F.style.display = "none";
+    if (ctrlF4) ctrlF4.style.display = "none";
+    if (vMacro) vMacro.style.display = "block";
+    await loadAndRenderMacro();
   }
 }
 
@@ -2073,7 +2145,7 @@ function renderF4SidebarCompanyList() {
     // 1) 즐겨찾기 섹션 서브헤더
     const favHeader = document.createElement("div");
     favHeader.style.cssText = "font-size: 11px; font-weight: 700; color: #ffb300; padding: 6px 8px 4px; display: flex; align-items: center; gap: 5px;";
-    favHeader.innerHTML = `<span>★ 즐겨찾기 기업</span> <span style="font-size: 10px; opacity: 0.8; font-weight: 600;">(${favList.length}개)</span>`;
+    favHeader.innerHTML = `<span>즐겨찾기 기업</span> <span style="font-size: 10px; opacity: 0.8; font-weight: 600;">(${favList.length}개)</span>`;
     container.appendChild(favHeader);
 
     favList.forEach(renderRow);
@@ -2081,7 +2153,7 @@ function renderF4SidebarCompanyList() {
     // 2) 전체 상장사 섹션 서브헤더
     const otherHeader = document.createElement("div");
     otherHeader.style.cssText = "font-size: 11px; font-weight: 700; color: var(--text-subdued); padding: 12px 8px 4px; border-top: 1px dashed rgba(255,255,255,0.08); margin-top: 6px; display: flex; align-items: center; gap: 5px;";
-    otherHeader.innerHTML = `<span>🏢 전체 상장사</span> <span style="font-size: 10px; opacity: 0.8; font-weight: 600;">(${otherList.length}개)</span>`;
+    otherHeader.innerHTML = `<span>전체 상장사</span> <span style="font-size: 10px; opacity: 0.8; font-weight: 600;">(${otherList.length}개)</span>`;
     container.appendChild(otherHeader);
 
     otherList.forEach(renderRow);
@@ -2413,3 +2485,529 @@ async function prefetchOtherFilings() {
 }
 
 function fetchLivePricesForCurrentView() {}
+
+// ==============================================================================
+// Macro Compass & Economic Pulse Engine (Fed Rates, BLS CPI/Labor, Calendar)
+// ==============================================================================
+
+let MACRO_DATA = null;
+state.macroCalFilter = "ALL";
+
+function renderMacroPulseBar() {
+  const bar = document.getElementById("macroPulseBar");
+  if (!bar || !MACRO_DATA) return;
+
+  const fed = MACRO_DATA.fedRate || {};
+  const cpi = MACRO_DATA.inflation || {};
+  const spread = (MACRO_DATA.treasury && MACRO_DATA.treasury.spread10Y_13W) || {};
+  const calendar = MACRO_DATA.calendar || [];
+  const benchmarks = MACRO_DATA.benchmarks || {};
+
+  const fedGap = benchmarks.fedRate ? `(중립선 ${benchmarks.fedRate.gapToNeutral})` : "(중립선 +0.73%p)";
+  const cpiGap = benchmarks.inflation ? `(목표선 ${benchmarks.inflation.gapToTarget})` : "(목표선 +1.40%p)";
+
+  // 가장 임박한 주요 이벤트 찾기
+  const nearestFedOrCritical = calendar.find(c => c.category === "FED" || c.impact === "CRITICAL") || calendar[0];
+
+  const spreadValStr = spread.spread !== undefined ? (spread.spread >= 0 ? `+${spread.spread.toFixed(2)}%p` : `${spread.spread.toFixed(2)}%p`) : "-";
+
+  let ddayBadgeHtml = "";
+  if (nearestFedOrCritical) {
+    const isFed = nearestFedOrCritical.category === "FED";
+    const dotClass = isFed ? "red" : (nearestFedOrCritical.daysDiff <= 5 ? "orange" : "");
+    ddayBadgeHtml = `
+      <div class="macro-pulse-dday-badge ${isFed ? 'fed' : ''}" title="${nearestFedOrCritical.name} (${nearestFedOrCritical.date})">
+        <span class="pulse-dot ${dotClass}"></span>
+        <span>${nearestFedOrCritical.dDay} ${nearestFedOrCritical.name.replace(/🏛️|미국\s*/g, '').trim()}</span>
+      </div>
+    `;
+  }
+
+  bar.innerHTML = `
+    <div class="macro-pulse-left">
+      <div class="macro-pulse-badge">
+        <span class="pulse-dot"></span>
+        <span>MACRO PULSE</span>
+      </div>
+      <div class="macro-pulse-items">
+        <div class="macro-pulse-pill" title="연준 기준금리 및 장기 중립선(2.90%) 대비 갭">
+          <span class="pill-label">연준 금리:</span>
+          <span class="pill-val">${fed.targetRange || "3.50% ~ 3.75%"}</span>
+          <span class="pill-sub" style="color: #ffa42b; font-size: 11px;">${fedGap}</span>
+        </div>
+        <div class="macro-pulse-sep"></div>
+        <div class="macro-pulse-pill" title="미국 소비자물가(CPI) 및 법정 목표치(2.00%) 대비 갭">
+          <span class="pill-label">CPI (YoY):</span>
+          <span class="pill-val" style="color: #c084fc;">${cpi.cpiYoY || "+3.4%"}</span>
+          <span class="pill-sub" style="color: #c084fc; font-size: 11px;">${cpiGap}</span>
+        </div>
+        <div class="macro-pulse-sep"></div>
+        <div class="macro-pulse-pill" title="10년물 국채 - 3개월물 T-Bill 금리 스프레드 (침체 역전선 0.00%p 기준)">
+          <span class="pill-label">10Y-3M 스프레드:</span>
+          <span class="pill-val" style="color: ${spread.spread >= 0 ? '#1ed760' : '#f3727f'};">${spreadValStr}</span>
+          <span class="pill-sub">(${spread.spread >= 0 ? '역전선 회복 · 정상' : '역전 경고'})</span>
+        </div>
+      </div>
+    </div>
+    <div class="macro-pulse-right">
+      ${ddayBadgeHtml}
+      <span class="macro-pulse-action">기준선 브리핑 ↗</span>
+    </div>
+  `;
+}
+
+async function loadAndRenderMacro() {
+  if (!MACRO_DATA) {
+    try {
+      const res = await fetch("latest_macro_indicators.json?_t=" + Date.now());
+      if (res.ok) MACRO_DATA = await res.json();
+    } catch (e) {
+      console.warn("Macro data load error:", e);
+    }
+  }
+  if (!MACRO_DATA) return;
+
+  renderMacroPulseBar();
+
+  // 1. 4대 요약 카드 렌더링 (공식 기준선과의 팩트 갭 표시)
+  const fed = MACRO_DATA.fedRate || {};
+  const cpi = MACRO_DATA.inflation || {};
+  const labor = MACRO_DATA.labor || {};
+  const treasury = MACRO_DATA.treasury || {};
+  const spread = treasury.spread10Y_13W || {};
+  const b = MACRO_DATA.benchmarks || {};
+
+  const fedEl = document.getElementById("macroFedTarget");
+  const fedSubEl = document.getElementById("macroFedSub");
+  if (fedEl) fedEl.innerText = fed.targetRange || "3.50% ~ 3.75%";
+  if (fedSubEl) {
+    const fedGap = b.fedRate ? b.fedRate.gapToNeutral : "+0.73%p";
+    fedSubEl.innerText = `연준 공식 중립선(2.90%) 대비 ${fedGap} · 완만한 긴축 영역`;
+  }
+
+  const cpiEl = document.getElementById("macroCpiVal");
+  const cpiSubEl = document.getElementById("macroCpiSub");
+  if (cpiEl) cpiEl.innerText = cpi.cpiYoY || "+3.4%";
+  if (cpiSubEl) {
+    const cpiGap = b.inflation ? b.inflation.gapToTarget : "+1.40%p";
+    cpiSubEl.innerText = `연준 법정 물가목표(2.00%) 대비 ${cpiGap} 상회 잔존`;
+  }
+
+  const unempEl = document.getElementById("macroUnemploymentVal");
+  const unempSubEl = document.getElementById("macroUnemploymentSub");
+  if (unempEl) unempEl.innerText = labor.unemploymentRate || "4.1%";
+  if (unempSubEl) unempSubEl.innerText = `미국 완전고용 추정선(4.0%~4.2%) 범위 내 유지`;
+
+  const spreadEl = document.getElementById("macroSpreadVal");
+  const spreadSubEl = document.getElementById("macroSpreadSub");
+  const spreadVal = spread.spread !== undefined ? spread.spread : 1.02;
+  if (spreadEl) {
+    spreadEl.innerText = spreadVal >= 0 ? `+${spreadVal.toFixed(2)}%p` : `${spreadVal.toFixed(2)}%p`;
+    spreadEl.className = `metric-value ${spreadVal >= 0 ? 'text-green' : 'text-red'}`;
+  }
+  if (spreadSubEl) {
+    spreadSubEl.innerText = spreadVal >= 0 
+      ? "뉴욕 연준 침체 역전선(0.00%p) 상회 회복 · 정상 곡선" 
+      : "침체 역전선(0.00%p) 하회 (경기침체 경고 구간)";
+  }
+
+  // 2. 공식 기준선 팩트 판정 카드 렌더링
+  renderMacroBenchmarks();
+
+  // 3. 시장 프록시 그리드 렌더링
+  renderMacroMarketProxies();
+
+  // 4. 13F 전략 인사이트 박스 렌더링
+  renderMacro13FInsights();
+
+  // 5. 거시경제 캘린더 & D-Day 렌더링
+  renderMacroCalendar();
+}
+
+function renderMacroBenchmarks() {
+  const container = document.getElementById("macroBenchmarkGrid");
+  if (!container || !MACRO_DATA) return;
+
+  const b = MACRO_DATA.benchmarks || {};
+  const fedRate = b.fedRate || {};
+  const inflation = b.inflation || {};
+  const yieldCurve = b.yieldCurve || {};
+  const cash = b.cashRiskFree || {};
+
+  container.innerHTML = `
+    <div class="benchmark-card">
+      <div class="benchmark-card-top">
+        <div class="benchmark-card-title">
+          <span>연준 기준금리 (Fed Funds)</span>
+        </div>
+        <span class="benchmark-badge amber">${fedRate.zone || '중립선 상회 (완만한 긴축)'}</span>
+      </div>
+      <div class="benchmark-metric-row">
+        <div class="benchmark-metric-item">
+          <span class="benchmark-metric-label">현재 금리 목표치</span>
+          <span class="benchmark-metric-val">${fedRate.current || '3.50% ~ 3.75%'}</span>
+        </div>
+        <div class="benchmark-metric-item" style="text-align: center;">
+          <span class="benchmark-metric-label">공식 중립금리 (FOMC 점도표)</span>
+          <span class="benchmark-metric-val" style="color: #9ca3af;">${fedRate.neutralRate || '2.90%'}</span>
+        </div>
+        <div class="benchmark-metric-item" style="text-align: right;">
+          <span class="benchmark-metric-label">중립선과의 격차</span>
+          <span class="benchmark-gap-val text-yellow">${fedRate.gapToNeutral || '+0.73%p'}</span>
+        </div>
+      </div>
+      <div class="benchmark-fact-explanation">
+        <strong>데이터 판정 팩트:</strong> 사이클 최고점(5.50%)에서 중립선(2.90%)을 향해 낮아지는 <strong>인하 사이클이 진행 중</strong>이나, 여전히 중립선보다 0.73%p 높아 기업들의 차입 이자 부담이 완전히 제로 수준으로 완화된 것은 아닙니다.
+      </div>
+    </div>
+
+    <div class="benchmark-card">
+      <div class="benchmark-card-top">
+        <div class="benchmark-card-title">
+          <span>미국 CPI 소비자물가지수 (YoY)</span>
+        </div>
+        <span class="benchmark-badge purple">${inflation.zone || '법정 목표 2.0% 상회 잔존'}</span>
+      </div>
+      <div class="benchmark-metric-row">
+        <div class="benchmark-metric-item">
+          <span class="benchmark-metric-label">현재 물가상승률</span>
+          <span class="benchmark-metric-val" style="color: #c084fc;">${inflation.current || '+3.4%'}</span>
+        </div>
+        <div class="benchmark-metric-item" style="text-align: center;">
+          <span class="benchmark-metric-label">연방준비법 법정목표</span>
+          <span class="benchmark-metric-val" style="color: #9ca3af;">${inflation.fedTarget || '2.0%'}</span>
+        </div>
+        <div class="benchmark-metric-item" style="text-align: right;">
+          <span class="benchmark-metric-label">목표선과의 격차</span>
+          <span class="benchmark-gap-val" style="color: #c084fc;">${inflation.gapToTarget || '+1.40%p'}</span>
+        </div>
+      </div>
+      <div class="benchmark-fact-explanation">
+        <strong>데이터 판정 팩트:</strong> 2022년 최고점(9.1%) 대비 대폭 둔화되었으나, <strong>법정 목표(2.0%)까지 1.4%p 갭이 남아 있어</strong> 연준 위원들이 금리를 단번에 파격적으로 내리지 못하고 신중하게 인하 속도를 조절하는 배경입니다.
+      </div>
+    </div>
+
+    <div class="benchmark-card">
+      <div class="benchmark-card-top">
+        <div class="benchmark-card-title">
+          <span>국채 장단기 금리차 (10Y-3M)</span>
+        </div>
+        <span class="benchmark-badge green">${yieldCurve.status || '정상 우상향 (역전선 회복)'}</span>
+      </div>
+      <div class="benchmark-metric-row">
+        <div class="benchmark-metric-item">
+          <span class="benchmark-metric-label">현재 스프레드</span>
+          <span class="benchmark-metric-val text-green">${yieldCurve.currentSpread !== undefined ? (yieldCurve.currentSpread >= 0 ? `+${yieldCurve.currentSpread.toFixed(2)}%p` : `${yieldCurve.currentSpread.toFixed(2)}%p`) : '+1.02%p'}</span>
+        </div>
+        <div class="benchmark-metric-item" style="text-align: center;">
+          <span class="benchmark-metric-label">뉴욕연준 침체판정선</span>
+          <span class="benchmark-metric-val" style="color: #9ca3af;">0.00%p</span>
+        </div>
+        <div class="benchmark-metric-item" style="text-align: right;">
+          <span class="benchmark-metric-label">역전선 대비 위치</span>
+          <span class="benchmark-gap-val text-green">+1.02%p (정상)</span>
+        </div>
+      </div>
+      <div class="benchmark-fact-explanation">
+        <strong>데이터 판정 팩트:</strong> 2023년 역전 최저점(-1.89%p)에서 완전히 탈출하여, <strong>만기가 긴 장기 채권이 단기 채권보다 이자를 더 많이 주는 본래의 정상 궤도로 복귀</strong>해 경기 침체 경고가 해제되었습니다.
+      </div>
+    </div>
+
+    <div class="benchmark-card">
+      <div class="benchmark-card-top">
+        <div class="benchmark-card-title">
+          <span>단기국채(T-Bill) 무위험 현금 수익률</span>
+        </div>
+        <span class="benchmark-badge blue">무위험 현금 매력도 3.76%</span>
+      </div>
+      <div class="benchmark-metric-row">
+        <div class="benchmark-metric-item">
+          <span class="benchmark-metric-label">3개월물 국채 금리</span>
+          <span class="benchmark-metric-val text-blue">연 ${cash.rate || 3.76}%</span>
+        </div>
+        <div class="benchmark-metric-item" style="text-align: center;">
+          <span class="benchmark-metric-label">S&P 500 배당수익률</span>
+          <span class="benchmark-metric-val" style="color: #9ca3af;">약 1.30%</span>
+        </div>
+        <div class="benchmark-metric-item" style="text-align: right;">
+          <span class="benchmark-metric-label">주식 배당 대비</span>
+          <span class="benchmark-gap-val text-blue">+2.46%p 상회</span>
+        </div>
+      </div>
+      <div class="benchmark-fact-explanation">
+        <strong>13F 구루 포지션 팩트:</strong> 주식 가격 변동 위험을 지지 않아도 <strong>단기국채에만 넣어두면 연 3.76% 확정 이자가 나오는 자금 환경</strong>입니다. 워런 버핏(버크셔 해서웨이)이 무리한 주식 매수를 자제하고 3천억 달러 현금을 쥐고 있는 핵심 이유입니다.
+      </div>
+    </div>
+  `;
+}
+
+function renderMacroMarketProxies() {
+  const container = document.getElementById("macroMarketProxyGrid");
+  if (!container || !MACRO_DATA) return;
+
+  const treasury = MACRO_DATA.treasury || {};
+  const cm = MACRO_DATA.commoditiesAndFx || {};
+
+  const items = [
+    {
+      label: "미국 10년물 국채",
+      val: treasury.yield10Y ? `${treasury.yield10Y.val.toFixed(2)}%` : "4.78%",
+      chg: treasury.yield10Y ? treasury.yield10Y.change : 0,
+      desc: "글로벌 자산 가격 할인율(무위험 수익률 척도)"
+    },
+    {
+      label: "미국 3개월물 T-Bill",
+      val: treasury.yield13W ? `${treasury.yield13W.val.toFixed(2)}%` : "3.76%",
+      chg: treasury.yield13W ? treasury.yield13W.change : 0,
+      desc: "단기 기준금리 및 현금성 자산 벤치마크"
+    },
+    {
+      label: "미국 5년물 국채",
+      val: treasury.yield5Y ? `${treasury.yield5Y.val.toFixed(2)}%` : "4.55%",
+      chg: treasury.yield5Y ? treasury.yield5Y.change : 0,
+      desc: "중기 경제 성장 및 인플레이션 기대치"
+    },
+    {
+      label: "달러 인덱스 (DXY)",
+      val: cm.dxy ? `${cm.dxy.val.toFixed(2)}` : "98.97",
+      chg: cm.dxy ? cm.dxy.change : -0.21,
+      desc: "주요 6개 통화 대비 달러화 가치 (글로벌 유동성)"
+    },
+    {
+      label: "WTI 국제유가",
+      val: cm.wtiOil ? `$${cm.wtiOil.val.toFixed(2)}` : "$93.69",
+      chg: cm.wtiOil ? cm.wtiOil.change : 2.42,
+      desc: "원유 배럴당 가격 (헤드라인 물가 직결)"
+    },
+    {
+      label: "국제 금 시세",
+      val: cm.gold ? `$${cm.gold.val.toLocaleString()}` : "$4,445.50",
+      chg: cm.gold ? cm.gold.change : -0.69,
+      desc: "대표 안전자산 및 통화가치 하락 헷지 수단"
+    }
+  ];
+
+  container.innerHTML = items.map(it => {
+    const chgClass = it.chg > 0 ? "up" : (it.chg < 0 ? "down" : "");
+    const chgSign = it.chg > 0 ? `+${it.chg}%` : (it.chg < 0 ? `${it.chg}%` : "0.0%");
+    return `
+      <div class="proxy-card">
+        <span class="proxy-label">${it.label}</span>
+        <div class="proxy-value-row">
+          <span class="proxy-val">${it.val}</span>
+          <span class="proxy-chg ${chgClass}">${chgSign}</span>
+        </div>
+        <span class="proxy-desc">${it.desc}</span>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderMacro13FInsights() {
+  const container = document.getElementById("macroInsightBox");
+  if (!container || !MACRO_DATA) return;
+
+  const fed = MACRO_DATA.fedRate || {};
+  const cpi = MACRO_DATA.inflation || {};
+  const spread = (MACRO_DATA.treasury && MACRO_DATA.treasury.spread10Y_13W) || {};
+
+  container.innerHTML = `
+    <div class="insight-point">
+      <div class="point-content">
+        <h5>연준 기준금리 (${fed.targetRange || '3.50%~3.75%'})와 기관의 단기국채(현금) 비중</h5>
+        <p>단기 기준금리가 3% 중후반을 유지하면서, 워런 버핏(Berkshire Hathaway)을 비롯한 가치투자 구루들은 무위험 T-Bill 확정 이자를 수취하며 주식 시장 고평가 조정에 대비하는 막대한 현금 탄약을 유지하고 있습니다.</p>
+      </div>
+    </div>
+
+    <div class="insight-point">
+      <div class="point-content">
+        <h5>수익률 곡선 스프레드 (${spread.spread >= 0 ? `+${spread.spread.toFixed(2)}%p 정상` : `${spread.spread.toFixed(2)}%p 역전`})</h5>
+        <p>장단기 금리차가 플러스(+1.02%p)로 우상향함에 따라 미국 경기 연착륙(Soft Landing) 기대감이 형성되어 있으며, 주요 기관들은 빅테크 성장주와 금융(은행) 섹터의 순이익 모멘텀에 베팅하고 있습니다.</p>
+      </div>
+    </div>
+
+    <div class="insight-point">
+      <div class="point-content">
+        <h5>물가 둔화(${cpi.cpiYoY || '+3.4%'}) 및 방어주 헷지 전략</h5>
+        <p>물가 상승 압력이 점진적으로 둔화되는 추세이나, 유가 반등 등의 변수가 남아 있어 헤지펀드들은 헬스케어 및 필수소비재 등 하방 경직성이 강한 종목을 포트폴리오 안전판으로 편입하고 있습니다.</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderMacroCalendar() {
+  const container = document.getElementById("macroCalendarGrid");
+  if (!container || !MACRO_DATA) return;
+
+  const calendar = MACRO_DATA.calendar || [];
+  
+  // 카운트 배지 갱신
+  const countAll = calendar.length;
+  const countFed = calendar.filter(c => c.category === "FED").length;
+  const countInf = calendar.filter(c => c.category === "INFLATION").length;
+  const countLab = calendar.filter(c => c.category === "LABOR" || c.category === "CONSUMER").length;
+
+  const elAll = document.getElementById("macroCalCountAll");
+  const elFed = document.getElementById("macroCalCountFed");
+  const elInf = document.getElementById("macroCalCountInf");
+  const elLab = document.getElementById("macroCalCountLab");
+
+  if (elAll) elAll.innerText = countAll;
+  if (elFed) elFed.innerText = countFed;
+  if (elInf) elInf.innerText = countInf;
+  if (elLab) elLab.innerText = countLab;
+
+  // 필터 적용
+  const filter = state.macroCalFilter || "ALL";
+  const filtered = calendar.filter(item => {
+    if (filter === "ALL") return true;
+    if (filter === "FED") return item.category === "FED";
+    if (filter === "INFLATION") return item.category === "INFLATION";
+    if (filter === "LABOR") return item.category === "LABOR" || item.category === "CONSUMER";
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--text-subdued);">해당 카테고리의 일정이 없습니다.</div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(ev => {
+    const impactClass = (ev.impact || "").toLowerCase();
+    const catClass = (ev.category || "").toLowerCase();
+    const isImminent = ev.daysDiff <= 7;
+    const catLabels = {
+      "FED": "연준 FOMC",
+      "INFLATION": "물가 지표",
+      "LABOR": "고용 지표",
+      "CONSUMER": "소비 지표"
+    };
+    const catName = catLabels[ev.category] || ev.category;
+
+    return `
+      <div class="cal-event-card ${impactClass}">
+        <div class="cal-card-top">
+          <div class="cal-tag-group">
+            <span class="cal-cat-badge ${catClass}">${catName}</span>
+            <span class="cal-impact-badge ${impactClass}">${ev.impact} IMPACT</span>
+          </div>
+          <span class="cal-dday-pill ${isImminent ? 'imminent' : ''}">
+            ${isImminent ? '<span class="pulse-dot"></span>' : ''}
+            ${ev.dDay}
+          </span>
+        </div>
+        <div class="cal-card-title">${ev.name}</div>
+        <div class="cal-card-date">${ev.releaseDate ? `회의 개막: <strong>${ev.date}</strong> · 결과 발표: <strong>${ev.releaseDate}</strong>` : `발표일: <strong>${ev.date}</strong>`} (${ev.daysDiff}일 남음)</div>
+
+        <!-- 3열 팩트 비교 박스 (이전치 vs 시장 예상치 vs 발표 결과) -->
+        <div class="cal-compare-box">
+          <div class="cal-compare-item">
+            <span class="cal-compare-label">이전 발표치 (전월)</span>
+            <span class="cal-compare-val">${ev.previous || '-'}</span>
+          </div>
+          <div class="cal-compare-item">
+            <span class="cal-compare-label">월가 시장 예상치</span>
+            <span class="cal-compare-val" style="color: #c084fc;">${ev.forecast || '-'}</span>
+          </div>
+          <div class="cal-compare-item">
+            <span class="cal-compare-label">실제 발표치</span>
+            <span class="cal-compare-val" style="color: #1ed760;">${ev.actual || '발표 대기'}</span>
+          </div>
+        </div>
+
+        <div class="cal-card-desc">${ev.description}</div>
+        
+        ${ev.ruleFact ? `<div class="cal-rule-fact"><strong>팩트 판독 가이드:</strong> ${ev.ruleFact}</div>` : ''}
+      </div>
+    `;
+  }).join("");
+}
+
+function openMacroModal() {
+  const modal = document.getElementById("macroModal");
+  const modalBody = document.getElementById("macroModalBody");
+  if (!modal || !modalBody || !MACRO_DATA) return;
+
+  const fed = MACRO_DATA.fedRate || {};
+  const cpi = MACRO_DATA.inflation || {};
+  const labor = MACRO_DATA.labor || {};
+  const spread = (MACRO_DATA.treasury && MACRO_DATA.treasury.spread10Y_13W) || {};
+  const calendar = MACRO_DATA.calendar || [];
+  const b = MACRO_DATA.benchmarks || {};
+
+  modalBody.innerHTML = `
+    <div class="macro-modal-grid">
+      <div class="modal-sub-card">
+        <h4>연준 기준금리 & 물가 공식 기준선</h4>
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
+          <div><strong>기준금리 목표치:</strong> <span class="text-green">${fed.targetRange || "3.50% ~ 3.75%"}</span></div>
+          <div><strong>공식 중립금리선:</strong> 2.90% <span style="color: #ffa42b; font-weight: 700;">(대비 +0.73%p 긴축)</span></div>
+          <div><strong>CPI 물가상승률(YoY):</strong> <span style="color: #c084fc; font-weight: 700;">${cpi.cpiYoY || "+3.4%"}</span></div>
+          <div><strong>법정 물가목표선:</strong> 2.00% <span style="color: #c084fc; font-weight: 700;">(대비 +1.40%p 상회)</span></div>
+        </div>
+      </div>
+
+      <div class="modal-sub-card">
+        <h4>국채 수익률 & 무위험 현금 수익률</h4>
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
+          <div><strong>10Y-3M 스프레드:</strong> <span class="${spread.spread >= 0 ? 'text-green' : 'text-red'} font-weight: 700;">${spread.spread >= 0 ? `+${spread.spread.toFixed(2)}%p` : `${spread.spread.toFixed(2)}%p`}</span></div>
+          <div><strong>침체 역전 판정선:</strong> 0.00%p <span class="text-green font-weight: 700;">(정상 곡선 회복)</span></div>
+          <div><strong>단기국채(3M) 확정 이자:</strong> <span class="text-blue font-weight: 700;">연 ${MACRO_DATA.treasury?.yield13W?.val || 3.76}%</span></div>
+          <div><strong>실업률:</strong> ${labor.unemploymentRate || "4.1%"} (완전고용 4.0~4.2% 범위)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-holders-section">
+      <h4>D-Day 주요 경제 지표 발표 카운트다운 & 예상치</h4>
+      <div class="table-wrapper" style="max-height: 300px; overflow-y: auto;">
+        <table class="power-table" style="min-width: 100%;">
+          <thead>
+            <tr>
+              <th class="text-left">D-Day</th>
+              <th class="text-left">발표일자</th>
+              <th class="text-left">지표명</th>
+              <th class="text-right">이전치 (전월)</th>
+              <th class="text-right">월가 예상치</th>
+              <th class="text-center">발표 결과</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${calendar.map(c => `
+              <tr>
+                <td><span class="cal-dday-pill ${c.daysDiff <= 7 ? 'imminent' : ''}" style="font-size: 11px; padding: 2px 8px;">${c.dDay}</span></td>
+                <td style="white-space: nowrap; color: #9ca3af;">${c.date}</td>
+                <td><strong style="color: #fff;">${c.name}</strong></td>
+                <td class="text-right" style="color: #888;">${c.previous || '-'}</td>
+                <td class="text-right" style="color: #c084fc; font-weight: 700;">${c.forecast || '-'}</td>
+                <td class="text-center"><span style="color: #1ed760; font-weight: 700;">${c.actual || '대기 중'}</span></td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="modal-links-row" style="margin-top: 18px; justify-content: flex-end;">
+      <button class="btn btn-outline" id="btnGoToMacroView" style="background: var(--spotify-green); color: #000; font-weight: 700;">
+        거시경제 전체 대시보드로 이동 ↗
+      </button>
+    </div>
+  `;
+
+  const btnGo = document.getElementById("btnGoToMacroView");
+  if (btnGo) {
+    btnGo.onclick = () => {
+      closeMacroModal();
+      switchFilingMode("MACRO");
+    };
+  }
+
+  modal.classList.add("active");
+}
+
+function closeMacroModal() {
+  const modal = document.getElementById("macroModal");
+  if (modal) modal.classList.remove("active");
+}
+

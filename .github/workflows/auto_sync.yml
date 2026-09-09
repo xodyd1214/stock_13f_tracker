@@ -1,10 +1,10 @@
-name: 🚀 Alpha13F 스마트 하이브리드 수집 엔진
+name: Alpha13F 스마트 하이브리드 수집 엔진
 
 on:
-  # ⏰ 1) 매일 오전 6시 (KST): 야후 파이낸스 실시간 주가만 초고속 2초 갱신
+  # 1) 매일 오전 6시 (KST): 야후 파이낸스 실시간 주가 + 거시경제 갱신
   schedule:
     - cron: '0 21 * * *'
-  # 🔘 2) GitHub 웹 화면 또는 대시보드에서 수동 실행 시: 13F 풀 데이터 + 주가 일괄 갱신
+  # 2) GitHub 웹 화면 또는 대시보드에서 수동 실행 시: 13F 풀 데이터 + 주가 일괄 갱신
   workflow_dispatch:
     inputs:
       full_sync:
@@ -42,18 +42,19 @@ jobs:
           python collector_1year.py
           python sec_collector.py
 
-      # 📈 매일 아침(한국시간 오전 6시 / 미국 장마감 직후): 주가 및 Form 4 내부자/13D 공시 자동 갱신
-      - name: 📈 야후 실시간 주가 + SEC Form 4 내부자 + 13D 공시 데일리 갱신
+      # 매일 아침(한국시간 오전 6시 / 미국 장마감 직후): 주가, 거시경제 지표 및 SEC Form 4/13D 공시 자동 갱신
+      - name: 실시간 주가 + 거시경제(Macro) + SEC Form 4/13D 공시 데일리 갱신
         run: |
-          echo "📡 [Daily Sync] 실시간 주가 및 SEC Form 4 / 13D 공시 데이터를 갱신합니다..."
+          echo "📡 [Daily Sync] 실시간 주가, 거시경제 지표 및 SEC 공시 데이터를 갱신합니다..."
           python price_fetcher.py
+          python macro_collector.py
           python sec_insider_collector.py
           python sec_13d_collector.py
 
-      - name: 💾 최신 데이터 GitHub 저장소에 자동 커밋 & 푸시
+      - name: 최신 데이터 GitHub 저장소에 자동 커밋 & 푸시
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add realtime_prices.json latest_13f_holdings.csv latest_13f_holdings.json live_13f_analytics.json latest_form4_insiders.json latest_13d_filings.json
-          git commit -m "chore(data): 🤖 실시간 주가 및 Form 4/13D 공시 스마트 자동 동기화 [skip ci]" || echo "No changes to commit"
+          git add realtime_prices.json latest_macro_indicators.json latest_13f_holdings.csv latest_13f_holdings.json live_13f_analytics.json latest_form4_insiders.json latest_13d_filings.json
+          git commit -m "chore(data): 실시간 주가 및 거시경제/공시 스마트 자동 동기화 [skip ci]" || echo "No changes to commit"
           git push

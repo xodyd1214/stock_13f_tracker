@@ -103,18 +103,34 @@ def parse_13f_xml(guru, report_date, filing_date, xml_text):
     
     for block in info_table_blocks:
         name_m = re.search(r'<(?:\w+:)?nameOfIssuer>([^<]+)', block, re.IGNORECASE)
+        title_m = re.search(r'<(?:\w+:)?titleOfClass>([^<]+)', block, re.IGNORECASE)
         cusip_m = re.search(r'<(?:\w+:)?cusip>([^<]+)', block, re.IGNORECASE)
         val_m = re.search(r'<(?:\w+:)?value>([^<]+)', block, re.IGNORECASE)
         shrs_m = re.search(r'<(?:\w+:)?sshPrnamt>([^<]+)', block, re.IGNORECASE)
+        put_call_m = re.search(r'<(?:\w+:)?putCall>([^<]+)', block, re.IGNORECASE)
         
         name = name_m.group(1).strip() if name_m else "Unknown"
+        title_of_class = title_m.group(1).strip() if title_m else ""
         cusip = cusip_m.group(1).strip() if cusip_m else ""
         val = float(val_m.group(1).replace(",", "")) if val_m else 0.0
         shrs = float(shrs_m.group(1).replace(",", "")) if shrs_m else 0.0
+        put_call = put_call_m.group(1).strip().upper() if put_call_m else ""
         
         total_val += val
         ticker = KNOWN_CUSIPS.get(cusip, {}).get("ticker", cusip)
         sector = KNOWN_CUSIPS.get(cusip, {}).get("sector", "Other")
+
+        is_option = False
+        action = "HOLD"
+        option_type = None
+
+        if put_call in ["CALL", "PUT"]:
+            is_option = True
+            action = put_call
+            option_type = put_call
+            ticker = f"{ticker} ({put_call})"
+            desc_kr = "콜옵션(상승베팅)" if put_call == "CALL" else "풋옵션(하락베팅)"
+            name = f"{name} [{desc_kr}]"
         
         holdings.append({
             "guru": guru["name"],
@@ -124,9 +140,13 @@ def parse_13f_xml(guru, report_date, filing_date, xml_text):
             "ticker": ticker,
             "name": name,
             "cusip": cusip,
+            "titleOfClass": title_of_class,
             "shares": shrs,
             "value": val,
-            "sector": sector
+            "sector": sector,
+            "action": action,
+            "isOption": is_option,
+            "optionType": option_type
         })
         
     for h in holdings:

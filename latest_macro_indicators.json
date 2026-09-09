@@ -1,0 +1,158 @@
+{
+  "lastUpdated": "2026-09-09 01:29:47",
+  "fedRate": {
+    "targetRange": "3.50% ~ 3.75%",
+    "effr": "3.63%",
+    "sofr": "3.65%",
+    "effectiveDate": "2026-09-04"
+  },
+  "labor": {
+    "unemploymentRate": "4.1%",
+    "period": "August 2026",
+    "prevRate": "4.1%"
+  },
+  "inflation": {
+    "cpiIndex": 333.918,
+    "cpiYoY": "+3.4%",
+    "period": "July 2026"
+  },
+  "treasury": {
+    "yield10Y": {
+      "val": 4.8,
+      "change": 0.29,
+      "label": "10년물 국채 금리"
+    },
+    "yield13W": {
+      "val": 3.77,
+      "change": 0.48,
+      "label": "3개월물 국채 (현금/기준금리 벤치마크)"
+    },
+    "yield5Y": {
+      "val": 4.57,
+      "change": 0.4,
+      "label": "5년물 국채 금리"
+    },
+    "spread10Y_13W": {
+      "spread": 1.03,
+      "inverted": false,
+      "desc": "정상 우상향 (연착륙/성장 궤도)"
+    }
+  },
+  "commoditiesAndFx": {
+    "dxy": {
+      "val": 98.92,
+      "change": -0.26,
+      "label": "달러 인덱스 (DXY)"
+    },
+    "wtiOil": {
+      "val": 92.36,
+      "change": 0.96,
+      "label": "WTI 국제유가 ($)"
+    },
+    "gold": {
+      "val": 4430.8,
+      "change": -1.02,
+      "label": "국제 금 시세 ($)"
+    }
+  },
+  "calendar": [
+    {
+      "name": "미국 8월 PPI 생산자물가지수",
+      "date": "2026-09-10",
+      "category": "INFLATION",
+      "impact": "MEDIUM",
+      "previous": "+2.2% (7월)",
+      "forecast": "+2.3%",
+      "actual": "발표 대기",
+      "description": "기업 도매 원가 물가 지표. CPI의 선행 지표 역할을 하며 생산 비용 압력 측정.",
+      "ruleFact": "전월(+2.2%) 대비 소폭 반등 예상 여부 확인.",
+      "daysDiff": 2,
+      "dDay": "D-2"
+    },
+    {
+      "name": "미국 8월 CPI 소비자물가지수",
+      "date": "2026-09-11",
+      "category": "INFLATION",
+      "impact": "HIGH",
+      "previous": "+3.4% (7월)",
+      "forecast": "+3.2%",
+      "actual": "발표 대기",
+      "description": "연준 법정 목표(2.0%)를 향한 둔화 추세 검증. 예상치(3.2%) 하회 시 인하 속도 지지, 상회 시 금리 인하 신중론 지속.",
+      "ruleFact": "예상치(3.2%)보다 낮으면 물가 둔화 확인, 높으면 물가 재상승 경계.",
+      "daysDiff": 3,
+      "dDay": "D-3"
+    },
+    {
+      "name": "미국 8월 소매판매 지수",
+      "date": "2026-09-15",
+      "category": "CONSUMER",
+      "impact": "MEDIUM",
+      "previous": "+1.0% (7월)",
+      "forecast": "+0.3%",
+      "actual": "발표 대기",
+      "description": "미국 GDP의 70%를 차지하는 가계 소비 체력 척도. 경기 침체 여부 판정의 핵심 팩트.",
+      "ruleFact": "양수(+) 유지 시 가계 소비 지출 견조 확인.",
+      "daysDiff": 7,
+      "dDay": "D-7"
+    },
+    {
+      "name": "FOMC 정례회의 (9월 15일~16일)",
+      "date": "2026-09-15",
+      "releaseDate": "2026-09-16",
+      "category": "FED",
+      "impact": "CRITICAL",
+      "previous": "3.50% ~ 3.75% (7월)",
+      "forecast": "0.25%p 인하 유력 (CME 88%)",
+      "actual": "발표 대기",
+      "description": "9월 15일 개막하여 16일 오후 2시(미 동부시간) 최종 기준금리 결정 및 분기 점도표(SEP)가 공식 발표됩니다.",
+      "ruleFact": "9월 15일 회의 개막, 16일 결과 발표. 점도표 장기 중립선(2.90%) 인하 궤적 확인.",
+      "daysDiff": 7,
+      "dDay": "D-7"
+    },
+    {
+      "name": "미국 9월 비농업 고용보고서 (NFP)",
+      "date": "2026-10-02",
+      "category": "LABOR",
+      "impact": "CRITICAL",
+      "previous": "14.2만 건 (8월)",
+      "forecast": "15.5만 건 (실업률 4.1%)",
+      "actual": "발표 대기",
+      "description": "미국 노동 시장 냉각 여부 판정. 비농업 신규 일자리 15만 건 내외는 완만한 균형 성장 영역.",
+      "ruleFact": "실업률이 완전고용선(4.0~4.2%) 내에 머무는지 팩트 확인.",
+      "daysDiff": 24,
+      "dDay": "D-24"
+    }
+  ],
+  "benchmarks": {
+    "fedRate": {
+      "current": "3.50% ~ 3.75%",
+      "currentMid": 3.625,
+      "neutralRate": "2.90%",
+      "neutralVal": 2.9,
+      "peakRate": "5.50%",
+      "peakVal": 5.5,
+      "gapToNeutral": "+0.73%p",
+      "zone": "완만한 긴축 영역 (중립선 대비 상회)"
+    },
+    "inflation": {
+      "current": "+3.4%",
+      "currentVal": 3.4,
+      "fedTarget": "2.0%",
+      "targetVal": 2.0,
+      "peakRate": "9.1%",
+      "peakVal": 9.1,
+      "gapToTarget": "+1.40%p",
+      "zone": "공식 목표치(2.0%) 상회 잔존 (완만한 둔화)"
+    },
+    "yieldCurve": {
+      "currentSpread": 1.03,
+      "recessionThreshold": 0.0,
+      "lowestSpread": -1.89,
+      "status": "정상 우상향 곡선 (역전 기준선 0%p 상회 회복)"
+    },
+    "cashRiskFree": {
+      "rate": 3.77,
+      "desc": "단기국채 무위험 확정 이자 수익률 (연 3.77%)"
+    }
+  }
+}

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=71">
+  <link rel="stylesheet" href="style.css?v=81">
 </head>
 <body>
   <div class="app-container">
@@ -23,17 +23,77 @@
         </div>
       </div>
 
-      <!-- 공시 전환 드롭다운 메뉴 -->
-      <div class="filing-dropdown-box">
-        <label class="filing-select-label">SEC 공식 공시 모드</label>
-        <div class="select-wrapper">
-          <select id="filingSelector" class="filing-select">
-            <option value="13F" selected>Form 13F (기관 포트폴리오)</option>
-            <option value="FORM4">Form 4 (내부자 거래 추적)</option>
-            <option value="13D">Schedule 13D (행동주의 5%)</option>
-            <option value="13G">Schedule 13G (단순 대량보유)</option>
-          </select>
+      <!-- SEC 공식 공시 모드 직관적 리스트 네비게이션 (원클릭 전환) -->
+      <div class="filing-mode-nav">
+        <div class="filing-mode-header">
+          <label class="filing-mode-label">SEC 공식 공시 모드</label>
+          <span class="filing-mode-count">5 MODES</span>
         </div>
+        <div class="filing-mode-list" id="filingModeList" role="tablist" aria-label="SEC 공식 공시 모드">
+          <button type="button" class="filing-mode-item active" data-mode="13F" role="tab" aria-selected="true" title="Form 13F 기관 포트폴리오">
+            <div class="mode-item-content">
+              <span class="mode-item-badge">13F</span>
+              <div class="mode-item-text">
+                <span class="mode-item-title">Form 13F</span>
+                <span class="mode-item-desc">기관 포트폴리오</span>
+              </div>
+            </div>
+            <span class="mode-active-pill"></span>
+          </button>
+
+          <button type="button" class="filing-mode-item" data-mode="FORM4" role="tab" aria-selected="false" title="Form 4 내부자 거래 추적">
+            <div class="mode-item-content">
+              <span class="mode-item-badge">F4</span>
+              <div class="mode-item-text">
+                <span class="mode-item-title">Form 4</span>
+                <span class="mode-item-desc">내부자 거래 추적</span>
+              </div>
+            </div>
+            <span class="mode-active-pill"></span>
+          </button>
+
+          <button type="button" class="filing-mode-item" data-mode="13D" role="tab" aria-selected="false" title="Schedule 13D 행동주의 5%">
+            <div class="mode-item-content">
+              <span class="mode-item-badge">13D</span>
+              <div class="mode-item-text">
+                <span class="mode-item-title">Schedule 13D</span>
+                <span class="mode-item-desc">행동주의 5% 지분</span>
+              </div>
+            </div>
+            <span class="mode-active-pill"></span>
+          </button>
+
+          <button type="button" class="filing-mode-item" data-mode="13G" role="tab" aria-selected="false" title="Schedule 13G 단순 대량보유">
+            <div class="mode-item-content">
+              <span class="mode-item-badge">13G</span>
+              <div class="mode-item-text">
+                <span class="mode-item-title">Schedule 13G</span>
+                <span class="mode-item-desc">단순 대량보유</span>
+              </div>
+            </div>
+            <span class="mode-active-pill"></span>
+          </button>
+
+          <button type="button" class="filing-mode-item" data-mode="MACRO" role="tab" aria-selected="false" title="Macro Compass 거시경제 & FOMC">
+            <div class="mode-item-content">
+              <span class="mode-item-badge badge-macro">MACRO</span>
+              <div class="mode-item-text">
+                <span class="mode-item-title">Macro Compass</span>
+                <span class="mode-item-desc">거시경제 &amp; FOMC</span>
+              </div>
+            </div>
+            <span class="mode-active-pill"></span>
+          </button>
+        </div>
+
+        <!-- 기존 하위 호환성 유지용 숨김 셀렉터 -->
+        <select id="filingSelector" class="filing-select" style="display: none;" aria-hidden="true">
+          <option value="13F" selected>Form 13F (기관 포트폴리오)</option>
+          <option value="FORM4">Form 4 (내부자 거래 추적)</option>
+          <option value="13D">Schedule 13D (행동주의 5%)</option>
+          <option value="13G">Schedule 13G (단순 대량보유)</option>
+          <option value="MACRO">Macro Compass (거시경제 &amp; FOMC 캘린더)</option>
+        </select>
       </div>
 
       <!-- 13F 전용 사이드바 컨트롤 영역 -->
@@ -134,6 +194,14 @@
           </div>
         </div>
       </header>
+
+      <!-- 상단 상시 노출: 실시간 거시경제 펄스 바 (Macro Pulse Bar) -->
+      <section class="macro-pulse-bar" id="macroPulseBar" title="클릭 시 거시경제 상세 요약 모달을 엽니다">
+        <div class="macro-pulse-loading">
+          <span class="macro-pulse-dot pulse"></span>
+          <span>거시경제 지표 및 FOMC 캘린더 로딩 중...</span>
+        </div>
+      </section>
 
       <!-- [VIEW 1] Form 13F 운용사 포트폴리오 대시보드 -->
       <div id="view13F" class="filing-view-container active">
@@ -262,9 +330,9 @@
                   <th class="col-shares sortable text-right" data-sort="shares">주식 수</th>
                   <th class="col-value sortable text-right" data-sort="value">총 평가 금액 ($)</th>
                   <th class="col-weight sortable text-right" data-sort="weight">통합 비중 (%)</th>
-                  <th class="col-estPrice sortable text-right" data-sort="estPrice" title="SEC 13F 분기 말일 종가 기준 (공시 분기 마지막 거래일 시장 종가)">분기말 종가 <small style="opacity:0.6;">ℹ️</small></th>
+                  <th class="col-estPrice sortable text-right" data-sort="estPrice" title="SEC 13F 분기 말일 종가 기준 (공시 분기 마지막 거래일 시장 종가)">분기말 종가</th>
                   <th class="col-curPrice sortable text-right" data-sort="curPrice">현재 실시간가 (1분)</th>
-                  <th class="col-discount sortable text-right" data-sort="discount" title="분기말 종가 대비 현재 실시간 주가의 등락률">분기말 대비 <small style="opacity:0.6;">ℹ️</small></th>
+                  <th class="col-discount sortable text-right" data-sort="discount" title="분기말 종가 대비 현재 실시간 주가의 등락률">분기말 대비</th>
                 </tr>
               </thead>
               <tbody id="tableBody">
@@ -440,6 +508,100 @@
           </div>
         </section>
       </div>
+
+      <!-- [VIEW 4] Macro Compass 거시경제 & FOMC 캘린더 대시보드 -->
+      <div id="viewMacro" class="filing-view-container" style="display: none;">
+        <!-- 거시경제 4대 축 핵심 요약 카드 -->
+        <section class="overview-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">연준 기준금리 (Fed Funds)</span>
+            </div>
+            <div class="metric-value text-green" id="macroFedTarget">-</div>
+            <div class="metric-sub" id="macroFedSub">실효금리(EFFR): - · SOFR: -</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">미국 CPI 소비자물가 (YoY)</span>
+            </div>
+            <div class="metric-value text-purple" id="macroCpiVal">-</div>
+            <div class="metric-sub" id="macroCpiSub">미 노동통계국(BLS) 공식 지수</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">실업률 (Unemployment)</span>
+            </div>
+            <div class="metric-value text-blue" id="macroUnemploymentVal">-</div>
+            <div class="metric-sub" id="macroUnemploymentSub">고용시장 체력 척도</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">국채 장단기 금리차 (10Y-3M)</span>
+            </div>
+            <div class="metric-value" id="macroSpreadVal">-</div>
+            <div class="metric-sub" id="macroSpreadSub">경기 침체 선행 신호</div>
+          </div>
+        </section>
+
+        <!-- 공식 정책 기준선 대비 팩트 판정 섹션 (Benchmark Analysis) -->
+        <section class="macro-benchmark-section">
+          <div class="benchmark-header">
+            <div class="section-title-wrap">
+              <h4>공식 정책 기준선(Benchmark) 대비 현재 자금 환경 판정</h4>
+              <span class="section-tooltip">추측을 배제하고 미국 법정 물가 목표(2.0%), 연준 공식 중립선(2.9%), 뉴욕 연준 역전선(0.0%p)과 현재 데이터를 1:1 대조한 객관적 팩트 지표입니다.</span>
+            </div>
+          </div>
+          <div class="benchmark-grid" id="macroBenchmarkGrid">
+            <!-- JS 동적 렌더링 -->
+          </div>
+        </section>
+
+        <!-- 거시 지표 2열 심층 분석 섹션 (시장 프록시 & 금리 곡선) -->
+        <section class="macro-deep-grid">
+          <div class="macro-deep-card">
+            <div class="card-title-wrap">
+              <h4>채권 금리 & 달러 / 원자재 실시간 프록시</h4>
+              <span class="card-sub">수익률 곡선(Yield Curve) 및 통화/상품 동향</span>
+            </div>
+            <div class="market-proxy-grid" id="macroMarketProxyGrid">
+              <!-- JS 렌더링 -->
+            </div>
+          </div>
+
+          <div class="macro-deep-card">
+            <div class="card-title-wrap">
+              <h4>13F 기관 포트폴리오 거시경제 연계 브리핑</h4>
+              <span class="card-sub">금리와 유동성 환경이 100대 운용사 포지션에 미치는 영향</span>
+            </div>
+            <div class="macro-insight-box" id="macroInsightBox">
+              <!-- JS 렌더링 -->
+            </div>
+          </div>
+        </section>
+
+        <!-- 거시경제 캘린더 & D-Day 타임라인 섹션 -->
+        <section class="macro-calendar-section">
+          <div class="section-header">
+            <div class="section-title-wrap">
+              <h3>2026 주요 거시경제 발표 일정 & 카운트다운 (FOMC · CPI · NFP)</h3>
+              <span class="section-tooltip">D-Day 순으로 정렬된 연준 금리 결정 및 핵심 물가/고용 지표 발표 캘린더</span>
+            </div>
+            <div class="calendar-filter-wrap" id="macroCalFilterWrap">
+              <button class="filter-tab active" data-calfilter="ALL">전체 일정 (<span id="macroCalCountAll">0</span>)</button>
+              <button class="filter-tab" data-calfilter="FED">FOMC 연준 (<span id="macroCalCountFed">0</span>)</button>
+              <button class="filter-tab" data-calfilter="INFLATION">물가지표 (<span id="macroCalCountInf">0</span>)</button>
+              <button class="filter-tab" data-calfilter="LABOR">고용 & 소비 (<span id="macroCalCountLab">0</span>)</button>
+            </div>
+          </div>
+
+          <div class="macro-calendar-grid" id="macroCalendarGrid">
+            <!-- JS 렌더링 -->
+          </div>
+        </section>
+      </div>
     </main>
   </div>
 
@@ -599,6 +761,26 @@
     </div>
   </div>
 
+  <!-- [NEW] 거시경제 퀵 브리핑 전용 모달 팝업 -->
+  <div class="modal-backdrop" id="macroModal">
+    <div class="modal-content modal-macro-quick" style="max-width: 860px;">
+      <button class="modal-close" id="btnMacroModalClose">&times;</button>
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-ticker-pill" style="background: rgba(30, 215, 96, 0.2); color: #1ed760; font-weight: 800;">MACRO</div>
+          <div>
+            <h2 class="modal-company-title">글로벌 거시경제 펄스 & FOMC 나침반</h2>
+            <p class="modal-sector-desc" id="macroModalSubtitle">실시간 미 연준 금리 · 물가(CPI) · 고용 · D-Day 캘린더 종합 브리핑</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-body" id="macroModalBody">
+        <!-- JS 렌더링 -->
+      </div>
+    </div>
+  </div>
+
   <!-- 트리맵 인터랙티브 플로팅 툴팁 (최상위 레이어) -->
   <div class="treemap-tooltip" id="treemapTooltip"></div>
 
@@ -606,6 +788,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="app.js?v=71"></script>
+  <script src="app.js?v=81"></script>
 </body>
 </html>

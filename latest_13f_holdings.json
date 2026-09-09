@@ -1562,13 +1562,16 @@
     "fund": "Scion Asset Management",
     "period": "2025-09-30",
     "filingDate": "2025-11-03",
-    "ticker": "406216101",
-    "name": "HALLIBURTON CO",
+    "ticker": "HAL (CALL)",
+    "name": "HALLIBURTON CO [콜옵션(상승베팅)]",
     "cusip": "406216101",
     "shares": 2500000.0,
     "value": 61500000.0,
     "sector": "Other",
-    "weight": 4.45
+    "weight": 4.45,
+    "action": "CALL",
+    "isOption": true,
+    "optionType": "CALL"
   },
   {
     "guru": "Michael Burry",
@@ -1633,13 +1636,16 @@
     "fund": "Scion Asset Management",
     "period": "2025-09-30",
     "filingDate": "2025-11-03",
-    "ticker": "717081103",
-    "name": "PFIZER INC",
+    "ticker": "PFE (CALL)",
+    "name": "PFIZER INC [콜옵션(상승베팅)]",
     "cusip": "717081103",
     "shares": 6000000.0,
     "value": 152880000.0,
     "sector": "Other",
-    "weight": 11.07
+    "weight": 11.07,
+    "action": "CALL",
+    "isOption": true,
+    "optionType": "CALL"
   },
   {
     "guru": "Michael Burry",
