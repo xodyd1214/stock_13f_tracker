@@ -102,10 +102,10 @@
       "category": "FED",
       "impact": "CRITICAL",
       "previous": "3.50% ~ 3.75% (7월)",
-      "forecast": "0.25%p 인하 유력 (CME 88%)",
+      "forecast": "추가 인하 vs 동결 팽팽",
       "actual": "발표 대기",
       "description": "9월 15일 개막하여 16일 오후 2시(미 동부시간) 최종 기준금리 결정 및 분기 점도표(SEP)가 공식 발표됩니다.",
-      "ruleFact": "9월 15일 회의 개막, 16일 결과 발표. 점도표 장기 중립선(2.90%) 인하 궤적 확인.",
+      "ruleFact": "물가(CPI) 재상승 경계 속 동결 지속 여부 및 점도표(SEP) 금리 경로 팩트 확인.",
       "daysDiff": 7,
       "dDay": "D-7"
     },

@@ -2657,7 +2657,7 @@ function renderMacroBenchmarks() {
         </div>
       </div>
       <div class="benchmark-fact-explanation">
-        <strong>데이터 판정 팩트:</strong> 사이클 최고점(5.50%)에서 중립선(2.90%)을 향해 낮아지는 <strong>인하 사이클이 진행 중</strong>이나, 여전히 중립선보다 0.73%p 높아 기업들의 차입 이자 부담이 완전히 제로 수준으로 완화된 것은 아닙니다.
+        <strong>복합 데이터 판정:</strong> 과거 최고점(5.50%) 대비 내려와 있으나 공식 중립금리(2.90%)를 여전히 +0.73%p 상회합니다. 특히 3%대 끈적한 물가(CPI +3.4%)와 결합되어 <strong>'추가 인하 지연 vs 동결 장기화(Higher for Longer) 및 재인상(Hike) 리스크'</strong>가 팽팽히 맞서는 긴축 유지 국면입니다.
       </div>
     </div>
 
@@ -2683,7 +2683,7 @@ function renderMacroBenchmarks() {
         </div>
       </div>
       <div class="benchmark-fact-explanation">
-        <strong>데이터 판정 팩트:</strong> 2022년 최고점(9.1%) 대비 대폭 둔화되었으나, <strong>법정 목표(2.0%)까지 1.4%p 갭이 남아 있어</strong> 연준 위원들이 금리를 단번에 파격적으로 내리지 못하고 신중하게 인하 속도를 조절하는 배경입니다.
+        <strong>복합 데이터 판정:</strong> 2022년 최고치(9.1%) 대비 대폭 둔화되었으나 <strong>법정 목표(2.0%)까지 +1.40%p 인플레이션 갭이 잔존</strong>합니다. 서비스 물가 경직성과 유가 반등 리스크로 인해 연준이 공격적으로 금리를 내리지 못하고 매파적 경계를 유지하는 핵심 이유입니다.
       </div>
     </div>
 
@@ -2709,7 +2709,7 @@ function renderMacroBenchmarks() {
         </div>
       </div>
       <div class="benchmark-fact-explanation">
-        <strong>데이터 판정 팩트:</strong> 2023년 역전 최저점(-1.89%p)에서 완전히 탈출하여, <strong>만기가 긴 장기 채권이 단기 채권보다 이자를 더 많이 주는 본래의 정상 궤도로 복귀</strong>해 경기 침체 경고가 해제되었습니다.
+        <strong>복합 데이터 판정:</strong> 2023년 침체 최저점(-1.89%p) 역전에서 벗어나 <strong>+1.03%p 우상향 정상 궤도로 복귀</strong>했습니다. 채권 시장의 단기 침체 공포는 해제되었으나 높은 실질금리 압력이 주식 시장 밸류에이션(PER)의 할인 요인으로 복합 작용하고 있습니다.
       </div>
     </div>
 
@@ -2735,7 +2735,7 @@ function renderMacroBenchmarks() {
         </div>
       </div>
       <div class="benchmark-fact-explanation">
-        <strong>13F 구루 포지션 팩트:</strong> 주식 가격 변동 위험을 지지 않아도 <strong>단기국채에만 넣어두면 연 3.76% 확정 이자가 나오는 자금 환경</strong>입니다. 워런 버핏(버크셔 해서웨이)이 무리한 주식 매수를 자제하고 3천억 달러 현금을 쥐고 있는 핵심 이유입니다.
+        <strong>13F 구루 포지션 팩트:</strong> 단기국채 금리(연 3.76%)가 S&P 배당수익률을 +2.46%p 상회하여 <strong>주식의 무위험 대비 매력(ERP)이 극도로 낮아진 환경</strong>입니다. 워런 버핏(버크셔)이 무리한 주식 매수를 멈추고 3천억 달러 현금을 T-Bill에 쥐고 있는 정량적 근거입니다.
       </div>
     </div>
   `;
@@ -2815,21 +2815,21 @@ function renderMacro13FInsights() {
     <div class="insight-point">
       <div class="point-content">
         <h5>연준 기준금리 (${fed.targetRange || '3.50%~3.75%'})와 기관의 단기국채(현금) 비중</h5>
-        <p>단기 기준금리가 3% 중후반을 유지하면서, 워런 버핏(Berkshire Hathaway)을 비롯한 가치투자 구루들은 무위험 T-Bill 확정 이자를 수취하며 주식 시장 고평가 조정에 대비하는 막대한 현금 탄약을 유지하고 있습니다.</p>
+        <p>기준금리가 중립선(2.90%)을 상회하는 긴축 영역에 머무는 가운데, 워런 버핏(Berkshire Hathaway) 등 가치투자 구루들은 무위험 T-Bill 확정 이자(연 3.76%)를 수취하며 주식 밸류에이션 부담 완화를 기다리는 막대한 현금 탄약을 유지하고 있습니다.</p>
       </div>
     </div>
 
     <div class="insight-point">
       <div class="point-content">
-        <h5>수익률 곡선 스프레드 (${spread.spread >= 0 ? `+${spread.spread.toFixed(2)}%p 정상` : `${spread.spread.toFixed(2)}%p 역전`})</h5>
-        <p>장단기 금리차가 플러스(+1.02%p)로 우상향함에 따라 미국 경기 연착륙(Soft Landing) 기대감이 형성되어 있으며, 주요 기관들은 빅테크 성장주와 금융(은행) 섹터의 순이익 모멘텀에 베팅하고 있습니다.</p>
+        <h5>수익률 곡선 스프레드 (${spread.spread >= 0 ? `+${spread.spread.toFixed(2)}%p 정상` : `${spread.spread.toFixed(2)}%p 역전`})와 경기 국면</h5>
+        <p>장단기 금리차가 정상 우상향(+1.03%p)으로 회복되어 단기 침체 공포는 해소되었으나, 높은 실질금리 환경이 지속됨에 따라 기관들은 고평가 성장주 대신 현금창출력이 확고한 빅테크 및 금리 수혜 금융주로 포트폴리오를 선별 압축하고 있습니다.</p>
       </div>
     </div>
 
     <div class="insight-point">
       <div class="point-content">
-        <h5>물가 둔화(${cpi.cpiYoY || '+3.4%'}) 및 방어주 헷지 전략</h5>
-        <p>물가 상승 압력이 점진적으로 둔화되는 추세이나, 유가 반등 등의 변수가 남아 있어 헤지펀드들은 헬스케어 및 필수소비재 등 하방 경직성이 강한 종목을 포트폴리오 안전판으로 편입하고 있습니다.</p>
+        <h5>물가 둔화 정체(${cpi.cpiYoY || '+3.4%'})와 방어주 헷지 전략</h5>
+        <p>소비자물가가 목표치(2.0%)를 상회한 채 3%대에서 하방 경직성을 보이고 '금리 동결 vs 재인상' 논쟁이 이어짐에 따라, 메이저 기관들은 가격 전가력과 배당 방어력이 검증된 헬스케어 및 필수소비재를 포트폴리오 안전판으로 편입하고 있습니다.</p>
       </div>
     </div>
   `;
