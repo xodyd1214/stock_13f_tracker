@@ -2657,7 +2657,7 @@ function renderMacroBenchmarks() {
         </div>
       </div>
       <div class="benchmark-fact-explanation">
-        <strong>복합 데이터 판정:</strong> 과거 최고점(5.50%) 대비 내려와 있으나 공식 중립금리(2.90%)를 여전히 +0.73%p 상회합니다. 특히 3%대 끈적한 물가(CPI +3.4%)와 결합되어 <strong>'추가 인하 지연 vs 동결 장기화(Higher for Longer) 및 재인상(Hike) 리스크'</strong>가 팽팽히 맞서는 긴축 유지 국면입니다.
+        <strong>복합 지표 정량 판정:</strong> 소비자물가(+3.4%)가 법정목표(2.0%)를 +1.40%p 초과하고 실업률(4.1%)이 완전고용을 유지하여 <strong>금리 인하 명분이 차단</strong>된 반면, 실질 정책금리(+0.23%)와 중립선 격차(+0.73%p)를 통해 경제에 실질 긴축이 이미 작동하고 있어 <strong>[현행 금리 동결(Hold) 유지]</strong>가 정량적으로 우세한 상태입니다.
       </div>
     </div>
 
@@ -2683,7 +2683,7 @@ function renderMacroBenchmarks() {
         </div>
       </div>
       <div class="benchmark-fact-explanation">
-        <strong>복합 데이터 판정:</strong> 2022년 최고치(9.1%) 대비 대폭 둔화되었으나 <strong>법정 목표(2.0%)까지 +1.40%p 인플레이션 갭이 잔존</strong>합니다. 서비스 물가 경직성과 유가 반등 리스크로 인해 연준이 공격적으로 금리를 내리지 못하고 매파적 경계를 유지하는 핵심 이유입니다.
+        <strong>복합 지표 정량 판정:</strong> 현재 소비자물가상승률(+3.4%)이 법정 목표치(2.0%)를 <strong>+1.40%p 지속 초과</strong>하고 있습니다. 물가상승률이 연준 공약 밴드에 안착하지 못한 상태에서 섣부른 조기 완화는 인플레이션 재확산 위험을 초래하므로, 통화 당국의 조기 금리 인하를 구조적으로 제약하는 직접적 근거입니다.
       </div>
     </div>
 
@@ -2709,7 +2709,7 @@ function renderMacroBenchmarks() {
         </div>
       </div>
       <div class="benchmark-fact-explanation">
-        <strong>복합 데이터 판정:</strong> 2023년 침체 최저점(-1.89%p) 역전에서 벗어나 <strong>+1.03%p 우상향 정상 궤도로 복귀</strong>했습니다. 채권 시장의 단기 침체 공포는 해제되었으나 높은 실질금리 압력이 주식 시장 밸류에이션(PER)의 할인 요인으로 복합 작용하고 있습니다.
+        <strong>복합 지표 정량 판정:</strong> 10년물 장기 국채금리(4.78%)가 3개월물(3.76%)을 <strong>+1.03%p 상회하는 정상 우상향 곡선</strong>입니다. 채권 시장의 단기 침체 역전 신호는 해소되었으나, 4%대 후반의 높은 장기 국채금리는 주식 미래 현금흐름의 할인율을 높여 주식 시장 밸류에이션(PER)을 지속적으로 압박합니다.
       </div>
     </div>
 
@@ -2735,7 +2735,7 @@ function renderMacroBenchmarks() {
         </div>
       </div>
       <div class="benchmark-fact-explanation">
-        <strong>13F 구루 포지션 팩트:</strong> 단기국채 금리(연 3.76%)가 S&P 배당수익률을 +2.46%p 상회하여 <strong>주식의 무위험 대비 매력(ERP)이 극도로 낮아진 환경</strong>입니다. 워런 버핏(버크셔)이 무리한 주식 매수를 멈추고 3천억 달러 현금을 T-Bill에 쥐고 있는 정량적 근거입니다.
+        <strong>13F 구루 포지션 팩트:</strong> 단기국채 금리(연 3.76%)가 S&P 배당수익률을 <strong>+2.46%p 상회</strong>하여 주식의 위험 프리미엄(ERP)이 구조적으로 위축되었습니다. 워런 버핏(버크셔 해서웨이)이 무리한 고PER 주식 추격을 멈추고 3천억 달러를 T-Bill 현금성 자산에 배분한 핵심 계량 근거입니다.
       </div>
     </div>
   `;
