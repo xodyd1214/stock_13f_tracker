@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=81">
+  <link rel="stylesheet" href="style.css?v=82">
 </head>
 <body>
   <div class="app-container">
@@ -30,6 +30,17 @@
           <span class="filing-mode-count">5 MODES</span>
         </div>
         <div class="filing-mode-list" id="filingModeList" role="tablist" aria-label="SEC 공식 공시 모드">
+          <button type="button" class="filing-mode-item" data-mode="MACRO" role="tab" aria-selected="false" title="Macro Compass 거시경제 & FOMC">
+            <div class="mode-item-content">
+              <span class="mode-item-badge badge-macro">MACRO</span>
+              <div class="mode-item-text">
+                <span class="mode-item-title">Macro Compass</span>
+                <span class="mode-item-desc">거시경제 &amp; FOMC</span>
+              </div>
+            </div>
+            <span class="mode-active-pill"></span>
+          </button>
+
           <button type="button" class="filing-mode-item active" data-mode="13F" role="tab" aria-selected="true" title="Form 13F 기관 포트폴리오">
             <div class="mode-item-content">
               <span class="mode-item-badge">13F</span>
@@ -73,26 +84,15 @@
             </div>
             <span class="mode-active-pill"></span>
           </button>
-
-          <button type="button" class="filing-mode-item" data-mode="MACRO" role="tab" aria-selected="false" title="Macro Compass 거시경제 & FOMC">
-            <div class="mode-item-content">
-              <span class="mode-item-badge badge-macro">MACRO</span>
-              <div class="mode-item-text">
-                <span class="mode-item-title">Macro Compass</span>
-                <span class="mode-item-desc">거시경제 &amp; FOMC</span>
-              </div>
-            </div>
-            <span class="mode-active-pill"></span>
-          </button>
         </div>
 
         <!-- 기존 하위 호환성 유지용 숨김 셀렉터 -->
         <select id="filingSelector" class="filing-select" style="display: none;" aria-hidden="true">
+          <option value="MACRO">Macro Compass (거시경제 &amp; FOMC 캘린더)</option>
           <option value="13F" selected>Form 13F (기관 포트폴리오)</option>
           <option value="FORM4">Form 4 (내부자 거래 추적)</option>
           <option value="13D">Schedule 13D (행동주의 5%)</option>
           <option value="13G">Schedule 13G (단순 대량보유)</option>
-          <option value="MACRO">Macro Compass (거시경제 &amp; FOMC 캘린더)</option>
         </select>
       </div>
 
@@ -788,6 +788,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="app.js?v=81"></script>
+  <script src="app.js?v=82"></script>
 </body>
 </html>
