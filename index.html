@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=86">
+  <link rel="stylesheet" href="style.css?v=87">
 </head>
 <body>
   <div class="app-container">
@@ -559,6 +559,37 @@
           </div>
         </section>
 
+        <!-- 거시 시각화 차트 섹션 (수익률 곡선 SVG 차트 & 5대 기준선 계량 갭 차트) -->
+        <section class="macro-charts-grid">
+          <!-- 좌측: 미국 국채 수익률 곡선 (Yield Curve) 인터랙티브 SVG 차트 -->
+          <div class="macro-chart-card">
+            <div class="card-title-wrap">
+              <div class="title-with-pill">
+                <h4>미국 국채 수익률 곡선 (Yield Curve)</h4>
+                <span class="benchmark-badge green" id="yieldCurveBadge">정상 우상향 (+1.03%p)</span>
+              </div>
+              <span class="card-sub">만기별 국채 금리(3M · 5Y · 10Y) 실시간 곡선 및 침체 역전 기준선 대조</span>
+            </div>
+            <div class="yield-curve-chart-wrap" id="yieldCurveChartContainer">
+              <!-- JS SVG 차트 렌더링 -->
+            </div>
+          </div>
+
+          <!-- 우측: 5대 복합 정책 기준선(Ground Truth) 갭 계량 차트 -->
+          <div class="macro-chart-card">
+            <div class="card-title-wrap">
+              <div class="title-with-pill">
+                <h4>5대 거시 정책 기준선(Ground Truth) 계량 갭 차트</h4>
+                <span class="benchmark-badge amber">복합 실질 긴축 유지</span>
+              </div>
+              <span class="card-sub">공식 법정·학술 기준선 대비 현재 수치의 편차(Gap) 100% 정량 시각화</span>
+            </div>
+            <div class="benchmark-gap-bars-wrap" id="benchmarkGapBarsContainer">
+              <!-- JS 바 차트 렌더링 -->
+            </div>
+          </div>
+        </section>
+
         <!-- 거시 시장 실시간 프록시 (채권 금리 · 달러 · 원자재) -->
         <section class="macro-deep-grid">
           <div class="macro-deep-card" style="grid-column: 1 / -1;">
@@ -778,6 +809,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="app.js?v=86"></script>
+  <script src="app.js?v=87"></script>
 </body>
 </html>

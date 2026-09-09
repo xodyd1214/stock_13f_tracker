@@ -2614,10 +2614,13 @@ async function loadAndRenderMacro() {
   // 2. 공식 기준선 팩트 대조 카드 렌더링
   renderMacroBenchmarks();
 
-  // 3. 시장 프록시 그리드 렌더링
+  // 3. 거시 시각화 차트 렌더링 (수익률 곡선 SVG & 5대 기준선 계량 갭 차트)
+  renderMacroCharts();
+
+  // 4. 시장 프록시 그리드 렌더링
   renderMacroMarketProxies();
 
-  // 4. 거시경제 캘린더 & D-Day 렌더링
+  // 5. 거시경제 캘린더 & D-Day 렌더링
   renderMacroCalendar();
 }
 
@@ -2799,6 +2802,210 @@ function renderMacroBenchmarks() {
       </div>
     </div>
   `;
+}
+
+function renderMacroCharts() {
+  if (!MACRO_DATA) return;
+  renderYieldCurveSvgChart();
+  renderBenchmarkGapBars();
+}
+
+function renderYieldCurveSvgChart() {
+  const container = document.getElementById("yieldCurveChartContainer");
+  if (!container || !MACRO_DATA) return;
+
+  const treasury = MACRO_DATA.treasury || {};
+  const y13w = (treasury.yield13W && treasury.yield13W.val) ? treasury.yield13W.val : 3.77;
+  const y5y = (treasury.yield5Y && treasury.yield5Y.val) ? treasury.yield5Y.val : 4.57;
+  const y10y = (treasury.yield10Y && treasury.yield10Y.val) ? treasury.yield10Y.val : 4.80;
+  const spread = (y10y - y13w).toFixed(2);
+  const isInverted = y10y < y13w;
+
+  const badge = document.getElementById("yieldCurveBadge");
+  if (badge) {
+    badge.className = `benchmark-badge ${isInverted ? 'red' : 'green'}`;
+    badge.innerText = isInverted ? `역전 경고 (${spread}%p)` : `정상 우상향 (+${spread}%p)`;
+  }
+
+  // SVG 좌표 매핑 (viewBox 0 0 520 220)
+  // X: 3M = 80, 5Y = 260, 10Y = 440
+  // Y 스케일: min 3.0%, max 5.5% (범위 2.5%p)
+  const minR = 3.0;
+  const maxR = 5.5;
+  const getY = (val) => Math.round(175 - ((Math.min(Math.max(val, minR), maxR) - minR) / (maxR - minR)) * 135);
+
+  const x1 = 80, y1 = getY(y13w);
+  const x2 = 260, y2 = getY(y5y);
+  const x3 = 440, y3 = getY(y10y);
+
+  // 부드러운 3차 베지어 스플라인 곡선 제어점 계산
+  const cpx1 = Math.round((x1 + x2) / 2);
+  const cpy1 = y1;
+  const cpx2 = Math.round((x1 + x2) / 2);
+  const cpy2 = y2;
+
+  const cpx3 = Math.round((x2 + x3) / 2);
+  const cpy3 = y2;
+  const cpx4 = Math.round((x2 + x3) / 2);
+  const cpy4 = y3;
+
+  const pathD = `M ${x1} ${y1} C ${cpx1} ${cpy1}, ${cpx2} ${cpy2}, ${x2} ${y2} C ${cpx3} ${cpy3}, ${cpx4} ${cpy4}, ${x3} ${y3}`;
+  const areaD = `${pathD} L ${x3} 185 L ${x1} 185 Z`;
+
+  const baselineY = y1;
+
+  container.innerHTML = `
+    <svg viewBox="0 0 520 220" width="100%" height="100%">
+      <defs>
+        <linearGradient id="curveFillGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1ed760" stop-opacity="0.25"/>
+          <stop offset="100%" stop-color="#1ed760" stop-opacity="0.0"/>
+        </linearGradient>
+        <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#38bdf8"/>
+          <stop offset="50%" stop-color="#1ed760"/>
+          <stop offset="100%" stop-color="#10b981"/>
+        </linearGradient>
+        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+        </filter>
+      </defs>
+
+      <!-- 수평 눈금선 -->
+      <line x1="50" y1="175" x2="470" y2="175" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+      <line x1="50" y1="121" x2="470" y2="121" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="3,3" />
+      <line x1="50" y1="67" x2="470" y2="67" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="3,3" />
+
+      <!-- Y축 눈금 라벨 -->
+      <text x="42" y="179" fill="#666" font-size="10" text-anchor="end" font-family="Inter, sans-serif">3.0%</text>
+      <text x="42" y="125" fill="#666" font-size="10" text-anchor="end" font-family="Inter, sans-serif">4.0%</text>
+      <text x="42" y="71" fill="#666" font-size="10" text-anchor="end" font-family="Inter, sans-serif">5.0%</text>
+
+      <!-- 3M 단기금리 수평 기준 점선 (스프레드 기준선) -->
+      <line x1="80" y1="${baselineY}" x2="440" y2="${baselineY}" stroke="rgba(56, 189, 248, 0.25)" stroke-width="1.5" stroke-dasharray="4,4" />
+      <text x="445" y="${baselineY + 3}" fill="#38bdf8" font-size="9" font-family="Inter, sans-serif" opacity="0.8">3M 기준선 (${y13w}%)</text>
+
+      <!-- 곡선 아래 채우기 영역 -->
+      <path d="${areaD}" fill="url(#curveFillGrad)" />
+
+      <!-- 곡선 본체 라인 -->
+      <path d="${pathD}" fill="none" stroke="url(#lineGrad)" stroke-width="3.5" filter="url(#glow)" stroke-linecap="round" />
+
+      <!-- X축 세로 가이드선 -->
+      <line x1="${x1}" y1="${y1}" x2="${x1}" y2="180" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-dasharray="2,2" />
+      <line x1="${x2}" y1="${y2}" x2="${x2}" y2="180" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-dasharray="2,2" />
+      <line x1="${x3}" y1="${y3}" x2="${x3}" y2="180" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-dasharray="2,2" />
+
+      <!-- 포인트 1: 3M -->
+      <circle cx="${x1}" cy="${y1}" r="6" fill="#38bdf8" stroke="#000" stroke-width="2.5" />
+      <text x="${x1}" y="${y1 - 12}" fill="#ffffff" font-size="12" font-weight="800" text-anchor="middle" font-family="Inter, sans-serif">${y13w}%</text>
+      <text x="${x1}" y="200" fill="#38bdf8" font-size="11" font-weight="700" text-anchor="middle" font-family="Inter, sans-serif">3개월 (3M)</text>
+
+      <!-- 포인트 2: 5Y -->
+      <circle cx="${x2}" cy="${y2}" r="6" fill="#1ed760" stroke="#000" stroke-width="2.5" />
+      <text x="${x2}" y="${y2 - 12}" fill="#ffffff" font-size="12" font-weight="800" text-anchor="middle" font-family="Inter, sans-serif">${y5y}%</text>
+      <text x="${x2}" y="200" fill="#9ca3af" font-size="11" font-weight="600" text-anchor="middle" font-family="Inter, sans-serif">5년 (5Y)</text>
+
+      <!-- 포인트 3: 10Y -->
+      <circle cx="${x3}" cy="${y3}" r="6" fill="#10b981" stroke="#000" stroke-width="2.5" />
+      <text x="${x3}" y="${y3 - 12}" fill="#ffffff" font-size="12" font-weight="800" text-anchor="middle" font-family="Inter, sans-serif">${y10y}%</text>
+      <text x="${x3}" y="200" fill="#10b981" font-size="11" font-weight="700" text-anchor="middle" font-family="Inter, sans-serif">10년 (10Y)</text>
+
+      <!-- 스프레드 차이 브래킷 표시 -->
+      <line x1="${x3 + 8}" y1="${baselineY}" x2="${x3 + 8}" y2="${y3}" stroke="#1ed760" stroke-width="1.5" />
+      <text x="${x3 + 14}" y="${Math.round((baselineY + y3) / 2) + 4}" fill="#1ed760" font-size="10" font-weight="800" font-family="Inter, sans-serif">+${spread}%p</text>
+    </svg>
+  `;
+}
+
+function renderBenchmarkGapBars() {
+  const container = document.getElementById("benchmarkGapBarsContainer");
+  if (!container || !MACRO_DATA) return;
+
+  const fed = MACRO_DATA.fedRate || {};
+  const cpi = MACRO_DATA.inflation || {};
+  const treasury = MACRO_DATA.treasury || {};
+
+  const effr = parseFloat(fed.effr || "3.63");
+  const neutral = 2.90;
+  const gapNeutral = (effr - neutral).toFixed(2); // +0.73%p
+
+  const cpiVal = parseFloat(cpi.cpiYoY || "3.4");
+  const target = 2.00;
+  const gapCpi = (cpiVal - target).toFixed(2); // +1.40%p
+
+  const realRate = (effr - cpiVal).toFixed(2); // +0.23%p
+
+  const y10 = treasury.yield10Y ? treasury.yield10Y.val : 4.80;
+  const y13w = treasury.yield13W ? treasury.yield13W.val : 3.77;
+  const spread10_3 = (y10 - y13w).toFixed(2); // +1.03%p
+
+  const spDiv = 1.30;
+  const cashEquityGap = (y13w - spDiv).toFixed(2); // +2.47%p
+
+  // 5대 복합 정책 기준선 정량 갭 항목
+  const items = [
+    {
+      name: "1. 기준금리 vs 공식 중립선(SEP)",
+      formula: `실효금리 ${effr}% - 중립선 2.90%`,
+      valStr: `+${gapNeutral}%p`,
+      val: parseFloat(gapNeutral),
+      max: 2.5,
+      color: "amber"
+    },
+    {
+      name: "2. CPI 물가 vs 연준 법정목표",
+      formula: `소비자물가 ${cpiVal}% - 법정목표 2.00%`,
+      valStr: `+${gapCpi}%p`,
+      val: parseFloat(gapCpi),
+      max: 2.5,
+      color: "purple"
+    },
+    {
+      name: "3. 실질 정책금리 (Real Rate)",
+      formula: `실효금리 ${effr}% - 물가 ${cpiVal}%`,
+      valStr: `+${realRate}%p`,
+      val: parseFloat(realRate),
+      max: 2.5,
+      color: "green"
+    },
+    {
+      name: "4. 장단기 수익률 스프레드 (10Y-3M)",
+      formula: `10년물 ${y10}% - 3개월물 ${y13w}%`,
+      valStr: `+${spread10_3}%p`,
+      val: parseFloat(spread10_3),
+      max: 2.5,
+      color: "green"
+    },
+    {
+      name: "5. 무위험 T-Bill vs S&P 배당수익률",
+      formula: `3개월 국채 ${y13w}% - S&P 배당 1.30%`,
+      valStr: `+${cashEquityGap}%p`,
+      val: parseFloat(cashEquityGap),
+      max: 3.0,
+      color: "blue"
+    }
+  ];
+
+  container.innerHTML = items.map(it => {
+    const pct = Math.min(Math.max((Math.abs(it.val) / it.max) * 100, 8), 100);
+    const colorClass = it.color;
+    return `
+      <div class="gap-bar-item">
+        <div class="gap-bar-meta">
+          <div>
+            <span class="gap-bar-name">${it.name}</span>
+            <span class="gap-bar-formula" style="margin-left: 8px;">(${it.formula})</span>
+          </div>
+          <span class="gap-bar-val text-${colorClass}">${it.valStr}</span>
+        </div>
+        <div class="gap-bar-track">
+          <div class="gap-bar-fill ${colorClass}" style="width: ${pct.toFixed(1)}%;"></div>
+        </div>
+      </div>
+    `;
+  }).join("");
 }
 
 function renderMacroMarketProxies() {
