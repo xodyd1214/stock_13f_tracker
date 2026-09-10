@@ -1,5 +1,20 @@
 [
   {
+    "filingDate": "2026-09-10",
+    "formType": "SCHEDULE 13D/A",
+    "typeLabel": "Schedule 13D (행동주의/경영참여)",
+    "isActivist": true,
+    "investorName": "Ryan Cohen",
+    "fundName": "RC Ventures LLC",
+    "cik": "0001767470",
+    "targetCompany": "공시 대상 상장 기업",
+    "targetTicker": "",
+    "percentOwned": null,
+    "cusip": "",
+    "accessionNumber": "0000921895-26-002530",
+    "docUrl": "https://www.sec.gov/Archives/edgar/data/1767470/000092189526002530/xslSCHEDULE_13D_X02/primary_doc.xml"
+  },
+  {
     "filingDate": "2026-09-03",
     "formType": "SCHEDULE 13D/A",
     "typeLabel": "Schedule 13D (행동주의/경영참여)",
@@ -433,21 +448,6 @@
     "cusip": "",
     "accessionNumber": "0000899140-25-000908",
     "docUrl": "https://www.sec.gov/Archives/edgar/data/1040273/000089914025000908/xslSCHEDULE_13G_X01/primary_doc.xml"
-  },
-  {
-    "filingDate": "2025-04-03",
-    "formType": "SCHEDULE 13D/A",
-    "typeLabel": "Schedule 13D (행동주의/경영참여)",
-    "isActivist": true,
-    "investorName": "Ryan Cohen",
-    "fundName": "RC Ventures LLC",
-    "cik": "0001767470",
-    "targetCompany": "공시 대상 상장 기업",
-    "targetTicker": "",
-    "percentOwned": null,
-    "cusip": "",
-    "accessionNumber": "0000921895-25-000971",
-    "docUrl": "https://www.sec.gov/Archives/edgar/data/1767470/000092189525000971/xslSCHEDULE_13D_X01/primary_doc.xml"
   },
   {
     "filingDate": "2024-02-14",
