@@ -471,6 +471,34 @@ async function fetchLivePricesForCurrentView() {
           renderMacroMarketProxies();
         }
       }
+    } else {
+      // GitHub Pages 등 정적 호스팅(No-Backend) 환경 Fallback: 1분 주기로 최신 realtime_prices.json 및 latest_macro_indicators.json 폴링
+      const [priceRes, macroRes] = await Promise.all([
+        fetch("realtime_prices.json?_t=" + Date.now()).catch(() => null),
+        fetch("latest_macro_indicators.json?_t=" + Date.now()).catch(() => null)
+      ]);
+
+      if (priceRes && priceRes.ok) {
+        const pData = await priceRes.json().catch(() => null);
+        if (pData) {
+          Object.assign(LIVE_PRICES, pData);
+          if (guru && guru.holdings) {
+            applyLivePricesToHoldings(guru.holdings);
+            updateSummaryMetrics(guru);
+            renderTable();
+            if (typeof renderTreemap === "function") renderTreemap(guru.holdings);
+          }
+        }
+      }
+
+      if (macroRes && macroRes.ok) {
+        const mData = await macroRes.json().catch(() => null);
+        if (mData) {
+          MACRO_DATA = mData;
+          renderMacroPulseBar();
+          if (typeof renderMacroMarketProxies === "function") renderMacroMarketProxies();
+        }
+      }
     }
   } catch (e) {}
 }
