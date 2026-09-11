@@ -85,29 +85,38 @@ class Alpha13FHandler(SimpleHTTPRequestHandler):
         if self.path.startswith("/api/prices"):
             from urllib.parse import urlparse, parse_qs
             import requests
+            from concurrent.futures import ThreadPoolExecutor
             
             query = parse_qs(urlparse(self.path).query)
             tickers_raw = query.get("tickers", [""])[0]
-            tickers = [t.strip().upper() for t in tickers_raw.split(",") if t.strip()]
+            tickers = [t.strip().upper() for t in tickers_raw.split(",") if t.strip()][:50]
             
-            results = {}
-            for ticker in tickers[:30]:
+            def fetch_single(ticker):
                 try:
-                    clean_t = ticker.replace(".", "-")
+                    clean_t = ticker if ("=" in ticker or "^" in ticker or "NYB" in ticker) else ticker.replace(".", "-")
                     url = f"https://query1.finance.yahoo.com/v8/finance/chart/{clean_t}?interval=1d&range=1d"
-                    res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=2)
+                    res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=3)
                     if res.status_code == 200:
                         meta = res.json()["chart"]["result"][0]["meta"]
                         cur_p = meta.get("regularMarketPrice")
                         prev_c = meta.get("chartPreviousClose") or meta.get("previousClose")
                         chg_pct = round(((cur_p - prev_c) / prev_c) * 100, 2) if (cur_p and prev_c) else 0.0
-                        results[ticker] = {
-                            "price": round(cur_p, 2),
-                            "changePct": chg_pct
-                        }
+                        if cur_p is not None:
+                            return ticker, {
+                                "price": round(cur_p, 2),
+                                "changePct": chg_pct
+                            }
                 except Exception:
                     pass
-            
+                return ticker, None
+
+            results = {}
+            if tickers:
+                with ThreadPoolExecutor(max_workers=10) as executor:
+                    for t, data in executor.map(fetch_single, tickers):
+                        if data:
+                            results[t] = data
+
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Access-Control-Allow-Origin", "*")

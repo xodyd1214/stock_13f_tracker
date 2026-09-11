@@ -403,14 +403,96 @@ document.addEventListener("DOMContentLoaded", () => {
   initFirebase();
   setupEventListeners();
   loadRealSecData();
+
+  // 1분마다 조용히 최신 실시간 시장가 백그라운드 갱신
+  setInterval(() => {
+    fetchLivePricesForCurrentView();
+  }, 60000);
 });
+
+// 브라우저에서 현재 화면 종목들의 실시간 주가 및 거시경제 지표 온디맨드 조회 (1분 주기 갱신)
+async function fetchLivePricesForCurrentView() {
+  const guru = GURU_DATABASE[state.currentGuruKey];
+  const stockTickers = (guru && guru.holdings) 
+    ? guru.holdings.slice(0, 30).map(h => h.baseTicker || h.ticker).filter(t => t && t.length <= 5 && !t.includes(" ")).join(",")
+    : "";
+
+  const macroTickers = "^TNX,^IRX,^FVX,CL=F,GC=F,DX-Y.NYB";
+  const allTickers = stockTickers ? `${stockTickers},${macroTickers}` : macroTickers;
+
+  try {
+    const res = await fetch(`/api/prices?tickers=${allTickers}`).catch(() => null);
+    if (res && res.ok) {
+      const data = await res.json();
+      let updated = false;
+      Object.keys(data).forEach(t => {
+        if (data[t] && data[t].price) {
+          LIVE_PRICES[t] = data[t];
+          updated = true;
+        }
+      });
+
+      // 1. 주식 포트폴리오 업데이트
+      if (updated && guru && guru.holdings) {
+        applyLivePricesToHoldings(guru.holdings);
+        updateSummaryMetrics(guru);
+        renderTable();
+        if (typeof renderTreemap === "function") {
+          renderTreemap(guru.holdings);
+        }
+      }
+
+      // 2. 거시경제 지표(WTI, 금, 국채, 환율) 실시간 연동
+      if (MACRO_DATA) {
+        if (!MACRO_DATA.commoditiesAndFx) MACRO_DATA.commoditiesAndFx = {};
+        if (!MACRO_DATA.treasury) MACRO_DATA.treasury = {};
+
+        if (data["CL=F"]) {
+          MACRO_DATA.commoditiesAndFx.wtiOil = { val: data["CL=F"].price, change: data["CL=F"].changePct, label: "WTI 국제유가 ($)" };
+        }
+        if (data["GC=F"]) {
+          MACRO_DATA.commoditiesAndFx.gold = { val: data["GC=F"].price, change: data["GC=F"].changePct, label: "국제 금 시세 ($)" };
+        }
+        if (data["DX-Y.NYB"]) {
+          MACRO_DATA.commoditiesAndFx.dxy = { val: data["DX-Y.NYB"].price, change: data["DX-Y.NYB"].changePct, label: "달러 인덱스 (DXY)" };
+        }
+        if (data["^TNX"]) {
+          MACRO_DATA.treasury.yield10Y = { val: data["^TNX"].price, change: data["^TNX"].changePct, label: "10년물 국채 금리" };
+        }
+        if (data["^IRX"]) {
+          MACRO_DATA.treasury.yield13W = { val: data["^IRX"].price, change: data["^IRX"].changePct, label: "3개월물 국채" };
+        }
+        if (data["^FVX"]) {
+          MACRO_DATA.treasury.yield5Y = { val: data["^FVX"].price, change: data["^FVX"].changePct, label: "5년물 국채 금리" };
+        }
+
+        renderMacroPulseBar();
+        if (typeof renderMacroMarketProxies === "function") {
+          renderMacroMarketProxies();
+        }
+      }
+    }
+  } catch (e) {}
+}
+
+function applyLivePricesToHoldings(holdings) {
+  if (!holdings || !holdings.length) return;
+  holdings.forEach(h => {
+    const key = h.baseTicker || h.ticker;
+    const info = LIVE_PRICES[key] || LIVE_PRICES[h.ticker];
+    if (info && info.price) {
+      h.curPrice = info.price;
+      h.priceChangePct = info.changePct;
+    }
+  });
+}
 
 async function loadRealSecData() {
   try {
     const [holdingsRes, tickerRes, priceRes, macroRes] = await Promise.all([
       fetch("latest_13f_holdings.json"),
       fetch("ticker_map.json").catch(() => null),
-      fetch("realtime_prices.json").catch(() => null),
+      fetch("realtime_prices.json?_t=" + Date.now()).catch(() => null),
       fetch("latest_macro_indicators.json?_t=" + Date.now()).catch(() => null)
     ]);
 
@@ -437,6 +519,9 @@ async function loadRealSecData() {
 
     // 최신 데이터로 화면 연산 및 렌더링
     processAndRenderHoldingsData();
+
+    // 초기 로드 직후 현재 화면 실시간가 즉시 온디맨드 fetch
+    fetchLivePricesForCurrentView();
 
     // 백그라운드 프리페치 (Form 4 및 13D 데이터)
     if (window.requestIdleCallback) {
@@ -845,6 +930,9 @@ function selectGuru(key) {
 
   renderGuruSidebar();
   loadGuruData(key);
+
+  // 운용사 전환 시 즉시 실시간가 온디맨드 fetch
+  fetchLivePricesForCurrentView();
 }
 
 function loadGuruData(key) {
@@ -1880,6 +1968,7 @@ async function switchFilingMode(filingType) {
     if (ctrlF4) ctrlF4.style.display = "none";
     if (vMacro) vMacro.style.display = "block";
     await loadAndRenderMacro();
+    fetchLivePricesForCurrentView();
   }
 }
 
@@ -2483,8 +2572,6 @@ async function prefetchOtherFilings() {
     } catch (e) {}
   }
 }
-
-function fetchLivePricesForCurrentView() {}
 
 // ==============================================================================
 // Macro Compass & Economic Pulse Engine (Fed Rates, BLS CPI/Labor, Calendar)
