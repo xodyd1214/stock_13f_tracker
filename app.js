@@ -1352,11 +1352,16 @@ function renderTreemap(holdings) {
   });
 }
 
-// 윈도우 리사이즈 시 트리맵 자동 재계산
+// 윈도우 리사이즈 시 트리맵 및 매크로 차트 자동 재계산
 window.addEventListener("resize", () => {
   const guru = GURU_DATABASE[state.currentGuruKey];
   if (guru && guru.holdings) {
     renderTreemap(guru.holdings);
+  }
+  const vMacro = document.getElementById("viewMacro");
+  if (vMacro && vMacro.style.display !== "none") {
+    renderYieldTimeSeriesChart(macroChartState.yieldPeriod);
+    renderSpreadTimeSeriesChart(macroChartState.spreadPeriod);
   }
 });
 
@@ -2943,6 +2948,32 @@ function renderMacroCharts() {
   renderYieldTimeSeriesChart(macroChartState.yieldPeriod);
   renderSpreadTimeSeriesChart(macroChartState.spreadPeriod);
   initMacroChartTabEvents();
+  setupMacroChartResize();
+}
+
+let macroResizeObserver = null;
+function setupMacroChartResize() {
+  if (macroResizeObserver) return;
+  if (typeof ResizeObserver === "undefined") return;
+
+  const c1 = document.getElementById("yieldTimeSeriesContainer");
+  const c2 = document.getElementById("spreadTimeSeriesContainer");
+  if (!c1 && !c2) return;
+
+  let rafId = null;
+  macroResizeObserver = new ResizeObserver(() => {
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(() => {
+      const vMacro = document.getElementById("viewMacro");
+      if (vMacro && vMacro.style.display !== "none" && c1 && c1.clientWidth > 50) {
+        renderYieldTimeSeriesChart(macroChartState.yieldPeriod);
+        renderSpreadTimeSeriesChart(macroChartState.spreadPeriod);
+      }
+    });
+  });
+
+  if (c1) macroResizeObserver.observe(c1);
+  if (c2) macroResizeObserver.observe(c2);
 }
 
 function initMacroChartTabEvents() {
@@ -2987,9 +3018,13 @@ function renderYieldTimeSeriesChart(period = '6M') {
   if (legY5Y && typeof latest.y5y === 'number') legY5Y.innerText = `${latest.y5y.toFixed(2)}%`;
   if (legY10Y && typeof latest.y10y === 'number') legY10Y.innerText = `${latest.y10y.toFixed(2)}%`;
 
-  const padL = 45, padR = 15, padT = 18, padB = 26;
-  const chartW = 520 - padL - padR; // 460
-  const chartH = 220 - padT - padB; // 176
+  // 컨테이너 실제 픽셀 크기 측정 (비정상 가로 늘어남/왜곡 방지)
+  const width = Math.max(container.clientWidth || 560, 320);
+  const height = Math.max(container.clientHeight || 248, 180);
+
+  const padL = 48, padR = 20, padT = 20, padB = 28;
+  const chartW = width - padL - padR;
+  const chartH = height - padT - padB;
 
   const allY = data.flatMap(d => [d.y3m, d.y5y, d.y10y]).filter(v => typeof v === 'number' && !isNaN(v));
   const minVal = Math.min(...allY);
@@ -3008,7 +3043,7 @@ function renderYieldTimeSeriesChart(period = '6M') {
     const tickY = getY(tickVal);
     gridSvg += `
       <line x1="${padL}" y1="${tickY.toFixed(1)}" x2="${padL + chartW}" y2="${tickY.toFixed(1)}" stroke="rgba(255,255,255,0.06)" stroke-width="1" ${s > 0 && s < steps ? 'stroke-dasharray="3,3"' : ''} />
-      <text x="${padL - 6}" y="${(tickY + 3.5).toFixed(1)}" fill="#777" font-size="9.5" text-anchor="end" font-family="Inter, sans-serif">${tickVal.toFixed(1)}%</text>
+      <text x="${padL - 8}" y="${(tickY + 3.5).toFixed(1)}" fill="#8e8e93" font-size="10" font-weight="500" text-anchor="end">${tickVal.toFixed(1)}%</text>
     `;
   }
 
@@ -3018,10 +3053,10 @@ function renderYieldTimeSeriesChart(period = '6M') {
     const idx = Math.min(Math.round((k / (xCount - 1)) * (data.length - 1)), data.length - 1);
     const d = data[idx];
     const posX = getX(idx);
-    const dateStr = d.date.substring(2); // '25-09-09'
+    const dateStr = d.date.substring(2); // '26-03-13'
     dateTicksSvg += `
-      <line x1="${posX.toFixed(1)}" y1="${padT + chartH}" x2="${posX.toFixed(1)}" y2="${padT + chartH + 4}" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
-      <text x="${posX.toFixed(1)}" y="${padT + chartH + 16}" fill="#777" font-size="9.5" text-anchor="${k === 0 ? 'start' : k === xCount - 1 ? 'end' : 'middle'}" font-family="Inter, sans-serif">${dateStr}</text>
+      <line x1="${posX.toFixed(1)}" y1="${padT + chartH}" x2="${posX.toFixed(1)}" y2="${padT + chartH + 4}" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
+      <text x="${posX.toFixed(1)}" y="${(padT + chartH + 18).toFixed(1)}" fill="#8e8e93" font-size="10" font-weight="500" text-anchor="${k === 0 ? 'start' : k === xCount - 1 ? 'end' : 'middle'}">${dateStr}</text>
     `;
   }
 
@@ -3030,33 +3065,27 @@ function renderYieldTimeSeriesChart(period = '6M') {
   const path10Y = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(i).toFixed(1)} ${getY(d.y10y).toFixed(1)}`).join(' ');
 
   container.innerHTML = `
-    <svg id="yieldChartSvg" viewBox="0 0 520 220" width="100%" height="100%" preserveAspectRatio="none">
-      <defs>
-        <filter id="glowGreenYield" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="2" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-        </filter>
-      </defs>
+    <svg id="yieldChartSvg" viewBox="0 0 ${width} ${height}" width="100%" height="100%">
       <!-- 그리드 & Y 라벨 -->
       ${gridSvg}
       <!-- X축 날짜 틱 -->
       ${dateTicksSvg}
 
-      <!-- 3M 국채금리 (하늘색) -->
-      <path d="${path3M}" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" />
+      <!-- 3M 국채금리 (단기: 하늘색, 슬림 1.5px) -->
+      <path d="${path3M}" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
 
-      <!-- 5Y 국채금리 (황색) -->
-      <path d="${path5Y}" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" />
+      <!-- 5Y 국채금리 (중기: 황색, 슬림 1.5px) -->
+      <path d="${path5Y}" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
 
-      <!-- 10Y 국채금리 (네온 그린) -->
-      <path d="${path10Y}" fill="none" stroke="#1ed760" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glowGreenYield)" />
+      <!-- 10Y 국채금리 (장기: 깔끔한 에메랄드 그린, 슬림 1.5px, 형광 필터 제거) -->
+      <path d="${path10Y}" fill="none" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
 
       <!-- 크로스헤어 그룹 -->
       <g id="yieldCrossGroup" style="display: none;">
-        <line id="yieldCrossLine" x1="0" y1="${padT}" x2="0" y2="${padT + chartH}" stroke="rgba(255,255,255,0.4)" stroke-width="1" stroke-dasharray="3,3" />
-        <circle id="yieldDot3M" r="4.5" fill="#38bdf8" stroke="#000" stroke-width="2" />
-        <circle id="yieldDot5Y" r="4.5" fill="#fbbf24" stroke="#000" stroke-width="2" />
-        <circle id="yieldDot10Y" r="5" fill="#1ed760" stroke="#000" stroke-width="2" />
+        <line id="yieldCrossLine" x1="0" y1="${padT}" x2="0" y2="${padT + chartH}" stroke="rgba(255,255,255,0.25)" stroke-width="1" stroke-dasharray="3,3" />
+        <circle id="yieldDot3M" r="3.5" fill="#38bdf8" stroke="#181818" stroke-width="1.5" />
+        <circle id="yieldDot5Y" r="3.5" fill="#f59e0b" stroke="#181818" stroke-width="1.5" />
+        <circle id="yieldDot10Y" r="3.5" fill="#10b981" stroke="#181818" stroke-width="1.5" />
       </g>
 
       <!-- 마우스 감지 투명 오버레이 -->
@@ -3106,11 +3135,11 @@ function renderYieldTimeSeriesChart(period = '6M') {
         tooltip.innerHTML = `
           <span class="date-tag">${d.date}</span>
           <span class="val-tag" style="color:#38bdf8;">3M: ${d.y3m.toFixed(2)}%</span>
-          <span class="val-tag" style="color:#fbbf24;">5Y: ${d.y5y.toFixed(2)}%</span>
-          <span class="val-tag" style="color:#1ed760;">10Y: ${d.y10y.toFixed(2)}%</span>
+          <span class="val-tag" style="color:#f59e0b;">5Y: ${d.y5y.toFixed(2)}%</span>
+          <span class="val-tag" style="color:#10b981;">10Y: ${d.y10y.toFixed(2)}%</span>
         `;
         const containerRect = container.getBoundingClientRect();
-        let leftPos = (px / 520) * containerRect.width - 70;
+        let leftPos = px - 70;
         leftPos = Math.max(10, Math.min(leftPos, containerRect.width - 240));
         tooltip.style.left = `${leftPos}px`;
       }
@@ -3144,9 +3173,13 @@ function renderSpreadTimeSeriesChart(period = '6M') {
     legSpread.className = s >= 0 ? 'text-green' : 'text-red';
   }
 
-  const padL = 45, padR = 15, padT = 18, padB = 26;
-  const chartW = 520 - padL - padR; // 460
-  const chartH = 220 - padT - padB; // 176
+  // 컨테이너 실제 픽셀 크기 측정 (비정상 가로 늘어남/왜곡 방지)
+  const width = Math.max(container.clientWidth || 560, 320);
+  const height = Math.max(container.clientHeight || 248, 180);
+
+  const padL = 50, padR = 20, padT = 20, padB = 28;
+  const chartW = width - padL - padR;
+  const chartH = height - padT - padB;
 
   const spreads = data.map(d => d.spread).filter(v => typeof v === 'number' && !isNaN(v));
   const minSp = Math.min(...spreads);
@@ -3166,7 +3199,7 @@ function renderSpreadTimeSeriesChart(period = '6M') {
     const tickY = getY(tickVal);
     gridSvg += `
       <line x1="${padL}" y1="${tickY.toFixed(1)}" x2="${padL + chartW}" y2="${tickY.toFixed(1)}" stroke="rgba(255,255,255,0.06)" stroke-width="1" ${s > 0 && s < steps ? 'stroke-dasharray="3,3"' : ''} />
-      <text x="${padL - 6}" y="${(tickY + 3.5).toFixed(1)}" fill="#777" font-size="9.5" text-anchor="end" font-family="Inter, sans-serif">${(tickVal >= 0 ? '+' : '') + tickVal.toFixed(1)}%p</text>
+      <text x="${padL - 8}" y="${(tickY + 3.5).toFixed(1)}" fill="#8e8e93" font-size="10" font-weight="500" text-anchor="end">${(tickVal >= 0 ? '+' : '') + tickVal.toFixed(1)}%p</text>
     `;
   }
 
@@ -3178,8 +3211,8 @@ function renderSpreadTimeSeriesChart(period = '6M') {
     const posX = getX(idx);
     const dateStr = d.date.substring(2);
     dateTicksSvg += `
-      <line x1="${posX.toFixed(1)}" y1="${padT + chartH}" x2="${posX.toFixed(1)}" y2="${padT + chartH + 4}" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
-      <text x="${posX.toFixed(1)}" y="${padT + chartH + 16}" fill="#777" font-size="9.5" text-anchor="${k === 0 ? 'start' : k === xCount - 1 ? 'end' : 'middle'}" font-family="Inter, sans-serif">${dateStr}</text>
+      <line x1="${posX.toFixed(1)}" y1="${padT + chartH}" x2="${posX.toFixed(1)}" y2="${padT + chartH + 4}" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
+      <text x="${posX.toFixed(1)}" y="${(padT + chartH + 18).toFixed(1)}" fill="#8e8e93" font-size="10" font-weight="500" text-anchor="${k === 0 ? 'start' : k === xCount - 1 ? 'end' : 'middle'}">${dateStr}</text>
     `;
   }
 
@@ -3189,36 +3222,32 @@ function renderSpreadTimeSeriesChart(period = '6M') {
   const areaSpread = `${pathSpread} L ${lastX} ${zeroY.toFixed(1)} L ${firstX} ${zeroY.toFixed(1)} Z`;
 
   container.innerHTML = `
-    <svg id="spreadChartSvg" viewBox="0 0 520 220" width="100%" height="100%" preserveAspectRatio="none">
+    <svg id="spreadChartSvg" viewBox="0 0 ${width} ${height}" width="100%" height="100%">
       <defs>
         <linearGradient id="spreadAreaGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#1ed760" stop-opacity="0.30"/>
-          <stop offset="100%" stop-color="#1ed760" stop-opacity="0.02"/>
+          <stop offset="0%" stop-color="#10b981" stop-opacity="0.12"/>
+          <stop offset="100%" stop-color="#10b981" stop-opacity="0.00"/>
         </linearGradient>
-        <filter id="glowGreenSpread" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="2" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-        </filter>
       </defs>
       <!-- 그리드 & Y 라벨 -->
       ${gridSvg}
       <!-- X축 날짜 틱 -->
       ${dateTicksSvg}
 
-      <!-- 0.00%p 침체 역전 기준선 (빨간색 점선) -->
-      <line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${padL + chartW}" y2="${zeroY.toFixed(1)}" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4" />
-      <text x="${padL + chartW - 5}" y="${(zeroY - 5).toFixed(1)}" fill="#ef4444" font-size="9.5" font-weight="700" text-anchor="end" font-family="Inter, sans-serif">0.00%p 침체 역전선</text>
+      <!-- 0.00%p 침체 역전 기준선 (빨간색 얇은 점선) -->
+      <line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${padL + chartW}" y2="${zeroY.toFixed(1)}" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,4" opacity="0.85" />
+      <text x="${padL + chartW - 4}" y="${(zeroY - 5).toFixed(1)}" fill="#ef4444" font-size="10" font-weight="600" text-anchor="end">0.00%p 침체 역전선</text>
 
-      <!-- 스프레드 영역 채우기 -->
+      <!-- 스프레드 영역 채우기 (은은한 그라데이션) -->
       <path d="${areaSpread}" fill="url(#spreadAreaGrad)" />
 
-      <!-- 스프레드 본체 라인 -->
-      <path d="${pathSpread}" fill="none" stroke="#1ed760" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glowGreenSpread)" />
+      <!-- 스프레드 본체 라인 (슬림 1.5px, 에메랄드 그린, 형광 필터 제거) -->
+      <path d="${pathSpread}" fill="none" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
 
       <!-- 크로스헤어 그룹 -->
       <g id="spreadCrossGroup" style="display: none;">
-        <line id="spreadCrossLine" x1="0" y1="${padT}" x2="0" y2="${padT + chartH}" stroke="rgba(255,255,255,0.4)" stroke-width="1" stroke-dasharray="3,3" />
-        <circle id="spreadCrossDot" r="5" fill="#1ed760" stroke="#000" stroke-width="2" />
+        <line id="spreadCrossLine" x1="0" y1="${padT}" x2="0" y2="${padT + chartH}" stroke="rgba(255,255,255,0.25)" stroke-width="1" stroke-dasharray="3,3" />
+        <circle id="spreadCrossDot" r="3.5" fill="#10b981" stroke="#181818" stroke-width="1.5" />
       </g>
 
       <!-- 마우스 감지 투명 오버레이 -->
@@ -3250,7 +3279,7 @@ function renderSpreadTimeSeriesChart(period = '6M') {
       crossLine.setAttribute("x2", px);
       crossDot.setAttribute("cx", px);
       crossDot.setAttribute("cy", py);
-      crossDot.setAttribute("fill", d.spread >= 0 ? "#1ed760" : "#ef4444");
+      crossDot.setAttribute("fill", d.spread >= 0 ? "#10b981" : "#ef4444");
 
       const sign = d.spread >= 0 ? '+' : '';
       const spreadStr = `${sign}${d.spread.toFixed(2)}%p`;
@@ -3263,14 +3292,14 @@ function renderSpreadTimeSeriesChart(period = '6M') {
         tooltip.style.display = "flex";
         const statusText = d.spread < 0 
           ? '<span style="color:#ef4444;margin-left:6px;font-weight:700;">(역전 경고)</span>' 
-          : '<span style="color:#1ed760;margin-left:6px;font-weight:700;">(정상 우상향)</span>';
+          : '<span style="color:#10b981;margin-left:6px;font-weight:700;">(정상 우상향)</span>';
         tooltip.innerHTML = `
           <span class="date-tag">${d.date}</span>
-          <span class="val-tag" style="color:${d.spread >= 0 ? '#1ed760' : '#ef4444'};">스프레드: ${spreadStr}</span>
+          <span class="val-tag" style="color:${d.spread >= 0 ? '#10b981' : '#ef4444'};">스프레드: ${spreadStr}</span>
           ${statusText}
         `;
         const containerRect = container.getBoundingClientRect();
-        let leftPos = (px / 520) * containerRect.width - 80;
+        let leftPos = px - 80;
         leftPos = Math.max(10, Math.min(leftPos, containerRect.width - 250));
         tooltip.style.left = `${leftPos}px`;
       }

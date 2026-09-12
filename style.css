@@ -917,6 +917,26 @@ body {
   color: var(--negative-red) !important;
 }
 
+.text-green {
+  color: #10b981 !important;
+}
+
+.text-red {
+  color: #ef4444 !important;
+}
+
+.text-blue {
+  color: #38bdf8 !important;
+}
+
+.text-amber {
+  color: #f59e0b !important;
+}
+
+.text-purple {
+  color: #a855f7 !important;
+}
+
 .metric-sub {
   font-size: 11.5px;
   color: var(--text-subdued);
@@ -2819,13 +2839,14 @@ body {
 }
 
 .legend-dot.blue { background-color: #38bdf8; }
-.legend-dot.amber { background-color: #fbbf24; }
-.legend-dot.green { background-color: #1ed760; }
+.legend-dot.amber { background-color: #f59e0b; }
+.legend-dot.green { background-color: #10b981; }
 .legend-dot.red { background-color: #ef4444; }
 
 .legend-item strong {
   color: #fff;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
 .time-series-chart-wrap {
@@ -2834,14 +2855,21 @@ body {
   position: relative;
   background: rgba(0, 0, 0, 0.28);
   border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0;
+  overflow: hidden;
 }
 
 .time-series-chart-wrap svg {
   width: 100%;
   height: 100%;
-  overflow: visible;
+  display: block;
+}
+
+.time-series-chart-wrap svg text {
+  font-family: var(--font-sans);
+  user-select: none;
+  font-variant-numeric: tabular-nums;
 }
 
 .chart-tooltip-floating {
