@@ -1,10 +1,10 @@
 {
-  "lastUpdated": "2026-09-20 22:51:38",
+  "lastUpdated": "2026-09-21 23:45:21",
   "fedRate": {
     "targetRange": "3.75% ~ 4.00%",
     "effr": "3.88%",
     "sofr": "3.85%",
-    "effectiveDate": "2026-09-17"
+    "effectiveDate": "2026-09-18"
   },
   "labor": {
     "unemploymentRate": "4.1%",
@@ -18,40 +18,40 @@
   },
   "treasury": {
     "yield10Y": {
-      "val": 5.0,
-      "change": 1.03,
+      "val": 4.96,
+      "change": -0.7,
       "label": "10년물 국채 금리"
     },
     "yield13W": {
       "val": 3.98,
-      "change": 0.33,
+      "change": 0.1,
       "label": "3개월물 국채 (현금/기준금리 벤치마크)"
     },
     "yield5Y": {
-      "val": 4.86,
-      "change": 1.15,
+      "val": 4.83,
+      "change": -0.45,
       "label": "5년물 국채 금리"
     },
     "spread10Y_13W": {
-      "spread": 1.02,
+      "spread": 0.98,
       "inverted": false,
       "desc": "정상 우상향 (연착륙/성장 궤도)"
     }
   },
   "commoditiesAndFx": {
     "dxy": {
-      "val": 100.25,
-      "change": 0.03,
+      "val": 100.42,
+      "change": -0.0,
       "label": "달러 인덱스 (DXY)"
     },
     "wtiOil": {
-      "val": 96.15,
-      "change": 0.07,
+      "val": 92.26,
+      "change": -0.12,
       "label": "WTI 국제유가 ($)"
     },
     "gold": {
-      "val": 4415.3,
-      "change": -0.22,
+      "val": 4397.5,
+      "change": 0.31,
       "label": "국제 금 시세 ($)"
     }
   },
@@ -120,20 +120,6 @@
   ],
   "timeSeries": {
     "treasuryDaily": [
-      {
-        "date": "2025-09-18",
-        "y3m": 3.88,
-        "y5y": 3.66,
-        "y10y": 4.1,
-        "spread": 0.22
-      },
-      {
-        "date": "2025-09-19",
-        "y3m": 3.88,
-        "y5y": 3.69,
-        "y10y": 4.14,
-        "spread": 0.26
-      },
       {
         "date": "2025-09-22",
         "y3m": 3.85,
@@ -1883,6 +1869,13 @@
         "y5y": 4.86,
         "y10y": 5.0,
         "spread": 1.02
+      },
+      {
+        "date": "2026-09-21",
+        "y3m": 3.98,
+        "y5y": 4.83,
+        "y10y": 4.96,
+        "spread": 0.98
       }
     ],
     "policyMonthly": [
@@ -2025,8 +2018,8 @@
       "zone": "법정 목표 2.0% 상회"
     },
     "yieldCurve": {
-      "currentSpread": 1.02,
-      "yield10Y": 5.0,
+      "currentSpread": 0.98,
+      "yield10Y": 4.96,
       "yield13W": 3.98,
       "recessionThreshold": 0.0,
       "status": "정상 우상향 (역전선 0%p 상회)"
