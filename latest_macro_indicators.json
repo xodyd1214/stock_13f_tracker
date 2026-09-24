@@ -1,10 +1,10 @@
 {
-  "lastUpdated": "2026-09-23 23:23:26",
+  "lastUpdated": "2026-09-24 23:42:51",
   "fedRate": {
     "targetRange": "3.75% ~ 4.00%",
     "effr": "3.88%",
     "sofr": "3.87%",
-    "effectiveDate": "2026-09-22"
+    "effectiveDate": "2026-09-23"
   },
   "labor": {
     "unemploymentRate": "4.1%",
@@ -18,40 +18,40 @@
   },
   "treasury": {
     "yield10Y": {
-      "val": 5.11,
-      "change": 2.94,
+      "val": 5.16,
+      "change": 0.94,
       "label": "10년물 국채 금리"
     },
     "yield13W": {
-      "val": 4.03,
-      "change": 0.57,
+      "val": 4.07,
+      "change": 0.99,
       "label": "3개월물 국채 (현금/기준금리 벤치마크)"
     },
     "yield5Y": {
-      "val": 5.0,
-      "change": 3.2,
+      "val": 5.03,
+      "change": 0.56,
       "label": "5년물 국채 금리"
     },
     "spread10Y_13W": {
-      "spread": 1.08,
+      "spread": 1.09,
       "inverted": false,
       "desc": "정상 우상향 (연착륙/성장 궤도)"
     }
   },
   "commoditiesAndFx": {
     "dxy": {
-      "val": 101.11,
-      "change": 0.02,
+      "val": 101.25,
+      "change": -0.04,
       "label": "달러 인덱스 (DXY)"
     },
     "wtiOil": {
-      "val": 92.24,
-      "change": 0.09,
+      "val": 94.06,
+      "change": -0.58,
       "label": "WTI 국제유가 ($)"
     },
     "gold": {
-      "val": 4326.3,
-      "change": 0.18,
+      "val": 4308.0,
+      "change": 0.23,
       "label": "국제 금 시세 ($)"
     }
   },
@@ -120,13 +120,6 @@
   ],
   "timeSeries": {
     "treasuryDaily": [
-      {
-        "date": "2025-09-23",
-        "y3m": 3.85,
-        "y5y": 3.68,
-        "y10y": 4.12,
-        "spread": 0.27
-      },
       {
         "date": "2025-09-24",
         "y3m": 3.86,
@@ -1876,6 +1869,13 @@
         "y5y": 5.0,
         "y10y": 5.11,
         "spread": 1.08
+      },
+      {
+        "date": "2026-09-24",
+        "y3m": 4.07,
+        "y5y": 5.03,
+        "y10y": 5.16,
+        "spread": 1.09
       }
     ],
     "policyMonthly": [
@@ -2018,17 +2018,17 @@
       "zone": "법정 목표 2.0% 상회"
     },
     "yieldCurve": {
-      "currentSpread": 1.08,
-      "yield10Y": 5.11,
-      "yield13W": 4.03,
+      "currentSpread": 1.09,
+      "yield10Y": 5.16,
+      "yield13W": 4.07,
       "recessionThreshold": 0.0,
       "status": "정상 우상향 (역전선 0%p 상회)"
     },
     "cashRiskFree": {
-      "rate": 4.03,
+      "rate": 4.07,
       "sp500Dividend": 1.3,
-      "spreadToEquity": 2.73,
-      "desc": "단기국채 무위험 확정 수익률 (연 4.03%)"
+      "spreadToEquity": 2.77,
+      "desc": "단기국채 무위험 확정 수익률 (연 4.07%)"
     }
   }
 }
