@@ -1,5 +1,20 @@
 [
   {
+    "filingDate": "2026-09-25",
+    "formType": "SCHEDULE 13D/A",
+    "typeLabel": "Schedule 13D (행동주의/경영참여)",
+    "isActivist": true,
+    "investorName": "Carl Icahn",
+    "fundName": "Icahn Enterprises",
+    "cik": "0000921669",
+    "targetCompany": "ICAHN ENTERPRISES L.P.",
+    "targetTicker": "IEP",
+    "percentOwned": 87.69,
+    "cusip": "451100101",
+    "accessionNumber": "0001539497-26-002605",
+    "docUrl": "https://www.sec.gov/Archives/edgar/data/921669/000153949726002605/xslSCHEDULE_13D_X02/primary_doc.xml"
+  },
+  {
     "filingDate": "2026-09-21",
     "formType": "SCHEDULE 13D/A",
     "typeLabel": "Schedule 13D (행동주의/경영참여)",
@@ -283,21 +298,6 @@
     "cusip": "76131D103",
     "accessionNumber": "0001140361-26-017888",
     "docUrl": "https://www.sec.gov/Archives/edgar/data/1336528/000114036126017888/xslSCHEDULE_13D_X02/primary_doc.xml"
-  },
-  {
-    "filingDate": "2026-04-17",
-    "formType": "SCHEDULE 13D/A",
-    "typeLabel": "Schedule 13D (행동주의/경영참여)",
-    "isActivist": true,
-    "investorName": "Carl Icahn",
-    "fundName": "Icahn Enterprises",
-    "cik": "0000921669",
-    "targetCompany": "ICAHN ENTERPRISES L.P.",
-    "targetTicker": "IEP",
-    "percentOwned": 86.89,
-    "cusip": "451100101",
-    "accessionNumber": "0001539497-26-001145",
-    "docUrl": "https://www.sec.gov/Archives/edgar/data/921669/000153949726001145/xslSCHEDULE_13D_X02/primary_doc.xml"
   },
   {
     "filingDate": "2026-04-14",
