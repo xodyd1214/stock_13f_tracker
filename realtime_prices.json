@@ -673,9 +673,9 @@
   },
   "TCEHY": {
     "price": 55.65,
-    "changePct": 0.29,
+    "changePct": 0.11,
     "currency": "USD",
-    "marketTime": 1790366399
+    "marketTime": 1790366400
   },
   "XYZ": {
     "price": 76.42,
