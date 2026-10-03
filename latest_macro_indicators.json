@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-03 00:06:01",
+  "lastUpdated": "2026-10-03 23:27:40",
   "fedRate": {
     "targetRange": "3.75% ~ 4.00%",
     "effr": "3.88%",
@@ -41,17 +41,17 @@
   "commoditiesAndFx": {
     "dxy": {
       "val": 101.92,
-      "change": -0.17,
+      "change": -0.01,
       "label": "달러 인덱스 (DXY)"
     },
     "wtiOil": {
-      "val": 91.26,
-      "change": -1.73,
+      "val": 91.11,
+      "change": -1.9,
       "label": "WTI 국제유가 ($)"
     },
     "gold": {
-      "val": 4172.1,
-      "change": -0.72,
+      "val": 4162.3,
+      "change": -0.95,
       "label": "국제 금 시세 ($)"
     }
   },
