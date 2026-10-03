@@ -1,5 +1,20 @@
 [
   {
+    "filingDate": "2026-10-02",
+    "formType": "SCHEDULE 13D/A",
+    "typeLabel": "Schedule 13D (행동주의/경영참여)",
+    "isActivist": true,
+    "investorName": "Ryan Cohen",
+    "fundName": "RC Ventures LLC",
+    "cik": "0001767470",
+    "targetCompany": "GameStop Corp.",
+    "targetTicker": "GME",
+    "percentOwned": 8.9,
+    "cusip": "36467W109",
+    "accessionNumber": "0000921895-26-002718",
+    "docUrl": "https://www.sec.gov/Archives/edgar/data/1767470/000092189526002718/xslSCHEDULE_13D_X02/primary_doc.xml"
+  },
+  {
     "filingDate": "2026-09-29",
     "formType": "SCHEDULE 13D/A",
     "typeLabel": "Schedule 13D (행동주의/경영참여)",
@@ -73,21 +88,6 @@
     "cusip": "36467W109",
     "accessionNumber": "0000921895-26-002530",
     "docUrl": "https://www.sec.gov/Archives/edgar/data/1767470/000092189526002530/xslSCHEDULE_13D_X02/primary_doc.xml"
-  },
-  {
-    "filingDate": "2026-09-03",
-    "formType": "SCHEDULE 13D/A",
-    "typeLabel": "Schedule 13D (행동주의/경영참여)",
-    "isActivist": true,
-    "investorName": "Ryan Cohen",
-    "fundName": "RC Ventures LLC",
-    "cik": "0001767470",
-    "targetCompany": "GameStop Corp.",
-    "targetTicker": "GME",
-    "percentOwned": 8.3,
-    "cusip": "36467W109",
-    "accessionNumber": "0000921895-26-002474",
-    "docUrl": "https://www.sec.gov/Archives/edgar/data/1767470/000092189526002474/xslSCHEDULE_13D_X02/primary_doc.xml"
   },
   {
     "filingDate": "2026-08-20",
