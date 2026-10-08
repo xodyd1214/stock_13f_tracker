@@ -397,9 +397,9 @@
     "investorName": "Bill Ackman",
     "fundName": "Pershing Square",
     "cik": "0001336528",
-    "targetCompany": "Howard Hughes Holdings Inc.",
-    "targetTicker": "HHH",
-    "percentOwned": 46.9,
+    "targetCompany": "공시 대상 상장 기업",
+    "targetTicker": "",
+    "percentOwned": null,
     "cusip": "",
     "accessionNumber": "0001140361-25-046218",
     "docUrl": "https://www.sec.gov/Archives/edgar/data/1336528/000114036125046218/xslSCHEDULE_13D_X01/primary_doc.xml"
