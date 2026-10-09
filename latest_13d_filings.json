@@ -1,5 +1,20 @@
 [
   {
+    "filingDate": "2026-10-07",
+    "formType": "SCHEDULE 13G/A",
+    "typeLabel": "Schedule 13G (단순 대량보유)",
+    "isActivist": false,
+    "investorName": "Warren Buffett",
+    "fundName": "Berkshire Hathaway",
+    "cik": "0001067983",
+    "targetCompany": "LENNAR CORPORATION",
+    "targetTicker": "",
+    "percentOwned": null,
+    "cusip": "526057104",
+    "accessionNumber": "0001193125-26-417254",
+    "docUrl": "https://www.sec.gov/Archives/edgar/data/1067983/000119312526417254/xslSCHEDULE_13G_X02/primary_doc.xml"
+  },
+  {
     "filingDate": "2026-10-02",
     "formType": "SCHEDULE 13D/A",
     "typeLabel": "Schedule 13D (행동주의/경영참여)",
@@ -240,21 +255,6 @@
     "docUrl": "https://www.sec.gov/Archives/edgar/data/1067983/000119312526227203/xslSCHEDULE_13G_X02/primary_doc.xml"
   },
   {
-    "filingDate": "2026-05-15",
-    "formType": "SCHEDULE 13G",
-    "typeLabel": "Schedule 13G (단순 대량보유)",
-    "isActivist": false,
-    "investorName": "Warren Buffett",
-    "fundName": "Berkshire Hathaway",
-    "cik": "0001067983",
-    "targetCompany": "NEW YORK TIMES CO",
-    "targetTicker": "",
-    "percentOwned": null,
-    "cusip": "650111107",
-    "accessionNumber": "0001193125-26-227126",
-    "docUrl": "https://www.sec.gov/Archives/edgar/data/1067983/000119312526227126/xslSCHEDULE_13G_X02/primary_doc.xml"
-  },
-  {
     "filingDate": "2026-05-14",
     "formType": "SCHEDULE 13D/A",
     "typeLabel": "Schedule 13D (행동주의/경영참여)",
@@ -397,9 +397,9 @@
     "investorName": "Bill Ackman",
     "fundName": "Pershing Square",
     "cik": "0001336528",
-    "targetCompany": "공시 대상 상장 기업",
-    "targetTicker": "",
-    "percentOwned": null,
+    "targetCompany": "Howard Hughes Holdings Inc.",
+    "targetTicker": "HHH",
+    "percentOwned": 46.9,
     "cusip": "",
     "accessionNumber": "0001140361-25-046218",
     "docUrl": "https://www.sec.gov/Archives/edgar/data/1336528/000114036125046218/xslSCHEDULE_13D_X01/primary_doc.xml"
