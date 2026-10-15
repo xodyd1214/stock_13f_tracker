@@ -1,5 +1,20 @@
 [
   {
+    "filingDate": "2026-10-15",
+    "formType": "SCHEDULE 13D",
+    "typeLabel": "Schedule 13D (행동주의/경영참여)",
+    "isActivist": true,
+    "investorName": "Dan Loeb",
+    "fundName": "Third Point LLC",
+    "cik": "0001040273",
+    "targetCompany": "Strata Critical Medical, Inc.",
+    "targetTicker": "SRTA",
+    "percentOwned": 5.8,
+    "cusip": "092667104",
+    "accessionNumber": "0000899140-26-001108",
+    "docUrl": "https://www.sec.gov/Archives/edgar/data/1040273/000089914026001108/xslSCHEDULE_13D_X02/primary_doc.xml"
+  },
+  {
     "filingDate": "2026-10-13",
     "formType": "SCHEDULE 13D/A",
     "typeLabel": "Schedule 13D (행동주의/경영참여)",
@@ -433,21 +448,6 @@
     "cusip": "",
     "accessionNumber": "0000950170-25-110438",
     "docUrl": "https://www.sec.gov/Archives/edgar/data/1040273/000095017025110438/xslSCHEDULE_13D_X01/primary_doc.xml"
-  },
-  {
-    "filingDate": "2025-08-11",
-    "formType": "SCHEDULE 13G",
-    "typeLabel": "Schedule 13G (단순 대량보유)",
-    "isActivist": false,
-    "investorName": "Dan Loeb",
-    "fundName": "Third Point LLC",
-    "cik": "0001040273",
-    "targetCompany": "Blade Air Mobility, Inc.",
-    "targetTicker": "",
-    "percentOwned": null,
-    "cusip": "",
-    "accessionNumber": "0000899140-25-000908",
-    "docUrl": "https://www.sec.gov/Archives/edgar/data/1040273/000089914025000908/xslSCHEDULE_13G_X01/primary_doc.xml"
   },
   {
     "filingDate": "2024-02-14",
