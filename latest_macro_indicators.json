@@ -1,10 +1,10 @@
 {
-  "lastUpdated": "2026-10-20 00:03:51",
+  "lastUpdated": "2026-10-20 23:34:27",
   "fedRate": {
     "targetRange": "3.75% ~ 4.00%",
     "effr": "3.88%",
-    "sofr": "3.88%",
-    "effectiveDate": "2026-10-16"
+    "sofr": "3.87%",
+    "effectiveDate": "2026-10-19"
   },
   "labor": {
     "unemploymentRate": "4.2%",
@@ -18,8 +18,8 @@
   },
   "treasury": {
     "yield10Y": {
-      "val": 5.14,
-      "change": 0.75,
+      "val": 5.12,
+      "change": -0.37,
       "label": "10년물 국채 금리"
     },
     "yield13W": {
@@ -29,29 +29,29 @@
     },
     "yield5Y": {
       "val": 4.93,
-      "change": 0.61,
+      "change": 0.12,
       "label": "5년물 국채 금리"
     },
     "spread10Y_13W": {
-      "spread": 1.06,
+      "spread": 1.04,
       "inverted": false,
       "desc": "정상 우상향 (연착륙/성장 궤도)"
     }
   },
   "commoditiesAndFx": {
     "dxy": {
-      "val": 101.98,
-      "change": -0.0,
+      "val": 101.73,
+      "change": 0.03,
       "label": "달러 인덱스 (DXY)"
     },
     "wtiOil": {
-      "val": 98.24,
-      "change": -0.3,
+      "val": 98.31,
+      "change": 0.5,
       "label": "WTI 국제유가 ($)"
     },
     "gold": {
-      "val": 4151.2,
-      "change": -0.21,
+      "val": 4135.7,
+      "change": -0.17,
       "label": "국제 금 시세 ($)"
     }
   },
@@ -1876,6 +1876,13 @@
         "y5y": 4.93,
         "y10y": 5.14,
         "spread": 1.07
+      },
+      {
+        "date": "2026-10-20",
+        "y3m": 4.08,
+        "y5y": 4.93,
+        "y10y": 5.12,
+        "spread": 1.04
       }
     ],
     "policyMonthly": [
@@ -2006,7 +2013,7 @@
       "current": "3.75% ~ 4.00%",
       "currentMid": 3.625,
       "effr": "3.88%",
-      "sofr": "3.88%",
+      "sofr": "3.87%",
       "neutralRate": "2.90%",
       "neutralVal": 2.9,
       "gapToNeutral": "+0.73%p",
@@ -2024,8 +2031,8 @@
       "zone": "법정 목표 2.0% 상회"
     },
     "yieldCurve": {
-      "currentSpread": 1.06,
-      "yield10Y": 5.14,
+      "currentSpread": 1.04,
+      "yield10Y": 5.12,
       "yield13W": 4.08,
       "recessionThreshold": 0.0,
       "status": "정상 우상향 (역전선 0%p 상회)"
