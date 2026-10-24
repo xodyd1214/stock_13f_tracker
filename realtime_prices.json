@@ -672,16 +672,16 @@
     "marketTime": 1787947200
   },
   "TCEHY": {
-    "price": 49.48,
-    "changePct": -0.24,
+    "price": 49.41,
+    "changePct": -0.28,
     "currency": "USD",
-    "marketTime": 1792785599
+    "marketTime": 1792785600
   },
   "XYZ": {
     "price": 76.46,
     "changePct": -3.24,
     "currency": "USD",
-    "marketTime": 1792785770
+    "marketTime": 1792785771
   },
   "ORLA": {
     "price": 9.44,

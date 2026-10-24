@@ -1,20 +1,20 @@
 {
-  "lastUpdated": "2026-10-23 23:42:36",
+  "lastUpdated": "2026-10-24 22:48:58",
   "fedRate": {
-    "targetRange": "3.50% ~ 3.75%",
-    "effr": "3.63%",
-    "sofr": "3.66%",
-    "effectiveDate": "2026-09-03"
+    "targetRange": "3.75% ~ 4.00%",
+    "effr": "3.88%",
+    "sofr": "3.90%",
+    "effectiveDate": "2026-10-22"
   },
   "labor": {
-    "unemploymentRate": "4.2%",
-    "period": "2026-09",
+    "unemploymentRate": "4.1%",
+    "period": "August 2026",
     "prevRate": "4.1%"
   },
   "inflation": {
-    "cpiIndex": 336.94,
-    "cpiYoY": "+3.7%",
-    "period": "2026-09"
+    "cpiIndex": 333.918,
+    "cpiYoY": "+3.4%",
+    "period": "July 2026"
   },
   "treasury": {
     "yield10Y": {
@@ -41,17 +41,17 @@
   "commoditiesAndFx": {
     "dxy": {
       "val": 101.75,
-      "change": 0.14,
+      "change": -0.06,
       "label": "달러 인덱스 (DXY)"
     },
     "wtiOil": {
-      "val": 103.44,
-      "change": 3.99,
+      "val": 103.27,
+      "change": 3.82,
       "label": "WTI 국제유가 ($)"
     },
     "gold": {
-      "val": 4010.0,
-      "change": -1.24,
+      "val": 4007.9,
+      "change": -1.29,
       "label": "국제 금 시세 ($)"
     }
   },
@@ -1885,147 +1885,26 @@
         "spread": 0.96
       }
     ],
-    "policyMonthly": [
-      {
-        "month": "2025-01",
-        "cpiYoY": 3.0,
-        "unemployment": 4.0,
-        "realRate": 0.63
-      },
-      {
-        "month": "2025-02",
-        "cpiYoY": 2.82,
-        "unemployment": 4.2,
-        "realRate": 0.81
-      },
-      {
-        "month": "2025-03",
-        "cpiYoY": 2.39,
-        "unemployment": 4.2,
-        "realRate": 1.24
-      },
-      {
-        "month": "2025-04",
-        "cpiYoY": 2.31,
-        "unemployment": 4.2,
-        "realRate": 1.32
-      },
-      {
-        "month": "2025-05",
-        "cpiYoY": 2.35,
-        "unemployment": 4.3,
-        "realRate": 1.28
-      },
-      {
-        "month": "2025-06",
-        "cpiYoY": 2.67,
-        "unemployment": 4.1,
-        "realRate": 0.96
-      },
-      {
-        "month": "2025-07",
-        "cpiYoY": 2.7,
-        "unemployment": 4.3,
-        "realRate": 0.93
-      },
-      {
-        "month": "2025-08",
-        "cpiYoY": 2.92,
-        "unemployment": 4.3,
-        "realRate": 0.71
-      },
-      {
-        "month": "2025-09",
-        "cpiYoY": 3.01,
-        "unemployment": 4.4,
-        "realRate": 0.62
-      },
-      {
-        "month": "2025-11",
-        "cpiYoY": 2.74,
-        "unemployment": 4.5,
-        "realRate": 0.89
-      },
-      {
-        "month": "2025-12",
-        "cpiYoY": 2.68,
-        "unemployment": 4.4,
-        "realRate": 0.95
-      },
-      {
-        "month": "2026-01",
-        "cpiYoY": 2.39,
-        "unemployment": 4.3,
-        "realRate": 1.24
-      },
-      {
-        "month": "2026-02",
-        "cpiYoY": 2.41,
-        "unemployment": 4.4,
-        "realRate": 1.22
-      },
-      {
-        "month": "2026-03",
-        "cpiYoY": 3.26,
-        "unemployment": 4.3,
-        "realRate": 0.37
-      },
-      {
-        "month": "2026-04",
-        "cpiYoY": 3.81,
-        "unemployment": 4.3,
-        "realRate": -0.18
-      },
-      {
-        "month": "2026-05",
-        "cpiYoY": 4.25,
-        "unemployment": 4.3,
-        "realRate": -0.62
-      },
-      {
-        "month": "2026-06",
-        "cpiYoY": 3.53,
-        "unemployment": 4.2,
-        "realRate": 0.1
-      },
-      {
-        "month": "2026-07",
-        "cpiYoY": 3.36,
-        "unemployment": 4.1,
-        "realRate": 0.27
-      },
-      {
-        "month": "2026-08",
-        "cpiYoY": 3.4,
-        "unemployment": 4.1,
-        "realRate": 0.23
-      },
-      {
-        "month": "2026-09",
-        "cpiYoY": 3.74,
-        "unemployment": 4.2,
-        "realRate": -0.11
-      }
-    ]
+    "policyMonthly": []
   },
   "benchmarks": {
     "fedRate": {
-      "current": "3.50% ~ 3.75%",
+      "current": "3.75% ~ 4.00%",
       "currentMid": 3.625,
-      "effr": "3.63%",
-      "sofr": "3.66%",
+      "effr": "3.88%",
+      "sofr": "3.90%",
       "neutralRate": "2.90%",
       "neutralVal": 2.9,
       "gapToNeutral": "+0.73%p",
-      "realRate": "-0.07%p",
+      "realRate": "+0.48%p",
       "zone": "중립선 상회 (제약적 긴축 영역)"
     },
     "inflation": {
-      "current": "+3.7%",
-      "currentVal": 3.7,
+      "current": "+3.4%",
+      "currentVal": 3.4,
       "fedTarget": "2.0%",
       "targetVal": 2.0,
-      "gapToTarget": "+1.70%p",
+      "gapToTarget": "+1.40%p",
       "prevRate": "+3.4%",
       "forecast": "+3.2%",
       "zone": "법정 목표 2.0% 상회"
