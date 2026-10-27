@@ -1,69 +1,69 @@
 {
   "AAPL": {
-    "price": 347.73,
-    "changePct": -0.14,
+    "price": 343.91,
+    "changePct": -1.1,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "AMZN": {
-    "price": 248.0,
-    "changePct": -0.95,
+    "price": 249.09,
+    "changePct": 0.44,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "AXP": {
-    "price": 313.22,
-    "changePct": -3.68,
+    "price": 315.05,
+    "changePct": 0.58,
     "currency": "USD",
-    "marketTime": 1792785812
+    "marketTime": 1793044932
   },
   "BAC": {
-    "price": 50.56,
-    "changePct": -1.02,
+    "price": 50.52,
+    "changePct": -0.08,
     "currency": "USD",
-    "marketTime": 1792785603
+    "marketTime": 1793044803
   },
   "CVX": {
-    "price": 233.21,
-    "changePct": 2.88,
+    "price": 232.01,
+    "changePct": -0.51,
     "currency": "USD",
-    "marketTime": 1792785776
+    "marketTime": 1793044920
   },
   "GOOG": {
-    "price": 317.28,
-    "changePct": -1.08,
+    "price": 314.19,
+    "changePct": -0.97,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "GOOGL": {
-    "price": 320.21,
-    "changePct": -1.24,
+    "price": 316.8,
+    "changePct": -1.06,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "KO": {
-    "price": 92.71,
-    "changePct": -2.76,
+    "price": 92.7,
+    "changePct": -0.01,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044802
   },
   "MSFT": {
-    "price": 524.51,
-    "changePct": 0.66,
+    "price": 532.6,
+    "changePct": 1.54,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "NVDA": {
-    "price": 210.96,
-    "changePct": -0.59,
+    "price": 216.0,
+    "changePct": 2.39,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044800
   },
   "OXY": {
-    "price": 64.17,
-    "changePct": 2.67,
+    "price": 64.07,
+    "changePct": -0.16,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044802
   },
   "CRM": {
     "price": 256.0,
@@ -72,10 +72,10 @@
     "marketTime": 1787947202
   },
   "PG": {
-    "price": 161.02,
-    "changePct": -2.12,
+    "price": 159.92,
+    "changePct": -0.68,
     "currency": "USD",
-    "marketTime": 1792785698
+    "marketTime": 1793044944
   },
   "STT": {
     "price": 193.33,
@@ -90,10 +90,10 @@
     "marketTime": 1787947203
   },
   "QCOM": {
-    "price": 175.91,
-    "changePct": 1.78,
+    "price": 179.6,
+    "changePct": 2.1,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044801
   },
   "UNH": {
     "price": 392.95,
@@ -102,52 +102,52 @@
     "marketTime": 1787947202
   },
   "V": {
-    "price": 407.92,
-    "changePct": -1.55,
+    "price": 404.16,
+    "changePct": -0.92,
     "currency": "USD",
-    "marketTime": 1792785603
+    "marketTime": 1793044802
   },
   "JNJ": {
-    "price": 263.81,
-    "changePct": -1.42,
+    "price": 266.3,
+    "changePct": 0.94,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044802
   },
   "SPY": {
-    "price": 759.97,
-    "changePct": -0.52,
+    "price": 765.37,
+    "changePct": 0.71,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044800
   },
   "AVGO": {
-    "price": 321.68,
-    "changePct": -0.48,
+    "price": 329.17,
+    "changePct": 2.33,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "INTC": {
-    "price": 86.96,
-    "changePct": 1.72,
+    "price": 90.47,
+    "changePct": 4.04,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044800
   },
   "IVV": {
-    "price": 763.25,
-    "changePct": -0.54,
+    "price": 768.69,
+    "changePct": 0.71,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044800
   },
   "TSLA": {
-    "price": 372.22,
-    "changePct": -0.63,
+    "price": 391.62,
+    "changePct": 5.21,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044800
   },
   "WMT": {
-    "price": 119.89,
-    "changePct": -1.02,
+    "price": 120.29,
+    "changePct": 0.33,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044801
   },
   "NVO": {
     "price": 45.61,
@@ -156,130 +156,130 @@
     "marketTime": 1787947202
   },
   "XOM": {
-    "price": 183.21,
-    "changePct": 2.79,
+    "price": 184.54,
+    "changePct": 0.73,
     "currency": "USD",
-    "marketTime": 1792785779
+    "marketTime": 1793045011
   },
   "VOO": {
-    "price": 698.58,
-    "changePct": -0.53,
+    "price": 703.41,
+    "changePct": 0.69,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044800
   },
   "MA": {
-    "price": 623.6,
-    "changePct": -1.52,
+    "price": 613.5,
+    "changePct": -1.62,
     "currency": "USD",
-    "marketTime": 1792785603
+    "marketTime": 1793044803
   },
   "DIS": {
-    "price": 112.52,
-    "changePct": -0.54,
+    "price": 110.4,
+    "changePct": -1.88,
     "currency": "USD",
-    "marketTime": 1792785757
+    "marketTime": 1793044903
   },
   "QQQ": {
-    "price": 704.4,
-    "changePct": -0.01,
+    "price": 712.2,
+    "changePct": 1.11,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044800
   },
   "TXN": {
-    "price": 284.69,
-    "changePct": 1.86,
+    "price": 298.12,
+    "changePct": 4.72,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044801
   },
   "NFLX": {
-    "price": 65.85,
-    "changePct": -1.79,
+    "price": 63.9,
+    "changePct": -2.96,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044801
   },
   "AMD": {
-    "price": 516.79,
-    "changePct": 1.74,
+    "price": 531.28,
+    "changePct": 2.8,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "PEP": {
-    "price": 135.77,
-    "changePct": -2.2,
+    "price": 135.46,
+    "changePct": -0.23,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044800
   },
   "CSCO": {
-    "price": 106.5,
-    "changePct": 1.53,
+    "price": 110.24,
+    "changePct": 3.51,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "TSM": {
-    "price": 418.51,
-    "changePct": 1.49,
+    "price": 424.37,
+    "changePct": 1.4,
     "currency": "USD",
-    "marketTime": 1792785603
+    "marketTime": 1793044803
   },
   "MU": {
-    "price": 877.55,
-    "changePct": 2.46,
+    "price": 903.7,
+    "changePct": 2.98,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "ADBE": {
-    "price": 263.82,
-    "changePct": -2.49,
+    "price": 258.62,
+    "changePct": -1.97,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "LLY": {
-    "price": 1273.46,
-    "changePct": -2.54,
+    "price": 1279.14,
+    "changePct": 0.45,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044802
   },
   "ASML": {
-    "price": 1571.8,
-    "changePct": 0.72,
+    "price": 1590.9,
+    "changePct": 1.22,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "WFC": {
-    "price": 82.39,
-    "changePct": -0.75,
+    "price": 82.65,
+    "changePct": 0.32,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044950
   },
   "META": {
-    "price": 642.62,
-    "changePct": -0.96,
+    "price": 630.56,
+    "changePct": -1.88,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "ORCL": {
-    "price": 126.16,
-    "changePct": 0.49,
+    "price": 126.06,
+    "changePct": -0.08,
     "currency": "USD",
-    "marketTime": 1792785768
+    "marketTime": 1793045071
   },
   "JPM": {
-    "price": 331.58,
-    "changePct": -1.47,
+    "price": 334.04,
+    "changePct": 0.74,
     "currency": "USD",
-    "marketTime": 1792785603
+    "marketTime": 1793044802
   },
   "COST": {
-    "price": 1003.32,
-    "changePct": -1.46,
+    "price": 1005.16,
+    "changePct": 0.18,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "PANW": {
-    "price": 380.55,
-    "changePct": 7.22,
+    "price": 390.46,
+    "changePct": 2.6,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044800
   },
   "MCHP": {
     "price": 72.93,
@@ -294,16 +294,16 @@
     "marketTime": 1787947201
   },
   "KLAC": {
-    "price": 145.61,
-    "changePct": -1.5,
+    "price": 149.21,
+    "changePct": 2.47,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "GS": {
-    "price": 875.68,
-    "changePct": -1.75,
+    "price": 893.28,
+    "changePct": 2.01,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044803
   },
   "WDC": {
     "price": 459.45,
@@ -318,10 +318,10 @@
     "marketTime": 1787947201
   },
   "LRCX": {
-    "price": 230.1,
-    "changePct": -0.02,
+    "price": 237.5,
+    "changePct": 3.22,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "CSGP": {
     "price": 32.22,
@@ -330,52 +330,52 @@
     "marketTime": 1787947201
   },
   "NET": {
-    "price": 325.73,
-    "changePct": 7.29,
+    "price": 331.86,
+    "changePct": 1.88,
     "currency": "USD",
-    "marketTime": 1792785752
+    "marketTime": 1793045015
   },
   "SNPS": {
-    "price": 430.14,
-    "changePct": 1.81,
+    "price": 454.33,
+    "changePct": 5.62,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044801
   },
   "MELI": {
-    "price": 1810.15,
-    "changePct": -0.81,
+    "price": 1668.72,
+    "changePct": -7.81,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "SE": {
-    "price": 74.63,
-    "changePct": -1.4,
+    "price": 74.01,
+    "changePct": -0.83,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044802
   },
   "ANET": {
-    "price": 172.37,
-    "changePct": 0.76,
+    "price": 177.24,
+    "changePct": 2.83,
     "currency": "USD",
-    "marketTime": 1792785603
+    "marketTime": 1793044803
   },
   "DASH": {
-    "price": 179.38,
-    "changePct": -3.53,
+    "price": 168.44,
+    "changePct": -6.1,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "INTU": {
-    "price": 343.39,
-    "changePct": -3.24,
+    "price": 339.89,
+    "changePct": -1.02,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "BKNG": {
-    "price": 155.83,
-    "changePct": -3.27,
+    "price": 153.14,
+    "changePct": -1.73,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "MCO": {
     "price": 514.95,
@@ -390,10 +390,10 @@
     "marketTime": 1787947201
   },
   "CB": {
-    "price": 355.11,
-    "changePct": -2.43,
+    "price": 356.74,
+    "changePct": 0.46,
     "currency": "USD",
-    "marketTime": 1792785603
+    "marketTime": 1793044803
   },
   "ON": {
     "price": 72.61,
@@ -402,10 +402,10 @@
     "marketTime": 1787947200
   },
   "GE": {
-    "price": 285.64,
-    "changePct": -2.69,
+    "price": 288.43,
+    "changePct": 0.98,
     "currency": "USD",
-    "marketTime": 1792785603
+    "marketTime": 1793044803
   },
   "GLD": {
     "price": 408.89,
@@ -432,10 +432,10 @@
     "marketTime": 1787947200
   },
   "RBLX": {
-    "price": 52.89,
-    "changePct": -1.98,
+    "price": 54.37,
+    "changePct": 2.8,
     "currency": "USD",
-    "marketTime": 1792785793
+    "marketTime": 1793045016
   },
   "NU": {
     "price": 14.3,
@@ -444,46 +444,46 @@
     "marketTime": 1787947202
   },
   "SMCI": {
-    "price": 32.94,
-    "changePct": -2.31,
+    "price": 32.69,
+    "changePct": -0.76,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044801
   },
   "MRVL": {
-    "price": 228.51,
-    "changePct": 2.26,
+    "price": 233.78,
+    "changePct": 2.31,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "CDNS": {
-    "price": 316.49,
-    "changePct": 2.21,
+    "price": 322.17,
+    "changePct": 1.79,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "PLTR": {
-    "price": 196.75,
-    "changePct": 0.29,
+    "price": 198.84,
+    "changePct": 1.06,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044800
   },
   "AMAT": {
-    "price": 377.24,
-    "changePct": 0.44,
+    "price": 387.59,
+    "changePct": 2.74,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "UBER": {
-    "price": 66.7,
-    "changePct": -3.43,
+    "price": 66.13,
+    "changePct": -0.85,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044803
   },
   "ADI": {
-    "price": 391.07,
-    "changePct": 1.38,
+    "price": 407.93,
+    "changePct": 4.31,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "DKNG": {
     "price": 25.26,
@@ -498,22 +498,22 @@
     "marketTime": 1787947221
   },
   "SPOT": {
-    "price": 584.22,
-    "changePct": 0.1,
+    "price": 572.36,
+    "changePct": -2.03,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044802
   },
   "ABNB": {
-    "price": 172.01,
-    "changePct": -2.13,
+    "price": 171.05,
+    "changePct": -0.56,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "CRWD": {
-    "price": 257.57,
-    "changePct": 8.25,
+    "price": 261.83,
+    "changePct": 1.65,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044801
   },
   "ISRG": {
     "price": 372.6,
@@ -534,10 +534,10 @@
     "marketTime": 1787947200
   },
   "NOW": {
-    "price": 158.96,
-    "changePct": 1.25,
+    "price": 158.18,
+    "changePct": -0.49,
     "currency": "USD",
-    "marketTime": 1792785603
+    "marketTime": 1793044803
   },
   "KHC": {
     "price": 25.7,
@@ -546,16 +546,16 @@
     "marketTime": 1787947201
   },
   "SNOW": {
-    "price": 325.43,
-    "changePct": 3.65,
+    "price": 334.95,
+    "changePct": 2.93,
     "currency": "USD",
-    "marketTime": 1792785603
+    "marketTime": 1793044802
   },
   "COIN": {
-    "price": 164.45,
-    "changePct": -2.74,
+    "price": 159.6,
+    "changePct": -2.95,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "APP": {
     "price": 317.76,
@@ -672,16 +672,16 @@
     "marketTime": 1787947200
   },
   "TCEHY": {
-    "price": 49.41,
-    "changePct": -0.28,
+    "price": 49.0,
+    "changePct": -0.97,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044878
   },
   "XYZ": {
-    "price": 76.46,
-    "changePct": -3.24,
+    "price": 74.55,
+    "changePct": -2.5,
     "currency": "USD",
-    "marketTime": 1792785771
+    "marketTime": 1793044906
   },
   "ORLA": {
     "price": 9.44,
@@ -690,88 +690,88 @@
     "marketTime": 1785441600
   },
   "FRPT": {
-    "price": 64.12,
-    "changePct": -4.3,
+    "price": 64.75,
+    "changePct": 0.98,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "PDD": {
-    "price": 79.04,
-    "changePct": -0.16,
+    "price": 78.13,
+    "changePct": -1.15,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044800
   },
   "BRKR": {
-    "price": 57.59,
-    "changePct": 0.49,
+    "price": 58.23,
+    "changePct": 1.11,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "PPTA": {
-    "price": 16.44,
-    "changePct": -4.75,
+    "price": 16.6,
+    "changePct": 0.97,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044801
   },
   "ARM": {
-    "price": 210.33,
-    "changePct": 0.11,
+    "price": 223.35,
+    "changePct": 6.19,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044801
   },
   "CRDO": {
-    "price": 147.29,
-    "changePct": -9.51,
+    "price": 151.15,
+    "changePct": 2.62,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "VZ": {
-    "price": 44.66,
-    "changePct": -1.19,
+    "price": 43.1,
+    "changePct": -3.49,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044803
   },
   "BRK.B": {
-    "price": 542.19,
-    "changePct": -0.87,
+    "price": 548.56,
+    "changePct": 1.17,
     "currency": "USD",
-    "marketTime": 1792785796
+    "marketTime": 1793044853
   },
   "BN": {
-    "price": 37.97,
-    "changePct": -0.81,
+    "price": 37.95,
+    "changePct": -0.05,
     "currency": "USD",
-    "marketTime": 1792785603
+    "marketTime": 1793044802
   },
   "MDB": {
-    "price": 371.09,
-    "changePct": 2.44,
+    "price": 389.11,
+    "changePct": 4.86,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "CVI": {
-    "price": 58.16,
-    "changePct": -0.8,
+    "price": 62.02,
+    "changePct": 6.64,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044802
   },
   "MDT": {
-    "price": 95.41,
-    "changePct": -1.22,
+    "price": 94.79,
+    "changePct": -0.65,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044802
   },
   "PENN": {
-    "price": 14.5,
-    "changePct": -6.21,
+    "price": 14.9,
+    "changePct": 2.76,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044800
   },
   "HON": {
-    "price": 221.15,
-    "changePct": 1.3,
+    "price": 219.28,
+    "changePct": -0.85,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "JHG": {
     "price": 51.95,
@@ -780,52 +780,52 @@
     "marketTime": 1782849603
   },
   "UNP": {
-    "price": 292.87,
-    "changePct": -1.75,
+    "price": 296.97,
+    "changePct": 1.4,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044802
   },
   "FTNT": {
-    "price": 179.99,
-    "changePct": 4.05,
+    "price": 183.33,
+    "changePct": 1.86,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "MCD": {
-    "price": 248.46,
-    "changePct": -1.65,
+    "price": 250.83,
+    "changePct": 0.95,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044802
   },
   "AMGN": {
-    "price": 439.26,
-    "changePct": -1.79,
+    "price": 444.63,
+    "changePct": 1.22,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044801
   },
   "ABBV": {
-    "price": 285.64,
-    "changePct": 0.16,
+    "price": 286.74,
+    "changePct": 0.39,
     "currency": "USD",
-    "marketTime": 1792785719
+    "marketTime": 1793044987
   },
   "MOH": {
-    "price": 209.15,
-    "changePct": -3.46,
+    "price": 204.79,
+    "changePct": -2.08,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044802
   },
   "TMO": {
-    "price": 673.82,
-    "changePct": -0.4,
+    "price": 684.89,
+    "changePct": 1.64,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044802
   },
   "LULU": {
-    "price": 99.01,
-    "changePct": -4.85,
+    "price": 102.91,
+    "changePct": 3.94,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "EA": {
     "price": 209.7,
@@ -834,141 +834,141 @@
     "marketTime": 1785873600
   },
   "TTD": {
-    "price": 13.0,
-    "changePct": -1.22,
+    "price": 12.77,
+    "changePct": -1.77,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044801
   },
   "AMR": {
-    "price": 163.6,
-    "changePct": 2.64,
+    "price": 159.03,
+    "changePct": -2.79,
     "currency": "USD",
-    "marketTime": 1792785603
+    "marketTime": 1793044803
   },
   "BABA": {
-    "price": 99.64,
-    "changePct": -2.14,
+    "price": 100.25,
+    "changePct": 0.61,
     "currency": "USD",
-    "marketTime": 1792785740
+    "marketTime": 1793044915
   },
   "PFE": {
-    "price": 30.03,
-    "changePct": -1.28,
+    "price": 29.79,
+    "changePct": -0.8,
     "currency": "USD",
-    "marketTime": 1792785729
+    "marketTime": 1793044927
   },
   "NTRA": {
-    "price": 403.95,
-    "changePct": 0.64,
+    "price": 404.9,
+    "changePct": 0.24,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044800
   },
   "ALLY": {
-    "price": 39.06,
+    "price": 38.81,
     "changePct": -0.64,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044803
   },
   "HD": {
-    "price": 319.83,
-    "changePct": -2.41,
+    "price": 319.38,
+    "changePct": -0.14,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044802
   },
   "ACN": {
-    "price": 249.37,
-    "changePct": -3.62,
+    "price": 247.23,
+    "changePct": -0.86,
     "currency": "USD",
-    "marketTime": 1792785603
+    "marketTime": 1793044803
   },
   "ABT": {
-    "price": 103.7,
-    "changePct": 1.16,
+    "price": 104.88,
+    "changePct": 1.14,
     "currency": "USD",
-    "marketTime": 1792785702
+    "marketTime": 1793044975
   },
   "DDOG": {
-    "price": 269.65,
-    "changePct": 4.62,
+    "price": 280.24,
+    "changePct": 3.93,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "RIG": {
-    "price": 6.41,
-    "changePct": 5.43,
+    "price": 6.53,
+    "changePct": 1.87,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044802
   },
   "DELL": {
-    "price": 456.44,
-    "changePct": 0.77,
+    "price": 467.09,
+    "changePct": 2.33,
     "currency": "USD",
-    "marketTime": 1792785769
+    "marketTime": 1793045065
   },
   "JOE": {
-    "price": 67.57,
-    "changePct": -2.71,
+    "price": 68.11,
+    "changePct": 0.8,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044802
   },
   "SYK": {
-    "price": 307.15,
-    "changePct": 0.02,
+    "price": 306.13,
+    "changePct": -0.33,
     "currency": "USD",
-    "marketTime": 1792785666
+    "marketTime": 1793045043
   },
   "MDGL": {
-    "price": 434.24,
-    "changePct": -4.21,
+    "price": 437.74,
+    "changePct": 0.81,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "BLK": {
-    "price": 1118.25,
-    "changePct": -1.67,
+    "price": 1127.66,
+    "changePct": 0.84,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044802
   },
   "LIN": {
-    "price": 508.83,
-    "changePct": -0.3,
+    "price": 507.56,
+    "changePct": -0.25,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "HAL": {
-    "price": 34.92,
-    "changePct": 5.21,
+    "price": 35.44,
+    "changePct": 1.49,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044803
   },
   "IEP": {
-    "price": 5.76,
-    "changePct": -5.95,
+    "price": 5.75,
+    "changePct": -0.26,
     "currency": "USD",
-    "marketTime": 1792785601
+    "marketTime": 1793044801
   },
   "CAT": {
-    "price": 687.0,
-    "changePct": -2.42,
+    "price": 692.13,
+    "changePct": 0.99,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044802
   },
   "SLM": {
-    "price": 19.41,
-    "changePct": -10.78,
+    "price": 19.62,
+    "changePct": 1.06,
     "currency": "USD",
-    "marketTime": 1792785600
+    "marketTime": 1793044800
   },
   "PGR": {
-    "price": 228.07,
-    "changePct": -0.68,
+    "price": 229.25,
+    "changePct": 0.52,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044802
   },
   "HCC": {
-    "price": 85.8,
-    "changePct": 3.37,
+    "price": 85.21,
+    "changePct": -0.69,
     "currency": "USD",
-    "marketTime": 1792785602
+    "marketTime": 1793044802
   }
 }

@@ -1,10 +1,10 @@
 {
-  "lastUpdated": "2026-10-25 22:58:21",
+  "lastUpdated": "2026-10-27 00:09:29",
   "fedRate": {
     "targetRange": "3.75% ~ 4.00%",
     "effr": "3.88%",
-    "sofr": "3.90%",
-    "effectiveDate": "2026-10-22"
+    "sofr": "3.92%",
+    "effectiveDate": "2026-10-23"
   },
   "labor": {
     "unemploymentRate": "4.2%",
@@ -19,17 +19,17 @@
   "treasury": {
     "yield10Y": {
       "val": 4.99,
-      "change": 0.71,
+      "change": -0.04,
       "label": "10년물 국채 금리"
     },
     "yield13W": {
       "val": 4.03,
-      "change": 0.25,
+      "change": -0.17,
       "label": "3개월물 국채 (현금/기준금리 벤치마크)"
     },
     "yield5Y": {
-      "val": 4.8,
-      "change": 0.78,
+      "val": 4.82,
+      "change": 0.4,
       "label": "5년물 국채 금리"
     },
     "spread10Y_13W": {
@@ -40,18 +40,18 @@
   },
   "commoditiesAndFx": {
     "dxy": {
-      "val": 101.75,
-      "change": 0.14,
+      "val": 102.02,
+      "change": 0.06,
       "label": "달러 인덱스 (DXY)"
     },
     "wtiOil": {
-      "val": 102.0,
-      "change": -1.23,
+      "val": 101.51,
+      "change": -0.25,
       "label": "WTI 국제유가 ($)"
     },
     "gold": {
-      "val": 4016.9,
-      "change": 0.22,
+      "val": 4018.9,
+      "change": -0.48,
       "label": "국제 금 시세 ($)"
     }
   },
@@ -120,20 +120,6 @@
   ],
   "timeSeries": {
     "treasuryDaily": [
-      {
-        "date": "2025-10-23",
-        "y3m": 3.79,
-        "y5y": 3.6,
-        "y10y": 3.99,
-        "spread": 0.2
-      },
-      {
-        "date": "2025-10-24",
-        "y3m": 3.76,
-        "y5y": 3.6,
-        "y10y": 4.0,
-        "spread": 0.24
-      },
       {
         "date": "2025-10-27",
         "y3m": 3.72,
@@ -1883,6 +1869,13 @@
         "y5y": 4.8,
         "y10y": 4.99,
         "spread": 0.96
+      },
+      {
+        "date": "2026-10-26",
+        "y3m": 4.03,
+        "y5y": 4.82,
+        "y10y": 4.99,
+        "spread": 0.96
       }
     ],
     "policyMonthly": [
@@ -2013,7 +2006,7 @@
       "current": "3.75% ~ 4.00%",
       "currentMid": 3.625,
       "effr": "3.88%",
-      "sofr": "3.90%",
+      "sofr": "3.92%",
       "neutralRate": "2.90%",
       "neutralVal": 2.9,
       "gapToNeutral": "+0.73%p",
