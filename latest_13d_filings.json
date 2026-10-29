@@ -1,5 +1,20 @@
 [
   {
+    "filingDate": "2026-10-28",
+    "formType": "SCHEDULE 13D/A",
+    "typeLabel": "Schedule 13D (행동주의/경영참여)",
+    "isActivist": true,
+    "investorName": "Nelson Peltz",
+    "fundName": "Trian Fund Management",
+    "cik": "0001345471",
+    "targetCompany": "Wendy's Co",
+    "targetTicker": "WEN",
+    "percentOwned": 16.23,
+    "cusip": "95058W100",
+    "accessionNumber": "0000930413-26-003164",
+    "docUrl": "https://www.sec.gov/Archives/edgar/data/1345471/000093041326003164/xslSCHEDULE_13D_X02/primary_doc.xml"
+  },
+  {
     "filingDate": "2026-10-15",
     "formType": "SCHEDULE 13D",
     "typeLabel": "Schedule 13D (행동주의/경영참여)",
@@ -373,21 +388,6 @@
     "cusip": "G4474Y214",
     "accessionNumber": "0000930413-26-000860",
     "docUrl": "https://www.sec.gov/Archives/edgar/data/1345471/000093041326000860/xslSCHEDULE_13D_X02/primary_doc.xml"
-  },
-  {
-    "filingDate": "2026-02-18",
-    "formType": "SCHEDULE 13D/A",
-    "typeLabel": "Schedule 13D (행동주의/경영참여)",
-    "isActivist": true,
-    "investorName": "Nelson Peltz",
-    "fundName": "Trian Fund Management",
-    "cik": "0001345471",
-    "targetCompany": "Wendy's Co",
-    "targetTicker": "WEN",
-    "percentOwned": 16.24,
-    "cusip": "",
-    "accessionNumber": "0001193125-26-056159",
-    "docUrl": "https://www.sec.gov/Archives/edgar/data/1345471/000119312526056159/xslSCHEDULE_13D_X01/primary_doc.xml"
   },
   {
     "filingDate": "2026-01-13",
