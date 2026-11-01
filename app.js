@@ -562,6 +562,33 @@ async function loadRealSecData() {
   }
 }
 
+function formatQuarterDisplay(periodStr) {
+  if (!periodStr) return "최신 13F 공시";
+  
+  // YYYY-MM-DD 형식 파싱
+  const m = String(periodStr).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) {
+    const year = m[1];
+    const month = parseInt(m[2], 10);
+    const day = m[3];
+    let q = 1;
+    if (month <= 3) q = 1;
+    else if (month <= 6) q = 2;
+    else if (month <= 9) q = 3;
+    else q = 4;
+    return `${year} Q${q} (${year}.${m[2]}.${day} 기준)`;
+  }
+  
+  const qm = String(periodStr).match(/^(\d{4})Q([1-4])/i);
+  if (qm) {
+    return `${qm[1]} Q${qm[2]} 기준`;
+  }
+  
+  return `${periodStr} 기준`;
+}
+
+let DOMINANT_13F_PERIOD = "2026-06-30";
+
 function processAndRenderHoldingsData() {
   if (!RAW_HOLDINGS || RAW_HOLDINGS.length === 0) return;
   
@@ -569,6 +596,23 @@ function processAndRenderHoldingsData() {
     const groups = {};
     const grandConsensusMap = {};
     let grandTotalAumVal = 0;
+
+    // 데이터셋 전체에서 가장 대표적인(최빈) 분기 말일 추출
+    const periodCounts = {};
+    RAW_HOLDINGS.forEach(item => {
+      if (item.period) {
+        periodCounts[item.period] = (periodCounts[item.period] || 0) + 1;
+      }
+    });
+    let dominantPeriod = "2026-06-30";
+    let maxCount = 0;
+    for (const [p, cnt] of Object.entries(periodCounts)) {
+      if (cnt > maxCount) {
+        maxCount = cnt;
+        dominantPeriod = p;
+      }
+    }
+    DOMINANT_13F_PERIOD = dominantPeriod;
     
     RAW_HOLDINGS.forEach(item => {
       if (isDerivativeOrOption(item.name, item.ticker, item.titleOfClass)) return;
@@ -577,12 +621,14 @@ function processAndRenderHoldingsData() {
       const fundName = item.fund || guruName;
       if (!groups[guruName]) {
         const initials = fundName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+        const guruPeriod = item.period || dominantPeriod;
         groups[guruName] = {
           name: guruName,
           fund: fundName,
           avatar: initials || "CO",
-          quarter: `${item.period || '2024Q2'} Filing`,
-          desc: `${fundName} (${guruName} 운용)의 최신 13F 공식 보유 보통주 포트폴리오`,
+          quarter: formatQuarterDisplay(guruPeriod),
+          periodDate: guruPeriod,
+          desc: `${fundName} (${guruName} 운용)의 공식 13F 보유 포트폴리오`,
           holdingsMap: {}
         };
       }
@@ -725,8 +771,9 @@ function processAndRenderHoldingsData() {
         avatar: "ALL",
         aum: formatMoney(grandTotalAumVal),
         rawAum: grandTotalAumVal,
-        quarter: "최신 13F 공시 종합",
-        desc: "미국 1억 달러 이상 운용 자격을 갖춘 100대 헤지펀드 및 메이저 운용사들의 포트폴리오를 하나로 통합 분석한 거대 자금 흐름",
+        quarter: `${formatQuarterDisplay(dominantPeriod)} 종합`,
+        periodDate: dominantPeriod,
+        desc: "미국 1억 달러 이상 운용 자격을 갖춘 100대 운용사의 포트폴리오를 하나로 통합 분석한 거대 자금 흐름",
         holdings: grandHoldings
       },
       ...groups
@@ -816,7 +863,8 @@ function buildCustomGroupPortfolio() {
     avatar: "FAV",
     aum: formatMoney(customTotalAumVal),
     rawAum: customTotalAumVal,
-    quarter: "최신 13F 맞춤 종합",
+    quarter: `${formatQuarterDisplay(DOMINANT_13F_PERIOD)} 맞춤 종합`,
+    periodDate: DOMINANT_13F_PERIOD,
     desc: `내가 선택한 ${favs.length}개 운용사들의 포트폴리오만 묶어서 합산 분석한 맞춤형 뷰`,
     holdings: customHoldings
   };
@@ -973,7 +1021,10 @@ function loadGuruData(key) {
   const elFund = document.getElementById("currentFundName");
   if (elFund) elFund.innerText = isSpecial ? guru.fund : guru.name;
   const elQuarter = document.getElementById("currentQuarter");
-  if (elQuarter) elQuarter.innerText = guru.quarter;
+  if (elQuarter) {
+    elQuarter.innerText = guru.quarter;
+    elQuarter.title = "SEC 13F 공시 규정에 따라 각 분기 마지막 거래일 시장 마감 기준 보유 현황입니다.";
+  }
   const elDesc = document.getElementById("currentGuruDesc");
   if (elDesc) elDesc.innerText = guru.desc;
 
