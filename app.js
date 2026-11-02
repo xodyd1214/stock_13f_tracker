@@ -519,7 +519,7 @@ async function loadRealSecData() {
   try {
     const [holdingsRes, tickerRes, priceRes, macroRes] = await Promise.all([
       fetch("latest_13f_holdings.json"),
-      fetch("ticker_map.json").catch(() => null),
+      fetch("ticker_map.json?_t=" + Date.now()).catch(() => null),
       fetch("realtime_prices.json?_t=" + Date.now()).catch(() => null),
       fetch("latest_macro_indicators.json?_t=" + Date.now()).catch(() => null)
     ]);
