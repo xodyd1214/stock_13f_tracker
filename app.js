@@ -402,6 +402,9 @@ const state = {
 document.addEventListener("DOMContentLoaded", () => {
   initFirebase();
   setupEventListeners();
+  initMobileInteractions();
+  initFilingDdayCountdown();
+  initConsensusTabs();
   loadRealSecData();
 
   // 1분마다 조용히 최신 실시간 시장가 백그라운드 갱신
@@ -782,6 +785,7 @@ function processAndRenderHoldingsData() {
     renderCategoryTabs();
     renderGuruSidebar();
     selectGuru("__GRAND_TOTAL__");
+    renderConsensusWidget("HOLDERS");
 
   } catch (err) {
     console.error("데이터 로드 실패:", err);
@@ -1600,6 +1604,9 @@ function openStockModal(item) {
   // 기능 1: 100대 운용사 중 이 종목을 보유한 전체 명단 추출 & 렌더링
   renderStockHoldersTable(item.ticker);
 
+  // [NEW] 최근 경영진 내부자 거래 (Form 4) 교차 분석 렌더링
+  renderModalInsiderCross(item);
+
   // 외부 파이낸스 링크 세팅
   let cleanTicker = (item.baseTicker || item.ticker || "").split(" ")[0].replace(/[^a-zA-Z0-9\-\.]/g, "");
   if (!cleanTicker || cleanTicker === "STOCK") {
@@ -1966,6 +1973,24 @@ async function switchFilingMode(filingType) {
     btn.classList.toggle("active", isActive);
     btn.setAttribute("aria-selected", isActive ? "true" : "false");
   });
+
+  // 모바일 하단 플로팅 네비게이션 바 동기화
+  const bottomNav = document.getElementById("mobileBottomNav");
+  if (bottomNav) {
+    bottomNav.querySelectorAll(".mobile-nav-item[data-mode]").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.mode === filingType);
+    });
+  }
+
+  // 모바일 상단 퀵 헤더 타이틀 동기화
+  const mobileBrandH2 = document.querySelector(".mobile-brand-title h2");
+  if (mobileBrandH2) {
+    if (filingType === "13F") mobileBrandH2.innerHTML = 'ALPHA <span>13F</span>';
+    else if (filingType === "FORM4") mobileBrandH2.innerHTML = 'ALPHA <span>INSIDER</span>';
+    else if (filingType === "13D") mobileBrandH2.innerHTML = 'ALPHA <span>13D</span>';
+    else if (filingType === "13G") mobileBrandH2.innerHTML = 'ALPHA <span>13G</span>';
+    else if (filingType === "MACRO") mobileBrandH2.innerHTML = 'ALPHA <span>MACRO</span>';
+  }
 
   // 하위 호환용 숨김 셀렉트 값 동기화
   const legacySel = document.getElementById("filingSelector");
@@ -3603,4 +3628,371 @@ function closeMacroModal() {
   const modal = document.getElementById("macroModal");
   if (modal) modal.classList.remove("active");
 }
+
+/* ==============================================================================
+   📱 모바일 인터랙션 컨트롤러 (드로어 사이드바 & 하단 탭 바)
+   ============================================================================== */
+function initMobileInteractions() {
+  const btnMenu = document.getElementById("btnMobileMenu");
+  const btnClose = document.getElementById("btnSidebarClose");
+  const backdrop = document.getElementById("sidebarBackdrop");
+  const sidebar = document.getElementById("appSidebar");
+  const btnMobileCsv = document.getElementById("btnMobileCsv");
+  const btnMobileDrawerOpen = document.getElementById("btnMobileDrawerOpen");
+  const bottomNav = document.getElementById("mobileBottomNav");
+
+  function openSidebar() {
+    if (sidebar) sidebar.classList.add("mobile-open");
+    if (backdrop) backdrop.classList.add("active");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeSidebar() {
+    if (sidebar) sidebar.classList.remove("mobile-open");
+    if (backdrop) backdrop.classList.remove("active");
+    document.body.style.overflow = "";
+  }
+
+  if (btnMenu) btnMenu.addEventListener("click", openSidebar);
+  if (btnClose) btnClose.addEventListener("click", closeSidebar);
+  if (backdrop) backdrop.addEventListener("click", closeSidebar);
+  if (btnMobileDrawerOpen) btnMobileDrawerOpen.addEventListener("click", openSidebar);
+
+  if (btnMobileCsv) {
+    btnMobileCsv.addEventListener("click", () => {
+      const csvBtn = document.getElementById("btnExportCsv");
+      if (csvBtn) csvBtn.click();
+    });
+  }
+
+  // 모바일 하단 탭 바 클릭 시 해당 공시 모드로 즉시 전환
+  if (bottomNav) {
+    bottomNav.querySelectorAll(".mobile-nav-item[data-mode]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const mode = btn.dataset.mode;
+        if (!mode) return;
+        bottomNav.querySelectorAll(".mobile-nav-item").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        switchFilingMode(mode);
+        closeSidebar();
+      });
+    });
+  }
+}
+
+/* ==============================================================================
+   🚨 1번 기능: 2026 Q3 SEC 13F 공시 시즌 실시간 D-Day 카운트다운 타이머
+   ============================================================================== */
+function initFilingDdayCountdown() {
+  const banner = document.getElementById("filingDdayBanner");
+  const btnClose = document.getElementById("btnDdayClose");
+  const badgeEl = document.getElementById("ddayBadge");
+  const chipEl = document.getElementById("ddayTimerChip");
+
+  if (!banner) return;
+
+  // 사용자가 배너를 닫은 적이 있다면 24시간 동안 숨김
+  const hideUntil = localStorage.getItem("alpha13f_dday_hide_until");
+  if (hideUntil && Date.now() < Number(hideUntil)) {
+    banner.style.display = "none";
+    return;
+  }
+
+  if (btnClose) {
+    btnClose.addEventListener("click", () => {
+      banner.style.opacity = "0";
+      banner.style.transform = "translateY(-10px)";
+      setTimeout(() => {
+        banner.style.display = "none";
+      }, 300);
+      localStorage.setItem("alpha13f_dday_hide_until", Date.now() + 24 * 60 * 60 * 1000);
+    });
+  }
+
+  function tick() {
+    // 2026 Q3 SEC 13F 공시 마감: 미 동부시간 2026년 11월 14일 23:59:59 (UTC 기준 11월 15일 04:59:59)
+    const targetDate = new Date("2026-11-15T04:59:59Z").getTime();
+    const now = Date.now();
+    const diff = targetDate - now;
+
+    if (diff <= 0) {
+      if (badgeEl) badgeEl.innerText = "D-DAY";
+      if (chipEl) chipEl.innerText = "3분기 공시 시즌 개막!";
+      return;
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+    if (badgeEl) badgeEl.innerText = `D-${days}`;
+    if (chipEl) {
+      chipEl.innerText = `${days}일 ${String(hours).padStart(2, '0')}시간 ${String(mins).padStart(2, '0')}분 ${String(secs).padStart(2, '0')}초 남음`;
+    }
+  }
+
+  tick();
+  setInterval(tick, 1000);
+}
+
+/* ==============================================================================
+   🏆 3번 기능: 월가 큰손 집중 매수 (Smart Money Consensus) TOP 5 위젯
+   ============================================================================== */
+let CURRENT_CONSENSUS_TYPE = "HOLDERS";
+
+function initConsensusTabs() {
+  const wrap = document.getElementById("consensusToggleTabs");
+  if (!wrap) return;
+  wrap.querySelectorAll(".consensus-tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      wrap.querySelectorAll(".consensus-tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      renderConsensusWidget(btn.dataset.type);
+    });
+  });
+}
+
+function renderConsensusWidget(forceType) {
+  if (forceType) CURRENT_CONSENSUS_TYPE = forceType;
+  const grid = document.getElementById("consensusCardsGrid");
+  if (!grid || !RAW_HOLDINGS || RAW_HOLDINGS.length === 0) return;
+
+  const stats = {};
+
+  RAW_HOLDINGS.forEach(item => {
+    if (isDerivativeOrOption(item.name, item.ticker, item.titleOfClass)) return;
+    const baseTicker = getMappedTicker(item.name, item.ticker, item.cusip);
+    if (!baseTicker || baseTicker === "UNKNOWN") return;
+
+    if (!stats[baseTicker]) {
+      let displayName = item.name || baseTicker;
+      if (baseTicker === "SPY") displayName = "SPDR S&P 500 ETF Trust";
+      else if (baseTicker === "IVV") displayName = "iShares Core S&P 500 ETF";
+      else if (baseTicker === "QQQ") displayName = "Invesco QQQ Trust";
+      else if (baseTicker === "GOOGL") displayName = "Alphabet Inc. (Class A)";
+      else if (baseTicker === "GOOG") displayName = "Alphabet Inc. (Class C)";
+      else if (baseTicker === "META") displayName = "Meta Platforms Inc.";
+      else if (baseTicker === "MSFT") displayName = "Microsoft Corp.";
+      else if (baseTicker === "AMZN") displayName = "Amazon.com Inc.";
+      else if (baseTicker === "AAPL") displayName = "Apple Inc.";
+      else if (baseTicker === "NVDA") displayName = "NVIDIA Corp.";
+
+      stats[baseTicker] = {
+        ticker: baseTicker,
+        name: displayName,
+        sector: getMappedSector(baseTicker, item.sector),
+        holders: new Set(),
+        totalValue: 0
+      };
+    }
+
+    const guruName = item.guru || "기타 운용사";
+    const val = Number(item.value) || 0;
+
+    stats[baseTicker].holders.add(guruName);
+    stats[baseTicker].totalValue += val;
+  });
+
+  const list = Object.values(stats);
+  let sorted = [];
+
+  if (CURRENT_CONSENSUS_TYPE === "HOLDERS") {
+    // 🥇 최다 기관 합의 보유 순
+    sorted = list
+      .sort((a, b) => (b.holders.size - a.holders.size) || (b.totalValue - a.totalValue))
+      .slice(0, 5);
+  } else {
+    // 🥈 최대 자금 집중(평가액) 순
+    sorted = list
+      .sort((a, b) => (b.totalValue - a.totalValue) || (b.holders.size - a.holders.size))
+      .slice(0, 5);
+  }
+
+  if (sorted.length === 0) {
+    grid.innerHTML = `<div style="grid-column: 1 / -1; padding: 24px; text-align: center; color: var(--text-subdued); font-size: 13px;">집계된 종목이 없습니다.</div>`;
+    return;
+  }
+
+  grid.innerHTML = sorted.map((s, idx) => {
+    const isHolders = CURRENT_CONSENSUS_TYPE === "HOLDERS";
+    const holderCount = s.holders.size;
+    const actionBadge = isHolders 
+      ? `<span class="consensus-action-tag new">${holderCount}개사 보유</span>`
+      : `<span class="consensus-action-tag add">AUM 집중</span>`;
+
+    const realInfo = LIVE_PRICES[s.ticker];
+    const priceText = realInfo ? `$${realInfo.price.toFixed(2)}` : "-";
+    const chgVal = realInfo ? realInfo.changePct : 0.0;
+    const chgClass = chgVal > 0 ? "up" : (chgVal < 0 ? "down" : "");
+    const chgText = realInfo ? `${chgVal > 0 ? "+" : ""}${chgVal.toFixed(2)}%` : "";
+
+    return `
+      <div class="consensus-card" onclick="openConsensusStock('${s.ticker}')" title="클릭 시 ${s.name} 상세 분석 팝업을 엽니다">
+        <div>
+          <div class="consensus-rank-tag">TOP ${idx + 1}</div>
+          <div class="consensus-card-header">
+            <span class="consensus-ticker">${s.ticker}</span>
+            ${actionBadge}
+          </div>
+          <div class="consensus-name" title="${s.name}">${s.name}</div>
+        </div>
+        <div>
+          <div class="consensus-metric-row">
+            <span class="consensus-metric-label">보유 기관수</span>
+            <span class="consensus-metric-val" style="color: var(--spotify-green);">${holderCount}개 운용사</span>
+          </div>
+          <div class="consensus-metric-row">
+            <span class="consensus-metric-label">합산 평가액</span>
+            <span class="consensus-metric-val">${formatMoney(s.totalValue)}</span>
+          </div>
+          <div class="consensus-price-row">
+            <span class="consensus-price">${priceText}</span>
+            <span class="consensus-chg ${chgClass}">${chgText}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function openConsensusStock(ticker) {
+  const grand = GURU_DATABASE["__GRAND_TOTAL__"];
+  if (grand && grand.holdings) {
+    const found = grand.holdings.find(h => h.ticker === ticker || h.baseTicker === ticker);
+    if (found) {
+      openStockModal(found);
+      return;
+    }
+  }
+  // 만약 Grand Total에 없으면 기본 객체 생성 후 팝업
+  openStockModal({
+    ticker: ticker,
+    baseTicker: ticker,
+    name: ticker,
+    sector: "Technology",
+    shares: "-",
+    value: 0,
+    weight: 0,
+    estPrice: 100,
+    curPrice: LIVE_PRICES[ticker] ? LIVE_PRICES[ticker].price : 100,
+    insight: `월가 100대 운용사가 이번 분기에 집중 매수한 핵심 종목입니다.`
+  });
+}
+
+/* ==============================================================================
+   🔗 2번 기능: 13F 종목 상세 모달 내 '최근 내부자 거래 (Form 4)' 교차 분석 연동
+   ============================================================================== */
+async function renderModalInsiderCross(item) {
+  const container = document.getElementById("modalInsiderContent");
+  const convictionBadge = document.getElementById("modalConvictionBadge");
+  if (!container) return;
+
+  container.innerHTML = `<div style="padding: 16px; text-align: center; color: var(--text-subdued); font-size: 12px;">최근 경영진 내부자 거래(Form 4) 공시 대조 중...</div>`;
+  if (convictionBadge) convictionBadge.style.display = "none";
+
+  // Form 4 데이터가 메모리에 없으면 즉시 로드
+  if (!FORM4_DATA || FORM4_DATA.length === 0) {
+    try {
+      const res = await fetch("latest_form4_insiders.json?v=" + Date.now());
+      if (res.ok) {
+        FORM4_DATA = await res.json();
+      }
+    } catch (e) {
+      console.warn("Form 4 로드 실패:", e);
+    }
+  }
+
+  const ticker = (item.baseTicker || item.ticker || "").toUpperCase();
+  const matched = (FORM4_DATA || []).filter(f => (f.ticker || "").toUpperCase() === ticker);
+
+  if (!matched || matched.length === 0) {
+    container.innerHTML = `
+      <div class="insider-empty-msg">
+        <p>최근 공시된 핵심 경영진 내부자 거래 내역이 없거나 Form 4 모니터링 대상 기업에 포함되지 않았습니다.</p>
+        <span class="btn-goto-f4" onclick="switchToForm4WithTicker('${ticker}')">Form 4 전체 내부자 거래 대시보드 바로가기 ↗</span>
+      </div>
+    `;
+    return;
+  }
+
+  // 장내 매수(Code P) 여부 판정
+  const hasBuy = matched.some(f => f.transactionType === "P" || f.actionType === "BUY" || f.transactionCode === "P");
+  const isGuruBuy = item.action === "NEW" || item.action === "ADD" || (item.holders && item.holders >= 2);
+
+  if (hasBuy && isGuruBuy && convictionBadge) {
+    convictionBadge.style.display = "inline-block";
+    convictionBadge.innerText = "🔥 Double Conviction (기관+내부자 쌍끌이 매수)";
+    convictionBadge.title = "100대 메이저 운용사의 포트폴리오 편입과 함께 기업 경영진/임원의 직접 장내 매수(P)가 동시에 포착된 최고 등급의 신뢰 시그널입니다.";
+  } else if (hasBuy && convictionBadge) {
+    convictionBadge.style.display = "inline-block";
+    convictionBadge.innerText = "💼 임원 장내 매수 (Code P) 포착";
+  }
+
+  // 최근 5건 거래 목록 표
+  const recentTrades = matched.slice(0, 5);
+  const rowsHtml = recentTrades.map(trade => {
+    const isP = trade.transactionType === "P" || trade.actionType === "BUY" || trade.transactionCode === "P";
+    const typeBadge = isP 
+      ? `<span class="badge" style="background: rgba(30,215,96,0.18); color: #1ed760; font-size: 10px; font-weight: 800;">장내 매수 (P)</span>`
+      : `<span class="badge" style="background: rgba(243,114,127,0.18); color: #f3727f; font-size: 10px; font-weight: 800;">장내 매도 (S)</span>`;
+    
+    const sharesDisplay = trade.shares ? Number(trade.shares).toLocaleString() + " 주" : "-";
+    const priceDisplay = trade.price ? `$${Number(trade.price).toFixed(2)}` : "-";
+    const totalValDisplay = trade.value ? formatMoney(trade.value) : (trade.shares && trade.price ? formatMoney(trade.shares * trade.price) : "-");
+
+    return `
+      <tr>
+        <td style="white-space: nowrap; color: #9ca3af;">${trade.filingDate || trade.transactionDate || "-"}</td>
+        <td style="font-weight: 700; color: #ffffff;">${trade.insiderName || "-"}</td>
+        <td style="color: var(--text-subdued);">${trade.officerTitle || trade.insiderRole || "경영진/임원"}</td>
+        <td style="text-align: center;">${typeBadge}</td>
+        <td style="text-align: right;">${sharesDisplay}</td>
+        <td style="text-align: right;">${priceDisplay}</td>
+        <td style="text-align: right; font-weight: 700; color: #ffffff;">${totalValDisplay}</td>
+      </tr>
+    `;
+  }).join("");
+
+  container.innerHTML = `
+    <div class="insider-cross-table-wrap">
+      <table class="insider-cross-table">
+        <thead>
+          <tr>
+            <th>공시일자</th>
+            <th>내부자 성명</th>
+            <th>직책</th>
+            <th style="text-align: center;">유형</th>
+            <th style="text-align: right;">수량</th>
+            <th style="text-align: right;">단가</th>
+            <th style="text-align: right;">총 대금</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+      <span style="font-size: 11px; color: var(--text-subdued);">최근 공시 총 ${matched.length}건 중 최신 5건 표시</span>
+      <span class="btn-goto-f4" onclick="switchToForm4WithTicker('${ticker}')">이 종목의 Form 4 내부자 거래 전체 보기 ↗</span>
+    </div>
+  `;
+}
+
+function switchToForm4WithTicker(ticker) {
+  const modal = document.getElementById("stockModal");
+  if (modal) modal.classList.remove("show");
+  
+  switchFilingMode("FORM4");
+  
+  setTimeout(() => {
+    const searchInput = document.getElementById("f4SearchInput");
+    if (searchInput) {
+      searchInput.value = ticker;
+      searchInput.dispatchEvent(new Event("input"));
+    }
+  }, 150);
+}
+
 

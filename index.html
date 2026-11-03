@@ -9,18 +9,24 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=90">
+  <link rel="stylesheet" href="style.css?v=92">
 </head>
 <body>
   <div class="app-container">
+    <!-- 모바일 사이드바 배경 백드롭 (오프캔버스 드로어용) -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
     <!-- 사이드바: 100대 운용사 셀렉터 & 통합 브리핑 -->
     <aside class="sidebar" id="appSidebar">
       <div class="brand">
-        <div class="brand-badge"></div>
-        <div class="brand-text">
-          <h1 id="brandTitle">ALPHA <span>13F</span></h1>
-          <p id="brandSubtitle">운용사 포트폴리오 분석</p>
+        <div class="brand-left">
+          <div class="brand-badge"></div>
+          <div class="brand-text">
+            <h1 id="brandTitle">ALPHA <span>13F</span></h1>
+            <p id="brandSubtitle">운용사 포트폴리오 분석</p>
+          </div>
         </div>
+        <button type="button" class="btn-sidebar-close" id="btnSidebarClose" aria-label="사이드바 닫기">&times;</button>
       </div>
 
       <!-- SEC 공식 공시 모드 직관적 리스트 네비게이션 (원클릭 전환) -->
@@ -161,6 +167,44 @@
 
     <!-- 메인 컨텐츠 영역 -->
     <main class="main-content">
+      <!-- 모바일 전용 상단 퀵 헤더 (768px 이하 전용) -->
+      <div class="mobile-top-bar" id="mobileTopBar">
+        <button type="button" class="btn-mobile-menu" id="btnMobileMenu" aria-label="메뉴 열기">
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+        </button>
+        <div class="mobile-brand-title">
+          <span class="brand-dot"></span>
+          <h2>ALPHA <span>13F</span></h2>
+        </div>
+        <div class="mobile-header-tools">
+          <button type="button" class="mobile-tool-btn" id="btnMobileCsv" title="CSV 다운로드">
+            <span>CSV</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 🚨 2026 Q3 SEC 13F 공시 시즌 실시간 D-Day 카운트다운 스마트 배너 -->
+      <section class="filing-dday-banner" id="filingDdayBanner">
+        <div class="dday-banner-inner">
+          <div class="dday-badge-col">
+            <span class="dday-pulse-dot"></span>
+            <span class="dday-badge" id="ddayBadge">D-11</span>
+          </div>
+          <div class="dday-text-col">
+            <div class="dday-title-wrap">
+              <strong class="dday-headline">2026 Q3 SEC 13F 공시 시즌 카운트다운</strong>
+              <span class="dday-timer-chip" id="ddayTimerChip">11일 01시간 44분 남음</span>
+            </div>
+            <p class="dday-subtext">
+              미 SEC 규정에 따라 3분기(9.30) 포트폴리오는 <strong>11월 14일(미 동부시간)</strong>까지 전원 공시됩니다. 워렌 버핏 등 월가 100대 운용사의 최신 3분기 공식 포트폴리오가 제출 즉시 실시간 자동 수집·반영됩니다.
+            </p>
+          </div>
+          <button type="button" class="btn-dday-close" id="btnDdayClose" aria-label="배너 닫기" title="배너 닫기">&times;</button>
+        </div>
+      </section>
+
       <!-- 상단 헤더 바 -->
       <header class="top-header">
         <div class="guru-profile-header">
@@ -237,6 +281,26 @@
             </div>
             <div class="metric-value" id="metricTopHolding">-</div>
             <div class="metric-sub" id="metricTopHoldingSub">-</div>
+          </div>
+        </section>
+
+        <!-- 🏆 월가 큰손 집중 매수 (Smart Money Consensus) TOP 5 하이라이트 위젯 -->
+        <section class="consensus-widget-section" id="consensusWidgetSection">
+          <div class="consensus-widget-header">
+            <div class="consensus-title-wrap">
+              <div class="consensus-title-row">
+                <span class="badge consensus-badge">🔥 SMART MONEY</span>
+                <h3 id="consensusWidgetTitle">월가 큰손 집중 매수 합의 종목 (Consensus) TOP 5</h3>
+              </div>
+              <p class="consensus-subtext">미국 100대 메이저 운용사들이 이번 분기 가장 집중적으로 신규 매수하거나 비중을 확대한 핵심 합의 종목입니다.</p>
+            </div>
+            <div class="consensus-toggle-tabs" id="consensusToggleTabs">
+              <button type="button" class="consensus-tab-btn active" data-type="HOLDERS">🥇 최다 기관 합의 (Holders TOP 5)</button>
+              <button type="button" class="consensus-tab-btn" data-type="VALUE">🥈 최대 자금 집중 (Value TOP 5)</button>
+            </div>
+          </div>
+          <div class="consensus-cards-grid" id="consensusCardsGrid">
+            <!-- JS 동적 렌더링 -->
           </div>
         </section>
 
@@ -721,6 +785,17 @@
           </div>
         </div>
 
+        <!-- [NEW] 최근 경영진 내부자 거래 (Form 4) 크로스 분석 섹션 -->
+        <div class="modal-insider-cross-section" id="modalInsiderSection">
+          <div class="modal-sub-header-row">
+            <h4>👔 최근 경영진 내부자 거래 (Form 4) 현황</h4>
+            <span class="badge conviction-badge" id="modalConvictionBadge" style="display: none;">🔥 Double Conviction (쌍끌이 매수)</span>
+          </div>
+          <div class="modal-insider-cross-wrap" id="modalInsiderContent">
+            <!-- JS 동적 렌더링 -->
+          </div>
+        </div>
+
         <!-- 외부 실시간 시세 / 차트 바로가기 버튼 -->
         <div class="modal-links-row">
           <a id="linkYahooFinance" href="https://finance.yahoo.com" target="_blank" rel="noopener noreferrer" class="btn-ext-link yahoo">
@@ -830,10 +905,34 @@
   <!-- 트리맵 인터랙티브 플로팅 툴팁 (최상위 레이어) -->
   <div class="treemap-tooltip" id="treemapTooltip"></div>
 
+  <!-- 모바일 전용 하단 플로팅 탭 바 (768px 이하 전용) -->
+  <nav class="mobile-bottom-nav" id="mobileBottomNav">
+    <button type="button" class="mobile-nav-item active" data-mode="13F">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">13F 기관</span>
+    </button>
+    <button type="button" class="mobile-nav-item" data-mode="FORM4">
+      <span class="nav-icon">👔</span>
+      <span class="nav-label">내부자</span>
+    </button>
+    <button type="button" class="mobile-nav-item" data-mode="13D">
+      <span class="nav-icon">🎯</span>
+      <span class="nav-label">행동주의</span>
+    </button>
+    <button type="button" class="mobile-nav-item" data-mode="MACRO">
+      <span class="nav-icon">🧭</span>
+      <span class="nav-label">거시경제</span>
+    </button>
+    <button type="button" class="mobile-nav-item" id="btnMobileDrawerOpen">
+      <span class="nav-icon">🏛️</span>
+      <span class="nav-label">운용사</span>
+    </button>
+  </nav>
+
   <!-- Firebase SDK (v10 compat) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="app.js?v=96"></script>
+  <script src="app.js?v=98"></script>
 </body>
 </html>
