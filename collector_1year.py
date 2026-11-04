@@ -92,7 +92,8 @@ def parse_xml_holdings(xml_text, filing_date):
         security_class = fields.get('titleOfClass', '')
         if option not in ('', 'PUT', 'CALL') or share_type not in ('SH', 'PRN'):
             raise ValueError('Unknown security/share type')
-        key = '|'.join((cusip, security_class, share_type, option or 'EQUITY'))
+        # CUSIP identifies the security; issuer-supplied class wording is descriptive.
+        key = '|'.join((cusip, share_type, option or 'EQUITY'))
         if key not in holdings:
             holdings[key] = {'cusip': cusip, 'positionId': key,
                 'ticker': KNOWN_CUSIPS.get(cusip, {}).get('ticker', cusip),
@@ -231,6 +232,15 @@ def run_1year_sync(output_path=None, gurus=None):
     updated, failed = [], []
     for guru in GURUS if gurus is None else gurus:
         data = fetch_guru_1year(guru)
+        previous = results.get(guru['name'])
+        if data and isinstance(previous, dict) and (previous.get('latestPeriod') or previous.get('schemaVersion') == 2):
+            try:
+                if any(date.fromisoformat(data[field]) < date.fromisoformat(previous[field])
+                       for field in ('latestPeriod', 'filingDate')):
+                    raise ValueError('Response predates preserved period or filing date')
+            except (ValueError, KeyError, TypeError) as error:
+                print(f"Unable to update {guru['name']}: {error}; preserving previous data")
+                data = None
         if data:
             results[guru['name']] = data
             updated.append(guru['name'])

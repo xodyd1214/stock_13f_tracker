@@ -84,16 +84,27 @@ def main():
     if not isinstance(prices, dict):
         raise ValueError("Existing price cache must be an object")
     updated = 0
+    failed = []
     for ticker in sorted(target_tickers):
         info = fetch_yahoo_price(ticker)
+        previous = prices.get(ticker, {})
+        previous_time = previous.get('marketTime') if isinstance(previous, dict) else None
+        if info and isinstance(previous_time, (int, float)) and not isinstance(previous_time, bool) and math.isfinite(previous_time) and previous_time > 0:
+            observed = info.get('marketTime')
+            if not isinstance(observed, (int, float)) or isinstance(observed, bool) or not math.isfinite(observed) or observed < previous_time:
+                info = None
         if info:
             prices[ticker] = info
             updated += 1
+        else:
+            failed.append(ticker)
         time.sleep(.15)
     if updated:
         atomic_write_json(path, prices)
     print(f"Updated {updated}/{len(target_tickers)} prices; failed quotes retain original timestamps.")
-    return updated > 0
+    if failed:
+        print("Failed or regressing quotes: " + ", ".join(failed), file=sys.stderr)
+    return updated > 0 and not failed
 
 if __name__ == "__main__":
     sys.exit(0 if main() else 1)
