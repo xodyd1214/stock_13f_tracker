@@ -1,363 +1,406 @@
-import urllib.request
+"""Collect sourced macro observations without manufacturing missing values.
+
+Importing this module never fetches data or writes files. Collection is deliberately
+separate from publication so callers can test every failure path offline.
+"""
+
+import copy
+from datetime import datetime, timedelta, timezone
 import json
+import math
+from pathlib import Path
 import ssl
-from datetime import datetime, date
-import os
 import sys
+import urllib.parse
+import urllib.request
 
-# Windows 콘솔 UTF-8 설정
-if sys.platform == "win32":
+from data_io import atomic_write_json, load_json
+
+NY_FED_URL = "https://markets.newyorkfed.org/api/rates/all/latest.json"
+BLS_URL = "https://api.bls.gov/publicAPI/v1/timeseries/data/"
+OUTPUT_PATH = Path(__file__).resolve().parent / "latest_macro_indicators.json"
+TICKERS = (
+    ("^TNX", "yield10Y", "10년물 국채 금리", "treasury"),
+    ("^IRX", "yield13W", "3개월물 국채 수익률 지표", "treasury"),
+    ("^FVX", "yield5Y", "5년물 국채 금리", "treasury"),
+    ("DX-Y.NYB", "dxy", "달러 인덱스 (DXY)", "commoditiesAndFx"),
+    ("CL=F", "wtiOil", "WTI 원유 선물 ($)", "commoditiesAndFx"),
+    ("GC=F", "gold", "금 선물 ($)", "commoditiesAndFx"),
+)
+
+
+def _utc(now=None):
+    now = now or datetime.now(timezone.utc)
+    return now.replace(tzinfo=timezone.utc) if now.tzinfo is None else now.astimezone(timezone.utc)
+
+
+def _stamp(now):
+    return now.isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def _number(value):
+    if isinstance(value, bool) or value is None:
+        return None
     try:
-        sys.stdout.reconfigure(encoding="utf-8")
-    except Exception:
-        pass
+        value = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return value if math.isfinite(value) else None
 
-def log(msg):
+
+def _date(value):
+    if not isinstance(value, str):
+        return None
     try:
-        print(msg, flush=True)
-    except:
-        pass
+        return datetime.strptime(value, "%Y-%m" if len(value) == 7 else "%Y-%m-%d").date()
+    except ValueError:
+        return None
 
-log("=" * 80)
-log("[Alpha13F 실시간 거시경제(Macro) & FOMC 캘린더 수집기]")
-log("=" * 80)
 
-ctx = ssl.create_default_context()
-ctx.check_hostname = False
-ctx.verify_mode = ssl.CERT_NONE
+def _percent(value, digits=2):
+    return f"{value:.{digits}f}%" if value is not None else None
 
-macro_data = {
-    "lastUpdated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-    "fedRate": {
-        "targetRange": "3.50% ~ 3.75%",
-        "effr": "3.63%",
-        "sofr": "3.66%",
-        "effectiveDate": "2026-09-03"
-    },
-    "labor": {
-        "unemploymentRate": "4.1%",
-        "period": "August 2026",
-        "prevRate": "4.1%"
-    },
-    "inflation": {
-        "cpiIndex": 333.918,
-        "cpiYoY": "+3.4%",
-        "period": "July 2026"
-    },
-    "treasury": {
-        "yield10Y": {"val": 4.78, "change": 0.0, "label": "10년물 국채 금리"},
-        "yield13W": {"val": 3.76, "change": 0.0, "label": "3개월물 국채 (현금/기준금리 벤치마크)"},
-        "yield5Y": {"val": 4.55, "change": 0.0, "label": "5년물 국채 금리"},
-        "spread10Y_13W": {
-            "spread": 1.03,
-            "inverted": False,
-            "desc": "정상 우상향 (연착륙/경제성장 기대)"
-        }
-    },
-    "commoditiesAndFx": {
-        "dxy": {"val": 98.95, "change": -0.23, "label": "달러 인덱스 (DXY)"},
-        "wtiOil": {"val": 93.67, "change": 2.39, "label": "WTI 국제유가 ($)"},
-        "gold": {"val": 4446.7, "change": -0.67, "label": "국제 금 시세 ($)"}
-    },
-    "calendar": [],
-    "timeSeries": {
-        "treasuryDaily": [],
-        "policyMonthly": []
+
+def fetch_json(url, payload=None):
+    """Use certificate/hostname verification and bounded HTTP timeouts."""
+    headers = {"User-Agent": "Alpha13F macro collector", "Accept": "application/json"}
+    body = None
+    if payload is not None:
+        headers["Content-Type"] = "application/json"
+        body = json.dumps(payload).encode("utf-8")
+    request = urllib.request.Request(url, data=body, headers=headers)
+    with urllib.request.urlopen(request, timeout=10, context=ssl.create_default_context()) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
+def _chart_url(symbol, period):
+    symbol = urllib.parse.quote(symbol, safe="")
+    return f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?range={period}&interval=1d"
+
+
+def _chart_result(payload):
+    chart = payload.get("chart", {}) if isinstance(payload, dict) else {}
+    results = chart.get("result")
+    if chart.get("error") or not isinstance(results, list) or not results or not isinstance(results[0], dict):
+        raise ValueError("Market source returned no valid chart")
+    return results[0]
+
+
+def _observation_date(timestamp, now):
+    timestamp = _number(timestamp)
+    if timestamp is None:
+        raise ValueError("Market source omitted observation time")
+    try:
+        observed = datetime.fromtimestamp(timestamp, timezone.utc)
+    except (OverflowError, OSError, ValueError) as exc:
+        raise ValueError("Invalid market observation time") from exc
+    if observed > now + timedelta(minutes=5):
+        raise ValueError("Market source returned a future observation")
+    return observed.date().isoformat()
+
+
+def parse_ny_fed(payload, now):
+    rates = payload.get("refRates", []) if isinstance(payload, dict) else []
+    valid = {}
+    for row in rates:
+        if not isinstance(row, dict) or row.get("type") not in ("EFFR", "SOFR"):
+            continue
+        observed = _date(row.get("effectiveDate"))
+        rate = _number(row.get("percentRate"))
+        if observed and observed <= now.date() and rate is not None:
+            if row["type"] not in valid or observed > _date(valid[row["type"]]["effectiveDate"]):
+                valid[row["type"]] = row
+    effr = valid.get("EFFR")
+    if not effr:
+        raise ValueError("NY Fed returned no dated EFFR observation")
+    lower, upper = _number(effr.get("targetRateFrom")), _number(effr.get("targetRateTo"))
+    if lower is None or upper is None or lower > upper:
+        lower = upper = None
+    sofr = valid.get("SOFR", {})
+    return {
+        "targetRange": f"{lower:.2f}% ~ {upper:.2f}%" if lower is not None else None,
+        "targetLower": lower,
+        "targetUpper": upper,
+        "effr": _percent(_number(effr.get("percentRate"))),
+        "sofr": _percent(_number(sofr.get("percentRate"))),
+        "effectiveDate": effr["effectiveDate"],
+        "sofrEffectiveDate": sofr.get("effectiveDate"),
     }
-}
 
-# 1. 뉴욕 연방준비은행 공식 금리 API 수집
-try:
-    log("[1/3] 뉴욕 연방준비은행(New York Fed) 공식 금리 수집 중...")
-    ny_url = 'https://markets.newyorkfed.org/api/rates/all/latest.json'
-    req = urllib.request.Request(ny_url, headers={'User-Agent': 'Mozilla/5.0'})
-    with urllib.request.urlopen(req, timeout=8, context=ctx) as resp:
-        ny_data = json.loads(resp.read().decode('utf-8'))
-        effr = next((r for r in ny_data.get('refRates', []) if r.get('type') == 'EFFR'), {})
-        sofr = next((r for r in ny_data.get('refRates', []) if r.get('type') == 'SOFR'), {})
-        if effr:
-            t_from = effr.get('targetRateFrom', 3.50)
-            t_to = effr.get('targetRateTo', 3.75)
-            macro_data["fedRate"] = {
-                "targetRange": f"{t_from:.2f}% ~ {t_to:.2f}%",
-                "effr": f"{effr.get('percentRate', 3.63):.2f}%",
-                "sofr": f"{sofr.get('percentRate', 3.66):.2f}%",
-                "effectiveDate": effr.get('effectiveDate', '2026-09-03')
-            }
-            log(f"  연준 기준금리: {macro_data['fedRate']['targetRange']} (EFFR: {macro_data['fedRate']['effr']})")
-except Exception as e:
-    log(f"  NY Fed 수집 실패 (기본값 유지): {e}")
 
-# 2. 미국 노동통계국(BLS) 공식 v1 API 수집 (고용 & 물가)
-try:
-    log("[2/3] 미국 노동통계국(BLS) 고용 및 CPI 물가 수집 중...")
-    bls_url = 'https://api.bls.gov/publicAPI/v1/timeseries/data/'
-    payload = json.dumps({
-        'seriesid': ['CUUR0000SA0', 'LNS14000000'],
-        'startyear': '2024',
-        'endyear': '2026'
-    }).encode('utf-8')
-    req = urllib.request.Request(bls_url, data=payload, headers={'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0'})
-    with urllib.request.urlopen(req, timeout=10, context=ctx) as resp:
-        bls_res = json.loads(resp.read().decode('utf-8'))
-        cpi_map = {}
-        unemp_map = {}
-        for s in bls_res.get('Results', {}).get('series', []):
-            sid = s.get('seriesID')
-            for row in s.get('data', []):
-                yr = row['year']
-                prd = row['period']
-                if prd.startswith('M') and prd != 'M13':
-                    k = f"{yr}-{prd[1:]}"
-                    raw_v = row['value'].strip()
-                    if raw_v not in ['-', '']:
-                        val = float(raw_v)
-                        if sid == 'CUUR0000SA0':
-                            cpi_map[k] = val
-                        else:
-                            unemp_map[k] = val
+def parse_bls(payload, now):
+    if not isinstance(payload, dict) or payload.get("status") != "REQUEST_SUCCEEDED":
+        raise ValueError("BLS did not report a successful request")
+    maps = {"CUUR0000SA0": {}, "LNS14000000": {}}
+    for series in payload.get("Results", {}).get("series", []):
+        values = maps.get(series.get("seriesID"))
+        if values is None:
+            continue
+        for row in series.get("data", []):
+            period = row.get("period", "")
+            month = f"{row.get('year')}-{period[1:]}"
+            observed = _date(month)
+            value = _number(row.get("value"))
+            if len(period) != 3 or not period.startswith("M") or not observed or observed > now.date() or value is None:
+                continue
+            if (series["seriesID"] == "CUUR0000SA0" and value <= 0) or (series["seriesID"] == "LNS14000000" and not 0 <= value <= 100):
+                continue
+            values[month] = value
+    return maps["CUUR0000SA0"], maps["LNS14000000"]
 
-        cpi_sorted = sorted(cpi_map.keys(), reverse=True)
-        unemp_sorted = sorted(unemp_map.keys(), reverse=True)
-        if cpi_sorted and len(cpi_sorted) >= 13:
-            cur_k = cpi_sorted[0]
-            prev_yr_k = f"{int(cur_k[:4])-1}{cur_k[4:]}"
-            if prev_yr_k in cpi_map:
-                cur_cpi = cpi_map[cur_k]
-                prev_yr_cpi = cpi_map[prev_yr_k]
-                yoy = ((cur_cpi - prev_yr_cpi) / prev_yr_cpi) * 100
-                macro_data["inflation"] = {
-                    "cpiIndex": cur_cpi,
-                    "cpiYoY": f"{yoy:+.1f}%",
-                    "period": cur_k
-                }
-                log(f"  CPI 소비자물가지수: {cur_cpi} (전년 대비 {macro_data['inflation']['cpiYoY']})")
 
-        if unemp_sorted:
-            cur_u = unemp_sorted[0]
-            prev_u = unemp_sorted[1] if len(unemp_sorted) > 1 else None
-            macro_data["labor"] = {
-                "unemploymentRate": f"{unemp_map[cur_u]}%",
-                "period": cur_u,
-                "prevRate": f"{unemp_map[prev_u]}%" if prev_u else None
-            }
-            log(f"  실업률: {macro_data['labor']['unemploymentRate']} ({cur_u})")
+def _previous_month(month):
+    return (_date(month).replace(day=1) - timedelta(days=1)).strftime("%Y-%m")
 
-        # 월별 정책 시계열 생성 (2025-01부터)
-        months = sorted([m for m in cpi_map.keys() if m >= '2025-01'])
-        monthly_policy = []
-        effr_base = 3.63
-        for m in months:
-            prev_m = f"{int(m[:4])-1}{m[4:]}"
-            if prev_m in cpi_map:
-                yoy_val = round(((cpi_map[m] - cpi_map[prev_m]) / cpi_map[prev_m]) * 100, 2)
-                u_val = unemp_map.get(m, None)
-                monthly_policy.append({
-                    "month": m,
-                    "cpiYoY": yoy_val,
-                    "unemployment": u_val,
-                    "realRate": round(effr_base - yoy_val, 2)
-                })
-        macro_data["timeSeries"]["policyMonthly"] = monthly_policy
-        log(f"  월별 정책 시계열: {len(monthly_policy)}개월 완료")
-except Exception as e:
-    log(f"  BLS 수집 실패 (기본값 유지): {e}")
 
-# 3. 국채 금리 및 매크로 자산 수집
-tickers = [
-    ('^TNX', 'yield10Y', '10년물 국채 금리'),
-    ('^IRX', 'yield13W', '3개월물 국채 (현금/기준금리 벤치마크)'),
-    ('^FVX', 'yield5Y', '5년물 국채 금리'),
-    ('DX-Y.NYB', 'dxy', '달러 인덱스 (DXY)'),
-    ('CL=F', 'wtiOil', 'WTI 국제유가 ($)'),
-    ('GC=F', 'gold', '국제 금 시세 ($)')
-]
+def _cpi_yoy(values, month):
+    previous = f"{int(month[:4]) - 1}{month[4:]}"
+    if month not in values or not values.get(previous):
+        return None
+    return (values[month] / values[previous] - 1) * 100
 
-log("[3/3] 미국 국채 금리, 달러 인덱스, 유가, 금값 수집 중...")
-for sym, key, label in tickers:
-    url = f'https://query1.finance.yahoo.com/v8/finance/chart/{sym}?range=1d&interval=1d'
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-    try:
-        with urllib.request.urlopen(req, timeout=8, context=ctx) as resp:
-            meta = json.loads(resp.read().decode('utf-8'))['chart']['result'][0]['meta']
-            p = meta.get('regularMarketPrice')
-            prev = meta.get('chartPreviousClose')
-            chg = ((p - prev) / prev * 100) if p and prev else 0.0
-            if 'yield' in key:
-                macro_data["treasury"][key] = {"val": round(p, 2), "change": round(chg, 2), "label": label}
-            else:
-                macro_data["commoditiesAndFx"][key] = {"val": round(p, 2), "change": round(chg, 2), "label": label}
-    except Exception as e:
-        log(f"  {label} 수집 실패: {e}")
 
-# 3-1. 미국 국채 1년 일별 시계열 수집 (3M, 5Y, 10Y 및 장단기 스프레드)
-log("[3-1] 미국 국채 1년 시계열(3M, 5Y, 10Y) 일별 수집 중...")
-treasury_1y_data = {}
-for sym, key in [('^IRX', 'y3m'), ('^FVX', 'y5y'), ('^TNX', 'y10y')]:
-    url = f'https://query1.finance.yahoo.com/v8/finance/chart/{sym}?range=1y&interval=1d'
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-    try:
-        with urllib.request.urlopen(req, timeout=10, context=ctx) as resp:
-            d = json.loads(resp.read().decode('utf-8'))['chart']['result'][0]
-            ts = d['timestamp']
-            closes = d['indicators']['quote'][0]['close']
-            series = {}
-            for t, c in zip(ts, closes):
-                if c is not None:
-                    dt = datetime.fromtimestamp(t).strftime('%Y-%m-%d')
-                    series[dt] = round(c, 2)
-            treasury_1y_data[key] = series
-    except Exception as e:
-        log(f"  {sym} 1년 시계열 수집 실패: {e}")
-
-if 'y3m' in treasury_1y_data and 'y5y' in treasury_1y_data and 'y10y' in treasury_1y_data:
-    common_dates = sorted(list(set(treasury_1y_data['y3m'].keys()) & set(treasury_1y_data['y5y'].keys()) & set(treasury_1y_data['y10y'].keys())))
-    daily_list = []
-    for dt in common_dates:
-        y3 = treasury_1y_data['y3m'][dt]
-        y5 = treasury_1y_data['y5y'][dt]
-        y10_val = treasury_1y_data['y10y'][dt]
-        daily_list.append({
-            "date": dt,
-            "y3m": y3,
-            "y5y": y5,
-            "y10y": y10_val,
-            "spread": round(y10_val - y3, 2)
-        })
-    macro_data["timeSeries"]["treasuryDaily"] = daily_list
-    log(f"  미국 국채 일별 시계열 완료: {len(daily_list)}영업일 ({daily_list[0]['date']} ~ {daily_list[-1]['date']})")
-
-# 장단기 금리차 (10년물 - 3개월물) 계산
-y10 = macro_data["treasury"].get("yield10Y", {}).get("val", 4.78)
-y13w = macro_data["treasury"].get("yield13W", {}).get("val", 3.76)
-spread = round(y10 - y13w, 2)
-macro_data["treasury"]["spread10Y_13W"] = {
-    "spread": spread,
-    "inverted": spread < 0,
-    "desc": "장단기 금리 역전 (경기침체 강력 경고)" if spread < 0 else "정상 우상향 (연착륙/성장 궤도)"
-}
-
-# 4. 공식 정책/경제학 기준선 (Ground Truth Benchmarks)
-effr_val = float(macro_data["fedRate"].get("effr", "3.63%").replace("%", ""))
-cpi_yoy_val = float(macro_data["inflation"].get("cpiYoY", "+3.4%").replace("%", "").replace("+", ""))
-real_rate_val = round(effr_val - cpi_yoy_val, 2)
-
-macro_data["benchmarks"] = {
-    "fedRate": {
-        "current": macro_data["fedRate"]["targetRange"],
-        "currentMid": 3.625,
-        "effr": macro_data["fedRate"]["effr"],
-        "sofr": macro_data["fedRate"]["sofr"],
-        "neutralRate": "2.90%",  # 연준 FOMC 점도표상 장기 중립금리 중간값
-        "neutralVal": 2.90,
-        "gapToNeutral": "+0.73%p",
-        "realRate": f"{real_rate_val:+.2f}%p",
-        "zone": "중립선 상회 (제약적 긴축 영역)"
-    },
-    "inflation": {
-        "current": macro_data["inflation"]["cpiYoY"],
-        "currentVal": cpi_yoy_val,
-        "fedTarget": "2.0%",     # 미 연방준비법 법정 물가목표
-        "targetVal": 2.0,
-        "gapToTarget": f"+{cpi_yoy_val - 2.0:.2f}%p",
-        "prevRate": "+3.4%",
-        "forecast": "+3.2%",
-        "zone": "법정 목표 2.0% 상회"
-    },
-    "yieldCurve": {
-        "currentSpread": spread,
-        "yield10Y": y10,
-        "yield13W": y13w,
-        "recessionThreshold": 0.00, # 뉴욕 연준 침체 역전선 (0%p 이하)
-        "status": "정상 우상향 (역전선 0%p 상회)"
-    },
-    "cashRiskFree": {
-        "rate": y13w,
-        "sp500Dividend": 1.30,
-        "spreadToEquity": round(y13w - 1.30, 2),
-        "desc": f"단기국채 무위험 확정 수익률 (연 {y13w}%)"
+def _inflation(values):
+    if not values:
+        raise ValueError("BLS returned no CPI observations")
+    month = max(values)
+    yoy, previous = _cpi_yoy(values, month), _cpi_yoy(values, _previous_month(month))
+    return {
+        "cpiIndex": values[month], "cpiYoY": f"{yoy:+.1f}%" if yoy is not None else None,
+        "cpiYoYValue": round(yoy, 4) if yoy is not None else None,
+        "period": month, "prevRate": f"{previous:+.1f}%" if previous is not None else None,
     }
-}
 
-# 5. 주요 매크로 일정 및 이전치/예상치/D-Day 캘린더 생성
-today = date(2026, 9, 8) # 현재 기준일
 
-raw_events = [
-    {
-        "name": "미국 8월 PPI 생산자물가지수",
-        "date": "2026-09-10",
-        "category": "INFLATION",
-        "impact": "MEDIUM",
-        "previous": "+2.2% (7월)",
-        "forecast": "+2.3%",
-        "actual": "발표 대기",
-        "description": "미 노동통계국(BLS) 공식 발표 생산자물가지수 (도매 물가 측정)."
-    },
-    {
-        "name": "미국 8월 CPI 소비자물가지수",
-        "date": "2026-09-11",
-        "category": "INFLATION",
-        "impact": "HIGH",
-        "previous": "+3.4% (7월)",
-        "forecast": "+3.2%",
-        "actual": "발표 대기",
-        "description": "미 노동통계국(BLS) 공식 발표 소비자물가지수 (연방준비법 법정 물가목표: 2.00%)."
-    },
-    {
-        "name": "미국 8월 소매판매 지수",
-        "date": "2026-09-15",
-        "category": "CONSUMER",
-        "impact": "MEDIUM",
-        "previous": "+1.0% (7월)",
-        "forecast": "+0.3%",
-        "actual": "발표 대기",
-        "description": "미 인구조사국(Census Bureau) 공식 발표 소매판매 지수 (가계 소비 지출 측정)."
-    },
-    {
-        "name": "FOMC 정례회의 (9월 15일~16일)",
-        "date": "2026-09-15",
-        "releaseDate": "2026-09-16",
-        "category": "FED",
-        "impact": "CRITICAL",
-        "previous": "3.50% ~ 3.75% (7월)",
-        "forecast": "기준금리 및 SEP 점도표",
-        "actual": "발표 대기",
-        "description": "연방공개시장위원회(FOMC) 정례회의. 기준금리 목표 범위 및 분기 경제전망(SEP 점도표) 공식 발표."
-    },
-    {
-        "name": "미국 9월 비농업 고용보고서 (NFP)",
-        "date": "2026-10-02",
-        "category": "LABOR",
-        "impact": "CRITICAL",
-        "previous": "14.2만 건 (8월)",
-        "forecast": "15.5만 건 (실업률 4.1%)",
-        "actual": "발표 대기",
-        "description": "미 노동통계국(BLS) 공식 발표 비농업 부문 신규 일자리 수 및 실업률."
+def _labor(values):
+    if not values:
+        raise ValueError("BLS returned no unemployment observations")
+    month = max(values)
+    return {"unemploymentRate": _percent(values[month], 1), "period": month,
+            "prevRate": _percent(values.get(_previous_month(month)), 1)}
+
+
+def parse_quote(payload, now, label):
+    meta = _chart_result(payload).get("meta", {})
+    price, previous = _number(meta.get("regularMarketPrice")), _number(meta.get("chartPreviousClose"))
+    if price is None:
+        raise ValueError("Market source omitted a finite price")
+    as_of = _observation_date(meta.get("regularMarketTime"), now)
+    change = ((price - previous) / previous * 100) if previous not in (None, 0) else None
+    return {"val": round(price, 2), "change": round(change, 2) if change is not None else None,
+            "label": label, "asOf": as_of}
+
+
+def parse_treasury_history(payload, now):
+    result = _chart_result(payload)
+    timestamps = result.get("timestamp", [])
+    quotes = result.get("indicators", {}).get("quote", [])
+    closes = quotes[0].get("close", []) if quotes else []
+    if len(timestamps) != len(closes):
+        raise ValueError("Market history has mismatched timestamps and values")
+    values = {}
+    for timestamp, close in zip(timestamps, closes):
+        value = _number(close)
+        if value is not None:
+            values[_observation_date(timestamp, now)] = round(value, 2)
+    if not values:
+        raise ValueError("Market source returned empty treasury history")
+    return values
+
+
+def empty_macro():
+    """A missing observation is null, never a sample or a guessed zero."""
+    result = {
+        "schemaVersion": 2, "lastUpdated": None, "collectedAt": None, "status": "unavailable",
+        "fedRate": {"targetRange": None, "targetLower": None, "targetUpper": None,
+                    "effr": None, "sofr": None, "effectiveDate": None, "sofrEffectiveDate": None},
+        "labor": {"unemploymentRate": None, "period": None, "prevRate": None},
+        "inflation": {"cpiIndex": None, "cpiYoY": None, "cpiYoYValue": None, "period": None, "prevRate": None},
+        "treasury": {}, "commoditiesAndFx": {}, "calendar": [],
+        "timeSeries": {"treasuryDaily": [], "policyMonthly": []}, "sources": {},
     }
-]
+    for _, key, label, section in TICKERS:
+        result[section][key] = {"val": None, "change": None, "label": label, "asOf": None}
+    return result
 
-calendar = []
-for ev in raw_events:
-    ev_date = datetime.strptime(ev["date"], "%Y-%m-%d").date()
-    days_diff = (ev_date - today).days
-    d_day_str = f"D-{days_diff}" if days_diff > 0 else ("D-DAY" if days_diff == 0 else f"D+{abs(days_diff)}")
-    calendar.append({
-        **ev,
-        "daysDiff": days_diff,
-        "dDay": d_day_str
-    })
 
-calendar.sort(key=lambda x: x["daysDiff"])
-macro_data["calendar"] = calendar
+def _source_meta(url, now, as_of=None, max_age=7, error=None, previous=None):
+    observed = _date(as_of)
+    age = (now.date() - observed).days if observed else None
+    status = "success" if observed else "unavailable"
+    if observed and (error or age > max_age):
+        status = "stale"
+    elif error:
+        status = "error"
+    return {"url": url, "status": status, "fetchStatus": "error" if error else "success",
+            "asOf": as_of, "ageDays": age, "maxAgeDays": max_age, "checkedAt": _stamp(now),
+            "lastSuccessAt": previous.get("lastSuccessAt") if error and previous else (_stamp(now) if not error else None),
+            "error": str(error) if error else None}
 
-# 6. 파일 저장
-output_path = "latest_macro_indicators.json"
-with open(output_path, "w", encoding="utf-8") as f:
-    json.dump(macro_data, f, ensure_ascii=False, indent=2)
 
-log(f"\n[Alpha13F] 최신 매크로 지표 및 캘린더가 '{output_path}'에 완벽 저장되었습니다!")
-log(f"   * 연준 기준금리: {macro_data['fedRate']['targetRange']} (EFFR: {macro_data['fedRate']['effr']})")
-log(f"   * 물가/고용: CPI {macro_data['inflation']['cpiYoY']} | 실업률 {macro_data['labor']['unemploymentRate']}")
-log(f"   * 국채/환율: 10Y {macro_data['treasury']['yield10Y']['val']}% | DXY {macro_data['commoditiesAndFx']['dxy']['val']}")
-log(f"   * 다음 FOMC: {calendar[3]['dDay']} ({calendar[3]['date']})")
-log("=" * 80)
+def _trusted_previous(previous, key, url):
+    """The old bundled dataset lacks provenance and includes invented values."""
+    if not isinstance(previous, dict) or previous.get("schemaVersion") != 2:
+        return None
+    meta = previous.get("sources", {}).get(key, {})
+    if (isinstance(meta, dict) and meta.get("url") == url and _date(meta.get("asOf"))
+            and meta.get("lastSuccessAt") and meta.get("status") in ("success", "stale")):
+        return meta
+    return None
+
+
+def _get_path(data, path):
+    for key in path:
+        data = data[key]
+    return data
+
+
+def _set_path(data, path, value):
+    for key in path[:-1]:
+        data = data[key]
+    data[path[-1]] = copy.deepcopy(value)
+
+
+def _derive(data):
+    y10, y3 = data["treasury"]["yield10Y"], data["treasury"]["yield13W"]
+    # Do not combine an old cached point with a different observation date.
+    comparable = y10["val"] is not None and y3["val"] is not None and y10.get("asOf") == y3.get("asOf")
+    spread = round(y10["val"] - y3["val"], 2) if comparable else None
+    description = None if spread is None else ("10년물 수익률이 3개월물보다 낮음" if spread < 0 else "10년물 수익률이 3개월물 이상")
+    data["treasury"]["spread10Y_13W"] = {
+        "spread": spread, "inverted": spread < 0 if spread is not None else None,
+        "desc": description, "asOf": y10.get("asOf") if comparable else None,
+    }
+    fed, inflation = data["fedRate"], data["inflation"]
+    lower, upper = fed.get("targetLower"), fed.get("targetUpper")
+    data["benchmarks"] = {
+        "fedRate": {"current": fed["targetRange"], "currentMid": (lower + upper) / 2 if lower is not None and upper is not None else None,
+                    "effr": fed["effr"], "sofr": fed["sofr"], "neutralRate": None, "neutralVal": None,
+                    "gapToNeutral": None, "realRate": None, "zone": None},
+        "inflation": {"current": inflation["cpiYoY"], "currentVal": inflation["cpiYoYValue"],
+                      "fedTarget": None, "targetVal": None, "gapToTarget": None,
+                      "prevRate": inflation["prevRate"], "forecast": None, "zone": None},
+        "yieldCurve": {"currentSpread": spread, "yield10Y": y10["val"], "yield13W": y3["val"],
+                       "recessionThreshold": None, "status": description},
+        "cashRiskFree": {"rate": y3["val"], "sp500Dividend": None, "spreadToEquity": None,
+                         "desc": "3개월물 국채 수익률 지표 (확정 투자수익률 아님)" if y3["val"] is not None else None},
+    }
+
+
+def collect_macro(previous=None, *, now=None, fetcher=None):
+    """Return a snapshot plus per-source freshness; never write as a side effect."""
+    now, fetcher = _utc(now), fetcher or fetch_json
+    previous = previous or {}
+    data = empty_macro()
+    data["collectedAt"] = _stamp(now)
+    successful = []
+
+    def collect(key, url, path, producer, as_of, max_age=7):
+        prior_meta = _trusted_previous(previous, key, url)
+        try:
+            value = producer()
+            observed = as_of(value)
+            if not _date(observed) or _date(observed) > now.date():
+                raise ValueError("Source omitted a valid observation date")
+            if prior_meta and _date(observed) < _date(prior_meta["asOf"]):
+                raise ValueError("Source is older than the preserved observation")
+            _set_path(data, path, value)
+            data["sources"][key] = _source_meta(url, now, observed, max_age)
+            successful.append(key)
+        except Exception as exc:
+            if prior_meta:
+                try:
+                    _set_path(data, path, _get_path(previous, path))
+                except (KeyError, TypeError):
+                    prior_meta = None
+            data["sources"][key] = _source_meta(url, now, prior_meta.get("asOf") if prior_meta else None,
+                                                 max_age, exc, prior_meta)
+
+    collect("nyFed", NY_FED_URL, ("fedRate",), lambda: parse_ny_fed(fetcher(NY_FED_URL), now),
+            lambda value: min(d for d in (value["effectiveDate"], value["sofrEffectiveDate"]) if d))
+    # Ask for enough history to calculate year-on-year inflation, including January.
+    try:
+        cpi, unemployment = parse_bls(fetcher(BLS_URL, {"seriesid": ["CUUR0000SA0", "LNS14000000"],
+                                                    "startyear": str(now.year - 2), "endyear": str(now.year)}), now)
+        bls_error = None
+    except Exception as exc:
+        cpi, unemployment, bls_error = {}, {}, exc
+
+    def bls_value(builder, values):
+        if bls_error:
+            raise bls_error
+        return builder(values)
+
+    collect("blsInflation", BLS_URL, ("inflation",), lambda: bls_value(_inflation, cpi), lambda value: value["period"], 75)
+    collect("blsLabor", BLS_URL, ("labor",), lambda: bls_value(_labor, unemployment), lambda value: value["period"], 75)
+
+    def monthly_policy():
+        if bls_error:
+            raise bls_error
+        if not cpi or not unemployment:
+            # A partial BLS reply must not erase the other series' saved history.
+            raise ValueError("BLS omitted a series needed for monthly history")
+        months = sorted(month for month in set(cpi) | set(unemployment) if month >= f"{now.year - 1}-01")
+        if not months:
+            raise ValueError("BLS returned no monthly history")
+        return [{"month": month, "cpiYoY": round(_cpi_yoy(cpi, month), 2) if _cpi_yoy(cpi, month) is not None else None,
+                 "unemployment": unemployment.get(month), "realRate": None} for month in months]
+
+    collect("policyMonthly", BLS_URL, ("timeSeries", "policyMonthly"), monthly_policy, lambda value: value[-1]["month"], 75)
+    for symbol, key, label, section in TICKERS:
+        url = _chart_url(symbol, "1d")
+        collect(key, url, (section, key), lambda url=url, label=label: parse_quote(fetcher(url), now, label), lambda value: value["asOf"])
+
+    def treasury_history():
+        series = {key: parse_treasury_history(fetcher(_chart_url(symbol, "1y")), now)
+                  for symbol, key in (("^IRX", "y3m"), ("^FVX", "y5y"), ("^TNX", "y10y"))}
+        dates = sorted(set.intersection(*(set(values) for values in series.values())))
+        if not dates:
+            raise ValueError("Treasury histories have no common observation dates")
+        return [{"date": day, "y3m": series["y3m"][day], "y5y": series["y5y"][day],
+                 "y10y": series["y10y"][day], "spread": round(series["y10y"][day] - series["y3m"][day], 2)} for day in dates]
+
+    collect("treasuryDaily", "https://query1.finance.yahoo.com/v8/finance/chart/", ("timeSeries", "treasuryDaily"),
+            treasury_history, lambda value: value[-1]["date"])
+    data["sources"]["calendar"] = {"status": "unavailable", "fetchStatus": "not_configured", "asOf": None,
+                                     "error": "No verified event-calendar source is configured"}
+    data["collection"] = {"successfulSources": successful,
+                          "failedSources": [key for key, source in data["sources"].items() if source["fetchStatus"] == "error"]}
+    data["lastUpdated"] = _stamp(now) if successful else (previous.get("lastUpdated") if previous.get("schemaVersion") == 2 else None)
+    data["status"] = "success" if successful and not data["collection"]["failedSources"] else ("partial" if successful else "unavailable")
+    if data["status"] == "success" and any(source["status"] == "stale" for source in data["sources"].values()):
+        data["status"] = "stale"
+    _derive(data)
+    return data
+
+
+def run(output_path=OUTPUT_PATH, *, now=None, fetcher=None):
+    """Publish only a validated, at-least-partly successful snapshot atomically.
+
+    Total fetch failure and malformed existing JSON leave the original bytes intact.
+    Failed source sections are retained only when their provenance was recorded by
+    this collector; old bundled samples are not treated as verified observations.
+    """
+    previous = load_json(output_path, {})
+    if not isinstance(previous, dict):
+        raise ValueError("Existing macro dataset must be a JSON object")
+    data = collect_macro(previous, now=now, fetcher=fetcher)
+    if not data["collection"]["successfulSources"]:
+        raise RuntimeError("All macro sources failed; existing data was not replaced")
+    atomic_write_json(output_path, data)
+    return data
+
+
+def main():
+    try:
+        data = run()
+    except Exception as exc:
+        print(f"Macro collection failed: {exc}", file=sys.stderr)
+        return 1
+    print(f"Macro collection {data['status']}: {len(data['collection']['successfulSources'])} sources saved to {OUTPUT_PATH}")
+    # Expose partial failures to the sync controller rather than claiming success.
+    return 0 if data["status"] == "success" else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

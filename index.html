@@ -374,8 +374,8 @@
                   <label><input type="checkbox" data-col="shares" checked> 보유 주식수</label>
                   <label><input type="checkbox" data-col="value" checked> 총 평가 금액 ($)</label>
                   <label><input type="checkbox" data-col="weight" checked> 통합 비중 (%)</label>
-                  <label><input type="checkbox" data-col="estPrice" checked> 분기말 종가</label>
-                  <label><input type="checkbox" data-col="curPrice" checked> 현재 실시간가 (1분)</label>
+                  <label><input type="checkbox" data-col="estPrice" checked> 공시 평가단가</label>
+                  <label><input type="checkbox" data-col="curPrice" checked> 최근 조회 시세</label>
                   <label><input type="checkbox" data-col="discount" checked> 분기말 대비 (%)</label>
                 </div>
               </div>
@@ -394,9 +394,9 @@
                   <th class="col-shares sortable text-right" data-sort="shares">주식 수</th>
                   <th class="col-value sortable text-right" data-sort="value">총 평가 금액 ($)</th>
                   <th class="col-weight sortable text-right" data-sort="weight">통합 비중 (%)</th>
-                  <th class="col-estPrice sortable text-right" data-sort="estPrice" title="SEC 13F 분기 말일 종가 기준 (공시 분기 마지막 거래일 시장 종가)">분기말 종가</th>
-                  <th class="col-curPrice sortable text-right" data-sort="curPrice">현재 실시간가 (1분)</th>
-                  <th class="col-discount sortable text-right" data-sort="discount" title="분기말 종가 대비 현재 실시간 주가의 등락률">분기말 대비</th>
+                  <th class="col-estPrice sortable text-right" data-sort="estPrice" title="공시 평가액 ÷ 보유 주식 수 (실제 매입가 아님)">공시 평가단가</th>
+                  <th class="col-curPrice sortable text-right" data-sort="curPrice">최근 조회 시세</th>
+                  <th class="col-discount sortable text-right" data-sort="discount" title="공시 평가단가 대비 현재 실시간 주가의 등락률">분기말 대비</th>
                 </tr>
               </thead>
               <tbody id="tableBody">
@@ -643,9 +643,9 @@
             </div>
             <!-- 범례 및 실시간 수치 -->
             <div class="chart-legend-row" id="yieldChartLegend">
-              <div class="legend-item"><span class="legend-dot blue"></span> 3개월물: <strong id="legendY3M">3.81%</strong></div>
-              <div class="legend-item"><span class="legend-dot amber"></span> 5년물: <strong id="legendY5Y">4.62%</strong></div>
-              <div class="legend-item"><span class="legend-dot green"></span> 10년물: <strong id="legendY10Y">4.85%</strong></div>
+              <div class="legend-item"><span class="legend-dot blue"></span> 3개월물: <strong id="legendY3M">-</strong></div>
+              <div class="legend-item"><span class="legend-dot amber"></span> 5년물: <strong id="legendY5Y">-</strong></div>
+              <div class="legend-item"><span class="legend-dot green"></span> 10년물: <strong id="legendY10Y">-</strong></div>
             </div>
             <div class="time-series-chart-wrap" id="yieldTimeSeriesContainer">
               <!-- JS SVG 시계열 라인 차트 렌더링 -->
@@ -670,7 +670,7 @@
             </div>
             <!-- 범례 및 현재 스프레드 -->
             <div class="chart-legend-row">
-              <div class="legend-item"><span class="legend-dot green"></span> 현재 스프레드: <strong id="legendSpreadVal">+1.04%p</strong></div>
+              <div class="legend-item"><span class="legend-dot green"></span> 현재 스프레드: <strong id="legendSpreadVal">-</strong></div>
               <div class="legend-item"><span class="legend-dot red"></span> 침체 역전 기준선: <strong>0.00%p</strong></div>
             </div>
             <div class="time-series-chart-wrap" id="spreadTimeSeriesContainer">
@@ -746,7 +746,7 @@
             <span class="val" id="modalShares">300,000,000 주</span>
           </div>
           <div class="modal-card">
-            <span class="label">분기말 종가</span>
+            <span class="label">공시 평가단가</span>
             <span class="val" id="modalEstPrice">$185.20</span>
           </div>
         </div>
@@ -936,3 +936,4 @@
   <script src="app.js?v=98"></script>
 </body>
 </html>
+

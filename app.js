@@ -312,46 +312,62 @@ function getMappedSector(ticker, defaultSector) {
 const TICKER_LOOKUP_CACHE = {};
 
 function getMappedTicker(name, rawTicker, cusip) {
-  const cleanCusip = (cusip || "").toUpperCase().trim();
-  const upperTicker = (rawTicker || "").toUpperCase().trim();
-  const upperName = (name || "").toUpperCase().trim();
-  
-  const cacheKey = cleanCusip || upperTicker || upperName;
-  if (TICKER_LOOKUP_CACHE[cacheKey]) {
-    return TICKER_LOOKUP_CACHE[cacheKey];
-  }
-
-  // 0순위: CUSIP / 티커 직접 매칭 (O(1))
-  if (cleanCusip && TICKER_MAP[cleanCusip]) {
-    TICKER_LOOKUP_CACHE[cacheKey] = TICKER_MAP[cleanCusip];
-    return TICKER_MAP[cleanCusip];
-  }
-  if (upperTicker && TICKER_MAP[upperTicker]) {
-    TICKER_LOOKUP_CACHE[cacheKey] = TICKER_MAP[upperTicker];
-    return TICKER_MAP[upperTicker];
-  }
-
-  // 1순위: TICKER_MAP 이름 사전 매칭
-  for (const [key, val] of Object.entries(TICKER_MAP)) {
-    if (upperName.includes(key)) {
-      TICKER_LOOKUP_CACHE[cacheKey] = val;
-      return val;
-    }
-  }
-
-  // 2순위: 정상 1~5자리 알파벳 티커
-  const isCusip = /^[0-9A-Z]{8,9}$/.test(upperTicker) && /\d/.test(upperTicker);
-  if (upperTicker && upperTicker.length <= 5 && !upperTicker.includes(" ") && /^[A-Z]+$/.test(upperTicker) && !isCusip) {
-    TICKER_LOOKUP_CACHE[cacheKey] = upperTicker;
-    return upperTicker;
-  }
-
-  // 3순위: 회사명 첫 단어 기반 추출
-  const cleanWord = (name || "STOCK").split(" ")[0].toUpperCase().replace(/[^A-Z]/g, "");
-  const res = cleanWord.slice(0, 5) || "STOCK";
-  TICKER_LOOKUP_CACHE[cacheKey] = res;
-  return res;
+  const id = String(cusip || '').toUpperCase().trim();
+  const ticker = String(rawTicker || '').toUpperCase().trim();
+  const company = String(name || '').toUpperCase().trim();
+  // Never invent a tradable symbol from a company-name prefix.
+  if (id && TICKER_MAP[id]) return TICKER_MAP[id];
+  if (ticker && TICKER_MAP[ticker]) return TICKER_MAP[ticker];
+  if (/^[A-Z]{1,5}(?:[.-][A-Z])?$/.test(ticker)) return ticker;
+  if (company && TICKER_MAP[company]) return TICKER_MAP[company];
+  return id ? `CUSIP:${id}` : `UNMAPPED:${company || ticker || 'UNKNOWN'}`;
 }
+
+function portfolioFreshness(guru) {
+  if (guru.periodRange) {
+    return `보유 기준일 ${guru.periodRange[0]} ~ ${guru.periodRange[1]}${guru.periodRange[0] !== guru.periodRange[1] ? ' · 서로 다른 분기 공시 합산' : ''}`;
+  }
+  const period = guru.periodDate || '미확인';
+  const filing = guru.filingDate || '미확인';
+  const older = guru.periodDate && guru.latestDatasetPeriod && guru.periodDate < guru.latestDatasetPeriod;
+  return `보유 기준일 ${period} · 공시일 ${filing}${older ? ' · 이전 분기 자료 (수집된 최신 기준일보다 오래됨)' : ''}`;
+}
+
+function hasPrice(value) { return Number.isFinite(value) && value > 0; }
+function priceLabel(value) { return hasPrice(value) ? `$${value.toFixed(2)}` : '시세 없음'; }
+function priceDifference(item) {
+  return hasPrice(item.curPrice) && hasPrice(item.estPrice)
+    ? ((item.curPrice - item.estPrice) / item.estPrice) * 100 : NaN;
+}
+function normalizeMacroData(data) {
+  if (data && data.schemaVersion === 2) return data;
+  return { schemaVersion: 2, status: 'unavailable', legacyRejected: true,
+    sources: {}, calendar: [], timeSeries: { treasuryDaily: [] } };
+}
+function macroFreshness(data) {
+  if (!data || data.legacyRejected) return '출처 검증 전 데이터 · 표시 보류';
+  const statuses = { success: '수집 완료', partial: '일부 수집 실패', stale: '오래된 관측값 포함', unavailable: '데이터 확인 불가' };
+  const sources = Object.values(data.sources || {});
+  const stale = sources.some(s => s.status === 'stale');
+  const dates = sources.map(s => s.asOf).filter(d => /^\d{4}-\d{2}-\d{2}/.test(d || '')).map(d => d.slice(0, 10)).sort();
+  return `${statuses[data.status] || '수집 상태 미확인'}${stale ? ' · 오래된 관측값 포함' : ''}${dates.length ? ` · 관측일 ${dates[0]} ~ ${dates[dates.length - 1]}` : ' · 관측일 미확인'}`;
+}
+function quoteFreshness(info) {
+  if (!info || !Number.isFinite(info.marketTime)) return '시세 관측시각 미확인';
+  const time = new Date(info.marketTime * 1000);
+  if (!Number.isFinite(time.getTime())) return '시세 관측시각 미확인';
+  return `${Date.now() - time.getTime() > 36 * 3600000 ? '과거 시세 · ' : ''}${time.toISOString().replace('T', ' ').slice(0, 16)} UTC`;
+}
+function insiderCode(item) {
+  return String(item.txTypeCode || item.transactionCode || item.transactionType || '').toUpperCase();
+}
+function insiderLabel(item) {
+  const labels = { P: '장내 매수 (P)', S: '장내 매도 (S)', A: '보상 취득 (A)',
+    M: '옵션 행사 (M)', C: '전환 (C)', G: '증여 (G)', F: '세금 납부 (F)' };
+  return labels[insiderCode(item)] || '기타 / 유형 미확인';
+}
+let priceRequestId = 0;
+let insiderRequestId = 0;
 
 function formatMoney(val) {
   if (!val || val <= 0) return "$0";
@@ -414,8 +430,21 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // 브라우저에서 현재 화면 종목들의 실시간 주가 및 거시경제 지표 온디맨드 조회 (1분 주기 갱신)
+async function refreshMacroSnapshot(requestId) {
+  const res = await fetch("latest_macro_indicators.json?_t=" + Date.now()).catch(() => null);
+  if (!res || !res.ok) return;
+  const data = await res.json().catch(() => null);
+  if (!data || requestId !== priceRequestId) return;
+  MACRO_DATA = normalizeMacroData(data);
+  // All macro surfaces redraw from the same complete snapshot.
+  await loadAndRenderMacro();
+}
+
 async function fetchLivePricesForCurrentView() {
-  const guru = GURU_DATABASE[state.currentGuruKey];
+  const requestId = ++priceRequestId;
+  const guruKey = state.currentGuruKey;
+  const guru = GURU_DATABASE[guruKey];
+  const isCurrent = () => requestId === priceRequestId && guruKey === state.currentGuruKey && state.currentFilingType === "13F";
   const stockTickers = (guru && guru.holdings) 
     ? guru.holdings.slice(0, 30).map(h => h.baseTicker || h.ticker).filter(t => t && t.length <= 5 && !t.includes(" ")).join(",")
     : "";
@@ -427,16 +456,17 @@ async function fetchLivePricesForCurrentView() {
     const res = await fetch(`/api/prices?tickers=${allTickers}`).catch(() => null);
     if (res && res.ok) {
       const data = await res.json();
+      if (requestId !== priceRequestId) return;
       let updated = false;
       Object.keys(data).forEach(t => {
-        if (data[t] && data[t].price) {
+        if (data[t] && hasPrice(data[t].price)) {
           LIVE_PRICES[t] = data[t];
           updated = true;
         }
       });
 
       // 1. 주식 포트폴리오 업데이트
-      if (updated && guru && guru.holdings) {
+      if (updated && isCurrent() && guru && guru.holdings) {
         applyLivePricesToHoldings(guru.holdings);
         updateSummaryMetrics(guru);
         renderTable();
@@ -445,47 +475,17 @@ async function fetchLivePricesForCurrentView() {
         }
       }
 
-      // 2. 거시경제 지표(WTI, 금, 국채, 환율) 실시간 연동
-      if (MACRO_DATA) {
-        if (!MACRO_DATA.commoditiesAndFx) MACRO_DATA.commoditiesAndFx = {};
-        if (!MACRO_DATA.treasury) MACRO_DATA.treasury = {};
+      // Macro observations retain their independently collected source/as-of metadata.
 
-        if (data["CL=F"]) {
-          MACRO_DATA.commoditiesAndFx.wtiOil = { val: data["CL=F"].price, change: data["CL=F"].changePct, label: "WTI 국제유가 ($)" };
-        }
-        if (data["GC=F"]) {
-          MACRO_DATA.commoditiesAndFx.gold = { val: data["GC=F"].price, change: data["GC=F"].changePct, label: "국제 금 시세 ($)" };
-        }
-        if (data["DX-Y.NYB"]) {
-          MACRO_DATA.commoditiesAndFx.dxy = { val: data["DX-Y.NYB"].price, change: data["DX-Y.NYB"].changePct, label: "달러 인덱스 (DXY)" };
-        }
-        if (data["^TNX"]) {
-          MACRO_DATA.treasury.yield10Y = { val: data["^TNX"].price, change: data["^TNX"].changePct, label: "10년물 국채 금리" };
-        }
-        if (data["^IRX"]) {
-          MACRO_DATA.treasury.yield13W = { val: data["^IRX"].price, change: data["^IRX"].changePct, label: "3개월물 국채" };
-        }
-        if (data["^FVX"]) {
-          MACRO_DATA.treasury.yield5Y = { val: data["^FVX"].price, change: data["^FVX"].changePct, label: "5년물 국채 금리" };
-        }
-
-        renderMacroPulseBar();
-        if (typeof renderMacroMarketProxies === "function") {
-          renderMacroMarketProxies();
-        }
-      }
     } else {
       // GitHub Pages 등 정적 호스팅(No-Backend) 환경 Fallback: 1분 주기로 최신 realtime_prices.json 및 latest_macro_indicators.json 폴링
-      const [priceRes, macroRes] = await Promise.all([
-        fetch("realtime_prices.json?_t=" + Date.now()).catch(() => null),
-        fetch("latest_macro_indicators.json?_t=" + Date.now()).catch(() => null)
-      ]);
+      const priceRes = await fetch("realtime_prices.json?_t=" + Date.now()).catch(() => null);
 
       if (priceRes && priceRes.ok) {
         const pData = await priceRes.json().catch(() => null);
-        if (pData) {
+        if (pData && requestId === priceRequestId) {
           Object.assign(LIVE_PRICES, pData);
-          if (guru && guru.holdings) {
+          if (isCurrent() && guru && guru.holdings) {
             applyLivePricesToHoldings(guru.holdings);
             updateSummaryMetrics(guru);
             renderTable();
@@ -494,15 +494,8 @@ async function fetchLivePricesForCurrentView() {
         }
       }
 
-      if (macroRes && macroRes.ok) {
-        const mData = await macroRes.json().catch(() => null);
-        if (mData) {
-          MACRO_DATA = mData;
-          renderMacroPulseBar();
-          if (typeof renderMacroMarketProxies === "function") renderMacroMarketProxies();
-        }
-      }
     }
+    await refreshMacroSnapshot(requestId);
   } catch (e) {}
 }
 
@@ -511,10 +504,9 @@ function applyLivePricesToHoldings(holdings) {
   holdings.forEach(h => {
     const key = h.baseTicker || h.ticker;
     const info = LIVE_PRICES[key] || LIVE_PRICES[h.ticker];
-    if (info && info.price) {
-      h.curPrice = info.price;
-      h.priceChangePct = info.changePct;
-    }
+    h.curPrice = info && hasPrice(info.price) ? info.price : null;
+    h.priceChangePct = info && Number.isFinite(info.changePct) ? info.changePct : null;
+    h.quoteAsOf = quoteFreshness(info);
   });
 }
 
@@ -540,7 +532,7 @@ async function loadRealSecData() {
     }
     if (macroRes && macroRes.ok) {
       try {
-        MACRO_DATA = await macroRes.json();
+        MACRO_DATA = normalizeMacroData(await macroRes.json());
         renderMacroPulseBar();
       } catch (e) {}
     }
@@ -590,7 +582,7 @@ function formatQuarterDisplay(periodStr) {
   return `${periodStr} 기준`;
 }
 
-let DOMINANT_13F_PERIOD = "2026-06-30";
+let DOMINANT_13F_PERIOD = null;
 
 function processAndRenderHoldingsData() {
   if (!RAW_HOLDINGS || RAW_HOLDINGS.length === 0) return;
@@ -607,7 +599,7 @@ function processAndRenderHoldingsData() {
         periodCounts[item.period] = (periodCounts[item.period] || 0) + 1;
       }
     });
-    let dominantPeriod = "2026-06-30";
+    let dominantPeriod = null;
     let maxCount = 0;
     for (const [p, cnt] of Object.entries(periodCounts)) {
       if (cnt > maxCount) {
@@ -616,6 +608,8 @@ function processAndRenderHoldingsData() {
       }
     }
     DOMINANT_13F_PERIOD = dominantPeriod;
+    const knownPeriods = Object.keys(periodCounts).filter(p => /^\d{4}-\d{2}-\d{2}$/.test(p)).sort();
+    const latestDatasetPeriod = knownPeriods.at(-1) || null;
     
     RAW_HOLDINGS.forEach(item => {
       if (isDerivativeOrOption(item.name, item.ticker, item.titleOfClass)) return;
@@ -624,13 +618,15 @@ function processAndRenderHoldingsData() {
       const fundName = item.fund || guruName;
       if (!groups[guruName]) {
         const initials = fundName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
-        const guruPeriod = item.period || dominantPeriod;
+        const guruPeriod = item.period || null;
         groups[guruName] = {
           name: guruName,
           fund: fundName,
           avatar: initials || "CO",
           quarter: formatQuarterDisplay(guruPeriod),
           periodDate: guruPeriod,
+          filingDate: item.filingDate || null,
+          latestDatasetPeriod,
           desc: `${fundName} (${guruName} 운용)의 공식 13F 보유 포트폴리오`,
           holdingsMap: {}
         };
@@ -701,10 +697,10 @@ function processAndRenderHoldingsData() {
       
       g.holdings = holdingList.map(h => {
         const weight = totalVal > 0 ? Number(((h.value / totalVal) * 100).toFixed(2)) : 0;
-        const estP = h.shares > 0 ? (h.value / h.shares) : 100.0;
+        const estP = h.shares > 0 ? (h.value / h.shares) : null;
         
         const realInfo = LIVE_PRICES[h.baseTicker] || LIVE_PRICES[h.ticker];
-        const curP = (realInfo && realInfo.price) ? realInfo.price : estP;
+        const curP = (realInfo && hasPrice(realInfo.price)) ? realInfo.price : null;
         
         let action = h.action || "HOLD";
         if (h.isOption || action === "PUT") {
@@ -725,8 +721,9 @@ function processAndRenderHoldingsData() {
           weight: weight,
           estPrice: estP,
           curPrice: curP,
-          priceChangePct: realInfo ? realInfo.changePct : 0.0,
-          insight: `${h.name} 보통주 - ${g.name} 포트폴리오의 ${weight}% 차지 (현재 시장가: $${curP})`
+          priceChangePct: realInfo && Number.isFinite(realInfo.changePct) ? realInfo.changePct : null,
+          quoteAsOf: quoteFreshness(realInfo),
+          insight: `${h.name} 보통주 - ${g.name} 포트폴리오의 ${weight}% 차지 (최근 조회 시세: ${priceLabel(curP)})`
         };
       });
 
@@ -736,10 +733,10 @@ function processAndRenderHoldingsData() {
     const grandList = Object.values(grandConsensusMap);
     const grandHoldings = grandList.map(h => {
       const weight = grandTotalAumVal > 0 ? Number(((h.value / grandTotalAumVal) * 100).toFixed(2)) : 0;
-      const estP = h.shares > 0 ? (h.value / h.shares) : 100.0;
+      const estP = h.shares > 0 ? (h.value / h.shares) : null;
       
       const realInfo = LIVE_PRICES[h.baseTicker] || LIVE_PRICES[h.ticker];
-      const curP = (realInfo && realInfo.price) ? realInfo.price : estP;
+      const curP = (realInfo && hasPrice(realInfo.price)) ? realInfo.price : null;
       
       const holderCount = h.holders.size;
       let action = h.action || "HOLD";
@@ -760,7 +757,8 @@ function processAndRenderHoldingsData() {
         weight: weight,
         estPrice: estP,
         curPrice: curP,
-        priceChangePct: realInfo ? realInfo.changePct : 0.0,
+        priceChangePct: realInfo && Number.isFinite(realInfo.changePct) ? realInfo.changePct : null,
+          quoteAsOf: quoteFreshness(realInfo),
         insight: `미국 100대 운용사 중 무려 ${holderCount}개 운용사가 공통 보유 중인 대표 컨센서스 종목`
       };
     });
@@ -776,6 +774,7 @@ function processAndRenderHoldingsData() {
         rawAum: grandTotalAumVal,
         quarter: `${formatQuarterDisplay(dominantPeriod)} 종합`,
         periodDate: dominantPeriod,
+        periodRange: knownPeriods.length ? [knownPeriods[0], latestDatasetPeriod] : null,
         desc: "미국 1억 달러 이상 운용 자격을 갖춘 100대 운용사의 포트폴리오를 하나로 통합 분석한 거대 자금 흐름",
         holdings: grandHoldings
       },
@@ -820,6 +819,7 @@ function buildCustomGroupPortfolio() {
           estPrice: h.estPrice,
           curPrice: h.curPrice,
           priceChangePct: h.priceChangePct,
+          quoteAsOf: h.quoteAsOf,
           holders: new Set([guru.name])
         };
       } else {
@@ -836,7 +836,7 @@ function buildCustomGroupPortfolio() {
     const weight = customTotalAumVal > 0 ? Number(((h.value / customTotalAumVal) * 100).toFixed(2)) : 0;
     const holderCount = h.holders.size;
     let action = "HOLD";
-    if (holderCount >= 2) action = "ADD";
+    // Shared ownership alone is not evidence of a quarter-over-quarter purchase.
 
     return {
       ticker: h.ticker,
@@ -852,15 +852,17 @@ function buildCustomGroupPortfolio() {
       rawShares: h.shares,
       value: h.value,
       weight: weight,
-      estPrice: h.estPrice,
+      estPrice: h.shares > 0 ? h.value / h.shares : null,
       curPrice: h.curPrice,
       priceChangePct: h.priceChangePct,
+          quoteAsOf: h.quoteAsOf,
       insight: `내가 선택한 ${favs.length}개 즐겨찾기 운용사 중 ${holderCount}개사가 공통 보유한 핵심 자산`
     };
   });
 
   customHoldings.sort((a, b) => b.value - a.value);
 
+  const selectedPeriods = favs.map(key => GURU_DATABASE[key]?.periodDate).filter(Boolean).sort();
   GURU_DATABASE["__CUSTOM_GROUP__"] = {
     name: "즐겨찾기 묶어보기",
     fund: `선택한 ${favs.length}개 운용사 맞춤 합산`,
@@ -869,6 +871,7 @@ function buildCustomGroupPortfolio() {
     rawAum: customTotalAumVal,
     quarter: `${formatQuarterDisplay(DOMINANT_13F_PERIOD)} 맞춤 종합`,
     periodDate: DOMINANT_13F_PERIOD,
+    periodRange: selectedPeriods.length ? [selectedPeriods[0], selectedPeriods.at(-1)] : null,
     desc: `내가 선택한 ${favs.length}개 운용사들의 포트폴리오만 묶어서 합산 분석한 맞춤형 뷰`,
     holdings: customHoldings
   };
@@ -1030,7 +1033,7 @@ function loadGuruData(key) {
     elQuarter.title = "SEC 13F 공시 규정에 따라 각 분기 마지막 거래일 시장 마감 기준 보유 현황입니다.";
   }
   const elDesc = document.getElementById("currentGuruDesc");
-  if (elDesc) elDesc.innerText = guru.desc;
+  if (elDesc) elDesc.innerText = `${guru.desc} · ${portfolioFreshness(guru)}`;
 
   updateSummaryMetrics(guru);
   renderSectorBreakdown(guru.holdings);
@@ -1053,6 +1056,8 @@ function updateSummaryMetrics(guru) {
   const elTopHold = document.getElementById("metricTopHolding");
   const elTopHoldSub = document.getElementById("metricTopHoldingSub");
   
+  [elTopBuy, elDisc, elTopHold].forEach(el => { if (el) el.innerText = '-'; });
+  [elTopBuySub, elDiscSub, elTopHoldSub].forEach(el => { if (el) el.innerText = '확인 가능한 데이터 없음'; });
   if (isGrandTotal) {
     if (elHoldings) elHoldings.innerText = `총 분석 종목 ${guru.holdings.length}개`;
     
@@ -1064,13 +1069,13 @@ function updateSummaryMetrics(guru) {
     }
 
     const discounts = guru.holdings
-      .filter(h => h.action !== 'PUT' && h.action !== 'CALL' && !h.isOption)
-      .map(h => ({ ...h, discountPct: ((h.curPrice - h.estPrice) / h.estPrice) * 100 }))
+      .filter(h => h.action !== 'PUT' && h.action !== 'CALL' && !h.isOption && Number.isFinite(priceDifference(h)))
+      .map(h => ({ ...h, discountPct: priceDifference(h) }))
       .sort((a, b) => a.discountPct - b.discountPct);
     const bestDiscount = discounts[0];
     if (bestDiscount && bestDiscount.discountPct < 0 && elDisc) {
       elDisc.innerHTML = `${bestDiscount.ticker} <small class="text-red">${bestDiscount.discountPct.toFixed(1)}%</small>`;
-      if (elDiscSub) elDiscSub.innerText = `분기말 종가 대비 하락`;
+      if (elDiscSub) elDiscSub.innerText = `공시 평가단가 대비 하락`;
     }
 
     const top1 = guru.holdings[0];
@@ -1084,18 +1089,18 @@ function updateSummaryMetrics(guru) {
     const buyPicks = guru.holdings.filter(h => h.action === "NEW" || h.action === "ADD");
     if (buyPicks.length > 0 && elTopBuy) {
       const topBuy = buyPicks[0];
-      elTopBuy.innerHTML = `${topBuy.ticker} <small class="text-green">${topBuy.action === 'NEW' ? 'NEW' : '+' + topBuy.weight + '%'}</small>`;
+      elTopBuy.innerHTML = `${topBuy.ticker} <small class="text-green">${topBuy.action === 'NEW' ? 'NEW' : 'ADD'}</small>`;
       if (elTopBuySub) elTopBuySub.innerText = `${topBuy.name} (${formatMoney(topBuy.value)})`;
     }
 
     const discounts = guru.holdings
-      .filter(h => h.action !== 'PUT' && h.action !== 'CALL' && !h.isOption)
-      .map(h => ({ ...h, discountPct: ((h.curPrice - h.estPrice) / h.estPrice) * 100 }))
+      .filter(h => h.action !== 'PUT' && h.action !== 'CALL' && !h.isOption && Number.isFinite(priceDifference(h)))
+      .map(h => ({ ...h, discountPct: priceDifference(h) }))
       .sort((a, b) => a.discountPct - b.discountPct);
     const bestDiscount = discounts[0];
     if (bestDiscount && bestDiscount.discountPct < 0 && elDisc) {
       elDisc.innerHTML = `${bestDiscount.ticker} <small class="text-purple">${bestDiscount.discountPct.toFixed(1)}%</small>`;
-      if (elDiscSub) elDiscSub.innerText = `분기말 종가 대비 하락`;
+      if (elDiscSub) elDiscSub.innerText = `공시 평가단가 대비 하락`;
     }
 
     const top1 = guru.holdings[0];
@@ -1314,7 +1319,7 @@ function renderTreemap(holdings) {
     tile.style.height = `${t.height}px`;
 
     const isOption = item.action === 'PUT' || item.action === 'CALL' || item.isOption;
-    const diffVal = ((item.curPrice - item.estPrice) / item.estPrice) * 100;
+    const diffVal = priceDifference(item);
     const diffPct = diffVal.toFixed(1);
     const isDown = diffVal < 0;
 
@@ -1333,7 +1338,7 @@ function renderTreemap(holdings) {
       ${hasRoomForName ? `<div class="tile-name" title="${item.name}">${cleanName}</div>` : ''}
       <div class="tile-bottom">
         <span class="tile-weight">${item.weight}%</span>
-        <span class="tile-price">$${item.curPrice ? item.curPrice.toFixed(1) : ''}</span>
+        <span class="tile-price">${priceLabel(item.curPrice)}</span>
       </div>
     `;
 
@@ -1347,7 +1352,7 @@ function renderTreemap(holdings) {
         else if (item.action === 'ADD') actionLabel = '비중 확대';
         else if (item.action === 'REDUCE') actionLabel = '비중 축소';
 
-        const diffRow = isOption ? `
+        const diffRow = !Number.isFinite(diffVal) ? `<div class="tooltip-row">시세 없음 · 비교 불가</div>` : isOption ? `
           <div class="tooltip-row">
             <span class="tooltip-label">기초자산 변동</span>
             <span class="tooltip-val" style="color:var(--text-subdued)">${isDown ? diffPct + '% 하락' : '+' + diffPct + '% 상승'} (옵션 비교 제외)</span>
@@ -1378,8 +1383,8 @@ function renderTreemap(holdings) {
               <span class="tooltip-val">${formatMoney(item.value)}</span>
             </div>
             <div class="tooltip-row">
-              <span class="tooltip-label">${isOption ? '기초자산 현재가' : '현재 실시간가'}</span>
-              <span class="tooltip-val">$${item.curPrice.toFixed(2)}</span>
+              <span class="tooltip-label">${isOption ? '기초자산 현재가' : '최근 조회 시세'}</span>
+              <span class="tooltip-val">${priceLabel(item.curPrice)}</span>
             </div>
             ${diffRow}
           </div>
@@ -1446,7 +1451,7 @@ function renderTable() {
     if (state.activeFilter === "ADD") return item.action === "ADD";
     if (state.activeFilter === "DISCOUNT") {
       const isOption = item.action === "PUT" || item.action === "CALL" || item.isOption;
-      return !isOption && item.curPrice < item.estPrice;
+      return !isOption && priceDifference(item) < 0;
     }
     if (state.activeFilter === "CONVICTION") return item.weight >= 5.0;
     if (state.activeFilter === "CONSENSUS") return (item.holders || 1) >= 2;
@@ -1460,7 +1465,7 @@ function renderTable() {
   const cAdd = document.getElementById("countAdd");
   if (cAdd) cAdd.innerText = guru.holdings.filter(h => h.action === "ADD").length;
   const cDisc = document.getElementById("countDiscount");
-  if (cDisc) cDisc.innerText = guru.holdings.filter(h => !(h.action === "PUT" || h.action === "CALL" || h.isOption) && h.curPrice < h.estPrice).length;
+  if (cDisc) cDisc.innerText = guru.holdings.filter(h => !(h.action === "PUT" || h.action === "CALL" || h.isOption) && priceDifference(h) < 0).length;
   const cConv = document.getElementById("countConviction");
   if (cConv) cConv.innerText = guru.holdings.filter(h => h.weight >= 5.0).length;
 
@@ -1471,10 +1476,12 @@ function renderTable() {
     if (state.sortColumn === "discount") {
       const isOptionA = a.action === "PUT" || a.action === "CALL" || a.isOption;
       const isOptionB = b.action === "PUT" || b.action === "CALL" || b.isOption;
-      valA = isOptionA ? 999999 : ((a.curPrice - a.estPrice) / a.estPrice) * 100;
-      valB = isOptionB ? 999999 : ((b.curPrice - b.estPrice) / b.estPrice) * 100;
+      valA = isOptionA ? NaN : priceDifference(a);
+      valB = isOptionB ? NaN : priceDifference(b);
     }
 
+    if (valA == null || (typeof valA === "number" && !Number.isFinite(valA))) return valB == null || (typeof valB === "number" && !Number.isFinite(valB)) ? 0 : 1;
+    if (valB == null || (typeof valB === "number" && !Number.isFinite(valB))) return -1;
     if (typeof valA === "string") {
       return state.sortDirection === "asc" ? valA.localeCompare(valB) : valB.localeCompare(valA);
     }
@@ -1499,7 +1506,7 @@ function appendNextPageRows() {
     const tr = document.createElement("tr");
     tr.onclick = () => openStockModal(item);
 
-    const diffVal = ((item.curPrice - item.estPrice) / item.estPrice) * 100;
+    const diffVal = priceDifference(item);
     const diffPct = diffVal.toFixed(1);
     const isUp = diffVal > 0;
     const isDown = diffVal < 0;
@@ -1532,13 +1539,13 @@ function appendNextPageRows() {
           <div class="weight-progress-fill" style="width: ${Math.min(item.weight * 3, 100)}%"></div>
         </div>
       </td>
-      <td class="col-estPrice text-right">$${item.estPrice.toFixed(2)}</td>
+      <td class="col-estPrice text-right">${priceLabel(item.estPrice)}</td>
       <td class="col-curPrice text-right">
-        <strong>$${item.curPrice.toFixed(2)}</strong>
-        ${item.priceChangePct !== 0 ? `<small class="${item.priceChangePct >= 0 ? 'text-green' : 'text-red'}">(${item.priceChangePct >= 0 ? '+' : ''}${item.priceChangePct}%)</small>` : ''}
+        <strong>${priceLabel(item.curPrice)}</strong><small>${item.quoteAsOf || "시세 관측시각 미확인"}</small>
+        ${Number.isFinite(item.priceChangePct) ? `<small class="${item.priceChangePct >= 0 ? 'text-green' : 'text-red'}">(${item.priceChangePct >= 0 ? '+' : ''}${item.priceChangePct}%)</small>` : ''}
       </td>
       <td class="col-discount text-right">
-        ${(item.action === 'PUT' || item.action === 'CALL' || item.isOption) ? `
+        ${(!Number.isFinite(diffVal) || item.action === 'PUT' || item.action === 'CALL' || item.isOption) ? `
           <span class="discount-val" style="color: var(--text-subdued);" title="옵션 파생상품은 공시단가 비교 대상이 아닙니다">-</span>
         ` : `
           <span class="discount-val ${isUp ? 'positive' : (isDown ? 'discount' : '')}">
@@ -1570,22 +1577,25 @@ function openStockModal(item) {
   const modal = document.getElementById("stockModal");
   if (!modal) return;
   const isOption = item.action === 'PUT' || item.action === 'CALL' || item.isOption;
-  const diffVal = ((item.curPrice - item.estPrice) / item.estPrice) * 100;
+  const diffVal = priceDifference(item);
   const diffPct = diffVal.toFixed(1);
   const isDown = diffVal < 0;
 
   document.getElementById("modalTicker").innerText = item.ticker;
   document.getElementById("modalName").innerText = item.name;
   document.getElementById("modalSector").innerText = item.sector;
-  document.getElementById("modalCurPrice").innerText = `$${item.curPrice.toFixed(2)}`;
+  document.getElementById("modalCurPrice").innerText = `${priceLabel(item.curPrice)}`;
   
   const discountTag = document.getElementById("modalDiscountTag");
   if (discountTag) {
-    if (isOption) {
+    if (!Number.isFinite(diffVal)) {
+      discountTag.innerText = "시세 없음 · 비교 불가";
+      discountTag.style.color = "var(--text-subdued)";
+    } else if (isOption) {
       discountTag.innerText = `옵션 파생상품 (공시단가 비교 제외)`;
       discountTag.style.color = "var(--text-subdued)";
     } else {
-      discountTag.innerText = isDown ? `분기말 종가 대비 ${diffPct}% 하락 상태` : `분기말 종가 대비 +${diffPct}% 상승 상태`;
+      discountTag.innerText = isDown ? `공시 평가단가 대비 ${diffPct}% 하락 상태` : `공시 평가단가 대비 +${diffPct}% 상승 상태`;
       discountTag.style.color = isDown ? "var(--negative-red)" : "var(--spotify-green)";
     }
   }
@@ -1593,7 +1603,7 @@ function openStockModal(item) {
   document.getElementById("modalWeight").innerText = `${item.weight}%`;
   document.getElementById("modalVal").innerText = formatMoney(item.value);
   document.getElementById("modalShares").innerText = `${item.shares} 주`;
-  document.getElementById("modalEstPrice").innerText = `$${item.estPrice.toFixed(2)}`;
+  document.getElementById("modalEstPrice").innerText = `${priceLabel(item.estPrice)}`;
   
   const elInsight = document.getElementById("modalInsightText");
   if (elInsight) elInsight.innerText = item.insight || "이 종목은 주요 운용사들의 포트폴리오에 편입된 핵심 자산입니다.";
@@ -1608,6 +1618,7 @@ function openStockModal(item) {
   renderModalInsiderCross(item);
 
   // 외부 파이낸스 링크 세팅
+  const isMapped = !/^(CUSIP:|UNMAPPED:)/.test(item.baseTicker || item.ticker || "");
   let cleanTicker = (item.baseTicker || item.ticker || "").split(" ")[0].replace(/[^a-zA-Z0-9\-\.]/g, "");
   if (!cleanTicker || cleanTicker === "STOCK") {
     cleanTicker = (item.name || "").split(" ")[0].replace(/[^a-zA-Z0-9]/g, "");
@@ -1616,12 +1627,14 @@ function openStockModal(item) {
   const linkYahoo = document.getElementById("linkYahooFinance");
   if (linkYahoo) {
     const yTicker = cleanTicker.replace(".", "-");
+    linkYahoo.hidden = !isMapped;
     linkYahoo.href = `https://finance.yahoo.com/quote/${yTicker}/`;
     linkYahoo.onclick = (e) => e.stopPropagation();
   }
 
   const linkGoogle = document.getElementById("linkGoogleFinance");
   if (linkGoogle) {
+    linkGoogle.hidden = !isMapped;
     linkGoogle.href = `https://www.google.com/finance?q=${encodeURIComponent(cleanTicker)}`;
     linkGoogle.onclick = (e) => e.stopPropagation();
   }
@@ -1634,30 +1647,10 @@ function renderStockHistoryTimeline(item) {
   if (!container) return;
   container.innerHTML = "";
 
-  // 가상 4분기 변천사 추이 (최신 13F 기준)
-  const currentW = item.weight || 3.5;
-  const quarters = [
-    { q: "2023 Q3", w: Number(Math.max(currentW * 0.75, 0.5).toFixed(1)) },
-    { q: "2023 Q4", w: Number(Math.max(currentW * 0.88, 0.8).toFixed(1)) },
-    { q: "2024 Q1", w: Number(Math.max(currentW * 0.95, 1.0).toFixed(1)) },
-    { q: "2024 Q2", w: Number(currentW.toFixed(1)) }
-  ];
-
-  const maxW = Math.max(...quarters.map(d => d.w), 5.0);
-
-  quarters.forEach(d => {
-    const heightPct = Math.min((d.w / maxW) * 100, 100);
-    const itemEl = document.createElement("div");
-    itemEl.className = "history-item";
-    itemEl.innerHTML = `
-      <div class="history-bar-track">
-        <div class="history-bar-fill" style="height: ${Math.max(heightPct, 8)}%;"></div>
-      </div>
-      <span class="history-weight-label">${d.w}%</span>
-      <span class="history-quarter">${d.q}</span>
-    `;
-    container.appendChild(itemEl);
-  });
+  const notice = document.createElement('p');
+  notice.className = 'history-unavailable';
+  notice.textContent = '검증된 과거 분기별 데이터가 없어 추이를 표시하지 않습니다.';
+  container.appendChild(notice);
 }
 
 function renderStockHoldersTable(ticker) {
@@ -1698,6 +1691,7 @@ function renderStockHoldersTable(ticker) {
     const tr = document.createElement("tr");
     tr.style.cursor = "pointer";
     tr.onclick = () => {
+      ++insiderRequestId;
       document.getElementById("stockModal").classList.remove("show");
       selectGuru(h.guruKey);
     };
@@ -1726,6 +1720,7 @@ function setupEventListeners() {
   const btnClose = document.getElementById("btnModalClose");
   if (btnClose) {
     btnClose.onclick = () => {
+      ++insiderRequestId;
       document.getElementById("stockModal").classList.remove("show");
     };
   }
@@ -1790,14 +1785,14 @@ function setupEventListeners() {
       if (!guru || !guru.holdings) return;
       
       let rows = [
-        ["종목", "티커", "섹터", "보유운용사수", "액션", "주식수", "평가금액", "포트비중(%)", "분기말종가($)", "현재시장가(1분)($)", "분기말대비등락(%)"]
+        ["종목", "티커", "섹터", "보유운용사수", "액션", "주식수", "평가금액", "포트비중(%)", "공시평가단가($, 매입가 아님)", "최근조회시세($)", "공시평가단가대비(%)", "시세관측시각"]
       ];
       
       guru.holdings.forEach(h => {
-        const discountPct = (((h.curPrice - h.estPrice) / h.estPrice) * 100).toFixed(1);
+        const discountPct = Number.isFinite(priceDifference(h)) ? `${priceDifference(h).toFixed(1)}%` : "";
         rows.push([
           h.name, h.ticker, h.sector, h.holdersDisplay || '1개사', h.action,
-          h.shares, h.value, `${h.weight}%`, `$${h.estPrice.toFixed(2)}`, `$${h.curPrice.toFixed(2)}`, `${discountPct}%`
+          h.shares, h.value, `${h.weight}%`, `${priceLabel(h.estPrice)}`, `${priceLabel(h.curPrice)}`, discountPct, h.quoteAsOf || "시세 관측시각 미확인"
         ]);
       });
 
@@ -2507,8 +2502,8 @@ function openInsiderModal(ticker) {
         <td><strong>${item.insiderName}</strong></td>
         <td><span style="font-size: 12px; color: var(--text-subdued);">${item.officerTitle}</span></td>
         <td class="text-center">
-          <span class="badge-tx ${isBuy ? 'badge-tx-buy' : 'badge-tx-sale'}">
-            ${isBuy ? '장내 매수 (P)' : '장내 매도 (S)'}
+          <span class="badge-tx ${isBuy ? 'badge-tx-buy' : (insiderCode(item) === 'S' ? 'badge-tx-sale' : '')}">
+            ${insiderLabel(item)}
           </span>
         </td>
         <td class="text-right">${item.shares.toLocaleString()} 주</td>
@@ -2699,13 +2694,13 @@ function renderMacroPulseBar() {
   const calendar = MACRO_DATA.calendar || [];
   const benchmarks = MACRO_DATA.benchmarks || {};
 
-  const fedGap = benchmarks.fedRate ? `(중립선 ${benchmarks.fedRate.gapToNeutral})` : "(중립선 +0.73%p)";
-  const cpiGap = benchmarks.inflation ? `(목표선 ${benchmarks.inflation.gapToTarget})` : "(목표선 +1.40%p)";
+  const fedGap = benchmarks.fedRate?.gapToNeutral != null ? `(중립선 ${benchmarks.fedRate.gapToNeutral})` : "(비교 불가)";
+  const cpiGap = benchmarks.inflation?.gapToTarget != null ? `(목표선 ${benchmarks.inflation.gapToTarget})` : "(비교 불가)";
 
   // 가장 임박한 주요 이벤트 찾기
   const nearestFedOrCritical = calendar.find(c => c.category === "FED" || c.impact === "CRITICAL") || calendar[0];
 
-  const spreadValStr = spread.spread !== undefined ? (spread.spread >= 0 ? `+${spread.spread.toFixed(2)}%p` : `${spread.spread.toFixed(2)}%p`) : "-";
+  const spreadValStr = Number.isFinite(spread.spread) ? (spread.spread >= 0 ? `+${spread.spread.toFixed(2)}%p` : `${spread.spread.toFixed(2)}%p`) : "확인 불가";
 
   let ddayBadgeHtml = "";
   if (nearestFedOrCritical) {
@@ -2723,25 +2718,25 @@ function renderMacroPulseBar() {
     <div class="macro-pulse-left">
       <div class="macro-pulse-badge">
         <span class="pulse-dot"></span>
-        <span>MACRO PULSE</span>
+        <span>MACRO PULSE</span><small>${macroFreshness(MACRO_DATA)}</small>
       </div>
       <div class="macro-pulse-items">
         <div class="macro-pulse-pill" title="연준 기준금리 및 장기 중립선(2.90%) 대비 갭">
           <span class="pill-label">연준 금리:</span>
-          <span class="pill-val">${fed.targetRange || "3.50% ~ 3.75%"}</span>
+          <span class="pill-val">${fed.targetRange || "확인 불가"}</span>
           <span class="pill-sub" style="color: #ffa42b; font-size: 11px;">${fedGap}</span>
         </div>
         <div class="macro-pulse-sep"></div>
         <div class="macro-pulse-pill" title="미국 소비자물가(CPI) 및 법정 목표치(2.00%) 대비 갭">
           <span class="pill-label">CPI (YoY):</span>
-          <span class="pill-val" style="color: #c084fc;">${cpi.cpiYoY || "+3.4%"}</span>
+          <span class="pill-val" style="color: #c084fc;">${cpi.cpiYoY || "확인 불가"}</span>
           <span class="pill-sub" style="color: #c084fc; font-size: 11px;">${cpiGap}</span>
         </div>
         <div class="macro-pulse-sep"></div>
         <div class="macro-pulse-pill" title="10년물 국채 - 3개월물 T-Bill 금리 스프레드 (침체 역전선 0.00%p 기준)">
           <span class="pill-label">10Y-3M 스프레드:</span>
           <span class="pill-val" style="color: ${spread.spread >= 0 ? '#1ed760' : '#f3727f'};">${spreadValStr}</span>
-          <span class="pill-sub">(${spread.spread >= 0 ? '역전선 회복 · 정상' : '역전 경고'})</span>
+          <span class="pill-sub">(${!Number.isFinite(spread.spread) ? '확인 불가' : spread.spread >= 0 ? '양의 스프레드' : '음의 스프레드'})</span>
         </div>
       </div>
     </div>
@@ -2756,7 +2751,7 @@ async function loadAndRenderMacro() {
   if (!MACRO_DATA) {
     try {
       const res = await fetch("latest_macro_indicators.json?_t=" + Date.now());
-      if (res.ok) MACRO_DATA = await res.json();
+      if (res.ok) MACRO_DATA = normalizeMacroData(await res.json());
     } catch (e) {
       console.warn("Macro data load error:", e);
     }
@@ -2775,34 +2770,34 @@ async function loadAndRenderMacro() {
 
   const fedEl = document.getElementById("macroFedTarget");
   const fedSubEl = document.getElementById("macroFedSub");
-  if (fedEl) fedEl.innerText = fed.targetRange || "3.50% ~ 3.75%";
+  if (fedEl) fedEl.innerText = fed.targetRange || "확인 불가";
   if (fedSubEl) {
-    const fedGap = b.fedRate ? b.fedRate.gapToNeutral : "+0.73%p";
-    fedSubEl.innerText = `공식 중립금리(2.90%) 대비 ${fedGap} · 실효금리(EFFR) ${fed.effr || "3.63%"}`;
+    const fedGap = b.fedRate?.gapToNeutral ?? "확인 불가";
+    fedSubEl.innerText = `중립금리 참고값 대비 ${fedGap} · 실효금리(EFFR) ${fed.effr || "확인 불가"}`;
   }
 
   const cpiEl = document.getElementById("macroCpiVal");
   const cpiSubEl = document.getElementById("macroCpiSub");
-  if (cpiEl) cpiEl.innerText = cpi.cpiYoY || "+3.4%";
+  if (cpiEl) cpiEl.innerText = cpi.cpiYoY || "확인 불가";
   if (cpiSubEl) {
-    const cpiGap = b.inflation ? b.inflation.gapToTarget : "+1.40%p";
-    cpiSubEl.innerText = `연준 법정 물가목표(2.00%) 대비 ${cpiGap} 상회`;
+    const cpiGap = b.inflation?.gapToTarget ?? "확인 불가";
+    cpiSubEl.innerText = `물가목표 참고값 대비 ${cpiGap} 상회`;
   }
 
   const unempEl = document.getElementById("macroUnemploymentVal");
   const unempSubEl = document.getElementById("macroUnemploymentSub");
-  if (unempEl) unempEl.innerText = labor.unemploymentRate || "4.1%";
-  if (unempSubEl) unempSubEl.innerText = `미국 완전고용 추정선(4.0%~4.2%) 범위 내 위치`;
+  if (unempEl) unempEl.innerText = labor.unemploymentRate || "확인 불가";
+  if (unempSubEl) unempSubEl.innerText = `관측 시점과 출처를 확인하세요`;
 
   const spreadEl = document.getElementById("macroSpreadVal");
   const spreadSubEl = document.getElementById("macroSpreadSub");
-  const spreadVal = spread.spread !== undefined ? spread.spread : 1.03;
+  const spreadVal = Number.isFinite(spread.spread) ? spread.spread : NaN;
   if (spreadEl) {
-    spreadEl.innerText = spreadVal >= 0 ? `+${spreadVal.toFixed(2)}%p` : `${spreadVal.toFixed(2)}%p`;
+    spreadEl.innerText = !Number.isFinite(spreadVal) ? "확인 불가" : spreadVal >= 0 ? `+${spreadVal.toFixed(2)}%p` : `${spreadVal.toFixed(2)}%p`;
     spreadEl.className = `metric-value ${spreadVal >= 0 ? 'text-green' : 'text-red'}`;
   }
   if (spreadSubEl) {
-    spreadSubEl.innerText = spreadVal >= 0 
+    spreadSubEl.innerText = !Number.isFinite(spreadVal) ? "비교 불가" : spreadVal >= 0 
       ? `뉴욕 연준 침체 역전선(0.00%p) 상회 (+${spreadVal.toFixed(2)}%p)` 
       : `침체 역전선(0.00%p) 하회 (경기침체 경고 구간)`;
   }
@@ -2821,183 +2816,8 @@ async function loadAndRenderMacro() {
 }
 
 function renderMacroBenchmarks() {
-  const container = document.getElementById("macroBenchmarkGrid");
-  if (!container || !MACRO_DATA) return;
-
-  const b = MACRO_DATA.benchmarks || {};
-  const fedRate = b.fedRate || {};
-  const inflation = b.inflation || {};
-  const yieldCurve = b.yieldCurve || {};
-  const cash = b.cashRiskFree || {};
-  const fed = MACRO_DATA.fedRate || {};
-  const labor = MACRO_DATA.labor || {};
-  const treasury = MACRO_DATA.treasury || {};
-
-  container.innerHTML = `
-    <div class="benchmark-card">
-      <div class="benchmark-card-top">
-        <div class="benchmark-card-title">
-          <span>연준 기준금리 (Fed Funds)</span>
-        </div>
-        <span class="benchmark-badge amber">${fedRate.zone || '중립선 상회 (제약적 긴축 영역)'}</span>
-      </div>
-      <div class="benchmark-metric-row">
-        <div class="benchmark-metric-item">
-          <span class="benchmark-metric-label">현재 금리 목표치</span>
-          <span class="benchmark-metric-val">${fedRate.current || '3.50% ~ 3.75%'}</span>
-        </div>
-        <div class="benchmark-metric-item" style="text-align: center;">
-          <span class="benchmark-metric-label">공식 중립금리 (FOMC 점도표)</span>
-          <span class="benchmark-metric-val" style="color: #9ca3af;">${fedRate.neutralRate || '2.90%'}</span>
-        </div>
-        <div class="benchmark-metric-item" style="text-align: right;">
-          <span class="benchmark-metric-label">중립선과의 격차</span>
-          <span class="benchmark-gap-val text-yellow">${fedRate.gapToNeutral || '+0.73%p'}</span>
-        </div>
-      </div>
-      <div class="benchmark-composite-grid">
-        <div class="composite-item">
-          <span class="composite-label">실효금리(EFFR)</span>
-          <span class="composite-val">${fed.effr || '3.63%'}</span>
-        </div>
-        <div class="composite-item">
-          <span class="composite-label">실질 정책금리</span>
-          <span class="composite-val text-green">${fedRate.realRate || '+0.23%p'}</span>
-        </div>
-        <div class="composite-item">
-          <span class="composite-label">CPI 물가상승률</span>
-          <span class="composite-val" style="color: #c084fc;">+3.4%</span>
-        </div>
-        <div class="composite-item">
-          <span class="composite-label">실업률</span>
-          <span class="composite-val text-blue">${labor.unemploymentRate || '4.1%'}</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="benchmark-card">
-      <div class="benchmark-card-top">
-        <div class="benchmark-card-title">
-          <span>미국 CPI 소비자물가지수 (YoY)</span>
-        </div>
-        <span class="benchmark-badge purple">${inflation.zone || '법정 목표 2.0% 상회'}</span>
-      </div>
-      <div class="benchmark-metric-row">
-        <div class="benchmark-metric-item">
-          <span class="benchmark-metric-label">현재 물가상승률</span>
-          <span class="benchmark-metric-val" style="color: #c084fc;">${inflation.current || '+3.4%'}</span>
-        </div>
-        <div class="benchmark-metric-item" style="text-align: center;">
-          <span class="benchmark-metric-label">연방준비법 법정목표</span>
-          <span class="benchmark-metric-val" style="color: #9ca3af;">${inflation.fedTarget || '2.0%'}</span>
-        </div>
-        <div class="benchmark-metric-item" style="text-align: right;">
-          <span class="benchmark-metric-label">목표선과의 격차</span>
-          <span class="benchmark-gap-val" style="color: #c084fc;">${inflation.gapToTarget || '+1.40%p'}</span>
-        </div>
-      </div>
-      <div class="benchmark-composite-grid">
-        <div class="composite-item">
-          <span class="composite-label">직전월 발표치</span>
-          <span class="composite-val" style="color: #c084fc;">${inflation.prevRate || '+3.4%'}</span>
-        </div>
-        <div class="composite-item">
-          <span class="composite-label">시장 예상치 (8월)</span>
-          <span class="composite-val" style="color: #ffa42b;">${inflation.forecast || '+3.2%'}</span>
-        </div>
-        <div class="composite-item">
-          <span class="composite-label">목표 초과폭</span>
-          <span class="composite-val" style="color: #c084fc;">+1.40%p</span>
-        </div>
-        <div class="composite-item">
-          <span class="composite-label">차기 발표일</span>
-          <span class="composite-val text-green">09-11 (D-3)</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="benchmark-card">
-      <div class="benchmark-card-top">
-        <div class="benchmark-card-title">
-          <span>국채 장단기 금리차 (10Y-3M)</span>
-        </div>
-        <span class="benchmark-badge green">${yieldCurve.status || '정상 우상향 (역전선 0%p 상회)'}</span>
-      </div>
-      <div class="benchmark-metric-row">
-        <div class="benchmark-metric-item">
-          <span class="benchmark-metric-label">현재 스프레드</span>
-          <span class="benchmark-metric-val text-green">${yieldCurve.currentSpread !== undefined ? (yieldCurve.currentSpread >= 0 ? `+${yieldCurve.currentSpread.toFixed(2)}%p` : `${yieldCurve.currentSpread.toFixed(2)}%p`) : '+1.03%p'}</span>
-        </div>
-        <div class="benchmark-metric-item" style="text-align: center;">
-          <span class="benchmark-metric-label">뉴욕연준 침체판정선</span>
-          <span class="benchmark-metric-val" style="color: #9ca3af;">0.00%p</span>
-        </div>
-        <div class="benchmark-metric-item" style="text-align: right;">
-          <span class="benchmark-metric-label">역전선 대비 위치</span>
-          <span class="benchmark-gap-val text-green">+1.03%p (정상)</span>
-        </div>
-      </div>
-      <div class="benchmark-composite-grid">
-        <div class="composite-item">
-          <span class="composite-label">10년물 장기 국채</span>
-          <span class="composite-val">${treasury.yield10Y ? `${treasury.yield10Y.val.toFixed(2)}%` : '4.80%'}</span>
-        </div>
-        <div class="composite-item">
-          <span class="composite-label">3개월물 T-Bill</span>
-          <span class="composite-val">${treasury.yield13W ? `${treasury.yield13W.val.toFixed(2)}%` : '3.77%'}</span>
-        </div>
-        <div class="composite-item">
-          <span class="composite-label">5년물 중기 국채</span>
-          <span class="composite-val">${treasury.yield5Y ? `${treasury.yield5Y.val.toFixed(2)}%` : '4.57%'}</span>
-        </div>
-        <div class="composite-item">
-          <span class="composite-label">역전 여부</span>
-          <span class="composite-val text-green">비역전 (정상)</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="benchmark-card">
-      <div class="benchmark-card-top">
-        <div class="benchmark-card-title">
-          <span>단기국채(T-Bill) 무위험 현금 수익률</span>
-        </div>
-        <span class="benchmark-badge blue">무위험 현금 매력도 3.77%</span>
-      </div>
-      <div class="benchmark-metric-row">
-        <div class="benchmark-metric-item">
-          <span class="benchmark-metric-label">3개월물 국채 금리</span>
-          <span class="benchmark-metric-val text-blue">연 ${cash.rate || 3.77}%</span>
-        </div>
-        <div class="benchmark-metric-item" style="text-align: center;">
-          <span class="benchmark-metric-label">S&P 500 배당수익률</span>
-          <span class="benchmark-metric-val" style="color: #9ca3af;">약 1.30%</span>
-        </div>
-        <div class="benchmark-metric-item" style="text-align: right;">
-          <span class="benchmark-metric-label">주식 배당 대비</span>
-          <span class="benchmark-gap-val text-blue">+2.47%p 상회</span>
-        </div>
-      </div>
-      <div class="benchmark-composite-grid">
-        <div class="composite-item">
-          <span class="composite-label">T-Bill 확정수익</span>
-          <span class="composite-val text-blue">연 ${cash.rate || 3.77}%</span>
-        </div>
-        <div class="composite-item">
-          <span class="composite-label">S&P 배당수익률</span>
-          <span class="composite-val" style="color: #9ca3af;">연 1.30%</span>
-        </div>
-        <div class="composite-item">
-          <span class="composite-label">무위험 스프레드</span>
-          <span class="composite-val text-blue">+2.47%p</span>
-        </div>
-        <div class="composite-item">
-          <span class="composite-label">10년물 금리 대비</span>
-          <span class="composite-val" style="color: #9ca3af;">-1.03%p</span>
-        </div>
-      </div>
-    </div>
-  `;
+  const container = document.getElementById('macroBenchmarkGrid');
+  if (container) container.textContent = '고정 예시값 기반 기준선 해석은 표시하지 않습니다. 실제 관측 지표와 출처를 확인하세요.';
 }
 
 let macroChartState = {
@@ -3009,7 +2829,7 @@ function getFilteredTreasuryData(period) {
   if (!MACRO_DATA || !MACRO_DATA.timeSeries || !Array.isArray(MACRO_DATA.timeSeries.treasuryDaily)) {
     return [];
   }
-  const list = MACRO_DATA.timeSeries.treasuryDaily;
+  const list = MACRO_DATA.timeSeries.treasuryDaily.filter(d => typeof d.date === "string" && [d.y3m, d.y5y, d.y10y, d.spread].every(Number.isFinite));
   if (!list.length) return [];
   let count = list.length;
   if (period === '1M') count = 21;
@@ -3080,6 +2900,7 @@ function renderYieldTimeSeriesChart(period = '6M') {
   const container = document.getElementById("yieldTimeSeriesContainer");
   if (!container || !MACRO_DATA) return;
 
+  ["legendY3M", "legendY5Y", "legendY10Y"].forEach(id => { const el = document.getElementById(id); if (el) el.innerText = "-"; });
   const data = getFilteredTreasuryData(period);
   if (!data.length) {
     container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#888;font-size:12px;">국채 시계열 데이터가 없습니다.</div>`;
@@ -3126,7 +2947,7 @@ function renderYieldTimeSeriesChart(period = '6M') {
   let dateTicksSvg = '';
   const xCount = Math.min(5, data.length);
   for (let k = 0; k < xCount; k++) {
-    const idx = Math.min(Math.round((k / (xCount - 1)) * (data.length - 1)), data.length - 1);
+    const idx = Math.min(Math.round((k / Math.max(xCount - 1, 1)) * (data.length - 1)), data.length - 1);
     const d = data[idx];
     const posX = getX(idx);
     const dateStr = d.date.substring(2); // '26-03-13'
@@ -3235,6 +3056,7 @@ function renderSpreadTimeSeriesChart(period = '6M') {
   const container = document.getElementById("spreadTimeSeriesContainer");
   if (!container || !MACRO_DATA) return;
 
+  ["legendSpreadVal"].forEach(id => { const el = document.getElementById(id); if (el) el.innerText = "-"; });
   const data = getFilteredTreasuryData(period);
   if (!data.length) {
     container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#888;font-size:12px;">스프레드 시계열 데이터가 없습니다.</div>`;
@@ -3282,7 +3104,7 @@ function renderSpreadTimeSeriesChart(period = '6M') {
   let dateTicksSvg = '';
   const xCount = Math.min(5, data.length);
   for (let k = 0; k < xCount; k++) {
-    const idx = Math.min(Math.round((k / (xCount - 1)) * (data.length - 1)), data.length - 1);
+    const idx = Math.min(Math.round((k / Math.max(xCount - 1, 1)) * (data.length - 1)), data.length - 1);
     const d = data[idx];
     const posX = getX(idx);
     const dateStr = d.date.substring(2);
@@ -3403,45 +3225,45 @@ function renderMacroMarketProxies() {
   const items = [
     {
       label: "미국 10년물 국채",
-      val: treasury.yield10Y ? `${treasury.yield10Y.val.toFixed(2)}%` : "4.80%",
-      chg: treasury.yield10Y ? treasury.yield10Y.change : 0.29,
+      val: Number.isFinite(treasury.yield10Y?.val) ? `${treasury.yield10Y.val.toFixed(2)}%` : "확인 불가",
+      chg: Number.isFinite(treasury.yield10Y?.val) ? treasury.yield10Y.change : null,
       desc: "글로벌 자산 가격 할인율(무위험 수익률 척도)"
     },
     {
       label: "미국 3개월물 T-Bill",
-      val: treasury.yield13W ? `${treasury.yield13W.val.toFixed(2)}%` : "3.77%",
-      chg: treasury.yield13W ? treasury.yield13W.change : 0.48,
+      val: Number.isFinite(treasury.yield13W?.val) ? `${treasury.yield13W.val.toFixed(2)}%` : "확인 불가",
+      chg: Number.isFinite(treasury.yield13W?.val) ? treasury.yield13W.change : null,
       desc: "단기 기준금리 및 현금성 자산 벤치마크"
     },
     {
       label: "미국 5년물 국채",
-      val: treasury.yield5Y ? `${treasury.yield5Y.val.toFixed(2)}%` : "4.57%",
-      chg: treasury.yield5Y ? treasury.yield5Y.change : 0.40,
+      val: Number.isFinite(treasury.yield5Y?.val) ? `${treasury.yield5Y.val.toFixed(2)}%` : "확인 불가",
+      chg: Number.isFinite(treasury.yield5Y?.val) ? treasury.yield5Y.change : null,
       desc: "중기 경제 성장 및 인플레이션 기대치"
     },
     {
       label: "달러 인덱스 (DXY)",
-      val: cm.dxy ? `${cm.dxy.val.toFixed(2)}` : "98.92",
-      chg: cm.dxy ? cm.dxy.change : -0.26,
+      val: Number.isFinite(cm.dxy?.val) ? `${cm.dxy.val.toFixed(2)}` : "확인 불가",
+      chg: Number.isFinite(cm.dxy?.val) ? cm.dxy.change : null,
       desc: "주요 6개 통화 대비 달러화 가치 (글로벌 유동성)"
     },
     {
       label: "WTI 국제유가",
-      val: cm.wtiOil ? `$${cm.wtiOil.val.toFixed(2)}` : "$92.36",
-      chg: cm.wtiOil ? cm.wtiOil.change : 0.96,
+      val: Number.isFinite(cm.wtiOil?.val) ? `$${cm.wtiOil.val.toFixed(2)}` : "확인 불가",
+      chg: Number.isFinite(cm.wtiOil?.val) ? cm.wtiOil.change : null,
       desc: "원유 배럴당 가격 (헤드라인 물가 직결)"
     },
     {
       label: "국제 금 시세",
-      val: cm.gold ? `$${cm.gold.val.toLocaleString()}` : "$4,430.80",
-      chg: cm.gold ? cm.gold.change : -1.02,
+      val: Number.isFinite(cm.gold?.val) ? `$${cm.gold.val.toLocaleString()}` : "확인 불가",
+      chg: Number.isFinite(cm.gold?.val) ? cm.gold.change : null,
       desc: "대표 안전자산 및 통화가치 하락 헷지 수단"
     }
   ];
 
   container.innerHTML = items.map(it => {
     const chgClass = it.chg > 0 ? "up" : (it.chg < 0 ? "down" : "");
-    const chgSign = it.chg > 0 ? `+${it.chg}%` : (it.chg < 0 ? `${it.chg}%` : "0.0%");
+    const chgSign = !Number.isFinite(it.chg) ? "확인 불가" : it.chg > 0 ? `+${it.chg}%` : (it.chg < 0 ? `${it.chg}%` : "0.0%");
     return `
       <div class="proxy-card">
         <span class="proxy-label">${it.label}</span>
@@ -3523,11 +3345,11 @@ function renderMacroCalendar() {
         <div class="cal-compare-box">
           <div class="cal-compare-item">
             <span class="cal-compare-label">이전 발표치 (전월)</span>
-            <span class="cal-compare-val">${ev.previous || '-'}</span>
+            <span class="cal-compare-val">${ev.previous || "확인 불가"}</span>
           </div>
           <div class="cal-compare-item">
             <span class="cal-compare-label">월가 시장 예상치</span>
-            <span class="cal-compare-val" style="color: #c084fc;">${ev.forecast || '-'}</span>
+            <span class="cal-compare-val" style="color: #c084fc;">${ev.forecast || "확인 불가"}</span>
           </div>
           <div class="cal-compare-item">
             <span class="cal-compare-label">실제 발표치</span>
@@ -3542,91 +3364,16 @@ function renderMacroCalendar() {
 }
 
 function openMacroModal() {
-  const modal = document.getElementById("macroModal");
-  const modalBody = document.getElementById("macroModalBody");
-  if (!modal || !modalBody || !MACRO_DATA) return;
-
-  const fed = MACRO_DATA.fedRate || {};
-  const cpi = MACRO_DATA.inflation || {};
-  const labor = MACRO_DATA.labor || {};
-  const spread = (MACRO_DATA.treasury && MACRO_DATA.treasury.spread10Y_13W) || {};
-  const calendar = MACRO_DATA.calendar || [];
-  const b = MACRO_DATA.benchmarks || {};
-
-  modalBody.innerHTML = `
-    <div class="macro-modal-grid">
-      <div class="modal-sub-card">
-        <h4>연준 기준금리 & 물가 공식 기준선</h4>
-        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
-          <div><strong>기준금리 목표치:</strong> <span class="text-green">${fed.targetRange || "3.50% ~ 3.75%"}</span></div>
-          <div><strong>공식 중립금리선:</strong> 2.90% <span style="color: #ffa42b; font-weight: 700;">(대비 +0.73%p)</span></div>
-          <div><strong>CPI 물가상승률(YoY):</strong> <span style="color: #c084fc; font-weight: 700;">${cpi.cpiYoY || "+3.4%"}</span></div>
-          <div><strong>법정 물가목표선:</strong> 2.00% <span style="color: #c084fc; font-weight: 700;">(대비 +1.40%p)</span></div>
-        </div>
-      </div>
-
-      <div class="modal-sub-card">
-        <h4>국채 수익률 & 무위험 현금 수익률</h4>
-        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
-          <div><strong>10Y-3M 스프레드:</strong> <span class="${spread.spread >= 0 ? 'text-green' : 'text-red'} font-weight: 700;">${spread.spread >= 0 ? `+${spread.spread.toFixed(2)}%p` : `${spread.spread.toFixed(2)}%p`}</span></div>
-          <div><strong>침체 역전 기준선:</strong> 0.00%p <span class="text-green font-weight: 700;">(정상 우상향 유지)</span></div>
-          <div><strong>단기국채(3M) 확정 이자:</strong> <span class="text-blue font-weight: 700;">연 ${MACRO_DATA.treasury?.yield13W?.val || 3.77}%</span></div>
-          <div><strong>실업률:</strong> ${labor.unemploymentRate || "4.1%"} (완전고용 4.0~4.2% 범위)</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal-holders-section">
-      <h4>D-Day 주요 경제 지표 발표 카운트다운 & 예상치</h4>
-      <div class="table-wrapper" style="max-height: 300px; overflow-y: auto;">
-        <table class="power-table" style="min-width: 100%;">
-          <thead>
-            <tr>
-              <th class="text-left">D-Day</th>
-              <th class="text-left">발표일자</th>
-              <th class="text-left">지표명</th>
-              <th class="text-right">이전치 (전월)</th>
-              <th class="text-right">월가 예상치</th>
-              <th class="text-center">발표 결과</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${calendar.map(c => `
-              <tr>
-                <td><span class="cal-dday-pill ${c.daysDiff <= 7 ? 'imminent' : ''}" style="font-size: 11px; padding: 2px 8px;">${c.dDay}</span></td>
-                <td style="white-space: nowrap; color: #9ca3af;">${c.date}</td>
-                <td><strong style="color: #fff;">${c.name}</strong></td>
-                <td class="text-right" style="color: #888;">${c.previous || '-'}</td>
-                <td class="text-right" style="color: #c084fc; font-weight: 700;">${c.forecast || '-'}</td>
-                <td class="text-center"><span style="color: #1ed760; font-weight: 700;">${c.actual || '대기 중'}</span></td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="modal-links-row" style="margin-top: 18px; justify-content: flex-end;">
-      <button class="btn btn-outline" id="btnGoToMacroView" style="background: var(--spotify-green); color: #000; font-weight: 700;">
-        거시경제 전체 대시보드로 이동 ↗
-      </button>
-    </div>
-  `;
-
-  const btnGo = document.getElementById("btnGoToMacroView");
-  if (btnGo) {
-    btnGo.onclick = () => {
-      closeMacroModal();
-      switchFilingMode("MACRO");
-    };
-  }
-
-  modal.classList.add("active");
+  const modal = document.getElementById('macroModal');
+  const body = document.getElementById('macroModalBody');
+  if (!modal || !body) return;
+  body.textContent = macroFreshness(MACRO_DATA) + '\n' + Object.entries(MACRO_DATA?.sources || {}).map(([key, source]) => `${key}: ${source.status || 'unknown'} · ${source.asOf || '관측일 없음'} · ${source.url || '출처 없음'}`).join('\n') + '\n거시경제 지표는 Macro 탭의 관측 데이터를 확인하세요. 시세가 없거나 오래된 경우 현재 시장 상황을 의미하지 않습니다.';
+  modal.classList.add('active');
 }
 
 function closeMacroModal() {
   const modal = document.getElementById("macroModal");
-  if (modal) modal.classList.remove("active");
+  if (modal) modal.classList.remove("active", "show");
 }
 
 /* ==============================================================================
@@ -3822,10 +3569,10 @@ function renderConsensusWidget(forceType) {
       : `<span class="consensus-action-tag add">AUM 집중</span>`;
 
     const realInfo = LIVE_PRICES[s.ticker];
-    const priceText = realInfo ? `$${realInfo.price.toFixed(2)}` : "-";
-    const chgVal = realInfo ? realInfo.changePct : 0.0;
+    const priceText = priceLabel(realInfo && realInfo.price);
+    const chgVal = realInfo && Number.isFinite(realInfo.changePct) ? realInfo.changePct : null;
     const chgClass = chgVal > 0 ? "up" : (chgVal < 0 ? "down" : "");
-    const chgText = realInfo ? `${chgVal > 0 ? "+" : ""}${chgVal.toFixed(2)}%` : "";
+    const chgText = Number.isFinite(chgVal) ? `${chgVal > 0 ? "+" : ""}${chgVal.toFixed(2)}%` : "";
 
     return `
       <div class="consensus-card" onclick="openConsensusStock('${s.ticker}')" title="클릭 시 ${s.name} 상세 분석 팝업을 엽니다">
@@ -3865,25 +3612,15 @@ function openConsensusStock(ticker) {
       return;
     }
   }
-  // 만약 Grand Total에 없으면 기본 객체 생성 후 팝업
-  openStockModal({
-    ticker: ticker,
-    baseTicker: ticker,
-    name: ticker,
-    sector: "Technology",
-    shares: "-",
-    value: 0,
-    weight: 0,
-    estPrice: 100,
-    curPrice: LIVE_PRICES[ticker] ? LIVE_PRICES[ticker].price : 100,
-    insight: `월가 100대 운용사가 이번 분기에 집중 매수한 핵심 종목입니다.`
-  });
+  // Do not synthesize prices, sectors or buy signals for missing holdings.
+  return;
 }
 
 /* ==============================================================================
    🔗 2번 기능: 13F 종목 상세 모달 내 '최근 내부자 거래 (Form 4)' 교차 분석 연동
    ============================================================================== */
 async function renderModalInsiderCross(item) {
+  const requestId = ++insiderRequestId;
   const container = document.getElementById("modalInsiderContent");
   const convictionBadge = document.getElementById("modalConvictionBadge");
   if (!container) return;
@@ -3903,6 +3640,7 @@ async function renderModalInsiderCross(item) {
     }
   }
 
+  if (requestId !== insiderRequestId) return;
   const ticker = (item.baseTicker || item.ticker || "").toUpperCase();
   const matched = (FORM4_DATA || []).filter(f => (f.ticker || "").toUpperCase() === ticker);
 
@@ -3917,29 +3655,29 @@ async function renderModalInsiderCross(item) {
   }
 
   // 장내 매수(Code P) 여부 판정
-  const hasBuy = matched.some(f => f.transactionType === "P" || f.actionType === "BUY" || f.transactionCode === "P");
-  const isGuruBuy = item.action === "NEW" || item.action === "ADD" || (item.holders && item.holders >= 2);
+  const hasBuy = matched.some(f => insiderCode(f) === "P");
+  const isGuruBuy = item.action === "NEW" || item.action === "ADD";
 
   if (hasBuy && isGuruBuy && convictionBadge) {
     convictionBadge.style.display = "inline-block";
-    convictionBadge.innerText = "🔥 Double Conviction (기관+내부자 쌍끌이 매수)";
-    convictionBadge.title = "100대 메이저 운용사의 포트폴리오 편입과 함께 기업 경영진/임원의 직접 장내 매수(P)가 동시에 포착된 최고 등급의 신뢰 시그널입니다.";
+    convictionBadge.innerText = "기관 증가·내부자 매수 공시 있음 (기간 상이 가능)";
+    convictionBadge.title = "13F와 Form 4는 보고 기준일이 다를 수 있습니다. 동시 매수나 투자 성과를 의미하지 않습니다.";
   } else if (hasBuy && convictionBadge) {
     convictionBadge.style.display = "inline-block";
     convictionBadge.innerText = "💼 임원 장내 매수 (Code P) 포착";
   }
 
   // 최근 5건 거래 목록 표
-  const recentTrades = matched.slice(0, 5);
+  const recentTrades = [...matched].sort((a, b) => String(b.filingDate || "").localeCompare(String(a.filingDate || ""))).slice(0, 5);
   const rowsHtml = recentTrades.map(trade => {
-    const isP = trade.transactionType === "P" || trade.actionType === "BUY" || trade.transactionCode === "P";
+    const isP = insiderCode(trade) === "P";
     const typeBadge = isP 
       ? `<span class="badge" style="background: rgba(30,215,96,0.18); color: #1ed760; font-size: 10px; font-weight: 800;">장내 매수 (P)</span>`
-      : `<span class="badge" style="background: rgba(243,114,127,0.18); color: #f3727f; font-size: 10px; font-weight: 800;">장내 매도 (S)</span>`;
+      : `<span class="badge" style="background: rgba(243,114,127,0.18); color: #f3727f; font-size: 10px; font-weight: 800;">${insiderLabel(trade)}</span>`;
     
     const sharesDisplay = trade.shares ? Number(trade.shares).toLocaleString() + " 주" : "-";
     const priceDisplay = trade.price ? `$${Number(trade.price).toFixed(2)}` : "-";
-    const totalValDisplay = trade.value ? formatMoney(trade.value) : (trade.shares && trade.price ? formatMoney(trade.shares * trade.price) : "-");
+    const totalValDisplay = trade.totalValue != null ? formatMoney(trade.totalValue) : (trade.shares && trade.price ? formatMoney(trade.shares * trade.price) : "-");
 
     return `
       <tr>
@@ -3994,5 +3732,6 @@ function switchToForm4WithTicker(ticker) {
     }
   }, 150);
 }
+
 
 

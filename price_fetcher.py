@@ -10,6 +10,13 @@ import sys
 import json
 import time
 import requests
+import math
+import re
+from pathlib import Path
+from datetime import datetime, timezone
+from data_io import atomic_write_json, load_json
+
+BASE_DIR = Path(__file__).resolve().parent
 
 if sys.platform == "win32":
     try:
@@ -19,13 +26,11 @@ if sys.platform == "win32":
         pass
 
 def get_standard_ticker(name, ticker, ticker_map):
-    name_clean = (name or "").upper().strip()
-    for k, v in ticker_map.items():
-        if k in name_clean:
-            return v
-    if ticker and len(ticker) <= 5 and not " " in ticker and ticker.isalpha():
+    # A provided ticker wins. Substring issuer matching can confuse share classes.
+    if ticker and re.fullmatch(r"[A-Za-z]{1,5}(?:[.-][A-Za-z])?", ticker):
         return ticker.upper()
-    return None
+    name_clean = (name or "").upper().strip()
+    return next((v for k, v in ticker_map.items() if k.upper().strip() == name_clean), None)
 
 def fetch_yahoo_price(ticker):
     try:
@@ -42,56 +47,64 @@ def fetch_yahoo_price(ticker):
                 meta = result[0].get("meta", {})
                 cur_price = meta.get("regularMarketPrice")
                 prev_close = meta.get("chartPreviousClose") or meta.get("previousClose")
-                if cur_price is not None:
-                    change_pct = 0.0
-                    if prev_close and prev_close > 0:
+                if isinstance(cur_price, (int, float)) and not isinstance(cur_price, bool) and math.isfinite(cur_price) and cur_price > 0:
+                    change_pct = None
+                    if isinstance(prev_close, (int, float)) and math.isfinite(prev_close) and prev_close > 0:
                         change_pct = round(((cur_price - prev_close) / prev_close) * 100, 2)
+                    market_time = meta.get("regularMarketTime")
+                    if not isinstance(market_time, (int, float)) or isinstance(market_time, bool) or not math.isfinite(market_time) or market_time <= 0:
+                        market_time = None
+                    stale = market_time is None or not -300 <= time.time() - market_time <= 86400
                     return {
                         "price": round(cur_price, 2),
                         "changePct": change_pct,
-                        "currency": meta.get("currency", "USD"),
-                        "marketTime": meta.get("regularMarketTime", int(time.time()))
+                        "currency": meta.get("currency"),
+                        "marketTime": market_time,
+                        "stale": stale,
+                        "fetchedAt": datetime.now(timezone.utc).isoformat(),
+                        "source": "Yahoo Finance"
                     }
     except Exception as e:
         pass
     return None
 
 def main():
-    ticker_map = {}
-    if os.path.exists("ticker_map.json"):
-        with open("ticker_map.json", "r", encoding="utf-8") as f:
-            ticker_map = json.load(f)
-
-    # 13F에서 종목 수집
+    ticker_map = load_json(BASE_DIR / "ticker_map.json", {})
     target_tickers = set(ticker_map.values())
-    if os.path.exists("latest_13f_holdings.json"):
-        with open("latest_13f_holdings.json", "r", encoding="utf-8") as f:
-            holdings = json.load(f)
-            for h in holdings[:500]:
-                mapped = get_standard_ticker(h.get("name"), h.get("ticker"), ticker_map)
-                if mapped:
-                    target_tickers.add(mapped)
-
-    # 기존 시세 캐시 유지
-    prices = {}
-    if os.path.exists("realtime_prices.json"):
-        try:
-            with open("realtime_prices.json", "r", encoding="utf-8") as f:
-                prices = json.load(f)
-        except Exception:
-            prices = {}
-
-    print(f"📡 총 {len(target_tickers)}개 종목의 야후 파이낸스 실시간 시세 수집을 시작합니다...")
-    for i, t in enumerate(target_tickers):
-        info = fetch_yahoo_price(t)
+    analytics = load_json(BASE_DIR / "live_13f_analytics.json", {})
+    for fund in analytics.values():
+        for holding in fund.get("holdings", []):
+            if holding.get("putCall") or holding.get("shareType") == "PRN":
+                continue
+            ticker = get_standard_ticker(holding.get("name"), holding.get("ticker"), ticker_map)
+            if ticker:
+                target_tickers.add(ticker)
+    path = BASE_DIR / "realtime_prices.json"
+    prices = load_json(path, {})
+    if not isinstance(prices, dict):
+        raise ValueError("Existing price cache must be an object")
+    updated = 0
+    failed = []
+    for ticker in sorted(target_tickers):
+        info = fetch_yahoo_price(ticker)
+        previous = prices.get(ticker, {})
+        previous_time = previous.get('marketTime') if isinstance(previous, dict) else None
+        if info and isinstance(previous_time, (int, float)) and not isinstance(previous_time, bool) and math.isfinite(previous_time) and previous_time > 0:
+            observed = info.get('marketTime')
+            if not isinstance(observed, (int, float)) or isinstance(observed, bool) or not math.isfinite(observed) or observed < previous_time:
+                info = None
         if info:
-            prices[t] = info
-            print(f"[{i+1}/{len(target_tickers)}] {t}: ${info['price']} ({info['changePct']}%)")
-        time.sleep(0.05)
-
-    with open("realtime_prices.json", "w", encoding="utf-8") as f:
-        json.dump(prices, f, ensure_ascii=False, indent=2)
-    print("✅ realtime_prices.json 갱신 완료!")
+            prices[ticker] = info
+            updated += 1
+        else:
+            failed.append(ticker)
+        time.sleep(.15)
+    if updated:
+        atomic_write_json(path, prices)
+    print(f"Updated {updated}/{len(target_tickers)} prices; failed quotes retain original timestamps.")
+    if failed:
+        print("Failed or regressing quotes: " + ", ".join(failed), file=sys.stderr)
+    return updated > 0 and not failed
 
 if __name__ == "__main__":
-    main()
+    sys.exit(0 if main() else 1)
