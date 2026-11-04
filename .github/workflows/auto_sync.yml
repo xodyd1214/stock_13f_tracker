@@ -1,60 +1,88 @@
-name: Alpha13F 스마트 하이브리드 수집 엔진
+name: Alpha13F validated data refresh
 
 on:
-  # 1) 매일 오전 6시 (KST): 야후 파이낸스 실시간 주가 + 거시경제 갱신
   schedule:
     - cron: '0 21 * * *'
-  # 2) GitHub 웹 화면 또는 대시보드에서 수동 실행 시: 13F 풀 데이터 + 주가 일괄 갱신
   workflow_dispatch:
     inputs:
       full_sync:
-        description: 'SEC 13F 전체 공시까지 풀 갱신할까요?'
+        description: 'Refresh SEC 13F filings too?'
         required: true
         type: boolean
         default: true
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
+
+# Serial publication prevents scheduled/manual refreshes racing over cache data.
+concurrency:
+  group: alpha13f-data-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   smart-sync:
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 코드 체크아웃
-        uses: actions/checkout@v4
-
-      - name: 🐍 Python 3.10 환경 세팅
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
+      - name: Install dependencies
+        run: python -m pip install requests
+      - name: Run offline regression tests
+        run: python -m unittest discover -s tests -v
 
-      - name: 📦 필수 라이브러리 설치
-        run: |
-          pip install requests pandas
+      # These collectors preserve last-good data and publish atomically. A partial
+      # error must not prevent independent sources from refreshing successfully.
+      - name: Refresh 13F history
+        id: filings
+        if: github.event_name == 'workflow_dispatch' && inputs.full_sync
+        continue-on-error: true
+        run: python collector_1year.py
+      - name: Export verified equity holdings for the dashboard
+        id: dashboard
+        if: github.event_name == 'workflow_dispatch' && inputs.full_sync
+        continue-on-error: true
+        run: python sec_collector.py
+      - name: Refresh prices
+        id: prices
+        continue-on-error: true
+        run: python price_fetcher.py
+      - name: Refresh macro indicators
+        id: macro
+        continue-on-error: true
+        run: python macro_collector.py
 
-      # 🔍 수동 트리거(full_sync=true) 또는 공시 집중 시즌일 때만 무거운 13F 풀 수집 실행
-      - name: 📑 SEC EDGAR 13F 공식 공시 풀 수집 (수동/시즌 전용)
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.full_sync == 'true'
+      # latest_13f_holdings.csv is a retained legacy snapshot, not regenerated or
+      # published by this workflow. Use the dashboard CSV export for current data.
+      # sec_insider_collector.py and sec_13d_collector.py are
+      # intentionally paused until their parsing and failure-preservation paths
+      # are audited. Preserve existing legacy datasets; never publish their output.
+      - name: Validate and publish only changed safe datasets
+        if: ${{ !cancelled() && (steps.filings.outcome == 'success' || steps.filings.outcome == 'failure' || steps.dashboard.outcome == 'failure' || steps.prices.outcome == 'success' || steps.prices.outcome == 'failure' || steps.macro.outcome == 'success' || steps.macro.outcome == 'failure') }}
+        shell: bash
         run: |
-          echo "🚀 [Full Sync] SEC 13F 전체 100인 공시 수집을 실행합니다..."
-          python collector_1year.py
-          python sec_collector.py
-
-      # 매일 아침(한국시간 오전 6시 / 미국 장마감 직후): 주가, 거시경제 지표 및 SEC Form 4/13D 공시 자동 갱신
-      - name: 실시간 주가 + 거시경제(Macro) + SEC Form 4/13D 공시 데일리 갱신
-        run: |
-          echo "📡 [Daily Sync] 실시간 주가, 거시경제 지표 및 SEC 공시 데이터를 갱신합니다..."
-          python price_fetcher.py
-          python macro_collector.py
-          python sec_insider_collector.py
-          python sec_13d_collector.py
-
-      - name: 최신 데이터 GitHub 저장소에 자동 커밋 & 푸시
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add realtime_prices.json latest_macro_indicators.json latest_13f_holdings.csv latest_13f_holdings.json live_13f_analytics.json latest_form4_insiders.json latest_13d_filings.json
-          git commit -m "chore(data): 실시간 주가 및 거시경제/공시 스마트 자동 동기화 [skip ci]" || echo "No changes to commit"
+          set -euo pipefail
+          outputs=(latest_13f_holdings.json live_13f_analytics.json realtime_prices.json latest_macro_indicators.json)
+          changed=()
+          for file in "${outputs[@]}"; do
+            if [[ -n "$(git status --porcelain -- "$file")" ]]; then
+              python validate_data.py "$file"
+              changed+=("$file")
+            fi
+          done
+          if (( ${#changed[@]} == 0 )); then
+            echo "No validated data changed. Existing snapshots retained."
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -- "${changed[@]}"
+          git commit -m 'chore(data): publish validated source updates [skip ci]'
           git push
+
+      - name: Report partial collection failure
+        if: ${{ always() && (steps.filings.outcome == 'failure' || steps.dashboard.outcome == 'failure' || steps.prices.outcome == 'failure' || steps.macro.outcome == 'failure') }}
+        run: |
+          echo '::error::One or more collectors failed or returned partial/stale data. Successful validated updates were retained; review collector logs.'
+          exit 1
