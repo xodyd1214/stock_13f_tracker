@@ -168,9 +168,25 @@ test('unmapped securities do not collide via issuer prefix and class ticker surv
 });
 test('insider canonical codes distinguish buys, sales, awards, exercises and unknowns', () => {
   const c = context(helpers);
-  assert.equal(c.insiderLabel({ txTypeCode: 'P' }), '장내 매수 (P)');
-  for (const code of ['A', 'M', 'G', 'F', 'Z']) assert.notEqual(c.insiderLabel({ txTypeCode: code }), '장내 매도 (S)');
+  assert.equal(c.insiderLabel({ txTypeCode: 'P' }), '매수 (P)');
+  for (const code of ['A', 'M', 'G', 'F', 'Z']) assert.notEqual(c.insiderLabel({ txTypeCode: code }), '매도 (S)');
   assert.equal(c.insiderCode({ txTypeCode: 'A', transactionCode: 'P' }), 'A');
+});
+test('Form 4 rejects legacy rows and resolves the issuer independently of the reporter', () => {
+  const snapshot = JSON.parse(fs.readFileSync(require('node:path').join(__dirname, '../latest_form4_insiders.json'), 'utf8'));
+  const c = context(['validateForm4Snapshot', 'form4IssuerForTicker', 'form4Price', 'getF4ActiveDataset'], {
+    FORM4_DATA: snapshot.transactions, state: { selectedF4Issuer: '0000070858' }
+  });
+  assert.equal(c.validateForm4Snapshot(snapshot), true);
+  assert.equal(c.validateForm4Snapshot([{ ticker: 'BAC', price: 6.334 }]), false);
+  assert.equal(c.form4IssuerForTicker(snapshot.transactions, 'PNI'), '0001170311');
+  assert.equal(c.form4IssuerForTicker(snapshot.transactions, 'BRK-B'), '0001067983');
+  const pni = snapshot.transactions.find(row => row.ticker === 'PNI' && row.shares === 12170);
+  assert.match(pni.insiderName, /BANK OF AMERICA.*MERRILL LYNCH/);
+  assert.equal(c.form4Price(pni.price), '$6.334');
+  assert.equal(c.form4Price(null), '미기재');
+  assert.ok(c.getF4ActiveDataset().every(row => row.ticker === 'BAC'));
+  assert.ok(c.getF4ActiveDataset().length > 0);
 });
 test('history displays an honest unavailable state, never synthesized quarters', () => {
   const children = [];
@@ -199,11 +215,11 @@ test('summary clears stale picks before empty/new manager render', () => {
 test('late insider response cannot overwrite newer modal', async () => {
   let finish;
   const content = { innerHTML: '' };
-  const c = context([...helpers, 'renderModalInsiderCross'], { insiderRequestId: 0, FORM4_DATA: [], document: { getElementById: id => id === 'modalInsiderContent' ? content : { style: {} } }, fetch: () => new Promise(resolve => { finish = resolve; }) });
+  const c = context([...helpers, 'renderModalInsiderCross'], { insiderRequestId: 0, FORM4_DATA: [], document: { getElementById: id => id === 'modalInsiderContent' ? content : { style: {} } }, loadVerifiedForm4: () => new Promise(resolve => { finish = resolve; }) });
   const old = c.renderModalInsiderCross({ ticker: 'OLD' });
   c.insiderRequestId++;
   content.innerHTML = 'NEW MODAL';
-  finish({ ok: true, json: async () => [] });
+  finish([]);
   await old;
   assert.equal(content.innerHTML, 'NEW MODAL');
 });

@@ -1,34 +1,15 @@
-import sys
-if sys.platform == "win32":
-    try:
-        sys.stdout.reconfigure(encoding="utf-8")
-    except:
-        pass
+"""Collect SEC Form 4 Table I transactions with issuer and reporter separated."""
+from datetime import date
+from decimal import Decimal, InvalidOperation
+import math
+import re
+import time
+import xml.etree.ElementTree as ET
 
 import requests
-import re
-import xml.etree.ElementTree as ET
-import json
-import time
-import os
 
-def log(msg):
-    try:
-        print(msg, flush=True)
-    except:
-        pass
+from data_io import atomic_write_json, load_json
 
-log("=" * 80)
-log("🛡️ [SEC Form 4 공식 원문 XML 100% 실데이터 대량 수집 파이프라인]")
-log("=" * 80)
-
-headers = {
-    "User-Agent": "AlphaInsiderTracker xodyd1214@gmail.com",
-    "Accept-Encoding": "gzip, deflate"
-}
-
-with open("sec_cik_master.json", "r", encoding="utf-8") as f:
-    ticker_to_cik = json.load(f)
 
 KEY_TICKERS = [
     # 빅테크 & 메가캡
@@ -49,210 +30,150 @@ KEY_TICKERS = [
     "NFLX", "DIS", "CMCSA", "TMUS", "VZ", "T", "UBER", "ABNB", "DASH", "BKNG", "SPOT"
 ]
 
-def parse_form4_xml(xml_content, comp_ticker, comp_name, comp_cik, acc_num, filing_date):
-    records = []
+
+def ownership_xml(submission):
+    for document in submission.split(b"<DOCUMENT>")[1:]:
+        if re.match(rb"\s*<TYPE>4\s", document):
+            match = re.search(rb"<ownershipDocument(?:\s[^>]*)?>.*?</ownershipDocument>", document, re.S)
+            if match:
+                return match.group()
+    raise ValueError("Form 4 ownership document missing")
+
+
+def field(node, path):
+    return (node.findtext(path) or "").strip()
+
+
+def number(node, path):
+    value = field(node, path)
+    if not value:
+        return None
     try:
-        root = ET.fromstring(xml_content)
-    except Exception as e:
-        return records
+        parsed = Decimal(value)
+        if parsed.is_finite() and math.isfinite(float(parsed)):
+            return parsed
+    except InvalidOperation:
+        pass
+    raise ValueError(f"Invalid Form 4 number at {path}")
 
-    # 1) 보고자 정보 추출
-    owner_name = "내부자 (미기재)"
-    for tag in [".//rptOwnerName", ".//reportingOwnerId/rptOwnerName", ".//reportingOwner/reportingOwnerId/rptOwnerName", ".//rptOwner/rptOwnerName"]:
-        elem = root.find(tag)
-        if elem is not None and elem.text and elem.text.strip():
-            owner_name = elem.text.strip()
-            break
 
-    officer_title = "임원 / 이사"
-    is_director = False
-    is_officer = False
-    is_ten_pct = False
-    is_other = False
+def parse_form4_xml(xml_content, accession, filing_date, source_url):
+    root = ET.fromstring(xml_content)
+    if root.tag != "ownershipDocument" or field(root, "documentType") != "4":
+        raise ValueError("Expected an original Form 4")
+    date.fromisoformat(filing_date)
+    cik = field(root, "issuer/issuerCik")
+    company = field(root, "issuer/issuerName")
+    if not re.fullmatch(r"[0-9]{1,10}", cik) or int(cik) == 0 or not company:
+        raise ValueError("Form 4 issuer identity missing")
+    ticker = field(root, "issuer/issuerTradingSymbol").upper()
+    if ticker in {"N/A", "NA", "NONE", "NOT APPLICABLE", "-"}:
+        ticker = ""
 
-    rel = root.find(".//reportingOwnerRelationship")
-    if rel is None:
-        rel = root.find(".//reportingOwner/reportingOwnerRelationship")
-
-    if rel is not None:
-        dir_e = rel.find("isDirector")
-        off_e = rel.find("isOfficer")
-        ten_e = rel.find("isTenPercentOwner")
-        oth_e = rel.find("isOther")
-        title_e = rel.find("officerTitle")
-
-        is_director = (dir_e is not None and dir_e.text in ["1", "true", "True"])
-        is_officer = (off_e is not None and off_e.text in ["1", "true", "True"])
-        is_ten_pct = (ten_e is not None and ten_e.text in ["1", "true", "True"])
-        is_other = (oth_e is not None and oth_e.text in ["1", "true", "True"])
-
-        if title_e is not None and title_e.text and title_e.text.strip():
-            officer_title = title_e.text.strip()
-        elif is_director and is_officer:
-            officer_title = "대표이사 / 사내이사 (Director & Officer)"
-        elif is_director:
-            officer_title = "사내/사외이사 (Director)"
-        elif is_ten_pct:
-            officer_title = "10% 이상 주요주주 (10% Owner)"
-        elif is_other:
-            officer_title = "주요 관계자 (Other)"
-
-    # Footnote 맵 구성
-    footnote_map = {}
-    for fn in root.findall(".//footnotes/footnote"):
-        fn_id = fn.attrib.get("id")
-        if fn_id and fn.text:
-            footnote_map[fn_id] = fn.text
-
-    # 2) Table I 거래 파싱
-    non_deriv_txs = root.findall(".//nonDerivativeTransaction")
-    if not non_deriv_txs:
-        return records
-
-    for tx in non_deriv_txs:
-        tx_date_elem = tx.find(".//transactionDate/value")
-        tx_date = tx_date_elem.text.strip() if tx_date_elem is not None and tx_date_elem.text else filing_date
-
-        tx_code_elem = tx.find(".//transactionCoding/transactionCode")
-        tx_code = tx_code_elem.text.strip() if tx_code_elem is not None and tx_code_elem.text else "ETC"
-
-        acq_disp_elem = tx.find(".//transactionAmounts/transactionAcquiredDisposedCode/value")
-        acq_disp = acq_disp_elem.text.strip() if acq_disp_elem is not None and acq_disp_elem.text else ""
-
-        shares_elem = tx.find(".//transactionAmounts/transactionShares/value")
-        shares = float(shares_elem.text.strip()) if shares_elem is not None and shares_elem.text else 0.0
-
-        price_elem = tx.find(".//transactionAmounts/transactionPricePerShare/value")
-        price = float(price_elem.text.strip()) if price_elem is not None and price_elem.text else 0.0
-
-        # 주석(Footnote)에 가격 범위가 적힌 경우 단가 복원
-        if price == 0.0:
-            fn_elem = tx.find(".//transactionAmounts/transactionPricePerShare/footnoteId")
-            if fn_elem is not None:
-                fn_id = fn_elem.attrib.get("id")
-                fn_text = footnote_map.get(fn_id, "")
-                if fn_text:
-                    m_range = re.search(r'ranging\s+from\s+\$([0-9\.]+)\s+to\s+\$([0-9\.]+)', fn_text, re.IGNORECASE)
-                    if m_range:
-                        price = round((float(m_range.group(1)) + float(m_range.group(2))) / 2, 2)
-                    else:
-                        m_price = re.search(r'\$([0-9\.]+)', fn_text)
-                        if m_price:
-                            price = float(m_price.group(1))
-
-        post_shares_elem = tx.find(".//postTransactionAmounts/sharesOwnedFollowingTransaction/value")
-        post_shares = float(post_shares_elem.text.strip()) if post_shares_elem is not None and post_shares_elem.text else 0.0
-
-        if tx_code == "P":
-            tx_type = "장내 매수 (P)"
-            tx_type_code = "P"
-        elif tx_code == "S":
-            tx_type = "장내 매도 (S)"
-            tx_type_code = "S"
-        elif tx_code in ["M", "C"]:
-            tx_type = f"옵션/전환 행사 ({tx_code})"
-            tx_type_code = tx_code
-        elif tx_code == "A":
-            tx_type = "주식 보상 부여 (A)"
-            tx_type_code = "A"
-        elif tx_code == "G":
-            tx_type = "증여/기부 (G)"
-            tx_type_code = "G"
-        elif tx_code == "F":
-            tx_type = "세금 납부 반납 (F)"
-            tx_type_code = "F"
-        elif acq_disp == "A":
-            tx_type = f"주식 취득 ({tx_code})"
-            tx_type_code = tx_code
-        elif acq_disp == "D":
-            tx_type = f"주식 처분 ({tx_code})"
-            tx_type_code = tx_code
-        else:
-            tx_type = f"기타 거래 ({tx_code})"
-            tx_type_code = tx_code
-
-        total_value = shares * price
-        acc_clean = acc_num.replace("-", "")
-        sec_url = f"https://www.sec.gov/Archives/edgar/data/{int(comp_cik)}/{acc_clean}/{acc_num}-index.htm"
-
-        records.append({
-            "filingDate": filing_date,
-            "transDate": tx_date,
-            "ticker": comp_ticker,
-            "companyName": comp_name,
-            "insiderName": owner_name,
-            "officerTitle": officer_title,
-            "isOfficer": is_officer,
-            "isDirector": is_director,
-            "isTenPercent": is_ten_pct,
-            "txType": tx_type,
-            "txTypeCode": tx_type_code,
-            "shares": shares,
-            "price": price,
-            "totalValue": total_value,
-            "postShares": post_shares,
-            "accessionNumber": acc_num,
-            "secUrl": sec_url
-        })
-
-    return records
-
-all_real_records = []
-
-for idx, ticker in enumerate(KEY_TICKERS):
-    if ticker not in ticker_to_cik:
-        continue
-    comp = ticker_to_cik[ticker]
-    cik = comp["cik"]
-    comp_name = comp["name"]
-
-    log(f"📡 [{idx+1}/{len(KEY_TICKERS)}] {ticker:<6} ({comp_name}) 수집 중...")
-
-    try:
-        sub_url = f"https://data.sec.gov/submissions/CIK{cik}.json"
-        res = requests.get(sub_url, headers=headers, timeout=10)
-        if res.status_code != 200:
-            time.sleep(0.2)
+    owners = []
+    for owner in root.findall("reportingOwner"):
+        name = field(owner, "reportingOwnerId/rptOwnerName")
+        if not name:
             continue
-        sec_data = res.json()
-        recent = sec_data.get("filings", {}).get("recent", {})
-        forms = recent.get("form", [])
+        relationship = owner.find("reportingOwnerRelationship")
+        roles = []
+        officer = False
+        if relationship is not None:
+            officer = field(relationship, "isOfficer").lower() in ("1", "true")
+            if officer:
+                roles.append(field(relationship, "officerTitle") or "임원")
+            if field(relationship, "isDirector").lower() in ("1", "true"):
+                roles.append("이사")
+            if field(relationship, "isTenPercentOwner").lower() in ("1", "true"):
+                roles.append("10% 초과 보유자로 신고")
+            if field(relationship, "isOther").lower() in ("1", "true"):
+                roles.append(field(relationship, "otherText") or "기타 관계")
+        owners.append((name, " / ".join(dict.fromkeys(roles)) or "관계 미기재", officer))
+    if not owners:
+        raise ValueError("Form 4 reporting owner missing")
 
-        f4_indices = [i for i, f in enumerate(forms) if f == "4"]
-        
-        # 최신 15개 공시 대상 파싱
-        for f_idx in f4_indices[:15]:
-            filing_date = recent["filingDate"][f_idx]
-            acc = recent["accessionNumber"][f_idx]
-            acc_clean = acc.replace("-", "")
-            
-            # Submission 폴더 인덱스 검색
-            dir_url = f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{acc_clean}/"
-            r_dir = requests.get(dir_url, headers=headers, timeout=8)
-            if r_dir.status_code == 200:
-                xml_links = re.findall(r'href="([^"]+\.xml)"', r_dir.text)
-                for x in xml_links:
-                    full_x = f"https://www.sec.gov{x}" if x.startswith("/") else f"{dir_url}{x}"
-                    rx = requests.get(full_x, headers=headers, timeout=8)
-                    if "<ownershipDocument" in rx.text or "<rptOwner" in rx.text:
-                        parsed = parse_form4_xml(rx.text, ticker, comp_name, cik, acc, filing_date)
-                        if parsed:
-                            all_real_records.extend(parsed)
-                            log(f"   -> {filing_date} | {parsed[0]['insiderName']} ({parsed[0]['officerTitle']}) | {parsed[0]['txType']} {parsed[0]['shares']:,}주 (${parsed[0]['price']})")
-                            break
-                    time.sleep(0.06)
+    names = " · ".join(dict.fromkeys(name for name, _, _ in owners))
+    roles = {role for _, role, _ in owners}
+    relation = owners[0][1] if len(roles) == 1 else " · ".join(f"{name} ({role})" for name, role, _ in owners)
+    rows = []
+    for transaction in root.findall("nonDerivativeTable/nonDerivativeTransaction"):
+        title = field(transaction, "securityTitle/value")
+        code = field(transaction, "transactionCoding/transactionCode")
+        traded = field(transaction, "transactionDate/value") or None
+        if traded:
+            date.fromisoformat(traded)
+        shares = number(transaction, "transactionAmounts/transactionShares/value")
+        price = number(transaction, "transactionAmounts/transactionPricePerShare/value")
+        post = number(transaction, "postTransactionAmounts/sharesOwnedFollowingTransaction/value")
+        rows.append({
+            "filingDate": filing_date,
+            "transDate": traded,
+            "issuerCik": cik.zfill(10),
+            "ticker": ticker,
+            "companyName": company,
+            "securityTitle": title or None,
+            "insiderName": names,
+            "officerTitle": relation,
+            "isOfficer": any(officer for _, _, officer in owners),
+            "txTypeCode": code,
+            "ownership": field(transaction, "ownershipNature/directOrIndirectOwnership/value"),
+            "shares": float(shares) if shares is not None else None,
+            "price": float(price) if price is not None else None,
+            "totalValue": float(shares * price) if shares is not None and price is not None else None,
+            "postShares": float(post) if post is not None else None,
+            "accessionNumber": accession,
+            "secUrl": source_url,
+        })
+    return rows
 
-            time.sleep(0.08)
-    except Exception as e:
-        log(f"  ❌ {ticker} 에러: {e}")
-        time.sleep(0.3)
 
-log(f"\n🎉 100% 실제 SEC 공식 원문 파싱 완료! 총 {len(all_real_records)}건")
+def snapshot(rows, *, verified_filings, source_filings):
+    return {
+        "schemaVersion": 1,
+        "sourceFilings": source_filings,
+        "verifiedFilings": verified_filings,
+        "transactions": sorted(rows, key=lambda row: row["filingDate"], reverse=True),
+    }
 
-# 최신 날짜순 정렬
-all_real_records.sort(key=lambda x: x["filingDate"], reverse=True)
 
-with open("latest_form4_insiders.json", "w", encoding="utf-8") as f:
-    json.dump(all_real_records, f, indent=2, ensure_ascii=False)
+def collect():
+    """Publish atomically only after all requested SEC responses have parsed."""
+    tickers = load_json("sec_cik_master.json")
+    rows, seen = [], set()
+    with requests.Session() as session:
+        session.headers["User-Agent"] = "AlphaInsiderTracker xodyd1214@gmail.com"
 
-log("💾 latest_form4_insiders.json 실제 사실 100% 데이터셋 저장 완료!")
+        def fetch(url):
+            time.sleep(.2)
+            response = session.get(url, timeout=15)
+            response.raise_for_status()
+            return response
+
+        for ticker in KEY_TICKERS:
+            if ticker not in tickers:
+                continue
+            cik = tickers[ticker]["cik"]
+            recent = fetch(f"https://data.sec.gov/submissions/CIK{cik}.json").json()["filings"]["recent"]
+            columns = [recent[key] for key in ("form", "accessionNumber", "filingDate")]
+            if len({len(column) for column in columns}) != 1:
+                raise ValueError(f"Mismatched SEC submission columns for {cik}")
+            filings = [(accession, filed) for form, accession, filed in zip(*columns) if form == "4"]
+            for accession, filed in filings[:15]:
+                if accession in seen:
+                    continue
+                if not re.fullmatch(r"[0-9]{10}-[0-9]{2}-[0-9]{6}", accession):
+                    raise ValueError("Invalid SEC accession")
+                base = f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{accession.replace('-', '')}"
+                raw = fetch(f"{base}/{accession}.txt").content
+                rows.extend(parse_form4_xml(ownership_xml(raw), accession, filed, f"{base}/{accession}-index.htm"))
+                seen.add(accession)
+
+    if not rows:
+        raise ValueError("No Form 4 transactions returned")
+    return snapshot(rows, verified_filings=len(seen), source_filings=len(seen))
+
+
+if __name__ == "__main__":
+    result = collect()
+    atomic_write_json("latest_form4_insiders.json", result)
+    print(f"Saved {len(result['transactions'])} transactions from {result['verifiedFilings']} SEC filings.")

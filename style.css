@@ -1732,6 +1732,87 @@ body {
   vertical-align: middle;
 }
 
+#f4Table {
+  min-width: 960px;
+}
+
+#f4Table .form4-date {
+  white-space: nowrap;
+}
+
+.main-content[data-filing-mode="FORM4"] :is(#filingDdayBanner, #macroPulseBar) {
+  display: none;
+}
+
+.form4-secondary {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-subdued);
+  font-size: 11px;
+}
+
+.form4-wrap {
+  min-width: 110px;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  #viewForm4 .overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #f4Table, #f4Table tbody {
+    display: block;
+    min-width: 0;
+  }
+
+  #f4Table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  #f4Table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 10px;
+    padding: 12px 8px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  #f4Table tbody td {
+    min-width: 0;
+    border: 0;
+    padding: 0;
+    text-align: left !important;
+    overflow-wrap: anywhere;
+  }
+
+  #f4Table .form4-wide {
+    grid-column: 1 / -1;
+  }
+
+  #f4Table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 2px;
+    color: var(--text-subdued);
+    font-size: 11px;
+  }
+
+  #f4Table .form4-date span, #f4Table .form4-date small {
+    display: inline;
+    margin: 0 6px 0 0;
+  }
+
+  #f4Table .sec-link-btn {
+    min-height: 36px;
+  }
+}
+
 .power-table tbody tr {
   transition: background-color 0.15s ease;
   cursor: pointer;

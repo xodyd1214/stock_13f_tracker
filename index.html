@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=92">
+  <link rel="stylesheet" href="style.css?v=93">
 </head>
 <body>
   <div class="app-container">
@@ -134,8 +134,8 @@
         <div class="grand-total-btn-wrap">
           <button class="grand-total-btn active" id="btnF4AllCompanies">
             <div class="grand-text">
-              <h4>전체 기업 통합 내부자 거래</h4>
-              <p>105개 주요 상장사 총합</p>
+              <h4>전체 Form 4 공시</h4>
+              <p>확인된 모든 발행사</p>
             </div>
           </button>
           <button class="grand-total-btn custom-group-btn-unified" id="btnF4FavCompanies" style="display: none;">
@@ -150,7 +150,7 @@
           <div class="f4-company-search-box" style="padding: 0 0 10px 0;">
             <input type="text" id="f4SidebarSearch" placeholder="기업명 / 티커 검색..." class="sidebar-search-input" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; font-size: 12px;">
           </div>
-          <label class="section-label" id="f4CompanyListLabel">개별 기업 선택 (105개사)</label>
+          <label class="section-label" id="f4CompanyListLabel">발행사 선택</label>
           <div class="guru-list" id="f4CompanyList">
             <!-- JS로 동적 렌더링 -->
           </div>
@@ -424,13 +424,13 @@
         </section>
       </div>
 
-      <!-- [VIEW 2] Form 4 실시간 내부자 거래(Insider Trading) 대시보드 -->
+      <!-- Form 4 내부자 거래 공시 대시보드 -->
       <div id="viewForm4" class="filing-view-container" style="display: none;">
         <!-- Form 4 상단 4대 통계 카드 -->
         <section class="overview-grid">
           <div class="metric-card">
             <div class="metric-header">
-              <span class="metric-title">최근 내부자 거래 총액</span>
+              <span class="metric-title">매수·매도 신고 금액</span>
             </div>
             <div class="metric-value text-green" id="f4MetricTotalVal">$0</div>
             <div class="metric-sub" id="f4MetricTotalCount">총 0건 거래</div>
@@ -438,7 +438,7 @@
 
           <div class="metric-card">
             <div class="metric-header">
-              <span class="metric-title">최다 거래 종목</span>
+              <span class="metric-title">신고 금액 상위 발행사</span>
             </div>
             <div class="metric-value" id="f4MetricTopTicker">-</div>
             <div class="metric-sub" id="f4MetricTopTickerSub">-</div>
@@ -446,68 +446,57 @@
 
           <div class="metric-card">
             <div class="metric-header">
-              <span class="metric-title">임원 장내 직접 매수(P)</span>
+              <span class="metric-title">매수 신고 (P)</span>
             </div>
             <div class="metric-value text-blue" id="f4MetricBuyCount">0건</div>
-            <div class="metric-sub" id="f4MetricBuySub">자사주 순매수 시그널</div>
+            <div class="metric-sub" id="f4MetricBuySub">장내 또는 사적 매수</div>
           </div>
 
           <div class="metric-card">
             <div class="metric-header">
-              <span class="metric-title">최대 단일 거래</span>
+              <span class="metric-title">최대 매수·매도 신고 금액</span>
             </div>
             <div class="metric-value" id="f4MetricMaxTrade">-</div>
             <div class="metric-sub" id="f4MetricMaxTradeSub">-</div>
           </div>
         </section>
 
+        <p class="card-sub data-quality-note">발행사 칸에는 공시 티커와 실제 거래 증권을 함께 표시합니다. 신고자는 거래를 보고한 개인 또는 법인입니다. 매수·매도(P/S)에는 장내와 사적 거래가 포함됩니다. 금액은 공시 단가에 수량을 곱한 값입니다.</p>
         <!-- Form 4 전용 테이블 섹션 -->
         <section class="table-section">
           <div class="table-toolbar">
             <div class="toolbar-left">
               <div class="filter-tabs" id="f4FilterTabs">
                 <button class="filter-tab active" data-f4filter="ALL">전체 거래 (<span id="f4CountAll">0</span>)</button>
-                <button class="filter-tab" data-f4filter="BUY">장내 매수 (P) (<span id="f4CountBuy">0</span>)</button>
-                <button class="filter-tab" data-f4filter="SALE">장내 매도 (S) (<span id="f4CountSale">0</span>)</button>
-                <button class="filter-tab" data-f4filter="OFFICER">경영진/CEO 거래 (<span id="f4CountOfficer">0</span>)</button>
+                <button class="filter-tab" data-f4filter="BUY">매수 (P) (<span id="f4CountBuy">0</span>)</button>
+                <button class="filter-tab" data-f4filter="SALE">매도 (S) (<span id="f4CountSale">0</span>)</button>
+                <button class="filter-tab" data-f4filter="OFFICER">임원 포함 공시 (<span id="f4CountOfficer">0</span>)</button>
               </div>
             </div>
             <div class="toolbar-right">
               <div class="search-input-wrap">
-                <input type="text" id="f4SearchInput" placeholder="티커, 회사명, 내부자 성명 검색...">
+                <input type="text" id="f4SearchInput" placeholder="티커, 발행사, 증권명, 신고자 검색..." aria-label="티커, 발행사, 증권명, 신고자 검색">
               </div>
             </div>
           </div>
 
           <div class="table-wrapper">
-            <table class="power-table fullwidth-table" id="f4Table">
-              <colgroup>
-                <col style="width: 7%;">
-                <col style="width: 15%;">
-                <col style="width: 13%;">
-                <col style="width: 18%;">
-                <col style="width: 9%;">
-                <col style="width: 8%;">
-                <col style="width: 8%;">
-                <col style="width: 9%;">
-                <col style="width: 8%;">
-                <col style="width: 5%;">
-              </colgroup>
-              <thead>
-                <tr>
-                  <th class="text-left">공시일자</th>
-                  <th class="text-left">종목 / 티커</th>
-                  <th class="text-left">내부자 성명</th>
-                  <th class="text-left">직책 / 자격</th>
-                  <th class="text-center">거래 유형</th>
-                  <th class="text-right">거래 수량</th>
-                  <th class="text-right">거래 단가 ($)</th>
-                  <th class="text-right">총 거래 대금 ($)</th>
-                  <th class="text-right">거래 후 보유수량</th>
-                  <th class="text-center">SEC 원문</th>
+            <table class="power-table" id="f4Table" role="table" aria-label="Form 4 거래 내역">
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th scope="col" role="columnheader" class="text-left">거래일 / 공시일</th>
+                  <th scope="col" role="columnheader" class="text-left">발행사 / 거래 증권</th>
+                  <th scope="col" role="columnheader" class="text-left">신고자 (개인·법인)</th>
+                  <th scope="col" role="columnheader" class="text-left">발행사와의 관계</th>
+                  <th scope="col" role="columnheader" class="text-center">거래 유형</th>
+                  <th scope="col" role="columnheader" class="text-right">거래 수량</th>
+                  <th scope="col" role="columnheader" class="text-right">거래 단가 ($)</th>
+                  <th scope="col" role="columnheader" class="text-right">단가 × 수량 ($)</th>
+                  <th scope="col" role="columnheader" class="text-right">거래 후 보유수량</th>
+                  <th scope="col" role="columnheader" class="text-center">SEC 원문</th>
                 </tr>
               </thead>
-              <tbody id="f4TableBody">
+              <tbody id="f4TableBody" role="rowgroup">
                 <!-- JS 렌더링 -->
               </tbody>
             </table>
@@ -805,8 +794,7 @@
         <!-- [NEW] 최근 경영진 내부자 거래 (Form 4) 크로스 분석 섹션 -->
         <div class="modal-insider-cross-section" id="modalInsiderSection">
           <div class="modal-sub-header-row">
-            <h4>👔 최근 경영진 내부자 거래 (Form 4) 현황</h4>
-            <span class="badge conviction-badge" id="modalConvictionBadge" style="display: none;">🔥 Double Conviction (쌍끌이 매수)</span>
+            <h4>👔 이 발행사의 Form 4 거래 공시</h4>
           </div>
           <div class="modal-insider-cross-wrap" id="modalInsiderContent">
             <!-- JS 동적 렌더링 -->
@@ -848,15 +836,15 @@
             <span class="stat-val" id="insiderModalCount">0건</span>
           </div>
           <div class="modal-stat-box">
-            <span class="stat-label">장내 직접 매수 (P)</span>
+            <span class="stat-label">매수 (P)</span>
             <span class="stat-val text-green" id="insiderModalBuyCount">0건</span>
           </div>
           <div class="modal-stat-box">
-            <span class="stat-label">장내 매도 (S)</span>
+            <span class="stat-label">매도 (S)</span>
             <span class="stat-val text-red" id="insiderModalSaleCount">0건</span>
           </div>
           <div class="modal-stat-box">
-            <span class="stat-label">총 거래 대금</span>
+            <span class="stat-label">매수·매도 신고 금액</span>
             <span class="stat-val text-blue" id="insiderModalTotalVal">$0</span>
           </div>
         </div>
@@ -868,13 +856,14 @@
             <table class="power-table" id="insiderModalTable" style="min-width: 100%;">
               <thead>
                 <tr>
-                  <th class="text-left">공시일자</th>
-                  <th class="text-left">내부자 성명</th>
-                  <th class="text-left">직책 / 자격</th>
+                  <th class="text-left">거래일 / 공시일</th>
+                  <th class="text-left">증권명</th>
+                  <th class="text-left">신고자</th>
+                  <th class="text-left">발행사와의 관계</th>
                   <th class="text-center">거래 유형</th>
                   <th class="text-right">거래 수량</th>
                   <th class="text-right">거래 단가 ($)</th>
-                  <th class="text-right">총 거래 대금 ($)</th>
+                  <th class="text-right">매수·매도 신고 금액 ($)</th>
                   <th class="text-right">거래 후 보유수량</th>
                   <th class="text-center">SEC 원문</th>
                 </tr>
@@ -889,7 +878,7 @@
         <!-- 외부 링크 바로가기 -->
         <div class="modal-links-row" style="margin-top: 18px;">
           <a id="insiderModalSecLink" href="#" target="_blank" rel="noopener noreferrer" class="btn-ext-link yahoo" style="background-color: #242424;">
-            <span>SEC EDGAR 공시 시스템 전체 내역 ↗</span>
+            <span>최신 SEC 공시 원문 ↗</span>
           </a>
           <a id="insiderModalYahooLink" href="#" target="_blank" rel="noopener noreferrer" class="btn-ext-link google">
             <span>Yahoo Finance 기업 시세 차트 ↗</span>
@@ -952,7 +941,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js"></script>
   <script src="sec_display_loader.js"></script>
-  <script src="app.js?v=100"></script>
+  <script src="app.js?v=101"></script>
 </body>
 </html>
 

@@ -200,17 +200,21 @@ test('source descriptor hashes, positive row ordinal and date-based value units 
 });
 test('adjacent SEC and macro feeds escape hostile text and reject executable or off-origin links',()=>{
  const attack='<img src=x onerror="alert(1)">';const {ctx,nodes}=context([]);
- const element=()=>({innerHTML:'',children:[],appendChild(x){this.children.push(x)}});ctx.document.createElement=element;ctx.document.createDocumentFragment=element;
+ const element=()=>({innerHTML:'',style:{},children:[],setAttribute(){},appendChild(x){this.children.push(x)}});ctx.document.createElement=element;ctx.document.createDocumentFragment=element;
  for(const url of ['javascript:alert(1)','data:text/html,test','https://sec.gov.evil.test/','https://evil.test/','https://user:pass@www.sec.gov/','http://www.sec.gov/'])assert.equal(ctx.safeSecUrl(url),'#');
  assert.equal(ctx.safeSecUrl('https://www.sec.gov/Archives/example.htm'),'https://www.sec.gov/Archives/example.htm');
  const d13=element();nodes.set('d13TableBody',d13);ctx.FILING_13D_DATA=[{filingDate:attack,formType:attack,investorName:attack,fundName:attack,targetCompany:attack,targetTicker:attack,percentOwned:attack,docUrl:'javascript:alert(1)'}];
  vm.runInContext(extract('render13DTable'),ctx);ctx.render13DTable();assert.doesNotMatch(d13.children[0].innerHTML,/<img|href="javascript:/);assert.match(d13.children[0].innerHTML,/&lt;img/);
  const macro=element();nodes.set('macroCalendarGrid',macro);ctx.MACRO_DATA={calendar:[{name:attack,category:attack,impact:attack,dDay:attack,date:attack,description:attack,previous:attack}]};
  vm.runInContext(extract('renderMacroCalendar'),ctx);ctx.renderMacroCalendar();assert.doesNotMatch(macro.innerHTML,/<img/);assert.match(macro.innerHTML,/&lt;img/);
- const f4=element();nodes.set('f4TableBody',f4);Object.assign(ctx,{F4_FILTERED_ITEMS:[{filingDate:attack,ticker:attack,companyName:attack,insiderName:attack,officerTitle:attack,txType:attack,secUrl:'data:text/html,test'}],F4_CURRENT_PAGE:1,F4_PAGE_SIZE:60});
- // Verify each external-data field at the actual table function's HTML boundary.
- for(const expression of ['item.filingDate','item.ticker','item.companyName','item.insiderName','item.officerTitle','item.txType'])assert.ok(extract('appendNextF4PageRows').includes(`escapeHtml(${expression})`));
- assert.ok(extract('appendNextF4PageRows').includes('escapeHtml(safeSecUrl(item.secUrl))'));
+ const f4=element();nodes.set('f4TableBody',f4);
+ Object.assign(ctx,{CURRENT_F4_FILTERED_ITEMS:[{filingDate:attack,transDate:attack,ticker:attack,companyName:attack,securityTitle:attack,insiderName:attack,officerTitle:attack,txTypeCode:attack,ownership:attack,secUrl:'data:text/html,test'}],CURRENT_F4_PAGE_INDEX:1,F4_PAGE_SIZE:60});
+ for(const fn of ['appendNextF4PageRows','form4Dates','form4Security','form4Relationship','form4Price','insiderCode','insiderLabel'])vm.runInContext(extract(fn),ctx);
+ ctx.appendNextF4PageRows();
+ const f4Row=f4.children[0].children[0].innerHTML;
+ assert.doesNotMatch(f4Row,/<img|href="data:/);
+ assert.match(f4Row,/&lt;img/);
+ assert.match(f4Row,/href="#"/);
 });
 if (process.env.SEC_REAL_BUNDLE) test('real exported generation reconciles exact rows, 42 entities, UI, CSV and bond-fund shares',async()=>{
  const root=path.resolve(process.env.SEC_REAL_BUNDLE);const configContext={};vm.runInNewContext(fs.readFileSync(path.join(root,'sec-display-config.js'),'utf8'),configContext);
