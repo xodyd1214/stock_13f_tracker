@@ -1,15 +1,9 @@
-name: Alpha13F validated data refresh
+name: Alpha13F validated quotes and macro refresh
 
 on:
   schedule:
     - cron: '0 21 * * *'
   workflow_dispatch:
-    inputs:
-      full_sync:
-        description: 'Refresh SEC 13F filings too?'
-        required: true
-        type: boolean
-        default: true
 
 permissions:
   contents: write
@@ -32,20 +26,11 @@ jobs:
       - name: Run offline regression tests
         run: python -m unittest discover -s tests -v
       - name: Run frontend regression tests
-        run: node --test tests/frontend.test.cjs
+        run: node --test tests/*.test.cjs
 
-      # These collectors preserve last-good data and publish atomically. A partial
-      # error must not prevent independent sources from refreshing successfully.
-      - name: Refresh 13F history
-        id: filings
-        if: github.event_name == 'workflow_dispatch' && inputs.full_sync
-        continue-on-error: true
-        run: python collector_1year.py
-      - name: Export verified equity holdings for the dashboard
-        id: dashboard
-        if: github.event_name == 'workflow_dispatch' && inputs.full_sync
-        continue-on-error: true
-        run: python sec_collector.py
+      # Legacy 13F collectors do not implement the source-replayed partial
+      # contract. Never publish their output. Preparing a new partial generation
+      # is a separate reviewed process; this workflow cannot move its pointer.
       - name: Refresh prices
         id: prices
         continue-on-error: true
@@ -61,11 +46,11 @@ jobs:
       # intentionally paused until their parsing and failure-preservation paths
       # are audited. Preserve existing legacy datasets; never publish their output.
       - name: Validate and publish only changed safe datasets
-        if: ${{ !cancelled() && (steps.filings.outcome == 'success' || steps.filings.outcome == 'failure' || steps.dashboard.outcome == 'failure' || steps.prices.outcome == 'success' || steps.prices.outcome == 'failure' || steps.macro.outcome == 'success' || steps.macro.outcome == 'failure') }}
+        if: ${{ !cancelled() && (steps.prices.outcome == 'success' || steps.prices.outcome == 'failure' || steps.macro.outcome == 'success' || steps.macro.outcome == 'failure') }}
         shell: bash
         run: |
           set -euo pipefail
-          outputs=(latest_13f_holdings.json live_13f_analytics.json realtime_prices.json latest_macro_indicators.json)
+          outputs=(realtime_prices.json latest_macro_indicators.json)
           changed=()
           for file in "${outputs[@]}"; do
             if [[ -n "$(git status --porcelain -- "$file")" ]]; then
@@ -84,7 +69,7 @@ jobs:
           git push
 
       - name: Report partial collection failure
-        if: ${{ always() && (steps.filings.outcome == 'failure' || steps.dashboard.outcome == 'failure' || steps.prices.outcome == 'failure' || steps.macro.outcome == 'failure') }}
+        if: ${{ always() && (steps.prices.outcome == 'failure' || steps.macro.outcome == 'failure') }}
         run: |
           echo '::error::One or more collectors failed or returned partial/stale data. Successful validated updates were retained; review collector logs.'
           exit 1

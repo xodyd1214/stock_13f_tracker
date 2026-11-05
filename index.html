@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Alpha13F - 100대 운용사 포트폴리오 분석 대시보드</title>
+  <title>Alpha13F - 검증된 SEC 공시 부분집합</title>
   <!-- Google Fonts (Inter) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -108,8 +108,8 @@
         <div class="grand-total-btn-wrap">
           <button class="grand-total-btn active" id="btnGrandTotal">
             <div class="grand-text">
-              <h4>전체 운용사 통합 포트폴리오</h4>
-              <p>100개 주요 운용사 총합</p>
+              <h4>확인된 공시 부분집합</h4>
+              <p>43/50 추적명 · 42개 SEC 신고 법인</p>
             </div>
           </button>
           <button class="grand-total-btn custom-group-btn-unified" id="btnCustomGroup" style="display: none;">
@@ -210,11 +210,11 @@
         <div class="guru-profile-header">
           <div class="guru-details">
             <div class="guru-name-row">
-              <h2 id="currentGuruName">전체 운용사 통합 포트폴리오 (Grand Total)</h2>
-              <span class="badge fund-badge" id="currentFundName">100개 주요 운용사 총합</span>
-              <span class="badge quarter-badge" id="currentQuarter" title="SEC Form 13F 분기 말일 기준 보유 현황">2026 Q2 (2026.06.30 기준)</span>
+              <h2 id="currentGuruName">확인된 공시 부분집합</h2>
+              <span class="badge fund-badge" id="currentFundName">공시 검증 대기</span>
+              <span class="badge quarter-badge" id="currentQuarter" title="SEC Form 13F 분기 말일 기준 보유 현황">보유 기준일 확인 중</span>
             </div>
-            <p class="guru-desc" id="currentGuruDesc">미국 1억 달러 이상 운용 자격을 갖춘 100개 주요 운용사의 포트폴리오를 하나로 통합 분석한 거대 자금 흐름</p>
+            <p class="guru-desc" id="currentGuruDesc">확인된 공시 부분집합만 표시합니다. 7개 추적명은 검증 중이며 현재 실시간 포트폴리오가 아닙니다.</p>
           </div>
         </div>
 
@@ -239,6 +239,11 @@
         </div>
       </header>
 
+      <section aria-label="SEC 공시 검증 범위" id="partialDisplayPanel">
+        <p id="partialDisplayStatus" role="status">공시 부분집합 검증 중. 확인 전 수치 표시 불가.</p>
+        <details><summary>50개 원래 추적명 및 확인 상태</summary><ol id="partialCoverageList"></ol></details>
+        <div id="partialSourceList"></div>
+      </section>
       <!-- 상단 상시 노출: 실시간 거시경제 펄스 바 (Macro Pulse Bar) -->
       <section class="macro-pulse-bar" id="macroPulseBar" title="클릭 시 거시경제 상세 요약 모달을 엽니다">
         <div class="macro-pulse-loading">
@@ -285,15 +290,15 @@
         </section>
 
         <!-- 🏆 월가 큰손 집중 매수 (Smart Money Consensus) TOP 5 하이라이트 위젯 -->
-        <p class="card-sub data-quality-note">최근 시세는 관측시각·통화가 확인된 24시간 이내 자료만 표시합니다. 공시 평가단가는 매입단가가 아니며, 주식분할 등 자본변동 조정이 검증되지 않아 분기말 대비 등락률과 하락 종목 추천을 보류합니다.</p>
+        <p class="card-sub data-quality-note">최근 시세는 관측시각·통화가 확인된 24시간 이내 자료만 표시합니다. 매입단가와 가격 비교는 검증되지 않아 표시하지 않습니다.</p>
         <section class="consensus-widget-section" id="consensusWidgetSection">
           <div class="consensus-widget-header">
             <div class="consensus-title-wrap">
               <div class="consensus-title-row">
                 <span class="badge consensus-badge">INSTITUTIONAL HOLDINGS</span>
-                <h3 id="consensusWidgetTitle">운용사 공통 보유 종목 TOP 5</h3>
+                <h3 id="consensusWidgetTitle">확인된 부분집합 공통 보고 종목 TOP 5</h3>
               </div>
-              <p class="consensus-subtext">수집된 13F 공시의 보유 기관수 또는 합산 평가액 순위입니다. 공동 매수나 이번 분기 매수 확대를 의미하지 않으며, 운용사별 보유 기준일이 다를 수 있습니다.</p>
+              <p class="consensus-subtext">확인된 43/50 추적명(42개 SEC 신고 법인) 부분집합의 보고 법인 수 또는 주식 평가액 순위입니다. 공동 매수나 이번 분기 매수 확대를 의미하지 않으며, 운용사별 보유 기준일이 다를 수 있습니다.</p>
             </div>
             <div class="consensus-toggle-tabs" id="consensusToggleTabs">
               <button type="button" class="consensus-tab-btn active" data-type="HOLDERS">최다 기관 보유 (Holders TOP 5)</button>
@@ -934,7 +939,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="app.js?v=99"></script>
+  <script src="sec-display-config.js"></script>
+  <script src="sec_display_loader.js"></script>
+  <script src="app.js?v=100"></script>
 </body>
 </html>
 

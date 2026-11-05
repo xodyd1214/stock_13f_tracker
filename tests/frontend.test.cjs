@@ -13,8 +13,10 @@ function extract(name) {
 }
 function context(names, extra = {}) {
   const metadata = JSON.parse(fs.readFileSync(require('node:path').join(__dirname, '../market_symbols.json'), 'utf8'));
-  const ctx = vm.createContext({ console, Date: TestDate, MARKET_SYMBOLS: metadata, LIVE_PRICES: {}, ...extra });
-  for (const name of new Set(['canonicalTicker', 'hasPrice', 'priceLabel', 'quoteStatus', 'quoteFreshness', 'quoteFields', 'holdingIdentity', 'mergeObservedPrices', 'refreshVisibleQuotes', 'applyLivePricesToHoldings', 'priceComparisonReason', ...names])) vm.runInContext(extract(name), ctx);
+  // Unit fixtures model rows already admitted by the separately tested loader.
+  const rows = (extra.RAW_HOLDINGS || []).map((row, i) => ({ legalName: row.guru || 'Manager', cik: '0000000001', shareType: 'SH', putCall: '', shares: 1, period: '2026-06-30', filingDate: '2026-08-01', accession: '0000000001-26-000001', sourceRowId: `fixture:${i}`, tableSha256: 'a'.repeat(64), sourceUrl: 'https://www.sec.gov/Archives/edgar/data/1/000000000126000001/table.xml', ...row }));
+  const ctx = vm.createContext({ URL, console, Date: TestDate, MARKET_SYMBOLS: metadata, LIVE_PRICES: {}, SEC_DISPLAY: {rows}, SEC_DISPLAY_ROWS: new WeakSet(rows), document: {getElementById:()=>null}, ...extra, ...(extra.RAW_HOLDINGS ? {RAW_HOLDINGS: rows} : {}) });
+  for (const name of new Set(['safeSecUrl', 'escapeHtml', 'verifiedDisplayRow', 'showUnavailableHoldings', 'canonicalTicker', 'hasPrice', 'priceLabel', 'quoteStatus', 'quoteFreshness', 'quoteFields', 'holdingIdentity', 'mergeObservedPrices', 'refreshVisibleQuotes', 'applyLivePricesToHoldings', 'priceComparisonReason', ...names])) vm.runInContext(extract(name), ctx);
   return ctx;
 }
 const helpers = ['hasPrice', 'priceLabel', 'priceDifference', 'insiderCode', 'insiderLabel', 'quoteFreshness'];
@@ -68,7 +70,7 @@ test('initial manager and aggregate JHG holdings stay historical-only', () => {
     assert.equal(h.ticker, 'JHG');
     assert.equal(h.rawShares, 10);
     assert.equal(h.value, 600);
-    assert.equal(h.estPrice, 60);
+    assert.equal(h.estPrice, null);
     assert.equal(h.curPrice, null);
     assert.match(h.quoteAsOf, /상장폐지/);
     assert.ok(Number.isNaN(c.priceDifference(h)));
@@ -177,14 +179,14 @@ test('history displays an honest unavailable state, never synthesized quarters',
   assert.equal(children.length, 1);
   assert.match(children[0].textContent, /데이터가 없어/);
 });
-test('custom common holdings are HOLD and reference valuation uses aggregate shares', () => {
+test('custom common holdings are UNKNOWN and inferred cost is unavailable', () => {
   const h = { ticker: 'ABC', baseTicker: 'ABC', cusip: '111111111', rawShares: 10, value: 100, estPrice: 10, curPrice: null };
   const c = context(['formatMoney', 'formatQuarterDisplay', 'buildCustomGroupPortfolio'], { getFavorites: () => ['A', 'B'], selectGuru() {}, DOMINANT_13F_PERIOD: null, GURU_DATABASE: { A: { name: 'A', holdings: [h] }, B: { name: 'B', holdings: [{ ...h, rawShares: 20, value: 300, estPrice: 15 }] } } });
   c.buildCustomGroupPortfolio();
   const result = c.GURU_DATABASE.__CUSTOM_GROUP__.holdings[0];
   assert.equal(result.holders, 2);
-  assert.equal(result.action, 'HOLD');
-  assert.equal(result.estPrice, 400 / 30);
+  assert.equal(result.action, 'UNKNOWN');
+  assert.equal(result.estPrice, null);
 });
 test('summary clears stale picks before empty/new manager render', () => {
   const elements = {};
@@ -229,13 +231,13 @@ test('invalid treasury observations cannot turn null into zero-yield chart point
   const c = context(['getFilteredTreasuryData'], { MACRO_DATA: { timeSeries: { treasuryDaily: [{ date: '2026-01-01', y3m: null, y5y: 2, y10y: 3, spread: 1 }, { date: '2026-01-02', y3m: 1, y5y: 2, y10y: 3, spread: 2 }] } } });
   assert.equal(c.getFilteredTreasuryData('1M').length, 1);
 });
-test('holdings pipeline preserves source actions and does not create missing quotes', () => {
+test('holdings pipeline keeps UNKNOWN actions and does not create missing quotes', () => {
   const c = context([...helpers, 'getMappedTicker', 'formatMoney', 'formatQuarterDisplay', 'processAndRenderHoldingsData'], { RAW_HOLDINGS: [{ guru: 'Manager', name: 'Unmapped Fund A', cusip: '111111111', shares: 10, value: 100, period: '2026-06-30', action: 'UNKNOWN' }, { guru: 'Manager', name: 'Unmapped Fund B', cusip: '222222222', shares: 20, value: 400, period: '2026-06-30', action: 'HOLD' }], GURU_DATABASE: {}, LIVE_PRICES: {}, TICKER_MAP: {}, DOMINANT_13F_PERIOD: null, isDerivativeOrOption: () => false, getMappedSector: () => 'Unknown', renderCategoryTabs() {}, renderGuruSidebar() {}, selectGuru() {}, renderConsensusWidget() {} });
   c.processAndRenderHoldingsData();
   assert.equal(c.GURU_DATABASE.Manager.holdings.length, 2);
   const first = c.GURU_DATABASE.Manager.holdings.find(h => h.cusip === '111111111');
   assert.equal(first.action, 'UNKNOWN');
-  assert.equal(first.estPrice, 10);
+  assert.equal(first.estPrice, null);
   assert.equal(first.curPrice, null);
   assert.equal(first.priceChangePct, null);
 });
