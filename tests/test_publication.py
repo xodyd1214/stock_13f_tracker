@@ -30,15 +30,18 @@ class PublicationTests(unittest.TestCase):
 
     def test_workflow_runs_safe_sources_independently_and_surfaces_errors(self):
         text = (Path(__file__).resolve().parents[1] / '.github/workflows/auto_sync.yml').read_text()
-        for script in ('collector_1year.py', 'sec_collector.py', 'price_fetcher.py', 'macro_collector.py'):
+        for script in ('price_fetcher.py', 'macro_collector.py'):
             self.assertIn('run: python ' + script, text)
-        self.assertEqual(text.count('continue-on-error: true'), 4)
-        self.assertIn('steps.filings.outcome', text)
+        self.assertEqual(text.count('continue-on-error: true'), 2)
+        self.assertNotIn('steps.filings.outcome', text)
         self.assertIn('python validate_data.py "$file"', text)
-        self.assertIn('node --test tests/frontend.test.cjs', text)
+        self.assertIn('node --test tests/*.test.cjs', text)
+        self.assertIn('outputs=(realtime_prices.json latest_macro_indicators.json)', text)
         self.assertIn('exit 1', text)
-        for script in ('sec_insider_collector.py', 'sec_13d_collector.py'):
+        for script in ('sec_insider_collector.py', 'sec_13d_collector.py', 'collector_1year.py', 'sec_collector.py'):
             self.assertNotIn('python ' + script, text)
+        for token in ('sec-data/current.json', 'prepare_partial_release.py', 'build_pages_bundle.py', 'deploy-pages'):
+            self.assertNotIn(token,text)
 
 if __name__ == '__main__': unittest.main()
 

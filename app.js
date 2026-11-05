@@ -1,3 +1,14 @@
+function safeSecUrl(value) {
+  try {
+    const url = new URL(String(value));
+    return url.protocol === 'https:' && ['www.sec.gov', 'sec.gov'].includes(url.hostname) && !url.username && !url.password && !url.port ? url.href : '#';
+  } catch (_) { return '#'; }
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+}
+
 /**
  * ==============================================================================
  * Alpha13F - 100대 운용사 포트폴리오 인텔리전스 (프론트엔드 분석 엔진)
@@ -6,6 +17,8 @@
 
 let GURU_DATABASE = {};
 let RAW_HOLDINGS = [];
+let SEC_DISPLAY = null;
+let SEC_DISPLAY_ROWS = new WeakSet();
 let LIVE_PRICES = {};
 let ACTIVE_STOCK_ITEM = null;
 let ACTIVE_STOCK_GURU_KEY = null;
@@ -576,8 +589,8 @@ function applyLivePricesToHoldings(holdings) {
 
 async function loadRealSecData() {
   try {
-    const [holdingsRes, tickerRes, priceRes, macroRes, symbolsRes] = await Promise.all([
-      fetch("latest_13f_holdings.json"),
+    const [displayResult, tickerRes, priceRes, macroRes, symbolsRes] = await Promise.all([
+      Promise.resolve().then(() => SECDisplayLoader.load({ baseURL: new URL("./", document.baseURI) })).then(value => ({ value }), error => ({ error })),
       fetch("ticker_map.json?_t=" + Date.now()).catch(() => null),
       fetch("realtime_prices.json?_t=" + Date.now()).catch(() => null),
       fetch("latest_macro_indicators.json?_t=" + Date.now()).catch(() => null),
@@ -607,9 +620,11 @@ async function loadRealSecData() {
         renderMacroPulseBar();
       } catch (e) {}
     }
-    if (holdingsRes && holdingsRes.ok) {
-      RAW_HOLDINGS = await holdingsRes.json();
-    }
+    SEC_DISPLAY = displayResult.value || null;
+    RAW_HOLDINGS = SEC_DISPLAY ? SEC_DISPLAY.rows : [];
+    SEC_DISPLAY_ROWS = new WeakSet(RAW_HOLDINGS);
+    renderPartialCoverage(displayResult.error);
+    if (!SEC_DISPLAY) showUnavailableHoldings();
 
     // 최신 데이터로 화면 연산 및 렌더링
     processAndRenderHoldingsData();
@@ -624,6 +639,9 @@ async function loadRealSecData() {
       setTimeout(prefetchOtherFilings, 1000);
     }
   } catch (e) {
+    SEC_DISPLAY = null;
+    showUnavailableHoldings();
+    renderPartialCoverage(e);
     console.error("데이터 로드 실패:", e);
   }
 }
@@ -656,7 +674,7 @@ function formatQuarterDisplay(periodStr) {
 let DOMINANT_13F_PERIOD = null;
 
 function processAndRenderHoldingsData(preserveView = false) {
-  if (!RAW_HOLDINGS || RAW_HOLDINGS.length === 0) return;
+  if (!SEC_DISPLAY || !RAW_HOLDINGS || RAW_HOLDINGS.length === 0) { showUnavailableHoldings(); return; }
   
   try {
     const groups = Object.create(null);
@@ -683,10 +701,10 @@ function processAndRenderHoldingsData(preserveView = false) {
     const latestDatasetPeriod = knownPeriods.at(-1) || null;
     
     RAW_HOLDINGS.forEach((item, rowIndex) => {
-      if (isDerivativeOrOption(item.name, item.ticker, item.titleOfClass, item)) return;
+      if (!verifiedDisplayRow(item) || (item.schemaVersion !== 3 && isDerivativeOrOption(item.name, item.ticker, item.titleOfClass, item))) return;
 
-      const guruName = item.guru || "기타 운용사";
-      const fundName = item.fund || guruName;
+      const guruName = item.legalName;
+      const fundName = item.legalName;
       if (!groups[guruName]) {
         const initials = fundName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
         const guruPeriod = item.period || null;
@@ -697,12 +715,15 @@ function processAndRenderHoldingsData(preserveView = false) {
           quarter: formatQuarterDisplay(guruPeriod),
           periodDate: guruPeriod,
           filingDate: item.filingDate || null,
+          cik: item.cik,
+          sources: (SEC_DISPLAY.sources || []).filter(source => source.cik === item.cik),
           latestDatasetPeriod,
-          desc: `${fundName} (${guruName} 운용)의 공식 13F 보유 포트폴리오`,
+          desc: `${fundName} SEC 신고 법인의 확인된 공시 부분집합. 원래 추적명은 운용 관계의 증명이 아닙니다.`,
           holdingsMap: Object.create(null)
         };
       }
       
+      if (!groups[guruName].sources.some(source => source.accession === item.accession)) groups[guruName].sources.push({ accession: item.accession, sourceUrl: item.sourceUrl, period: item.period, filingDate: item.filingDate });
       const baseTicker = getMappedTicker(item.name, item.ticker, item.cusip, item.shareType, item.putCall || item.optionType);
       const cusip = String(item.cusip || '').toUpperCase().trim();
       const securityId = holdingIdentity({ ...item, securityId: null }, rowIndex);
@@ -734,7 +755,7 @@ function processAndRenderHoldingsData(preserveView = false) {
           securityId, shareType, putCall,
           securityClass: item.securityClass || item.titleOfClass || '',
           periods: new Set(item.period ? [item.period] : []),
-          action: item.action || "HOLD",
+          action: "UNKNOWN",
           isOption: item.isOption || false
         };
       } else {
@@ -742,7 +763,7 @@ function processAndRenderHoldingsData(preserveView = false) {
         hMap[securityId].value += itemVal;
         if (item.period) hMap[securityId].periods.add(item.period);
         if (item.action && item.action !== "None" && item.action !== "HOLD") {
-          hMap[securityId].action = item.action;
+          hMap[securityId].action = "UNKNOWN";
         }
       }
 
@@ -779,14 +800,14 @@ function processAndRenderHoldingsData(preserveView = false) {
       
       g.holdings = holdingList.map(h => {
         const weight = totalVal > 0 ? Number(((h.value / totalVal) * 100).toFixed(2)) : 0;
-        const estP = h.shares > 0 && h.shareType === 'SH' && !h.putCall ? (h.value / h.shares) : null;
+        const estP = null;
         const periods = Array.from(h.periods).sort();
         
         const realInfo = LIVE_PRICES[h.baseTicker] || LIVE_PRICES[h.ticker];
         const currentQuote = quoteFields(h.baseTicker || h.ticker, realInfo);
         const curP = currentQuote.curPrice;
         
-        let action = h.action || "HOLD";
+        let action = "UNKNOWN";
         if (h.isOption || action === "PUT") {
           action = "PUT";
         }
@@ -821,14 +842,14 @@ function processAndRenderHoldingsData(preserveView = false) {
     const grandList = Object.values(grandConsensusMap);
     const grandHoldings = grandList.map(h => {
       const weight = grandTotalAumVal > 0 ? Number(((h.value / grandTotalAumVal) * 100).toFixed(2)) : 0;
-      const estP = h.shares > 0 && h.shareType === 'SH' && !h.putCall ? (h.value / h.shares) : null;
+      const estP = null;
       const periods = Array.from(h.periods).sort();
       
       const realInfo = LIVE_PRICES[h.baseTicker] || LIVE_PRICES[h.ticker];
       const currentQuote = quoteFields(h.baseTicker || h.ticker, realInfo);
       
       const holderCount = h.holders.size;
-      let action = h.action || "HOLD";
+      let action = "UNKNOWN";
 
       return {
         ticker: h.ticker,
@@ -852,7 +873,7 @@ function processAndRenderHoldingsData(preserveView = false) {
         weight: weight,
         estPrice: estP,
         ...currentQuote,
-        insight: `미국 100대 운용사 중 무려 ${holderCount}개 운용사가 공통 보유 중인 대표 컨센서스 종목`
+        insight: `확인된 공시 부분집합 내 ${holderCount}개 SEC 신고 법인의 공통 보고 종목`
       };
     });
 
@@ -860,15 +881,15 @@ function processAndRenderHoldingsData(preserveView = false) {
 
     GURU_DATABASE = {
       "__GRAND_TOTAL__": {
-        name: "전체 운용사 통합 포트폴리오",
-        fund: "100개 주요 운용사 총합",
+        name: "확인된 공시 부분집합",
+        fund: "43/50 추적명 · 42개 SEC 신고 법인 · 7개 검증 중",
         avatar: "ALL",
-        aum: formatMoney(grandTotalAumVal),
-        rawAum: grandTotalAumVal,
+        aum: grandHoldings.length ? formatMoney(grandTotalAumVal) : "확인된 수치 없음",
+        rawAum: grandHoldings.length ? grandTotalAumVal : null,
         quarter: `${formatQuarterDisplay(dominantPeriod)} 종합`,
         periodDate: dominantPeriod,
         periodRange: knownPeriods.length ? [knownPeriods[0], latestDatasetPeriod] : null,
-        desc: "미국 1억 달러 이상 운용 자격을 갖춘 100대 운용사의 포트폴리오를 하나로 통합 분석한 거대 자금 흐름",
+        desc: "서로 다른 기준일의 확인된 SEC 공시 부분집합만 합산합니다. 전체 커버리지나 현재 실시간 포트폴리오가 아닙니다.",
         holdings: grandHoldings
       },
       ...groups
@@ -944,7 +965,7 @@ function buildCustomGroupPortfolio(preserveView = false) {
     const weight = customTotalAumVal > 0 ? Number(((h.value / customTotalAumVal) * 100).toFixed(2)) : 0;
     const holderCount = h.holders.size;
     const periods = Array.from(h.periods).sort();
-    let action = "HOLD";
+    let action = "UNKNOWN";
     // Shared ownership alone is not evidence of a quarter-over-quarter purchase.
 
     return {
@@ -967,7 +988,7 @@ function buildCustomGroupPortfolio(preserveView = false) {
       rawShares: h.shares,
       value: h.value,
       weight: weight,
-      estPrice: h.shares > 0 && h.shareType === 'SH' && !h.putCall ? h.value / h.shares : null,
+      estPrice: null,
       ...quoteFields(h.baseTicker || h.ticker, LIVE_PRICES[canonicalTicker(h.baseTicker || h.ticker)]),
       insight: `내가 선택한 ${favs.length}개 즐겨찾기 운용사 중 ${holderCount}개사가 공통 보유한 핵심 자산`
     };
@@ -980,12 +1001,13 @@ function buildCustomGroupPortfolio(preserveView = false) {
     name: "즐겨찾기 묶어보기",
     fund: `선택한 ${favs.length}개 운용사 맞춤 합산`,
     avatar: "FAV",
-    aum: formatMoney(customTotalAumVal),
-    rawAum: customTotalAumVal,
+    aum: customHoldings.length ? formatMoney(customTotalAumVal) : "확인된 수치 없음",
+    rawAum: customHoldings.length ? customTotalAumVal : null,
     quarter: `${formatQuarterDisplay(DOMINANT_13F_PERIOD)} 맞춤 종합`,
     periodDate: DOMINANT_13F_PERIOD,
     periodRange: selectedPeriods.length ? [selectedPeriods[0], selectedPeriods.at(-1)] : null,
-    desc: `내가 선택한 ${favs.length}개 운용사들의 포트폴리오만 묶어서 합산 분석한 맞춤형 뷰`,
+    desc: `선택한 SEC 신고 법인들의 확인된 공시 부분집합 합산입니다. 현재 실시간 포트폴리오가 아닙니다.`,
+    sources: (SEC_DISPLAY?.sources || []).filter(source => favs.some(key => GURU_DATABASE[key]?.cik === source.cik)),
     holdings: customHoldings
   };
 
@@ -1105,10 +1127,10 @@ function renderGuruSidebar() {
     btn.onclick = () => selectGuru(key);
 
     btn.innerHTML = `
-      <div class="guru-mini-avatar">${guru.avatar || 'CO'}</div>
+      <div class="guru-mini-avatar">${escapeHtml(guru.avatar || 'CO')}</div>
       <div class="guru-card-info">
-        <h4>${guru.fund || guru.name}</h4>
-        <p>${guru.name} · <small class="text-green">${guru.aum || ''}</small></p>
+        <h4>${escapeHtml(guru.fund || guru.name)}</h4>
+        <p>${escapeHtml(guru.name)} · <small class="text-green">${escapeHtml(guru.aum || '')}</small></p>
       </div>
     `;
 
@@ -1153,6 +1175,7 @@ function loadGuruData(key) {
   const elDesc = document.getElementById("currentGuruDesc");
   if (elDesc) elDesc.innerText = `${guru.desc} · ${portfolioFreshness(guru)}`;
 
+  renderSelectedSources(guru);
   updateSummaryMetrics(guru);
   renderSectorBreakdown(guru.holdings);
   renderTreemap(guru.holdings);
@@ -1182,7 +1205,7 @@ function updateSummaryMetrics(guru) {
     const sortedByHolders = [...guru.holdings].sort((a, b) => (b.holders || 1) - (a.holders || 1));
     const topHolderPick = sortedByHolders[0];
     if (topHolderPick && elTopBuy) {
-      elTopBuy.innerHTML = `${topHolderPick.ticker} <small class="text-green">${topHolderPick.holders}개사 보유</small>`;
+      elTopBuy.innerHTML = `${escapeHtml(topHolderPick.ticker)} <small class="text-green">${topHolderPick.holders}개사 보유</small>`;
       if (elTopBuySub) elTopBuySub.innerText = `${topHolderPick.name} (${formatMoney(topHolderPick.value)})`;
     }
 
@@ -1192,13 +1215,13 @@ function updateSummaryMetrics(guru) {
       .sort((a, b) => a.discountPct - b.discountPct);
     const bestDiscount = discounts[0];
     if (bestDiscount && bestDiscount.discountPct < 0 && elDisc) {
-      elDisc.innerHTML = `${bestDiscount.ticker} <small class="text-red">${bestDiscount.discountPct.toFixed(1)}%</small>`;
+      elDisc.innerHTML = `${escapeHtml(bestDiscount.ticker)} <small class="text-red">${bestDiscount.discountPct.toFixed(1)}%</small>`;
       if (elDiscSub) elDiscSub.innerText = `공시 평가단가 대비 하락`;
     }
 
     const top1 = guru.holdings[0];
     if (top1 && elTopHold) {
-      elTopHold.innerHTML = `${top1.ticker} <small>${top1.weight}%</small>`;
+      elTopHold.innerHTML = `${escapeHtml(top1.ticker)} <small>${top1.weight}%</small>`;
       if (elTopHoldSub) elTopHoldSub.innerText = `${top1.name} (${formatMoney(top1.value)})`;
     }
   } else {
@@ -1207,7 +1230,7 @@ function updateSummaryMetrics(guru) {
     const buyPicks = guru.holdings.filter(h => h.action === "NEW" || h.action === "ADD");
     if (buyPicks.length > 0 && elTopBuy) {
       const topBuy = buyPicks[0];
-      elTopBuy.innerHTML = `${topBuy.ticker} <small class="text-green">${topBuy.action === 'NEW' ? 'NEW' : 'ADD'}</small>`;
+      elTopBuy.innerHTML = `${escapeHtml(topBuy.ticker)} <small class="text-green">${topBuy.action === 'NEW' ? 'NEW' : 'ADD'}</small>`;
       if (elTopBuySub) elTopBuySub.innerText = `${topBuy.name} (${formatMoney(topBuy.value)})`;
     }
 
@@ -1217,13 +1240,13 @@ function updateSummaryMetrics(guru) {
       .sort((a, b) => a.discountPct - b.discountPct);
     const bestDiscount = discounts[0];
     if (bestDiscount && bestDiscount.discountPct < 0 && elDisc) {
-      elDisc.innerHTML = `${bestDiscount.ticker} <small class="text-purple">${bestDiscount.discountPct.toFixed(1)}%</small>`;
+      elDisc.innerHTML = `${escapeHtml(bestDiscount.ticker)} <small class="text-purple">${bestDiscount.discountPct.toFixed(1)}%</small>`;
       if (elDiscSub) elDiscSub.innerText = `공시 평가단가 대비 하락`;
     }
 
     const top1 = guru.holdings[0];
     if (top1 && elTopHold) {
-      elTopHold.innerHTML = `${top1.ticker} <small>${top1.weight}%</small>`;
+      elTopHold.innerHTML = `${escapeHtml(top1.ticker)} <small>${top1.weight}%</small>`;
       if (elTopHoldSub) elTopHoldSub.innerText = `${top1.name} (${formatMoney(top1.value)})`;
     }
   }
@@ -1271,7 +1294,7 @@ function renderSectorBreakdown(holdings) {
     tag.className = "sector-legend-tag";
     tag.innerHTML = `
       <span class="sector-dot" style="background-color: ${color};"></span>
-      <span>${item.sector} <strong>${item.pct.toFixed(1)}%</strong></span>
+      <span>${escapeHtml(item.sector)} <strong>${item.pct.toFixed(1)}%</strong></span>
     `;
     legendContainer.appendChild(tag);
   });
@@ -1420,7 +1443,7 @@ function renderTreemap(holdings) {
   tiles.forEach(t => {
     const item = t.item;
     const tile = document.createElement("div");
-    tile.className = `treemap-tile ${item.action || 'HOLD'}`;
+    tile.className = 'treemap-tile'; tile.classList.add(['UNKNOWN','HOLD','PUT','CALL','NEW','ADD','REDUCE'].includes(item.action) ? item.action : 'UNKNOWN');
     
     // 크기 구분 클래스 (폭 85px 미만 또는 높이 65px 미만 시 소형 모드)
     const area = t.width * t.height;
@@ -1447,30 +1470,30 @@ function renderTreemap(holdings) {
 
     tile.innerHTML = `
       <div class="tile-top">
-        <span class="tile-ticker">${item.ticker}</span>
+        <span class="tile-ticker">${escapeHtml(item.ticker)}</span>
         <div class="tile-badges">
           ${(isDown && hasRoomForDiscount && !isOption) ? '<span class="tile-discount-badge" title="분기말 대비 하락">▼</span>' : ''}
-          <span class="tile-action ${item.action}">${item.action === 'NEW' ? 'NEW' : item.action}</span>
+          <span class="tile-action ${escapeHtml(item.action)}">${escapeHtml(item.action === 'NEW' ? 'NEW' : item.action)}</span>
         </div>
       </div>
-      ${hasRoomForName ? `<div class="tile-name" title="${item.name}">${cleanName}</div>` : ''}
+      ${hasRoomForName ? `<div class="tile-name" title="${escapeHtml(item.name)}">${escapeHtml(cleanName)}</div>` : ''}
       <div class="tile-bottom">
         <span class="tile-weight">${item.weight}%</span>
-        <span class="tile-price">${priceLabel(item.curPrice)}</span>
+        <span class="tile-price">${escapeHtml(priceLabel(item.curPrice))}</span>
       </div>
     `;
 
     // 인터랙티브 플로팅 툴팁(Toast) 이벤트
     if (tooltip) {
       tile.addEventListener("mouseenter", (e) => {
-        let actionLabel = '보유 유지';
+        let actionLabel = '거래 방향 미검증';
         if (item.action === 'PUT') actionLabel = '풋옵션 (하락 베팅)';
         else if (item.action === 'CALL') actionLabel = '콜옵션 (상승 베팅)';
         else if (item.action === 'NEW') actionLabel = '신규 매수';
         else if (item.action === 'ADD') actionLabel = '비중 확대';
         else if (item.action === 'REDUCE') actionLabel = '비중 축소';
 
-        const diffRow = !Number.isFinite(diffVal) ? `<div class="tooltip-row">${priceComparisonReason(item)}</div>` : isOption ? `
+        const diffRow = !Number.isFinite(diffVal) ? `<div class="tooltip-row">${escapeHtml(priceComparisonReason(item))}</div>` : isOption ? `
           <div class="tooltip-row">
             <span class="tooltip-label">기초자산 변동</span>
             <span class="tooltip-val" style="color:var(--text-subdued)">${isDown ? diffPct + '% 하락' : '+' + diffPct + '% 상승'} (옵션 비교 제외)</span>
@@ -1484,13 +1507,13 @@ function renderTreemap(holdings) {
 
         tooltip.innerHTML = `
           <div class="tooltip-header">
-            <span class="tooltip-ticker">${item.ticker}</span>
+            <span class="tooltip-ticker">${escapeHtml(item.ticker)}</span>
             <div class="tooltip-badges">
               ${(isDown && !isOption) ? '<span class="tile-discount-badge" title="분기말 대비 하락">▼</span>' : ''}
-              <span class="tile-action ${item.action}">${item.action} (${actionLabel})</span>
+              <span class="tile-action ${escapeHtml(item.action)}">${escapeHtml(item.action)} (${actionLabel})</span>
             </div>
           </div>
-          <div class="tooltip-name">${item.name || cleanName}</div>
+          <div class="tooltip-name">${escapeHtml(item.name || cleanName)}</div>
           <div class="tooltip-grid">
             <div class="tooltip-row">
               <span class="tooltip-label">포트폴리오 비중</span>
@@ -1502,7 +1525,7 @@ function renderTreemap(holdings) {
             </div>
             <div class="tooltip-row">
               <span class="tooltip-label">${isOption ? '기초자산 현재가' : '최근 조회 시세'}</span>
-              <span class="tooltip-val">${priceLabel(item.curPrice)}</span>
+              <span class="tooltip-val">${escapeHtml(priceLabel(item.curPrice))}</span>
             </div>
             ${diffRow}
           </div>
@@ -1634,23 +1657,23 @@ function appendNextPageRows() {
       <td class="text-left">
         <div class="ticker-cell">
           <div>
-            <div class="ticker-symbol">${item.ticker}</div>
-            <div class="company-title">${item.name}</div>
+            <div class="ticker-symbol">${escapeHtml(item.ticker)}</div>
+            <div class="company-title">${escapeHtml(item.name)}</div>
           </div>
         </div>
       </td>
-      <td class="col-sector text-left">${item.sector}</td>
+      <td class="col-sector text-left">${escapeHtml(item.sector)}</td>
       <td class="col-holders text-center">
         <span class="badge ${item.holders >= 5 ? 'fund-badge' : 'quarter-badge'}">
-          ${item.holdersDisplay || '1개사 보유'}
+          ${escapeHtml(item.holdersDisplay || '1개사 보유')}
         </span>
       </td>
       <td class="text-center">
-        <span class="action-badge ${item.action}">
-          ${item.action === 'NEW' ? 'NEW' : item.action}
+        <span class="action-badge ${escapeHtml(item.action)}">
+          ${escapeHtml(item.action === 'NEW' ? 'NEW' : item.action)}
         </span>
       </td>
-      <td class="col-shares text-right">${item.shares}</td>
+      <td class="col-shares text-right">${escapeHtml(item.shares)}</td>
       <td class="col-value text-right">${formatMoney(item.value)}</td>
       <td class="col-weight text-right">
         <strong>${item.weight}%</strong>
@@ -1660,12 +1683,12 @@ function appendNextPageRows() {
       </td>
       <td class="col-estPrice text-right">${priceLabel(item.estPrice)}</td>
       <td class="col-curPrice text-right">
-        <strong>${priceLabel(item.curPrice)}</strong><small>${item.quoteAsOf || "시세 관측시각 미확인"}</small>
+        <strong>${priceLabel(item.curPrice)}</strong><small>${escapeHtml(item.quoteAsOf || "시세 관측시각 미확인")}</small>
         ${Number.isFinite(item.priceChangePct) ? `<small class="${item.priceChangePct >= 0 ? 'text-green' : 'text-red'}">(${item.priceChangePct >= 0 ? '+' : ''}${item.priceChangePct}%)</small>` : ''}
       </td>
       <td class="col-discount text-right">
         ${(!Number.isFinite(diffVal) || item.action === 'PUT' || item.action === 'CALL' || item.isOption) ? `
-          <span class="discount-val" style="color: var(--text-subdued);" title="${priceComparisonReason(item)}">비교 보류</span>
+          <span class="discount-val" style="color: var(--text-subdued);" title="${escapeHtml(priceComparisonReason(item))}">비교 보류</span>
         ` : `
           <span class="discount-val ${isUp ? 'positive' : (isDown ? 'discount' : '')}">
             ${isUp ? '+' : ''}${diffPct}%
@@ -1809,9 +1832,9 @@ function renderStockHoldersTable(item) {
       selectGuru(h.guruKey);
     };
     tr.innerHTML = `
-      <td><strong>${h.fund}</strong></td>
-      <td>${h.manager}</td>
-      <td class="text-right">${h.shares}</td>
+      <td><strong>${escapeHtml(h.fund)}</strong></td>
+      <td>${escapeHtml(h.manager)}</td>
+      <td class="text-right">${escapeHtml(h.shares)}</td>
       <td class="text-right">${formatMoney(h.val)}</td>
       <td class="text-right text-green"><strong>${h.weight}%</strong></td>
     `;
@@ -1897,19 +1920,7 @@ function setupEventListeners() {
       const guru = GURU_DATABASE[state.currentGuruKey];
       if (!guru || !guru.holdings) return;
       
-      let rows = [
-        ["종목", "티커", "섹터", "보유운용사수", "액션", "주식수", "평가금액", "포트비중(%)", "공시평가단가($, 매입가 아님)", "최근조회시세($)", "공시평가단가대비(%)", "시세관측시각"]
-      ];
-      
-      guru.holdings.forEach(h => {
-        const discountPct = Number.isFinite(priceDifference(h)) ? `${priceDifference(h).toFixed(1)}%` : "";
-        rows.push([
-          h.name, h.ticker, h.sector, h.holdersDisplay || '1개사', h.action,
-          h.shares, h.value, `${h.weight}%`, `${priceLabel(h.estPrice)}`, `${priceLabel(h.curPrice)}`, discountPct, h.quoteAsOf || "시세 관측시각 미확인"
-        ]);
-      });
-
-      let csvContent = "\uFEFF" + rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+      const csvContent = buildPartialCsv(guru);
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
@@ -2180,7 +2191,7 @@ async function switchFilingMode(filingType) {
     if (headerName) headerName.innerText = 'Macro Compass (거시경제 & FOMC 캘린더)';
     if (headerFund) headerFund.innerText = '연준 금리 · 물가(CPI) · 고용(NFP) · 국채 수익률';
     if (headerQuarter) headerQuarter.innerText = '실시간 공식 데이터 연동';
-    if (headerDesc) headerDesc.innerText = '미 뉴욕 연준(FRBNY), 미 노동통계국(BLS) 공식 지표 및 국채 수익률 곡선을 100대 운용사의 13F 기관 포트폴리오와 입체적으로 연계 분석합니다.';
+    if (headerDesc) headerDesc.innerText = '미 뉴욕 연준(FRBNY), 미 노동통계국(BLS) 공식 지표 및 국채 수익률 곡선을 확인된 SEC 공시 부분집합와 입체적으로 연계 분석합니다.';
     if (ctrl13F) ctrl13F.style.display = "none";
     if (ctrlF4) ctrlF4.style.display = "none";
     if (vMacro) vMacro.style.display = "block";
@@ -2426,13 +2437,13 @@ function renderF4SidebarCompanyList() {
 
     const initials = c.ticker.slice(0, 2);
     btn.innerHTML = `
-      <div class="guru-mini-avatar">${initials}</div>
+      <div class="guru-mini-avatar">${escapeHtml(initials)}</div>
       <div class="guru-card-info" style="flex: 1; min-width: 0;">
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px;">
-          <h4 style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text-base);">${c.ticker}</h4>
+          <h4 style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text-base);">${escapeHtml(c.ticker)}</h4>
           <span style="font-size: 10px; padding: 1px 5px; border-radius: 4px; background: rgba(0, 230, 118, 0.15); color: #00E676; font-weight: 700;">${c.count}건</span>
         </div>
-        <p style="margin: 2px 0 0 0; font-size: 11px; color: var(--text-subdued); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${c.name}</p>
+        <p style="margin: 2px 0 0 0; font-size: 11px; color: var(--text-subdued); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(c.name)}</p>
       </div>
     `;
 
@@ -2540,22 +2551,22 @@ function appendNextF4PageRows() {
     const formattedPost = item.postShares > 0 ? Number(item.postShares).toLocaleString(undefined, { maximumFractionDigits: 0 }) : "-";
 
     tr.innerHTML = `
-      <td class="text-left font-mono" style="font-size: 12px; color: var(--text-secondary);">${item.filingDate}</td>
-      <td class="text-left font-semibold" title="${item.ticker} - ${item.companyName}">
+      <td class="text-left font-mono" style="font-size: 12px; color: var(--text-secondary);">${escapeHtml(item.filingDate)}</td>
+      <td class="text-left font-semibold" title="${escapeHtml(item.ticker)} - ${escapeHtml(item.companyName)}">
         <div style="display: flex; align-items: baseline; gap: 6px; overflow: hidden;">
-          <span style="color: #fff; font-weight: 800; font-size: 13px; flex-shrink: 0;">${item.ticker}</span>
-          <span style="font-size: 11.5px; color: var(--text-muted); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.companyName}</span>
+          <span style="color: #fff; font-weight: 800; font-size: 13px; flex-shrink: 0;">${escapeHtml(item.ticker)}</span>
+          <span style="font-size: 11.5px; color: var(--text-muted); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(item.companyName)}</span>
         </div>
       </td>
-      <td class="text-left font-medium" style="color: var(--accent-blue);" title="${item.insiderName}">${item.insiderName}</td>
-      <td class="text-left" style="font-size: 12px; color: var(--text-secondary);" title="${item.officerTitle}">${item.officerTitle}</td>
-      <td class="text-center"><span class="${txBadgeClass}">${item.txType}</span></td>
+      <td class="text-left font-medium" style="color: var(--accent-blue);" title="${escapeHtml(item.insiderName)}">${escapeHtml(item.insiderName)}</td>
+      <td class="text-left" style="font-size: 12px; color: var(--text-secondary);" title="${escapeHtml(item.officerTitle)}">${escapeHtml(item.officerTitle)}</td>
+      <td class="text-center"><span class="${txBadgeClass}">${escapeHtml(item.txType)}</span></td>
       <td class="text-right font-mono font-medium">${formattedShares} 주</td>
       <td class="text-right font-mono">${formattedPrice}</td>
       <td class="text-right font-mono font-bold" style="color: ${item.txTypeCode === 'P' ? '#00E676' : (item.txTypeCode === 'S' ? '#FF5252' : '#fff')};">${formattedVal}</td>
       <td class="text-right font-mono" style="color: var(--text-muted); font-size: 12px;">${formattedPost}</td>
       <td class="text-center">
-        <a href="${item.secUrl}" target="_blank" rel="noopener noreferrer" class="sec-link-btn" title="SEC 공식 원문 공시 보기" onclick="event.stopPropagation();" style="display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.06); color: #00E676; font-size: 11px; text-decoration: none; border: 1px solid rgba(0,230,118,0.2);">
+        <a href="${escapeHtml(safeSecUrl(item.secUrl))}" target="_blank" rel="noopener noreferrer" class="sec-link-btn" title="SEC 공식 원문 공시 보기" onclick="event.stopPropagation();" style="display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.06); color: #00E676; font-size: 11px; text-decoration: none; border: 1px solid rgba(0,230,118,0.2);">
           원문 ↗
         </a>
       </td>
@@ -2611,20 +2622,20 @@ function openInsiderModal(ticker) {
       const isBuy = item.txTypeCode === "P";
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${item.filingDate}</td>
-        <td><strong>${item.insiderName}</strong></td>
-        <td><span style="font-size: 12px; color: var(--text-subdued);">${item.officerTitle}</span></td>
+        <td>${escapeHtml(item.filingDate)}</td>
+        <td><strong>${escapeHtml(item.insiderName)}</strong></td>
+        <td><span style="font-size: 12px; color: var(--text-subdued);">${escapeHtml(item.officerTitle)}</span></td>
         <td class="text-center">
           <span class="badge-tx ${isBuy ? 'badge-tx-buy' : (insiderCode(item) === 'S' ? 'badge-tx-sale' : '')}">
-            ${insiderLabel(item)}
+            ${escapeHtml(insiderLabel(item))}
           </span>
         </td>
-        <td class="text-right">${item.shares.toLocaleString()} 주</td>
+        <td class="text-right">${escapeHtml(item.shares.toLocaleString())} 주</td>
         <td class="text-right">$${item.price.toFixed(2)}</td>
         <td class="text-right text-green"><strong>${formatMoney(item.totalValue)}</strong></td>
-        <td class="text-right">${item.postShares.toLocaleString()} 주</td>
+        <td class="text-right">${escapeHtml(item.postShares.toLocaleString())} 주</td>
         <td class="text-center">
-          <a href="${item.secUrl || '#'}" target="_blank" class="sec-doc-link">SEC 공시 ↗</a>
+          <a href="${escapeHtml(safeSecUrl(item.secUrl))}" target="_blank" class="sec-doc-link">SEC 공시 ↗</a>
         </td>
       `;
       tbody.appendChild(tr);
@@ -2633,10 +2644,10 @@ function openInsiderModal(ticker) {
 
   // 외부 링크
   const secLink = document.getElementById("insiderModalSecLink");
-  if (secLink) secLink.href = first.secUrl || `https://www.sec.gov/edgar/searchedgar/companysearch`;
+  if (secLink) secLink.href = safeSecUrl(first.secUrl || 'https://www.sec.gov/edgar/searchedgar/companysearch');
 
   const yahooLink = document.getElementById("insiderModalYahooLink");
-  if (yahooLink) yahooLink.href = `https://finance.yahoo.com/quote/${first.ticker}/insider-roster`;
+  if (yahooLink) yahooLink.href = `https://finance.yahoo.com/quote/${encodeURIComponent(first.ticker)}/insider-roster`;
 
   modal.classList.add("active");
   document.body.style.overflow = "hidden";
@@ -2740,22 +2751,22 @@ function render13DTable() {
     if (item.percentOwned !== null && item.percentOwned !== undefined) {
       const pctVal = typeof item.percentOwned === "number" ? item.percentOwned.toFixed(1) : item.percentOwned;
       const pctColor = item.isActivist ? '#c084fc' : '#60a5fa';
-      pctDisplay = `<span style="font-size: 13px; font-weight: 700; color: ${pctColor};">${pctVal}%</span>`;
+      pctDisplay = `<span style="font-size: 13px; font-weight: 700; color: ${pctColor};">${escapeHtml(pctVal)}%</span>`;
     }
 
     tr.innerHTML = `
-      <td>${item.filingDate}</td>
-      <td><strong style="color: var(--text-base);">${item.formType}</strong></td>
+      <td>${escapeHtml(item.filingDate)}</td>
+      <td><strong style="color: var(--text-base);">${escapeHtml(item.formType)}</strong></td>
       <td>
         <div class="stock-name-cell">
-          <span class="stock-ticker" style="font-size: 13px;">${item.investorName}</span>
-          <span class="stock-company">${item.fundName}</span>
+          <span class="stock-ticker" style="font-size: 13px;">${escapeHtml(item.investorName)}</span>
+          <span class="stock-company">${escapeHtml(item.fundName)}</span>
         </div>
       </td>
       <td>
         <div class="stock-name-cell">
-          ${item.targetTicker ? `<span class="stock-ticker" style="font-size: 13px; color: var(--spotify-green);">${item.targetTicker}</span>` : ''}
-          <span class="stock-company" style="font-weight: 600; color: var(--text-base);">${item.targetCompany}</span>
+          ${item.targetTicker ? `<span class="stock-ticker" style="font-size: 13px; color: var(--spotify-green);">${escapeHtml(item.targetTicker)}</span>` : ''}
+          <span class="stock-company" style="font-weight: 600; color: var(--text-base);">${escapeHtml(item.targetCompany)}</span>
         </div>
       </td>
       <td class="text-center">
@@ -2767,7 +2778,7 @@ function render13DTable() {
         </span>
       </td>
       <td class="text-center">
-        <a href="${item.docUrl}" target="_blank" class="sec-doc-link">SEC 원문 ↗</a>
+        <a href="${escapeHtml(safeSecUrl(item.docUrl))}" target="_blank" class="sec-doc-link">SEC 원문 ↗</a>
       </td>
     `;
     tbody.appendChild(tr);
@@ -2820,9 +2831,9 @@ function renderMacroPulseBar() {
     const isFed = nearestFedOrCritical.category === "FED";
     const dotClass = isFed ? "red" : (nearestFedOrCritical.daysDiff <= 5 ? "orange" : "");
     ddayBadgeHtml = `
-      <div class="macro-pulse-dday-badge ${isFed ? 'fed' : ''}" title="${nearestFedOrCritical.name} (${nearestFedOrCritical.date})">
+      <div class="macro-pulse-dday-badge ${isFed ? 'fed' : ''}" title="${escapeHtml(nearestFedOrCritical.name)} (${escapeHtml(nearestFedOrCritical.date)})">
         <span class="pulse-dot ${dotClass}"></span>
-        <span>${nearestFedOrCritical.dDay} ${nearestFedOrCritical.name.replace(/🏛️|미국\s*/g, '').trim()}</span>
+        <span>${escapeHtml(nearestFedOrCritical.dDay)} ${escapeHtml(nearestFedOrCritical.name.replace(/🏛️|미국\s*/g, '').trim())}</span>
       </div>
     `;
   }
@@ -2831,19 +2842,19 @@ function renderMacroPulseBar() {
     <div class="macro-pulse-left">
       <div class="macro-pulse-badge">
         <span class="pulse-dot"></span>
-        <span>MACRO PULSE</span><small>${macroFreshness(MACRO_DATA)}</small>
+        <span>MACRO PULSE</span><small>${escapeHtml(macroFreshness(MACRO_DATA))}</small>
       </div>
       <div class="macro-pulse-items">
         <div class="macro-pulse-pill" title="연준 기준금리 및 장기 중립선(2.90%) 대비 갭">
           <span class="pill-label">연준 금리:</span>
-          <span class="pill-val">${fed.targetRange || "확인 불가"}</span>
-          <span class="pill-sub" style="color: #ffa42b; font-size: 11px;">${fedGap}</span>
+          <span class="pill-val">${escapeHtml(fed.targetRange || "확인 불가")}</span>
+          <span class="pill-sub" style="color: #ffa42b; font-size: 11px;">${escapeHtml(fedGap)}</span>
         </div>
         <div class="macro-pulse-sep"></div>
         <div class="macro-pulse-pill" title="미국 소비자물가(CPI) 및 법정 목표치(2.00%) 대비 갭">
           <span class="pill-label">CPI (YoY):</span>
-          <span class="pill-val" style="color: #c084fc;">${cpi.cpiYoY || "확인 불가"}</span>
-          <span class="pill-sub" style="color: #c084fc; font-size: 11px;">${cpiGap}</span>
+          <span class="pill-val" style="color: #c084fc;">${escapeHtml(cpi.cpiYoY || "확인 불가")}</span>
+          <span class="pill-sub" style="color: #c084fc; font-size: 11px;">${escapeHtml(cpiGap)}</span>
         </div>
         <div class="macro-pulse-sep"></div>
         <div class="macro-pulse-pill" title="10년물 국채 - 3개월물 T-Bill 금리 스프레드 (침체 역전선 0.00%p 기준)">
@@ -3066,7 +3077,7 @@ function renderYieldTimeSeriesChart(period = '6M') {
     const dateStr = d.date.substring(2); // '26-03-13'
     dateTicksSvg += `
       <line x1="${posX.toFixed(1)}" y1="${padT + chartH}" x2="${posX.toFixed(1)}" y2="${padT + chartH + 4}" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
-      <text x="${posX.toFixed(1)}" y="${(padT + chartH + 18).toFixed(1)}" fill="#8e8e93" font-size="10" font-weight="500" text-anchor="${k === 0 ? 'start' : k === xCount - 1 ? 'end' : 'middle'}">${dateStr}</text>
+      <text x="${posX.toFixed(1)}" y="${(padT + chartH + 18).toFixed(1)}" fill="#8e8e93" font-size="10" font-weight="500" text-anchor="${k === 0 ? 'start' : k === xCount - 1 ? 'end' : 'middle'}">${escapeHtml(dateStr)}</text>
     `;
   }
 
@@ -3143,7 +3154,7 @@ function renderYieldTimeSeriesChart(period = '6M') {
       if (tooltip) {
         tooltip.style.display = "flex";
         tooltip.innerHTML = `
-          <span class="date-tag">${d.date}</span>
+          <span class="date-tag">${escapeHtml(d.date)}</span>
           <span class="val-tag" style="color:#38bdf8;">3M: ${d.y3m.toFixed(2)}%</span>
           <span class="val-tag" style="color:#f59e0b;">5Y: ${d.y5y.toFixed(2)}%</span>
           <span class="val-tag" style="color:#10b981;">10Y: ${d.y10y.toFixed(2)}%</span>
@@ -3223,7 +3234,7 @@ function renderSpreadTimeSeriesChart(period = '6M') {
     const dateStr = d.date.substring(2);
     dateTicksSvg += `
       <line x1="${posX.toFixed(1)}" y1="${padT + chartH}" x2="${posX.toFixed(1)}" y2="${padT + chartH + 4}" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
-      <text x="${posX.toFixed(1)}" y="${(padT + chartH + 18).toFixed(1)}" fill="#8e8e93" font-size="10" font-weight="500" text-anchor="${k === 0 ? 'start' : k === xCount - 1 ? 'end' : 'middle'}">${dateStr}</text>
+      <text x="${posX.toFixed(1)}" y="${(padT + chartH + 18).toFixed(1)}" fill="#8e8e93" font-size="10" font-weight="500" text-anchor="${k === 0 ? 'start' : k === xCount - 1 ? 'end' : 'middle'}">${escapeHtml(dateStr)}</text>
     `;
   }
 
@@ -3305,7 +3316,7 @@ function renderSpreadTimeSeriesChart(period = '6M') {
           ? '<span style="color:#ef4444;margin-left:6px;font-weight:700;">(역전 경고)</span>' 
           : '<span style="color:#10b981;margin-left:6px;font-weight:700;">(정상 우상향)</span>';
         tooltip.innerHTML = `
-          <span class="date-tag">${d.date}</span>
+          <span class="date-tag">${escapeHtml(d.date)}</span>
           <span class="val-tag" style="color:${d.spread >= 0 ? '#10b981' : '#ef4444'};">스프레드: ${spreadStr}</span>
           ${statusText}
         `;
@@ -3440,37 +3451,37 @@ function renderMacroCalendar() {
     const catName = catLabels[ev.category] || ev.category;
 
     return `
-      <div class="cal-event-card ${impactClass}">
+      <div class="cal-event-card ${escapeHtml(impactClass)}">
         <div class="cal-card-top">
           <div class="cal-tag-group">
-            <span class="cal-cat-badge ${catClass}">${catName}</span>
-            <span class="cal-impact-badge ${impactClass}">${ev.impact} IMPACT</span>
+            <span class="cal-cat-badge ${escapeHtml(catClass)}">${escapeHtml(catName)}</span>
+            <span class="cal-impact-badge ${escapeHtml(impactClass)}">${escapeHtml(ev.impact)} IMPACT</span>
           </div>
           <span class="cal-dday-pill ${isImminent ? 'imminent' : ''}">
             ${isImminent ? '<span class="pulse-dot"></span>' : ''}
-            ${ev.dDay}
+            ${escapeHtml(ev.dDay)}
           </span>
         </div>
-        <div class="cal-card-title">${ev.name}</div>
-        <div class="cal-card-date">${ev.releaseDate ? `회의 개막: <strong>${ev.date}</strong> · 결과 발표: <strong>${ev.releaseDate}</strong>` : `발표일: <strong>${ev.date}</strong>`} (${ev.daysDiff}일 남음)</div>
+        <div class="cal-card-title">${escapeHtml(ev.name)}</div>
+        <div class="cal-card-date">${ev.releaseDate ? `회의 개막: <strong>${escapeHtml(ev.date)}</strong> · 결과 발표: <strong>${escapeHtml(ev.releaseDate)}</strong>` : `발표일: <strong>${escapeHtml(ev.date)}</strong>`} (${escapeHtml(ev.daysDiff)}일 남음)</div>
 
         <!-- 3열 팩트 비교 박스 (이전치 vs 시장 예상치 vs 발표 결과) -->
         <div class="cal-compare-box">
           <div class="cal-compare-item">
             <span class="cal-compare-label">이전 발표치 (전월)</span>
-            <span class="cal-compare-val">${ev.previous || "확인 불가"}</span>
+            <span class="cal-compare-val">${escapeHtml(ev.previous || "확인 불가")}</span>
           </div>
           <div class="cal-compare-item">
             <span class="cal-compare-label">월가 시장 예상치</span>
-            <span class="cal-compare-val" style="color: #c084fc;">${ev.forecast || "확인 불가"}</span>
+            <span class="cal-compare-val" style="color: #c084fc;">${escapeHtml(ev.forecast || "확인 불가")}</span>
           </div>
           <div class="cal-compare-item">
             <span class="cal-compare-label">실제 발표치</span>
-            <span class="cal-compare-val" style="color: #1ed760;">${ev.actual || '발표 대기'}</span>
+            <span class="cal-compare-val" style="color: #1ed760;">${escapeHtml(ev.actual || '발표 대기')}</span>
           </div>
         </div>
 
-        <div class="cal-card-desc">${ev.description}</div>
+        <div class="cal-card-desc">${escapeHtml(ev.description)}</div>
       </div>
     `;
   }).join("");
@@ -3634,7 +3645,7 @@ function renderConsensusWidget(forceType) {
   const stats = Object.create(null);
 
   RAW_HOLDINGS.forEach((item, rowIndex) => {
-    if (isDerivativeOrOption(item.name, item.ticker, item.titleOfClass, item)) return;
+    if (!SEC_DISPLAY || !verifiedDisplayRow(item) || (item.schemaVersion !== 3 && isDerivativeOrOption(item.name, item.ticker, item.titleOfClass, item))) return;
     const baseTicker = getMappedTicker(item.name, item.ticker, item.cusip, item.shareType, item.putCall || item.optionType);
     if (!baseTicker || baseTicker === "UNKNOWN") return;
 
@@ -3662,7 +3673,7 @@ function renderConsensusWidget(forceType) {
       };
     }
 
-    const guruName = item.guru || "기타 운용사";
+    const guruName = item.legalName;
     const val = Number(item.value) || 0;
 
     stats[securityId].holders.add(guruName);
@@ -3694,7 +3705,7 @@ function renderConsensusWidget(forceType) {
     const holderCount = s.holders.size;
     const actionBadge = isHolders 
       ? `<span class="consensus-action-tag new">${holderCount}개사 보유</span>`
-      : `<span class="consensus-action-tag add">AUM 집중</span>`;
+      : `<span class="consensus-action-tag add">부분집합 평가액</span>`;
 
     const realInfo = LIVE_PRICES[s.ticker];
     const currentQuote = quoteFields(s.ticker, realInfo);
@@ -3704,29 +3715,29 @@ function renderConsensusWidget(forceType) {
     const chgText = Number.isFinite(chgVal) ? `${chgVal > 0 ? "+" : ""}${chgVal.toFixed(2)}%` : "";
 
     return `
-      <div class="consensus-card" onclick="openConsensusStock(decodeURIComponent('${encodeURIComponent(s.securityId).replace(/'/g, '%27')}'))" title="클릭 시 ${s.name} 상세 분석 팝업을 엽니다">
+      <div class="consensus-card" onclick="openConsensusStock(decodeURIComponent('${encodeURIComponent(s.securityId).replace(/'/g, '%27')}'))" title="클릭 시 ${escapeHtml(s.name)} 상세 분석 팝업을 엽니다">
         <div>
           <div class="consensus-rank-tag">TOP ${idx + 1}</div>
           <div class="consensus-card-header">
-            <span class="consensus-ticker">${s.ticker}</span>
+            <span class="consensus-ticker">${escapeHtml(s.ticker)}</span>
             ${actionBadge}
           </div>
-          <div class="consensus-name" title="${s.name}">${s.name}</div>
+          <div class="consensus-name" title="${escapeHtml(s.name)}">${escapeHtml(s.name)}</div>
         </div>
         <div>
           <div class="consensus-metric-row">
             <span class="consensus-metric-label">보유 기관수</span>
-            <span class="consensus-metric-val" style="color: var(--spotify-green);">${holderCount}개 운용사</span>
+            <span class="consensus-metric-val" style="color: var(--spotify-green);">${holderCount}개 SEC 신고 법인</span>
           </div>
           <div class="consensus-metric-row">
             <span class="consensus-metric-label">합산 평가액</span>
             <span class="consensus-metric-val">${formatMoney(s.totalValue)}</span>
           </div>
           <div class="consensus-price-row">
-            <span class="consensus-price">${priceText}</span>
+            <span class="consensus-price">${escapeHtml(priceText)}</span>
             <span class="consensus-chg ${chgClass}">${chgText}</span>
           </div>
-          <small class="consensus-quote-asof">${currentQuote.quoteAsOf}</small>
+          <small class="consensus-quote-asof">${escapeHtml(currentQuote.quoteAsOf)}</small>
         </div>
       </div>
     `;
@@ -3778,7 +3789,7 @@ async function renderModalInsiderCross(item) {
     container.innerHTML = `
       <div class="insider-empty-msg">
         <p>최근 공시된 핵심 경영진 내부자 거래 내역이 없거나 Form 4 모니터링 대상 기업에 포함되지 않았습니다.</p>
-        <span class="btn-goto-f4" onclick="switchToForm4WithTicker('${ticker}')">Form 4 전체 내부자 거래 대시보드 바로가기 ↗</span>
+        <span class="btn-goto-f4" onclick="switchToForm4WithTicker(decodeURIComponent('${encodeURIComponent(ticker).replace(/'/g, '%27')}'))">Form 4 전체 내부자 거래 대시보드 바로가기 ↗</span>
       </div>
     `;
     return;
@@ -3803,7 +3814,7 @@ async function renderModalInsiderCross(item) {
     const isP = insiderCode(trade) === "P";
     const typeBadge = isP 
       ? `<span class="badge" style="background: rgba(30,215,96,0.18); color: #1ed760; font-size: 10px; font-weight: 800;">장내 매수 (P)</span>`
-      : `<span class="badge" style="background: rgba(243,114,127,0.18); color: #f3727f; font-size: 10px; font-weight: 800;">${insiderLabel(trade)}</span>`;
+      : `<span class="badge" style="background: rgba(243,114,127,0.18); color: #f3727f; font-size: 10px; font-weight: 800;">${escapeHtml(insiderLabel(trade))}</span>`;
     
     const sharesDisplay = trade.shares ? Number(trade.shares).toLocaleString() + " 주" : "-";
     const priceDisplay = trade.price ? `$${Number(trade.price).toFixed(2)}` : "-";
@@ -3811,9 +3822,9 @@ async function renderModalInsiderCross(item) {
 
     return `
       <tr>
-        <td style="white-space: nowrap; color: #9ca3af;">${trade.filingDate || trade.transactionDate || "-"}</td>
-        <td style="font-weight: 700; color: #ffffff;">${trade.insiderName || "-"}</td>
-        <td style="color: var(--text-subdued);">${trade.officerTitle || trade.insiderRole || "경영진/임원"}</td>
+        <td style="white-space: nowrap; color: #9ca3af;">${escapeHtml(trade.filingDate || trade.transactionDate || "-")}</td>
+        <td style="font-weight: 700; color: #ffffff;">${escapeHtml(trade.insiderName || "-")}</td>
+        <td style="color: var(--text-subdued);">${escapeHtml(trade.officerTitle || trade.insiderRole || "경영진/임원")}</td>
         <td style="text-align: center;">${typeBadge}</td>
         <td style="text-align: right;">${sharesDisplay}</td>
         <td style="text-align: right;">${priceDisplay}</td>
@@ -3843,7 +3854,7 @@ async function renderModalInsiderCross(item) {
     </div>
     <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
       <span style="font-size: 11px; color: var(--text-subdued);">최근 공시 총 ${matched.length}건 중 최신 5건 표시</span>
-      <span class="btn-goto-f4" onclick="switchToForm4WithTicker('${ticker}')">이 종목의 Form 4 내부자 거래 전체 보기 ↗</span>
+      <span class="btn-goto-f4" onclick="switchToForm4WithTicker(decodeURIComponent('${encodeURIComponent(ticker).replace(/'/g, '%27')}'))">이 종목의 Form 4 내부자 거래 전체 보기 ↗</span>
     </div>
   `;
 }
@@ -3866,3 +3877,85 @@ function switchToForm4WithTicker(ticker) {
 
 
 
+
+// Numeric views are restricted to the integrity-checked partial generation.
+function verifiedDisplayRow(row) {
+  return !!SEC_DISPLAY && SEC_DISPLAY_ROWS.has(row) &&
+    (row.schemaVersion !== 3 || SECDisplayLoader.isReportedEquity(row, SEC_DISPLAY.classificationPolicy || [])) &&
+    typeof row.legalName === 'string' && row.legalName.length > 0 && /^\d{10}$/.test(row.cik) &&
+    Number.isSafeInteger(row.value) && row.value >= 0 && Number.isSafeInteger(row.shares) && row.shares >= 0 &&
+    ['SH', 'PRN'].includes(row.shareType) && ['', 'PUT', 'CALL'].includes(row.putCall) &&
+    typeof row.sourceRowId === 'string' && /^[a-f0-9]{64}$/.test(row.tableSha256) &&
+    /^\d{4}-\d{2}-\d{2}$/.test(row.period) && /^\d{4}-\d{2}-\d{2}$/.test(row.filingDate) &&
+    /^\d{10}-\d{2}-\d{6}$/.test(row.accession) && /^https:\/\/www\.sec\.gov\/Archives\/edgar\/data\//.test(row.sourceUrl);
+}
+function showUnavailableHoldings() {
+  RAW_HOLDINGS = [];
+  GURU_DATABASE = { __GRAND_TOTAL__: { name: '검증된 공시 수치 없음', fund: '부분집합 사용 불가',
+    desc: '검증 실패 또는 확인된 행이 없습니다. 기존 미검증 자료를 대신 표시하지 않습니다.',
+    aum: '확인된 수치 없음', rawAum: null, holdings: [], quarter: '확인 불가' } };
+  for (const [id, text] of Object.entries({currentGuruName:'검증된 공시 수치 없음',currentFundName:'부분집합 사용 불가',currentQuarter:'보유 기준일 확인 불가',currentGuruDesc:'검증된 자료가 없어 수치를 표시하지 않습니다.'})) { const el = document.getElementById(id); if (el) el.textContent = text; }
+  for (const id of ['metricTotalAum', 'metricTotalHoldings', 'metricTopBuy', 'metricTopHolding', 'metricDiscountPick']) {
+    const el = document.getElementById(id); if (el) el.textContent = '확인 불가';
+  }
+  for (const id of ['consensusCardsGrid', 'tableBody', 'treemapContainer', 'sectorStackedBar', 'sectorLegend', 'partialSourceList']) {
+    const el = document.getElementById(id); if (el) el.textContent = '';
+  }
+  ACTIVE_STOCK_ITEM = null;
+  const modal = document.getElementById('stockModal'); if (modal?.classList) modal.classList.remove('show');
+  renderGuruSidebar();
+}
+function renderPartialCoverage(error) {
+  const status = document.getElementById('partialDisplayStatus');
+  const list = document.getElementById('partialCoverageList');
+  if (list) list.replaceChildren();
+  if (!SEC_DISPLAY) {
+    if (status) status.textContent = '공시 부분집합 사용 불가. 검증되지 않은 기존 자료는 표시하지 않습니다.';
+    return;
+  }
+  if (status) status.textContent = `43/50 추적명 확인 · 42개 SEC 신고 법인 · 7개 검증 중. ${SEC_DISPLAY.freshness.label} · 불러온 UTC ${SEC_DISPLAY.freshness.loadedAt || "미확인"} · 최초 원천 확인 UTC ${SEC_DISPLAY.freshness.acquisitionStartedAt || SEC_DISPLAY.manifest?.acquisitionStartedAt || "미확인"} · 마지막 확인 UTC ${SEC_DISPLAY.freshness.lastCheckedAt}. 전체 커버리지 및 현재 실시간 포트폴리오가 아닙니다. 숫자 합계는 검증된 비파생 주식 부분집합입니다. 매매 방향 UNKNOWN · 추정 매입가 및 가격 비교 미제공.`;
+  for (const item of SEC_DISPLAY.coverage.labels) {
+    const li = document.createElement('li');
+    li.textContent = `${item.label} (원래 추적명) · ${item.status === 'available' ? `확인됨 · SEC 신고 법인 ${item.legalName} · CIK ${item.cik}` : `검증 중 · ${item.reason || '원천 무결성 확인 대기'} · 보유 수치 없음`}`;
+    if (list) list.appendChild(li);
+  }
+}
+function renderSelectedSources(guru) {
+  const container = document.getElementById('partialSourceList');
+  if (!container) return;
+  container.replaceChildren();
+  if (!SEC_DISPLAY) return;
+  const sources = guru.sources || SEC_DISPLAY.sources;
+  for (const source of sources || []) {
+    const line = document.createElement('p');
+    line.textContent = `${source.legalName || ''} · 보유 기준일 ${source.period} · 공시/수정 공시일 ${source.filingDate} · `;
+    const link = document.createElement('a');
+    link.textContent = source.accession;
+    link.href = safeSecUrl(source.sourceUrl);
+    link.target = '_blank'; link.rel = 'noopener noreferrer';
+    line.appendChild(link); container.appendChild(line);
+  }
+}
+function buildPartialCsv(guru) {
+  if (!SEC_DISPLAY) throw new Error('Verified partial display unavailable');
+  const rows = [
+    ['범위', '확인된 공시 부분집합: 43/50 추적명, 42 SEC 신고 법인, 7 검증 중'],
+    ['주의', '전체 커버리지 또는 현재 실시간 포트폴리오 아님; 매입가/가격비교 미검증'],
+    ['불러온 UTC', SEC_DISPLAY.freshness.loadedAt || '미확인'],
+    ['최초 원천 확인 UTC', SEC_DISPLAY.freshness.acquisitionStartedAt || SEC_DISPLAY.manifest?.acquisitionStartedAt || '미확인'],
+    ['마지막 확인 UTC', SEC_DISPLAY.freshness.lastCheckedAt, SEC_DISPLAY.freshness.label],
+    ['법인/부분집합', guru.name],
+    ['종목', '티커', 'CUSIP', '주식 유형', '옵션', '보유 신고 법인 수', '매매 방향', '주식수', '평가금액 USD', '부분집합 비중 %', '보유 기준일 시작', '보유 기준일 끝', '매입가', '가격 비교']
+  ];
+  for (const h of guru.holdings || []) {
+    if (!Number.isSafeInteger(h.value) || !Number.isSafeInteger(h.rawShares) || !h.shareType || !h.cusip) continue;
+    rows.push([h.name, h.ticker, h.cusip, h.shareType, h.putCall || '', h.holders || 1, 'UNKNOWN', h.rawShares, h.value, h.weight,
+      h.periodRange?.[0] || '', h.periodRange?.[1] || '', '미검증', '미검증']);
+  }
+  rows.push(['출처', '법인', '보유 기준일', '공시/수정 공시일', 'SEC accession', 'SEC 원문']);
+  for (const source of guru.sources || SEC_DISPLAY.sources || []) rows.push(['SEC', source.legalName || guru.name, source.period, source.filingDate, source.accession, source.sourceUrl]);
+  return '\uFEFF' + rows.map(row => row.map(cell => {
+    const text = String(cell ?? '');
+    return '"' + (/^[=+@\-]/.test(text) ? "'" : '') + text.replace(/"/g, '""') + '"';
+  }).join(',')).join('\n');
+}

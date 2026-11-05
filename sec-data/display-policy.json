@@ -1,0 +1,390 @@
+{
+  "schemaVersion": 1,
+  "contract": "exact_43_labels_42_entities_of_50",
+  "ledgerSha256": "c5cb47bde0c39e8892fb2a4e0c8d6293366666fec3988935b113553aa4a48268",
+  "requestSha256": "39c5d94db46477cce42a36a44dee14199c8d8471d870764604433728151f779c",
+  "originalLabels": [
+    "Warren Buffett",
+    "Charlie Munger (Legacy)",
+    "Li Lu",
+    "Bill Ackman",
+    "Michael Burry",
+    "Seth Klarman",
+    "Mohnish Pabrai",
+    "Howard Marks",
+    "David Tepper",
+    "Stanley Druckenmiller",
+    "Ray Dalio",
+    "Ron Baron",
+    "Dan Loeb",
+    "David Einhorn",
+    "Chase Coleman",
+    "Philippe Laffont",
+    "Lee Ainslie",
+    "Andreas Halvorsen",
+    "Chuck Akre",
+    "Terry Smith",
+    "Tom Gayner",
+    "Carl Icahn",
+    "Nelson Peltz",
+    "Prem Watsa",
+    "Donald Yacktman",
+    "Tom Russo",
+    "George Soros",
+    "John Paulson",
+    "Paul Singer",
+    "Leon Cooperman",
+    "Clifford Asness",
+    "Jim Simons (Legacy)",
+    "Ken Griffin",
+    "Steven Cohen",
+    "Bruce Berkowitz",
+    "Barry Rosenstein",
+    "Chris Hohn",
+    "Markel Asset Management",
+    "Artisan Partners",
+    "Polen Capital",
+    "Sands Capital",
+    "Baillie Gifford",
+    "Hillhouse Capital",
+    "Veritas Asset Management",
+    "Hotchkis & Wiley",
+    "Diamond Hill Capital",
+    "Valley Forge Capital",
+    "Sylebra Capital",
+    "Farallon Capital",
+    "King Street Capital"
+  ],
+  "eligible": [
+    {
+      "label": "Warren Buffett",
+      "cik": "0001067983",
+      "legalName": "BERKSHIRE HATHAWAY INC"
+    },
+    {
+      "label": "Charlie Munger (Legacy)",
+      "cik": "0000783412",
+      "legalName": "DAILY JOURNAL CORP"
+    },
+    {
+      "label": "Bill Ackman",
+      "cik": "0002026053",
+      "legalName": "PERSHING SQUARE INC."
+    },
+    {
+      "label": "Mohnish Pabrai",
+      "cik": "0001549575",
+      "legalName": "Dalal Street, LLC"
+    },
+    {
+      "label": "Howard Marks",
+      "cik": "0000949509",
+      "legalName": "OAKTREE CAPITAL MANAGEMENT LP"
+    },
+    {
+      "label": "Ray Dalio",
+      "cik": "0001350694",
+      "legalName": "Bridgewater Associates, LP"
+    },
+    {
+      "label": "Ron Baron",
+      "cik": "0001017918",
+      "legalName": "BAMCO INC /NY/"
+    },
+    {
+      "label": "Dan Loeb",
+      "cik": "0001040273",
+      "legalName": "Third Point LLC"
+    },
+    {
+      "label": "Chase Coleman",
+      "cik": "0001167483",
+      "legalName": "TIGER GLOBAL MANAGEMENT LLC"
+    },
+    {
+      "label": "Philippe Laffont",
+      "cik": "0001135730",
+      "legalName": "COATUE MANAGEMENT LLC"
+    },
+    {
+      "label": "Lee Ainslie",
+      "cik": "0000934639",
+      "legalName": "MAVERICK CAPITAL LTD"
+    },
+    {
+      "label": "Andreas Halvorsen",
+      "cik": "0001103804",
+      "legalName": "VIKING GLOBAL INVESTORS LP"
+    },
+    {
+      "label": "Chuck Akre",
+      "cik": "0001112520",
+      "legalName": "AKRE CAPITAL MANAGEMENT LLC"
+    },
+    {
+      "label": "Terry Smith",
+      "cik": "0001569205",
+      "legalName": "Fundsmith LLP"
+    },
+    {
+      "label": "Tom Gayner",
+      "cik": "0001096343",
+      "legalName": "MARKEL GROUP INC."
+    },
+    {
+      "label": "Carl Icahn",
+      "cik": "0000921669",
+      "legalName": "ICAHN CARL C"
+    },
+    {
+      "label": "Nelson Peltz",
+      "cik": "0001345471",
+      "legalName": "TRIAN FUND MANAGEMENT, L.P."
+    },
+    {
+      "label": "Prem Watsa",
+      "cik": "0000915191",
+      "legalName": "FAIRFAX FINANCIAL HOLDINGS LTD/ CAN"
+    },
+    {
+      "label": "Donald Yacktman",
+      "cik": "0000905567",
+      "legalName": "YACKTMAN ASSET MANAGEMENT LP"
+    },
+    {
+      "label": "Tom Russo",
+      "cik": "0000860643",
+      "legalName": "GARDNER RUSSO & QUINN LLC"
+    },
+    {
+      "label": "George Soros",
+      "cik": "0001029160",
+      "legalName": "SOROS FUND MANAGEMENT LLC"
+    },
+    {
+      "label": "John Paulson",
+      "cik": "0001035674",
+      "legalName": "PAULSON & CO. INC."
+    },
+    {
+      "label": "Leon Cooperman",
+      "cik": "0000898382",
+      "legalName": "COOPERMAN LEON G"
+    },
+    {
+      "label": "Clifford Asness",
+      "cik": "0001167557",
+      "legalName": "AQR CAPITAL MANAGEMENT LLC"
+    },
+    {
+      "label": "Jim Simons (Legacy)",
+      "cik": "0001037389",
+      "legalName": "RENAISSANCE TECHNOLOGIES LLC"
+    },
+    {
+      "label": "Ken Griffin",
+      "cik": "0001423053",
+      "legalName": "CITADEL ADVISORS LLC"
+    },
+    {
+      "label": "Steven Cohen",
+      "cik": "0001603466",
+      "legalName": "Point72 Asset Management, L.P."
+    },
+    {
+      "label": "Bruce Berkowitz",
+      "cik": "0001056831",
+      "legalName": "FAIRHOLME CAPITAL MANAGEMENT LLC"
+    },
+    {
+      "label": "Barry Rosenstein",
+      "cik": "0001998597",
+      "legalName": "JANA Partners Management, LP"
+    },
+    {
+      "label": "Chris Hohn",
+      "cik": "0001647251",
+      "legalName": "TCI Fund Management Ltd"
+    },
+    {
+      "label": "Markel Asset Management",
+      "cik": "0001096343",
+      "legalName": "MARKEL GROUP INC."
+    },
+    {
+      "label": "Artisan Partners",
+      "cik": "0001466153",
+      "legalName": "Artisan Partners Limited Partnership"
+    },
+    {
+      "label": "Polen Capital",
+      "cik": "0001034524",
+      "legalName": "POLEN CAPITAL MANAGEMENT LLC"
+    },
+    {
+      "label": "Sands Capital",
+      "cik": "0001020066",
+      "legalName": "SANDS CAPITAL MANAGEMENT, LLC"
+    },
+    {
+      "label": "Baillie Gifford",
+      "cik": "0001088875",
+      "legalName": "BAILLIE GIFFORD & CO"
+    },
+    {
+      "label": "Hillhouse Capital",
+      "cik": "0001762304",
+      "legalName": "HHLR ADVISORS, LTD."
+    },
+    {
+      "label": "Veritas Asset Management",
+      "cik": "0001541448",
+      "legalName": "Veritas Asset Management LLP"
+    },
+    {
+      "label": "Hotchkis & Wiley",
+      "cik": "0001164833",
+      "legalName": "HOTCHKIS & WILEY CAPITAL MANAGEMENT LLC"
+    },
+    {
+      "label": "Diamond Hill Capital",
+      "cik": "0001217541",
+      "legalName": "Diamond Hill Capital Management, LLC (Investment Advisor)"
+    },
+    {
+      "label": "Valley Forge Capital",
+      "cik": "0001697868",
+      "legalName": "Valley Forge Capital Management, LP"
+    },
+    {
+      "label": "Sylebra Capital",
+      "cik": "0002003074",
+      "legalName": "SYLEBRA CAPITAL LLC"
+    },
+    {
+      "label": "Farallon Capital",
+      "cik": "0000909661",
+      "legalName": "FARALLON CAPITAL MANAGEMENT, L.L.C."
+    },
+    {
+      "label": "King Street Capital",
+      "cik": "0001218199",
+      "legalName": "KING STREET CAPITAL MANAGEMENT, L.P."
+    }
+  ],
+  "pending": [
+    {
+      "label": "Li Lu",
+      "cik": "0001709323",
+      "reason": "unresolved_cover_table_mismatch",
+      "integrityEvidence": {
+        "cik": "0001709323",
+        "accession": "0002043585-26-000022",
+        "kind": "unresolved_cover_table_mismatch",
+        "table_value": 3702921099,
+        "cover_value": 3702921098,
+        "difference": 1,
+        "note": "No automatic $1 repair. Cover and table must agree or an explicit reconciliation rule must be reviewed.",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/1709323/000204358526000022/primary_doc.xml",
+        "evidence_status": "fresh_primary_sources_reverified",
+        "table_rows": 8,
+        "cover_rows": 8,
+        "evidence_file": "integrity/integrity_report.json"
+      }
+    },
+    {
+      "label": "Michael Burry",
+      "cik": "0001649339",
+      "reason": "unresolved_historical_identity",
+      "integrityEvidence": null
+    },
+    {
+      "label": "Seth Klarman",
+      "cik": "0001061768",
+      "reason": "unresolved_source_scale",
+      "integrityEvidence": {
+        "cik": "0001061768",
+        "accession": "0001061768-26-000010",
+        "kind": "unresolved_source_scale",
+        "table_value": 5415853,
+        "cover_value": 5415853,
+        "difference": 0,
+        "note": "Cover/table totals agree but value-per-share scale conflicts with same-date peer filings. Agreement alone does not establish correct units; no automatic1000x repair.",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/1061768/000106176826000010/primary_doc.xml",
+        "evidence_status": "fresh_primary_sources_reverified",
+        "table_rows": 23,
+        "cover_rows": 23,
+        "evidence_file": "integrity/integrity_report.json",
+        "fresh_peer_comparison_scope": "Three same-date plain-share CUSIPs: Amazon and Visa versus Tiger; Alphabet C versus Berkshire. All approximately0.001 ratio. Prior19-CUSIP count not re-established."
+      }
+    },
+    {
+      "label": "David Tepper",
+      "cik": "0001006438",
+      "reason": "unresolved_historical_identity",
+      "integrityEvidence": null
+    },
+    {
+      "label": "Stanley Druckenmiller",
+      "cik": "0001536411",
+      "reason": "unresolved_cover_table_mismatch_and_scale",
+      "integrityEvidence": {
+        "cik": "0001536411",
+        "accession": "0001536411-26-000006",
+        "kind": "unresolved_cover_table_mismatch_and_scale",
+        "table_value": 5210856,
+        "cover_value": 5210860,
+        "difference": -4,
+        "note": "Cover/table mismatch plus suspected source-unit scale. Do not apply an inferred1000x repair.",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/1536411/000153641126000006/primary_doc.xml",
+        "evidence_status": "fresh_primary_sources_reverified",
+        "table_rows": 95,
+        "cover_rows": 95,
+        "evidence_file": "integrity/integrity_report.json",
+        "fresh_peer_comparison_scope": "Ten same-date plain-share CUSIPs versus Tiger; all approximately0.001 ratio."
+      }
+    },
+    {
+      "label": "David Einhorn",
+      "cik": "0001079114",
+      "reason": "unresolved_historical_identity",
+      "integrityEvidence": null
+    },
+    {
+      "label": "Paul Singer",
+      "cik": "0001048445",
+      "reason": "unresolved_historical_identity",
+      "integrityEvidence": null
+    }
+  ],
+  "equityShareClassOverrides": [
+    {
+      "cusip": "25459Y207",
+      "issuer": "DIREXION SHARES ETF TRUST",
+      "titleOfClass": "NASDAQ 100 EQ WT",
+      "classification": "fund_share",
+      "evidence": [
+        {
+          "url": "https://www.direxion.com/uploads/QQQE-Fact-Sheet.pdf",
+          "sha256": "c7fd90146c0834323652c6f99555d6b30c3c4c2d173c81561f3cb3c97da7cb92",
+          "title": "Direxion NASDAQ-100 Equal Weighted Index ETF (QQQE) issuer fact sheet",
+          "checkedAt": "2026-11-05T11:36:54.550432+00:00"
+        }
+      ]
+    },
+    {
+      "cusip": "88636J410",
+      "issuer": "TIDAL TRUST II",
+      "titleOfClass": "PEERLESS OPTION",
+      "classification": "fund_share",
+      "evidence": [
+        {
+          "url": "https://peerlessetfs.com/wp-content/uploads/2026/06/Peerless-WEEL-Fact-Sheet-05312026.pdf",
+          "sha256": "ea98d13f60730df0bf956f94e35f36caafc92fbfec8f5ce42b21e23185d8fd0c",
+          "title": "Peerless Option Income Wheel ETF (WEEL) issuer fact sheet",
+          "checkedAt": "2026-11-05T11:37:00.368475+00:00"
+        }
+      ]
+    }
+  ]
+}
