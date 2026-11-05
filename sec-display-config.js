@@ -1,1 +1,1 @@
-globalThis.SEC_DISPLAY_CONFIG = Object.freeze({"contract":"exact_43_labels_42_entities_of_50","expectedScopeSha256":"a4f693dd22f448562957b44597871bba4d1917c00bb8e02894d466e724a527a7","pointerPath":"sec-data/current.json","policyPath":"sec-data/display-policy.json"});
+globalThis.SEC_DISPLAY_CONFIG = Object.freeze({contract:"holdings_temporarily_unavailable",reason:"Source verification temporarily unavailable"});
