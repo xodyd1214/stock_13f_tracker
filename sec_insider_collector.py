@@ -57,6 +57,27 @@ def number(node, path):
     raise ValueError(f"Invalid Form 4 number at {path}")
 
 
+COMMON_SHARE_TITLE = re.compile(
+    r"^(?:class [a-z0-9]+ )?(?:common stock|common shares?|ordinary shares?)"
+    r"(?:,\s*(?:\$[0-9.]+\s*)?par value.*|\s*\([a-z0-9.]+\))?$",
+    re.IGNORECASE,
+)
+PLAN_PURCHASE = re.compile(
+    r"employee stock purchase plan|dividend reinvestment plan|\bESPP\b|\bDRIP\b",
+    re.IGNORECASE,
+)
+
+
+def tracked_issuer_ciks(tickers):
+    return {str(tickers[ticker]["cik"]).zfill(10) for ticker in KEY_TICKERS if ticker in tickers}
+
+
+def linked_notes(node, notes):
+    if node is None:
+        return ""
+    return " ".join(notes.get(ref.get("id"), "") for ref in node.findall(".//footnoteId"))
+
+
 def parse_form4_xml(xml_content, accession, filing_date, source_url):
     root = ET.fromstring(xml_content)
     if root.tag != "ownershipDocument" or field(root, "documentType") != "4":
@@ -70,31 +91,36 @@ def parse_form4_xml(xml_content, accession, filing_date, source_url):
     if ticker in {"N/A", "NA", "NONE", "NOT APPLICABLE", "-"}:
         ticker = ""
 
+    owner_nodes = root.findall("reportingOwner")
     owners = []
-    for owner in root.findall("reportingOwner"):
+    for owner in owner_nodes:
         name = field(owner, "reportingOwnerId/rptOwnerName")
         if not name:
             continue
         relationship = owner.find("reportingOwnerRelationship")
         roles = []
-        officer = False
+        officer = director = False
         if relationship is not None:
             officer = field(relationship, "isOfficer").lower() in ("1", "true")
+            director = field(relationship, "isDirector").lower() in ("1", "true")
             if officer:
                 roles.append(field(relationship, "officerTitle") or "임원")
-            if field(relationship, "isDirector").lower() in ("1", "true"):
+            if director:
                 roles.append("이사")
             if field(relationship, "isTenPercentOwner").lower() in ("1", "true"):
                 roles.append("10% 초과 보유자로 신고")
             if field(relationship, "isOther").lower() in ("1", "true"):
                 roles.append(field(relationship, "otherText") or "기타 관계")
-        owners.append((name, " / ".join(dict.fromkeys(roles)) or "관계 미기재", officer))
+        owners.append((name, " / ".join(dict.fromkeys(roles)) or "관계 미기재", officer, director))
     if not owners:
         raise ValueError("Form 4 reporting owner missing")
 
-    names = " · ".join(dict.fromkeys(name for name, _, _ in owners))
-    roles = {role for _, role, _ in owners}
-    relation = owners[0][1] if len(roles) == 1 else " · ".join(f"{name} ({role})" for name, role, _ in owners)
+    names = " · ".join(dict.fromkeys(name for name, _, _, _ in owners))
+    roles = {role for _, role, _, _ in owners}
+    relation = owners[0][1] if len(roles) == 1 else " · ".join(f"{name} ({role})" for name, role, _, _ in owners)
+    sole_officer_or_director = len(owner_nodes) == 1 and (owners[0][2] or owners[0][3])
+    notes = {note.get("id"): "".join(note.itertext()) for note in root.findall("footnotes/footnote")}
+    plan_mentioned = PLAN_PURCHASE.search(" ".join([field(root, "remarks"), *notes.values()]))
     rows = []
     for transaction in root.findall("nonDerivativeTable/nonDerivativeTransaction"):
         title = field(transaction, "securityTitle/value")
@@ -105,6 +131,21 @@ def parse_form4_xml(xml_content, accession, filing_date, source_url):
         shares = number(transaction, "transactionAmounts/transactionShares/value")
         price = number(transaction, "transactionAmounts/transactionPricePerShare/value")
         post = number(transaction, "postTransactionAmounts/sharesOwnedFollowingTransaction/value")
+        ownership = field(transaction, "ownershipNature/directOrIndirectOwnership/value")
+        acquired = field(transaction, "transactionAmounts/transactionAcquiredDisposedCode/value")
+        price_notes = linked_notes(transaction.find("transactionAmounts/transactionPricePerShare"), notes)
+        if re.search(r"\bweighted[- ]average\b", price_notes, re.IGNORECASE):
+            price_basis = "weightedAverage"
+        elif re.search(r"multiple (?:trades|transactions|executions)", price_notes, re.IGNORECASE):
+            price_basis = "multipleExecutions"
+        else:
+            price_basis = None
+        direct_purchase = (
+            sole_officer_or_director and code == "P" and acquired == "A" and ownership == "D"
+            and bool(traded and COMMON_SHARE_TITLE.fullmatch(title))
+            and shares is not None and shares > 0 and price is not None and price > 0
+            and not plan_mentioned
+        )
         rows.append({
             "filingDate": filing_date,
             "transDate": traded,
@@ -114,9 +155,11 @@ def parse_form4_xml(xml_content, accession, filing_date, source_url):
             "securityTitle": title or None,
             "insiderName": names,
             "officerTitle": relation,
-            "isOfficer": any(officer for _, _, officer in owners),
+            "isOfficer": any(officer for _, _, officer, _ in owners),
             "txTypeCode": code,
-            "ownership": field(transaction, "ownershipNature/directOrIndirectOwnership/value"),
+            "ownership": ownership,
+            "directInsiderPurchase": direct_purchase,
+            "priceBasis": price_basis,
             "shares": float(shares) if shares is not None else None,
             "price": float(price) if price is not None else None,
             "totalValue": float(shares * price) if shares is not None and price is not None else None,
@@ -127,12 +170,16 @@ def parse_form4_xml(xml_content, accession, filing_date, source_url):
     return rows
 
 
-def snapshot(rows, *, verified_filings, source_filings):
+def snapshot(rows, *, verified_filings, source_filings, issuer_ciks):
+    scoped_rows = [
+        {**row, "directInsiderPurchase": row["directInsiderPurchase"] and row["issuerCik"] in issuer_ciks}
+        for row in rows
+    ]
     return {
         "schemaVersion": 1,
         "sourceFilings": source_filings,
         "verifiedFilings": verified_filings,
-        "transactions": sorted(rows, key=lambda row: row["filingDate"], reverse=True),
+        "transactions": sorted(scoped_rows, key=lambda row: row["filingDate"], reverse=True),
     }
 
 
@@ -170,7 +217,7 @@ def collect():
 
     if not rows:
         raise ValueError("No Form 4 transactions returned")
-    return snapshot(rows, verified_filings=len(seen), source_filings=len(seen))
+    return snapshot(rows, verified_filings=len(seen), source_filings=len(seen), issuer_ciks=tracked_issuer_ciks(tickers))
 
 
 if __name__ == "__main__":

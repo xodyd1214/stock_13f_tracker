@@ -34,11 +34,37 @@ class Form4Tests(unittest.TestCase):
         self.assertEqual((first["ticker"], first["issuerCik"], first["securityTitle"]),
                          ("PNI", "0001170311", "Common Stock"))
         self.assertEqual(first["insiderName"], "Bank of America · Merrill Lynch")
+        self.assertFalse(first["directInsiderPurchase"])
         self.assertEqual((first["transDate"], first["filingDate"]), ("2026-10-21", "2026-10-23"))
         self.assertEqual((first["price"], first["totalValue"], first["ownership"]), (6.334, 77084.78, "I"))
         self.assertIsNone(second["price"])
         self.assertIsNone(second["totalValue"])
         self.assertIsNone(second["transDate"])
+
+    def test_direct_company_purchase_and_weighted_average_exclude_plan(self):
+        xml = b"""<ownershipDocument><documentType>4</documentType>
+          <issuer><issuerCik>12927</issuerCik><issuerName>Boeing</issuerName>
+          <issuerTradingSymbol>BA</issuerTradingSymbol></issuer>
+          <reportingOwner><reportingOwnerId><rptOwnerName>Test Director</rptOwnerName></reportingOwnerId>
+          <reportingOwnerRelationship><isDirector>1</isDirector></reportingOwnerRelationship></reportingOwner>
+          <nonDerivativeTable><nonDerivativeTransaction>
+            <securityTitle><value>Common Stock</value></securityTitle>
+            <transactionDate><value>2026-10-30</value></transactionDate>
+            <transactionCoding><transactionCode>P</transactionCode></transactionCoding>
+            <transactionAmounts><transactionShares><value>2950</value></transactionShares>
+            <transactionPricePerShare><value>173.026</value><footnoteId id="F1"/></transactionPricePerShare>
+            <transactionAcquiredDisposedCode><value>A</value></transactionAcquiredDisposedCode></transactionAmounts>
+            <ownershipNature><directOrIndirectOwnership><value>D</value></directOrIndirectOwnership></ownershipNature>
+          </nonDerivativeTransaction></nonDerivativeTable>
+          <footnotes><footnote id="F1">Weighted average purchase price</footnote></footnotes>
+        </ownershipDocument>"""
+        def parse(raw):
+            return parse_form4_xml(raw, "0001225208-26-008641", "2026-11-02", "https://www.sec.gov/example")[0]
+
+        self.assertTrue(parse(xml)["directInsiderPurchase"])
+        self.assertEqual(parse(xml)["priceBasis"], "weightedAverage")
+        self.assertFalse(parse(xml.replace(b"<value>D</value>", b"<value>I</value>"))["directInsiderPurchase"])
+        self.assertFalse(parse(xml.replace(b"Weighted average purchase price", b"Purchased under the ESPP"))["directInsiderPurchase"])
 
     def test_missing_issuer_does_not_fall_back_to_the_reporter(self):
         with self.assertRaisesRegex(ValueError, "issuer identity"):

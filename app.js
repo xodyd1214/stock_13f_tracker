@@ -1957,10 +1957,8 @@ function setupEventListeners() {
   // Form 4 전용 필터 탭
   document.querySelectorAll("#f4FilterTabs .filter-tab").forEach(tab => {
     tab.onclick = () => {
-      document.querySelectorAll("#f4FilterTabs .filter-tab").forEach(t => t.classList.remove("active"));
-      tab.classList.add("active");
       state.f4Filter = tab.dataset.f4filter;
-      renderForm4Table();
+      loadAndRenderForm4();
     };
   });
 
@@ -2073,7 +2071,7 @@ let form4Load = null;
 let FILING_13D_DATA = [];
 
 state.currentFilingType = "13F";
-state.f4Filter = "ALL";
+state.f4Filter = "DIRECT";
 state.f4Query = "";
 state.d13Filter = "ALL";
 state.d13Query = "";
@@ -2214,10 +2212,16 @@ function form4IssuerForTicker(rows, ticker) {
   return issuers.size === 1 ? issuers.values().next().value : null;
 }
 
-function form4Price(value) {
+function form4Price(value, maximumFractionDigits = 10) {
   return Number.isFinite(value) ? value.toLocaleString("en-US", {
-    style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 10
+    style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits
   }) : "미기재";
+}
+
+function form4PriceWithBasis(item) {
+  const basis = item.priceBasis === "weightedAverage" ? "가중평균"
+    : item.priceBasis === "multipleExecutions" ? "복수 체결" : "";
+  return `${form4Price(item.price)}${basis ? `<small class="form4-secondary">${basis}</small>` : ""}`;
 }
 
 function form4Dates(item) {
@@ -2230,7 +2234,7 @@ function form4Security(item) {
 
 function form4Relationship(item) {
   const ownership = item.ownership === "D" ? "직접 보유" : item.ownership === "I" ? "간접 보유" : "";
-  return `${escapeHtml(item.officerTitle)}${ownership ? `<small class="form4-secondary">${ownership}</small>` : ""}`;
+  return `${escapeHtml(item.officerTitle)}${ownership ? `<small class="form4-secondary form4-ownership">${ownership}</small>` : ""}`;
 }
 
 function validateForm4Snapshot(payload) {
@@ -2245,6 +2249,7 @@ function validateForm4Snapshot(payload) {
       typeof row.ticker === "string" && typeof row.companyName === "string" && row.companyName.trim() &&
       typeof row.insiderName === "string" && row.insiderName.trim() &&
       typeof row.officerTitle === "string" && typeof row.isOfficer === "boolean" &&
+      (row.directInsiderPurchase === undefined || typeof row.directInsiderPurchase === "boolean") &&
       validDate(row.filingDate) && (row.transDate === null || validDate(row.transDate)) &&
       /^[0-9]{10}-[0-9]{2}-[0-9]{6}$/.test(row.accessionNumber) &&
       safeSecUrl(row.secUrl) !== "#" &&
@@ -2277,101 +2282,50 @@ async function loadVerifiedForm4() {
   return rows;
 }
 
+function getF4ScopeDataset() {
+  return state.f4Filter === "ALL" ? FORM4_DATA : FORM4_DATA.filter(row => row.directInsiderPurchase === true);
+}
+
 function getF4ActiveDataset() {
+  const rows = getF4ScopeDataset();
   if (state.selectedF4Issuer) {
-    return FORM4_DATA.filter(item => item.issuerCik === state.selectedF4Issuer);
+    return rows.filter(item => item.issuerCik === state.selectedF4Issuer);
   }
   if (state.isF4FavGroupActive && state.f4FavCompanies.length > 0) {
-    return FORM4_DATA.filter(item => state.f4FavCompanies.includes(item.issuerCik));
+    return rows.filter(item => state.f4FavCompanies.includes(item.issuerCik));
   }
-  return FORM4_DATA;
+  return rows;
 }
 
 async function loadAndRenderForm4() {
   await loadVerifiedForm4();
   if (state.currentFilingType !== "FORM4") return;
 
-  // 좌측 105개 상장사 사이드바 렌더링
+  const isDirect = state.f4Filter === "DIRECT";
+  const scopeLabel = isDirect ? "임원·이사 직접 매수" : "전체 Form 4";
+  const view = document.getElementById("viewForm4");
+  if (view) view.dataset.scope = isDirect ? "direct" : "all";
+  document.querySelectorAll("#f4FilterTabs [data-f4filter]").forEach(button => {
+    const active = button.dataset.f4filter === state.f4Filter;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
   renderF4SidebarCompanyList();
 
-  // 상단 헤더 동기화
   const headerName = document.getElementById("currentGuruName");
   const headerFund = document.getElementById("currentFundName");
   const headerQuarter = document.getElementById("currentQuarter");
   const headerDesc = document.getElementById("currentGuruDesc");
-
   const dataset = getF4ActiveDataset();
-
-  if (state.selectedF4Issuer) {
-    const issuer = dataset[0];
-    if (headerName) headerName.innerText = issuer?.companyName || state.selectedF4Issuer;
-    if (headerFund) headerFund.innerText = issuer?.ticker || "발행사별 공시";
-  } else if (state.isF4FavGroupActive) {
-    if (headerName) headerName.innerText = "즐겨찾기 발행사 Form 4";
-    if (headerFund) headerFund.innerText = "즐겨찾기 묶어보기";
-  } else {
-    if (headerName) headerName.innerText = "Form 4 내부자 거래 공시";
-    if (headerFund) headerFund.innerText = "발행사와 신고자별 거래";
-  }
-  if (headerQuarter) headerQuarter.innerText = form4Snapshot && FORM4_DATA[0]
-    ? `최신 공시일 ${FORM4_DATA[0].filingDate}` : "검증된 자료 없음";
+  const issuer = FORM4_DATA.find(row => row.issuerCik === state.selectedF4Issuer);
+  if (headerName) headerName.innerText = issuer?.companyName ||
+    (state.isF4FavGroupActive ? "즐겨찾기 발행사" : "Form 4 내부자 거래");
+  if (headerFund) headerFund.innerText = scopeLabel;
+  if (headerQuarter) headerQuarter.innerText = dataset[0]
+    ? `최신 공시일 ${dataset[0].filingDate}` : "표시할 공시 없음";
   if (headerDesc) headerDesc.innerText = form4Snapshot
-    ? `저장된 공시 ${form4Snapshot.sourceFilings.toLocaleString()}건 중 ${form4Snapshot.verifiedFilings.toLocaleString()}건 원문 확인 · 표시 범위 ${dataset.length.toLocaleString()}개 거래 행`
+    ? `확인된 자료 기준 · 발행사 ${new Set(dataset.map(row => row.issuerCik)).size.toLocaleString()}곳 · 거래 ${dataset.length.toLocaleString()}건`
     : "발행 종목이 확인된 Form 4 자료를 불러오지 못했습니다.";
-
-  const buyItems = dataset.filter(item => insiderCode(item) === "P");
-  const saleItems = dataset.filter(item => insiderCode(item) === "S");
-  const officerItems = dataset.filter(item => item.isOfficer);
-  const pricedTrades = [...buyItems, ...saleItems].filter(item => Number.isFinite(item.totalValue));
-  const totalVal = pricedTrades.reduce((sum, item) => sum + item.totalValue, 0);
-  const issuerAmounts = new Map();
-  for (const item of pricedTrades) {
-    const key = item.issuerCik;
-    const entry = issuerAmounts.get(key) || { label: item.companyName, amount: 0 };
-    entry.amount += item.totalValue;
-    issuerAmounts.set(key, entry);
-  }
-  const topIssuer = [...issuerAmounts.values()].sort((a, b) => b.amount - a.amount)[0];
-  const maxTradeItem = pricedTrades.reduce((max, item) => !max || item.totalValue > max.totalValue ? item : max, null);
-
-  const elTotVal = document.getElementById("f4MetricTotalVal");
-  if (elTotVal) elTotVal.innerText = pricedTrades.length ? formatMoney(totalVal) : "—";
-
-  const elTotCount = document.getElementById("f4MetricTotalCount");
-  if (elTotCount) elTotCount.innerText = `금액 확인 ${pricedTrades.length}건 / 매수·매도 ${buyItems.length + saleItems.length}건`;
-
-  const elTopTicker = document.getElementById("f4MetricTopTicker");
-  if (elTopTicker) elTopTicker.innerText = topIssuer?.label || "—";
-
-  const elTopTickerSub = document.getElementById("f4MetricTopTickerSub");
-  if (elTopTickerSub) elTopTickerSub.innerText = topIssuer ? formatMoney(topIssuer.amount) : "금액 확인 자료 없음";
-
-  const elBuyCount = document.getElementById("f4MetricBuyCount");
-  if (elBuyCount) elBuyCount.innerText = `${buyItems.length}건 매수`;
-
-  const elMaxTrade = document.getElementById("f4MetricMaxTrade");
-  if (elMaxTrade && maxTradeItem) {
-    elMaxTrade.innerText = `${maxTradeItem.ticker || maxTradeItem.companyName} (${formatMoney(maxTradeItem.totalValue)})`;
-  } else if (elMaxTrade) {
-    elMaxTrade.innerText = "-";
-  }
-
-  const elMaxTradeSub = document.getElementById("f4MetricMaxTradeSub");
-  if (elMaxTradeSub && maxTradeItem) {
-    elMaxTradeSub.innerText = `${maxTradeItem.insiderName} (${maxTradeItem.officerTitle})`;
-  } else if (elMaxTradeSub) {
-    elMaxTradeSub.innerText = "-";
-  }
-
-  // 필터 카운트
-  const elCntAll = document.getElementById("f4CountAll");
-  if (elCntAll) elCntAll.innerText = dataset.length;
-  const elCntBuy = document.getElementById("f4CountBuy");
-  if (elCntBuy) elCntBuy.innerText = buyItems.length;
-  const elCntSale = document.getElementById("f4CountSale");
-  if (elCntSale) elCntSale.innerText = saleItems.length;
-  const elCntOff = document.getElementById("f4CountOfficer");
-  if (elCntOff) elCntOff.innerText = officerItems.length;
 
   renderForm4Table();
 }
@@ -2382,7 +2336,7 @@ function renderF4SidebarCompanyList() {
   container.innerHTML = "";
 
   const issuers = new Map();
-  for (const item of FORM4_DATA) {
+  for (const item of getF4ScopeDataset()) {
     const key = item.issuerCik;
     const entry = issuers.get(key) || { key, symbols: new Set(), name: item.companyName, count: 0 };
     for (const symbol of item.ticker.split(",")) {
@@ -2550,21 +2504,13 @@ function renderForm4Table() {
 
   let list = getF4ActiveDataset();
 
-  if (state.f4Filter === "BUY") {
-    list = list.filter(item => item.txTypeCode === "P");
-  } else if (state.f4Filter === "SALE") {
-    list = list.filter(item => item.txTypeCode === "S");
-  } else if (state.f4Filter === "OFFICER") {
-    list = list.filter(item => item.isOfficer);
-  }
-
   if (state.f4Query) {
     list = list.filter(item => [item.ticker, item.companyName, item.securityTitle, item.insiderName]
       .some(value => value?.toLowerCase().includes(state.f4Query)));
   }
 
   if (list.length === 0) {
-    tbody.innerHTML = `<tr><td class="form4-wide text-center" colspan="10" style="padding: 40px; color: var(--text-muted);">${form4Snapshot ? "조건에 맞는 검증된 거래 행이 없습니다." : "발행 종목을 확인한 Form 4 자료를 불러오지 못했습니다."}</td></tr>`;
+    tbody.innerHTML = `<tr><td class="form4-wide text-center" colspan="${state.f4Filter === "DIRECT" ? 7 : 9}" style="padding: 40px; color: var(--text-muted);">${form4Snapshot ? "선택한 범위와 검색 조건에 맞는 거래가 없습니다." : "발행 종목을 확인한 Form 4 자료를 불러오지 못했습니다."}</td></tr>`;
     return;
   }
 
@@ -2601,22 +2547,24 @@ function appendNextF4PageRows() {
     else if (item.txTypeCode === "F") txBadgeClass = "action-badge badge-f4-tax";
 
     const formattedShares = item.shares?.toLocaleString(undefined, { maximumFractionDigits: 8 }) ?? "—";
-    const formattedVal = form4Price(item.totalValue);
+    const formattedVal = form4Price(item.totalValue, 2);
     const formattedPost = item.postShares?.toLocaleString(undefined, { maximumFractionDigits: 8 }) ?? "—";
 
     tr.innerHTML = `
-      <td class="text-left font-mono form4-date form4-wide" role="cell" data-label="거래일">${form4Dates(item)}</td>
-      <td class="text-left form4-wrap form4-wide" role="cell" data-label="발행사 / 거래 증권">
+      <td class="text-left form4-wrap form4-wide" role="cell" data-label="기업 / 거래 증권">
         <strong>${escapeHtml(item.ticker || "티커 미기재")}</strong> ${escapeHtml(item.companyName)}
         <small class="form4-secondary">${form4Security(item)}</small>
       </td>
-      <td class="text-left form4-wrap form4-wide" role="cell" data-label="신고자">${escapeHtml(item.insiderName)}</td>
-      <td class="text-left form4-wrap form4-wide" role="cell" data-label="발행사와의 관계">${form4Relationship(item)}</td>
-      <td class="text-center" role="cell" data-label="거래 유형"><span class="action-badge ${txBadgeClass}">${escapeHtml(insiderLabel(item))}</span></td>
+      <td class="text-left form4-wrap form4-wide" role="cell" data-label="신고자 / 직책">
+        <strong>${escapeHtml(item.insiderName)}</strong>
+        <span class="form4-secondary">${form4Relationship(item)}</span>
+      </td>
+      <td class="text-left font-mono form4-date form4-wide" role="cell" data-label="거래일">${form4Dates(item)}</td>
+      <td class="text-center form4-all-only" role="cell" data-label="거래 유형"><span class="action-badge ${txBadgeClass}">${escapeHtml(insiderLabel(item))}</span></td>
       <td class="text-right font-mono font-medium" role="cell" data-label="수량">${formattedShares}</td>
-      <td class="text-right font-mono" role="cell" data-label="공시 단가">${form4Price(item.price)}</td>
-      <td class="text-right font-mono font-bold" role="cell" data-label="단가 × 수량" style="color: ${item.txTypeCode === 'P' ? '#00E676' : (item.txTypeCode === 'S' ? '#FF5252' : '#fff')};">${formattedVal}</td>
-      <td class="text-right font-mono" role="cell" data-label="거래 후 보유수량" style="color: var(--text-muted); font-size: 12px;">${formattedPost}</td>
+      <td class="text-right font-mono" role="cell" data-label="공시 단가">${form4PriceWithBasis(item)}</td>
+      <td class="text-right font-mono font-bold" role="cell" data-label="거래 금액" style="color: ${item.txTypeCode === 'P' ? '#00E676' : (item.txTypeCode === 'S' ? '#FF5252' : '#fff')};">${formattedVal}</td>
+      <td class="text-right font-mono form4-all-only" role="cell" data-label="거래 후 보유수량" style="color: var(--text-muted);">${formattedPost}</td>
       <td class="text-center" role="cell" data-label="출처">
         <a href="${escapeHtml(safeSecUrl(item.secUrl))}" target="_blank" rel="noopener noreferrer" class="sec-link-btn" title="SEC 공식 원문 공시 보기" onclick="event.stopPropagation();" style="display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.06); color: #00E676; font-size: 11px; text-decoration: none; border: 1px solid rgba(0,230,118,0.2);">
           SEC 원문
@@ -2634,17 +2582,18 @@ function openInsiderModal(issuerKey) {
   const modal = document.getElementById("insiderModal");
   if (!modal) return;
 
-  const tickerItems = FORM4_DATA.filter(item => item.issuerCik === issuerKey);
+  const tickerItems = getF4ScopeDataset().filter(item => item.issuerCik === issuerKey);
   if (tickerItems.length === 0) return;
 
   const first = tickerItems[0];
+  modal.dataset.scope = state.f4Filter === "DIRECT" ? "direct" : "all";
   const elTicker = document.getElementById("insiderModalTicker");
   const elName = document.getElementById("insiderModalName");
   const elSector = document.getElementById("insiderModalSector");
 
   if (elTicker) elTicker.innerText = first.ticker || "Form 4";
   if (elName) elName.innerText = first.companyName;
-  if (elSector) elSector.innerText = "저장된 SEC Form 4 공시의 거래 내역";
+  if (elSector) elSector.innerText = state.f4Filter === "DIRECT" ? "임원·이사 직접 매수" : "저장된 SEC Form 4 공시의 거래 내역";
 
   // 통계 계산
   const buyItems = tickerItems.filter(item => item.txTypeCode === "P");
@@ -2685,8 +2634,8 @@ function openInsiderModal(issuerKey) {
           </span>
         </td>
         <td class="text-right">${item.shares?.toLocaleString() ?? "—"}</td>
-        <td class="text-right">${form4Price(item.price)}</td>
-        <td class="text-right text-green"><strong>${form4Price(item.totalValue)}</strong></td>
+        <td class="text-right">${form4PriceWithBasis(item)}</td>
+        <td class="text-right text-green"><strong>${form4Price(item.totalValue, 2)}</strong></td>
         <td class="text-right">${item.postShares?.toLocaleString() ?? "—"}</td>
         <td class="text-center">
           <a href="${escapeHtml(safeSecUrl(item.secUrl))}" target="_blank" class="sec-doc-link">SEC 공시 ↗</a>
@@ -3822,13 +3771,13 @@ async function renderModalInsiderCross(item) {
   const rows = await loadVerifiedForm4();
   if (requestId !== insiderRequestId) return;
   const issuer = form4IssuerForTicker(rows, item.baseTicker || item.ticker);
-  const matched = issuer ? rows.filter(row => row.issuerCik === issuer) : [];
+  const matched = issuer ? rows.filter(row => row.issuerCik === issuer && row.directInsiderPurchase === true) : [];
 
   if (matched.length === 0) {
     container.innerHTML = `
       <div class="insider-empty-msg">
-        <p>저장된 Form 4 자료에서 발행사가 일치하는 거래를 찾지 못했습니다.</p>
-        <span class="btn-goto-f4" onclick="switchToForm4Issuer()">Form 4 전체 공시 보기</span>
+        <p>저장된 공시에서 이 발행사의 임원·이사 직접 매수를 확인하지 못했습니다.</p>
+        <button type="button" class="btn-goto-f4" onclick="switchToForm4Issuer(${issuer ? `'${escapeHtml(issuer)}'` : 'null'}, 'ALL')">Form 4 전체 공시 보기</button>
       </div>
     `;
     return;
@@ -3837,13 +3786,8 @@ async function renderModalInsiderCross(item) {
   // 최근 5건 거래 목록 표
   const recentTrades = [...matched].sort((a, b) => String(b.filingDate || "").localeCompare(String(a.filingDate || ""))).slice(0, 5);
   const rowsHtml = recentTrades.map(trade => {
-    const isP = insiderCode(trade) === "P";
-    const typeBadge = isP 
-      ? `<span class="badge" style="background: rgba(30,215,96,0.18); color: #1ed760; font-size: 10px; font-weight: 800;">매수 (P)</span>`
-      : `<span class="badge" style="background: rgba(243,114,127,0.18); color: #f3727f; font-size: 10px; font-weight: 800;">${escapeHtml(insiderLabel(trade))}</span>`;
-    
     const sharesDisplay = trade.shares ? Number(trade.shares).toLocaleString() + " 주" : "-";
-    const priceDisplay = form4Price(trade.price);
+    const priceDisplay = form4PriceWithBasis(trade);
     const totalValDisplay = trade.totalValue != null ? formatMoney(trade.totalValue) : "—";
 
     return `
@@ -3852,7 +3796,6 @@ async function renderModalInsiderCross(item) {
         <td class="form4-wrap">${form4Security(trade)}</td>
         <td style="font-weight: 700; color: #ffffff;">${escapeHtml(trade.insiderName || "-")}</td>
         <td style="color: var(--text-subdued);">${form4Relationship(trade)}</td>
-        <td style="text-align: center;">${typeBadge}</td>
         <td style="text-align: right;">${sharesDisplay}</td>
         <td style="text-align: right;">${priceDisplay}</td>
         <td style="text-align: right; font-weight: 700; color: #ffffff;">${totalValDisplay}</td>
@@ -3869,7 +3812,6 @@ async function renderModalInsiderCross(item) {
             <th>증권명</th>
             <th>신고자</th>
             <th>발행사와의 관계</th>
-            <th style="text-align: center;">유형</th>
             <th style="text-align: right;">수량</th>
             <th style="text-align: right;">단가</th>
             <th style="text-align: right;">총 대금</th>
@@ -3881,17 +3823,18 @@ async function renderModalInsiderCross(item) {
       </table>
     </div>
     <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
-      <span style="font-size: 11px; color: var(--text-subdued);">최근 공시 총 ${matched.length}건 중 최신 5건 표시</span>
-      <span class="btn-goto-f4" onclick="switchToForm4Issuer('${escapeHtml(issuer)}')">이 발행사의 Form 4 공시 보기</span>
+      <span style="font-size: 11px; color: var(--text-subdued);">직접 매수 ${matched.length}건 중 최대 5건 표시</span>
+      <button type="button" class="btn-goto-f4" onclick="switchToForm4Issuer('${escapeHtml(issuer)}')">이 발행사의 직접 매수 보기</button>
     </div>
   `;
 }
 
-function switchToForm4Issuer(issuer = null) {
+function switchToForm4Issuer(issuer = null, scope = "DIRECT") {
   ++insiderRequestId;
   const modal = document.getElementById("stockModal");
   if (modal) modal.classList.remove("show");
   state.selectedF4Issuer = issuer;
+  state.f4Filter = scope;
   state.isF4FavGroupActive = false;
   state.f4Query = "";
   const searchInput = document.getElementById("f4SearchInput");

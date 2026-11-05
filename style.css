@@ -1736,6 +1736,16 @@ body {
   min-width: 960px;
 }
 
+#viewForm4[data-scope="direct"] :is(.form4-all-only, .form4-ownership),
+#insiderModal[data-scope="direct"] .modal-stats-grid,
+#viewForm4[data-scope="all"] .form4-direct-only {
+  display: none;
+}
+
+#viewForm4[data-scope="direct"] #f4Table {
+  min-width: 740px;
+}
+
 #f4Table .form4-date {
   white-space: nowrap;
 }
@@ -1757,11 +1767,7 @@ body {
 }
 
 @media (max-width: 640px) {
-  #viewForm4 .overview-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  #f4Table, #f4Table tbody {
+  #f4Table, #viewForm4[data-scope="direct"] #f4Table, #f4Table tbody {
     display: block;
     min-width: 0;
   }

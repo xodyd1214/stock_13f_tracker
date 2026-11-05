@@ -209,7 +209,7 @@ test('adjacent SEC and macro feeds escape hostile text and reject executable or 
  vm.runInContext(extract('renderMacroCalendar'),ctx);ctx.renderMacroCalendar();assert.doesNotMatch(macro.innerHTML,/<img/);assert.match(macro.innerHTML,/&lt;img/);
  const f4=element();nodes.set('f4TableBody',f4);
  Object.assign(ctx,{CURRENT_F4_FILTERED_ITEMS:[{filingDate:attack,transDate:attack,ticker:attack,companyName:attack,securityTitle:attack,insiderName:attack,officerTitle:attack,txTypeCode:attack,ownership:attack,secUrl:'data:text/html,test'}],CURRENT_F4_PAGE_INDEX:1,F4_PAGE_SIZE:60});
- for(const fn of ['appendNextF4PageRows','form4Dates','form4Security','form4Relationship','form4Price','insiderCode','insiderLabel'])vm.runInContext(extract(fn),ctx);
+ for(const fn of ['appendNextF4PageRows','form4Dates','form4Security','form4Relationship','form4Price','form4PriceWithBasis','insiderCode','insiderLabel'])vm.runInContext(extract(fn),ctx);
  ctx.appendNextF4PageRows();
  const f4Row=f4.children[0].children[0].innerHTML;
  assert.doesNotMatch(f4Row,/<img|href="data:/);
