@@ -35,8 +35,10 @@ class PublicationTests(unittest.TestCase):
         self.assertEqual(text.count('continue-on-error: true'), 4)
         self.assertIn('steps.filings.outcome', text)
         self.assertIn('python validate_data.py "$file"', text)
+        self.assertIn('node --test tests/frontend.test.cjs', text)
         self.assertIn('exit 1', text)
         for script in ('sec_insider_collector.py', 'sec_13d_collector.py'):
             self.assertNotIn('python ' + script, text)
 
 if __name__ == '__main__': unittest.main()
+

@@ -53,21 +53,21 @@ class ReviewRegressionTests(unittest.TestCase):
             self.assertEqual(result['updated'], ['Test'])
 
     def test_partial_price_success_publishes_good_quote_but_returns_failure(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(p, 'BASE_DIR', Path(directory)), patch.object(p.time, 'sleep'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(p, 'BASE_DIR', Path(directory)), patch.object(p.time, 'sleep'), patch.object(p.time, 'time', return_value=200):
             root = Path(directory)
-            (root / 'ticker_map.json').write_text('{"Apple":"AAPL","Microsoft":"MSFT"}')
+            (root / 'ticker_map.json').write_text('{"037833100":"AAPL","594918104":"MSFT"}')
             cache = root / 'realtime_prices.json'
             old = {'price': 10, 'marketTime': 100}
             cache.write_text(json.dumps({'MSFT': old}))
-            fresh = {'price': 200, 'marketTime': 200}
+            fresh = {'price': 200, 'marketTime': 200, 'currency': 'USD'}
             with patch.object(p, 'fetch_yahoo_price', side_effect=lambda ticker: fresh if ticker == 'AAPL' else None):
                 self.assertFalse(p.main())
             self.assertEqual(json.loads(cache.read_text()), {'MSFT': old, 'AAPL': fresh})
 
     def test_older_or_undated_price_preserves_bytes(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(p, 'BASE_DIR', Path(directory)), patch.object(p.time, 'sleep'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(p, 'BASE_DIR', Path(directory)), patch.object(p.time, 'sleep'), patch.object(p.time, 'time', return_value=200):
             root = Path(directory)
-            (root / 'ticker_map.json').write_text('{"Apple":"AAPL"}')
+            (root / 'ticker_map.json').write_text('{"037833100":"AAPL"}')
             cache = root / 'realtime_prices.json'
             original = b'{"AAPL":{"price":200,"marketTime":200}}\n'
             for market_time in [100, None]:
@@ -77,12 +77,13 @@ class ReviewRegressionTests(unittest.TestCase):
                 self.assertEqual(cache.read_bytes(), original)
 
     def test_newer_price_is_published_and_returns_success(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(p, 'BASE_DIR', Path(directory)), patch.object(p.time, 'sleep'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(p, 'BASE_DIR', Path(directory)), patch.object(p.time, 'sleep'), patch.object(p.time, 'time', return_value=200):
             root = Path(directory)
-            (root / 'ticker_map.json').write_text('{"Apple":"AAPL"}')
+            (root / 'ticker_map.json').write_text('{"037833100":"AAPL"}')
             cache = root / 'realtime_prices.json'
             cache.write_text('{"AAPL":{"price":10,"marketTime":100}}')
-            fresh = {'price': 200, 'marketTime': 200}
+            fresh = {'price': 200, 'marketTime': 200, 'currency': 'USD'}
             with patch.object(p, 'fetch_yahoo_price', return_value=fresh):
                 self.assertTrue(p.main())
             self.assertEqual(json.loads(cache.read_text()), {'AAPL': fresh})
+

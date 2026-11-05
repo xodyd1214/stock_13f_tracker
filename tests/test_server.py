@@ -253,6 +253,7 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(set(body), {"AAPL", "BRK.B", "^TNX", "CL=F", "DX-Y.NYB"})
         self.assertEqual(self.get.call_count, 5)
+
         self.assertEqual(body["AAPL"]["price"], 110)
         self.assertEqual(body["AAPL"]["changePct"], 10)
         self.assertEqual(body["AAPL"]["marketTime"], 1700000000)
@@ -265,6 +266,19 @@ class ServerTests(unittest.TestCase):
         self.assertTrue(any("/CL%3DF?" in url for url in urls))
         self.assertTrue(any("/DX-Y.NYB?" in url for url in urls))
         self.assertNotIn("Access-Control-Allow-Origin", headers)
+
+    def test_prices_skip_jhg_and_deduplicate_renamed_block(self):
+        self.quote_response()
+        status, _, body = self.request('GET', '/api/prices?tickers=JHG,SQ,XYZ,HRB,BGIN')
+        self.assertEqual(status, 200)
+        self.assertEqual(set(body), {'XYZ', 'HRB', 'BGIN'})
+        self.assertEqual(self.get.call_count, 3)
+        self.assertTrue(all('/JHG?' not in call.args[0] and '/SQ?' not in call.args[0] for call in self.get.call_args_list))
+
+    def test_inactive_price_request_does_not_contact_yahoo(self):
+        status, _, body = self.request('GET', '/api/prices?tickers=JHG')
+        self.assertEqual((status, body), (200, {}))
+        self.get.assert_not_called()
 
     def test_invalid_tickers_are_rejected_before_network(self):
         for query in ("AAPL%2F..%2Fevil", "AAPL%3Fsecret%3Dx", "AAPL&tickers=MSFT", ",".join(f"T{i}" for i in range(51))):
@@ -354,3 +368,4 @@ class ControllerTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
