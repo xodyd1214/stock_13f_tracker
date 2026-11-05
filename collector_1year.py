@@ -15,6 +15,7 @@ from pathlib import Path
 from datetime import date, datetime, timezone
 import xml.etree.ElementTree as ET
 from data_io import atomic_write_json, load_json
+from market_symbols import resolve_security_symbol
 
 if sys.platform == "win32":
     try:
@@ -80,7 +81,7 @@ def parse_xml_holdings(xml_text, filing_date):
     holdings = {}
     for node in entries:
         fields = {e.tag.split('}')[-1]: (e.text or '').strip() for e in node.iter()}
-        cusip = fields.get('cusip', '')
+        cusip = fields.get('cusip', '').upper().strip()
         if not cusip or not fields.get('nameOfIssuer'):
             raise ValueError('Incomplete information-table entry')
         value = float(fields['value'].replace(',', '')) * multiplier
@@ -96,7 +97,7 @@ def parse_xml_holdings(xml_text, filing_date):
         key = '|'.join((cusip, share_type, option or 'EQUITY'))
         if key not in holdings:
             holdings[key] = {'cusip': cusip, 'positionId': key,
-                'ticker': KNOWN_CUSIPS.get(cusip, {}).get('ticker', cusip),
+                'ticker': resolve_security_symbol(cusip, share_type, option) or cusip,
                 'name': fields['nameOfIssuer'], 'sector': KNOWN_CUSIPS.get(cusip, {}).get('sector', 'Other'),
                 'putCall': option or None, 'shareType': share_type, 'securityClass': security_class,
                 'shares': 0, 'value': 0, 'valueUnit': 'USD'}
@@ -257,3 +258,4 @@ def run_1year_sync(output_path=None, gurus=None):
 if __name__ == '__main__':
     result = run_1year_sync()
     sys.exit(1 if result['failed'] or not result['updated'] else 0)
+

@@ -1,0 +1,1288 @@
+{
+  "aliases": {
+    "SQ": "XYZ",
+    "BRK-A": "BRK.A",
+    "BRK-B": "BRK.B"
+  },
+  "reviewedCusips": {
+    "852234103": {
+      "ticker": "XYZ",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1976322/000089418926027644/primary_doc.xml"
+    },
+    "093671105": {
+      "ticker": "HRB",
+      "sourceUrl": "https://investors.hrblock.com/static-files/45ff82d7-60b9-4908-a51c-71b5cc366a7b"
+    },
+    "G17429104": {
+      "ticker": "BGIN",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1945565/000121390026017263/xslSCHEDULE_13G_X01/primary_doc.xml"
+    },
+    "69702V107": {
+      "ticker": "PSBD",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1794776/000180108226000003/xslSCHEDULE_13G_X02/primary_doc.xml"
+    },
+    "892231101": {
+      "ticker": "TSQ",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1499832/000142050626002360/primary_doc.xml"
+    },
+    "81369Y209": {
+      "ticker": "XLV",
+      "sourceUrl": "https://www.ssga.com/uk/en_gb/institutional/etfs/state-street-health-care-select-sector-spdr-etf-xlv",
+      "reviewedAt": "2026-11-05"
+    },
+    "81369Y308": {
+      "ticker": "XLP",
+      "sourceUrl": "https://www.ssga.com/nl/en_gb/institutional/etfs/state-street-consumer-staples-select-sector-spdr-etf-xlp",
+      "reviewedAt": "2026-11-05"
+    },
+    "81369Y407": {
+      "ticker": "XLY",
+      "sourceUrl": "https://www.ssga.com/ch/en_gb/institutional/etfs/state-street-consumer-discretionary-select-sector-spdr-etf-xly",
+      "reviewedAt": "2026-11-05"
+    },
+    "81369Y506": {
+      "ticker": "XLE",
+      "sourceUrl": "https://www.ssga.com/us/en/individual/etfs/state-street-energy-select-sector-spdr-etf-xle",
+      "reviewedAt": "2026-11-05"
+    },
+    "81369Y605": {
+      "ticker": "XLF",
+      "sourceUrl": "https://www.ssga.com/us/en/individual/etfs/state-street-financial-select-sector-spdr-etf-xlf",
+      "reviewedAt": "2026-11-05"
+    },
+    "81369Y704": {
+      "ticker": "XLI",
+      "sourceUrl": "https://www.ssga.com/us/en/individual/etfs/state-street-industrial-select-sector-spdr-etf-xli",
+      "reviewedAt": "2026-11-05"
+    },
+    "81369Y803": {
+      "ticker": "XLK",
+      "sourceUrl": "https://www.ssga.com/us/en/intermediary/etfs/state-street-technology-select-sector-spdr-etf-xlk",
+      "reviewedAt": "2026-11-05"
+    },
+    "81369Y852": {
+      "ticker": "XLC",
+      "sourceUrl": "https://www.ssga.com/us/en/individual/etfs/state-street-communication-services-select-sector-spdr-etf-xlc",
+      "reviewedAt": "2026-11-05"
+    },
+    "81369Y860": {
+      "ticker": "XLRE",
+      "sourceUrl": "https://www.ssga.com/us/en/individual/etfs/state-street-real-estate-select-sector-spdr-etf-xlre",
+      "reviewedAt": "2026-11-05"
+    },
+    "81369Y100": {
+      "ticker": "XLB",
+      "sourceUrl": "https://www.ssga.com/us/en/institutional/etfs/state-street-materials-select-sector-spdr-etf-xlb",
+      "reviewedAt": "2026-11-05"
+    },
+    "81369Y886": {
+      "ticker": "XLU",
+      "sourceUrl": "https://www.ssga.com/us/en/intermediary/etfs/state-street-utilities-select-sector-spdr-etf-xlu",
+      "reviewedAt": "2026-11-05"
+    },
+    "G02602103": {
+      "ticker": "DOX",
+      "sourceUrl": "https://investors.amdocs.com/shareholder-services/investor-faqs?c=113915&p=irol-faq",
+      "reviewedAt": "2026-11-05"
+    },
+    "133131102": {
+      "ticker": "CPT",
+      "sourceUrl": "https://s28.q4cdn.com/425223795/files/doc_news/Camden-Property-Trust-Announces-Tax-Characteristics-of-2021-Distributions-2022.pdf",
+      "reviewedAt": "2026-11-05"
+    },
+    "133034108": {
+      "ticker": "CAC",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1023875/000102387526000007/primary_doc.xml",
+      "reviewedAt": "2026-11-05",
+      "symbolSourceUrl": "https://stockanalysis.com/stocks/cac/company/"
+    },
+    "40049J206": {
+      "ticker": "TV",
+      "sourceUrl": "https://infomemo.theocc.com/infomemos?number=54573",
+      "reviewedAt": "2026-11-05",
+      "lifecycleSourceUrl": "https://depositaryreceipts.citi.com/adr/notices/pgm_dispCA.aspx?cusip=40049J206&pageId=16&subpageID=112"
+    },
+    "479167108": {
+      "ticker": "JOUT",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1260729/000175272424127903/primary_doc.xml",
+      "reviewedAt": "2026-11-05"
+    },
+    "084670108": {
+      "ticker": "BRK.A",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/315090/000119312526304838/xslSCHEDULE_13D_X02/primary_doc.xml",
+      "reviewedAt": "2026-11-05",
+      "symbolSourceUrl": "https://investor.vcm.com/assets/victoryMF/allholdings-pdf/Victory_Growth_and_Income_Fund_Holdings.pdf"
+    },
+    "09259E108": {
+      "ticker": "TCPC",
+      "sourceUrl": "https://infomemo.theocc.com/infomemos?number=53529",
+      "reviewedAt": "2026-11-05",
+      "lifecycleSourceUrl": "https://www.sec.gov/Archives/edgar/data/1370755/000114036126037711/tcpc-20260922.htm"
+    },
+    "381430529": {
+      "ticker": "GBIL",
+      "sourceUrl": "https://am.gs.com/public-assets/documents/56252259-24d6-11ef-870d-e95c24dfdaeb",
+      "reviewedAt": "2026-11-05"
+    },
+    "64124P101": {
+      "ticker": "NBH",
+      "sourceUrl": "https://www.nb.com/handlers/documents.ashx?id=0ac5d4bc-a5a9-40bd-8ba0-8d61c692bc99&name=Neuberger_Berman_Municipal_Fund_Inc_Report_of_Organization_Action_Affecting_Basis_of_Security_Return_of_Capital_10_31_24.pdf",
+      "reviewedAt": "2026-11-05",
+      "lifecycleSourceUrl": "https://www.sec.gov/Archives/edgar/data/1178839/000089843226000446/nbh-ncsrs.htm"
+    },
+    "09290C780": {
+      "ticker": "BAI",
+      "sourceUrl": "https://www.nasdaqtrader.com/content/newsalerts/2024/infocircular/BAI_Circular.pdf",
+      "reviewedAt": "2026-11-05",
+      "lifecycleSourceUrl": "https://www.blackrock.com/us/individual/products/339081/fund"
+    },
+    "007903107": {
+      "ticker": "AMD",
+      "sourceUrl": "https://ir.amd.com/contacts-faq/faq",
+      "reviewedAt": "2026-11-05"
+    },
+    "594918104": {
+      "ticker": "MSFT",
+      "sourceUrl": "https://www.microsoft.com/en-us/investor/FAQ",
+      "reviewedAt": "2026-11-05"
+    },
+    "037833100": {
+      "ticker": "AAPL",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1976517/000114554925034556/primary_doc.xml",
+      "reviewedAt": "2026-11-05"
+    },
+    "67066G104": {
+      "ticker": "NVDA",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1919700/000119312526367809/primary_doc.xml",
+      "reviewedAt": "2026-11-05"
+    },
+    "674599105": {
+      "ticker": "OXY",
+      "sourceUrl": "https://www.oxy.com/siteassets/documents/investors/2019-IRS-Form-8937.pdf",
+      "reviewedAt": "2026-11-05"
+    },
+    "191216100": {
+      "ticker": "KO",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1135300/000089418926015509/primary_doc.xml",
+      "reviewedAt": "2026-11-05"
+    },
+    "060505104": {
+      "ticker": "BAC",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/45291/000004529126000011/primary_doc.xml",
+      "reviewedAt": "2026-11-05"
+    },
+    "02079K305": {
+      "ticker": "GOOGL",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1415726/000089418926028314/primary_doc.xml",
+      "reviewedAt": "2026-11-05"
+    },
+    "02079K107": {
+      "ticker": "GOOG",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1415726/000089418926028314/primary_doc.xml",
+      "reviewedAt": "2026-11-05"
+    },
+    "023135106": {
+      "ticker": "AMZN",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1350487/000094040026022919/primary_doc.xml",
+      "reviewedAt": "2026-11-05"
+    },
+    "025816109": {
+      "ticker": "AXP",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/796227/000119312526349363/primary_doc.xml",
+      "reviewedAt": "2026-11-05"
+    },
+    "166764100": {
+      "ticker": "CVX",
+      "sourceUrl": "https://www.chevron.com/-/media/chevron/investors/documents/form-8937-for-hess-acquisition.pdf",
+      "reviewedAt": "2026-11-05"
+    },
+    "57636Q104": {
+      "ticker": "MA",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/2031546/000119312526081036/primary_doc.xml",
+      "reviewedAt": "2026-11-05"
+    },
+    "92826C839": {
+      "ticker": "V",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1648403/000094040026038970/primary_doc.xml",
+      "reviewedAt": "2026-11-05"
+    },
+    "084670702": {
+      "ticker": "BRK.B",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1592900/000159290026004402/primary_doc.xml",
+      "reviewedAt": "2026-11-05"
+    },
+    "169656105": {
+      "ticker": "CMG",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/723455/000119312526299664/primary_doc.xml",
+      "reviewedAt": "2026-11-05"
+    },
+    "43300A203": {
+      "ticker": "HLT",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/745968/000074596826000164/primary_doc.xml",
+      "reviewedAt": "2026-11-05"
+    },
+    "654106103": {
+      "ticker": "NKE",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/891944/000119312526404859/primary_doc.xml",
+      "reviewedAt": "2026-11-05"
+    },
+    "69608A108": {
+      "ticker": "PLTR",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1810747/000094040026033628/primary_doc.xml",
+      "reviewedAt": "2026-11-05"
+    },
+    "G4474Y214": {
+      "ticker": "JHG",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1540305/000114554922060253/primary_doc.xml",
+      "reviewedAt": "2026-11-05"
+    },
+    "78462F103": {
+      "ticker": "SPY",
+      "sourceUrl": "https://www.ssga.com/library-content/products/factsheets/etfs/us/factsheet-us-en-spy.pdf?source=news_body_link",
+      "reviewedAt": "2026-11-05"
+    },
+    "464287200": {
+      "ticker": "IVV",
+      "sourceUrl": "https://www.ishares.com/us/products/239726/",
+      "reviewedAt": "2026-11-05"
+    },
+    "46090E103": {
+      "ticker": "QQQ",
+      "sourceUrl": "https://www.invesco.com/us/en/financial-products/etfs/invesco-qqq-trust-series-1.html",
+      "reviewedAt": "2026-11-05"
+    },
+    "464287655": {
+      "ticker": "IWM",
+      "sourceUrl": "https://www.ishares.com/us/products/239710/ishares-russell-2000-etf",
+      "reviewedAt": "2026-11-05"
+    },
+    "78463V107": {
+      "ticker": "GLD",
+      "sourceUrl": "https://www.spdrgoldshares.com/usa/gld/",
+      "reviewedAt": "2026-11-05"
+    },
+    "922908363": {
+      "ticker": "VOO",
+      "sourceUrl": "https://workplace.vanguard.com/assets/corp/fund_communications/pdf_publish/us-products/investment-profiles/0968.pdf",
+      "reviewedAt": "2026-11-05"
+    },
+    "464286772": {
+      "ticker": "EWY",
+      "sourceUrl": "https://www.ishares.com/us/products/239681/ishares-msci-south-korea-capped-etf",
+      "reviewedAt": "2026-11-05"
+    },
+    "464287234": {
+      "ticker": "EEM",
+      "sourceUrl": "https://www.ishares.com/us/literature/fact-sheet/eem-ishares-msci-emerging-markets-etf-fund-fact-sheet-en-us.pdf",
+      "reviewedAt": "2026-11-05"
+    },
+    "30303M102": {
+      "ticker": "META",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1976877/000119312526358401/primary_doc.xml",
+      "reviewedAt": "2026-11-05"
+    },
+    "88160R101": {
+      "ticker": "TSLA",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1683471/000119312526427556/primary_doc.xml",
+      "reviewedAt": "2026-11-05"
+    },
+    "46625H100": {
+      "ticker": "JPM",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1771146/000119312526398954/primary_doc.xml",
+      "reviewedAt": "2026-11-05"
+    },
+    "09290D101": {
+      "ticker": "BLK",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1919700/000119312526367801/primary_doc.xml",
+      "reviewedAt": "2026-11-05",
+      "lifecycleSourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/000087666124000908/ruleprovisionnotice.htm"
+    },
+    "874039100": {
+      "ticker": "TSM",
+      "sourceUrl": "https://depositaryreceipts.citi.com/adr/guides/pgm_d.aspx?cusip=874039100&pageId=15&subpageid=105",
+      "reviewedAt": "2026-11-05"
+    }
+  },
+  "inactive": {
+    "JHG": {
+      "status": "delisted",
+      "effectiveDate": "2026-06-30",
+      "reason": "Janus Henderson completed a take-private transaction; no current exchange quote is available.",
+      "sourceUrl": "https://www.janushenderson.com/corporate/press-releases/janus-henderson-completes-take-private-transaction-with-trian-general-catalyst-and-qia/"
+    }
+  },
+  "quarantinedCusips": {
+    "71531U102": {
+      "issuer": "Pershing Square Inc.",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1056513/000114036126033226/xslSCHEDULE_13G_X02/primary_doc.xml"
+    },
+    "55825T103": {
+      "issuer": "Madison Square Garden Sports Corp.",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1636519/000214700726000006/xslSCHEDULE_13G_X02/primary_doc.xml"
+    },
+    "558256103": {
+      "issuer": "Madison Square Garden Entertainment Corp.",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1952073/000031206926000219/xslSCHEDULE_13G_X02/primary_doc.xml"
+    },
+    "36468G103": {
+      "issuer": "GameSquare Holdings, Inc.",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1714562/000149315226025463/xslSCHEDULE_13D_X02/primary_doc.xml"
+    },
+    "69181V107": {
+      "issuer": "Oxford Square Capital Corp.",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/2069207/000206336426000060/xslForm13F_X02/Reliant.13F.2025Q4.xml"
+    },
+    "71531T105": {
+      "issuer": "Pershing Square USA, Ltd.",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/2002660/000079684826000003/xslSCHEDULE_13G_X02/primary_doc.xml"
+    },
+    "02005N100": {
+      "previousTicker": "ALLY",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "H1467J104": {
+      "previousTicker": "CB",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "01609W102": {
+      "previousTicker": "BABA",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "949746101": {
+      "previousTicker": "WFC",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "722304102": {
+      "previousTicker": "PDD",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "88034P109": {
+      "previousTicker": "TCEHY",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "11271J107": {
+      "previousTicker": "BN",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "90353T100": {
+      "previousTicker": "UBER",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "116794207": {
+      "previousTicker": "BRKR",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "406216101": {
+      "previousTicker": "HAL",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "550021109": {
+      "previousTicker": "LULU",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "60855R100": {
+      "previousTicker": "MOH",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "717081103": {
+      "previousTicker": "PFE",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "78442P106": {
+      "previousTicker": "SLM",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "020764106": {
+      "previousTicker": "AMR",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "H8817H100": {
+      "previousTicker": "RIG",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "93627C101": {
+      "previousTicker": "HCC",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "01609WBG6": {
+      "previousTicker": "BABA",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "18915MAF4": {
+      "previousTicker": "NET",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "23804LAD5": {
+      "previousTicker": "DDOG",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "25809KAB1": {
+      "previousTicker": "DASH",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "358039AB1": {
+      "previousTicker": "FRPT",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "N53745100": {
+      "previousTicker": "DELL",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "70932AAH6": {
+      "previousTicker": "PENN",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "81141R100": {
+      "previousTicker": "SE",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "81141RAG5": {
+      "previousTicker": "SE",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "833445AB5": {
+      "previousTicker": "SNOW",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "90353TAM2": {
+      "previousTicker": "UBER",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "90353TAS9": {
+      "previousTicker": "UBER",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "042068205": {
+      "previousTicker": "ARM",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "12510Q100": {
+      "previousTicker": "INTC",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "532457108": {
+      "previousTicker": "LLY",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "512807306": {
+      "previousTicker": "LRCX",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "G54950103": {
+      "previousTicker": "LIN",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "632307104": {
+      "previousTicker": "NTRA",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "697435105": {
+      "previousTicker": "PANW",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "883556102": {
+      "previousTicker": "TMO",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "002824100": {
+      "previousTicker": "ABT",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "00287Y109": {
+      "previousTicker": "ABBV",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "00724F101": {
+      "previousTicker": "ADBE",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "009066101": {
+      "previousTicker": "ABNB",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "031162100": {
+      "previousTicker": "AMGN",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "032654105": {
+      "previousTicker": "ADI",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "040413205": {
+      "previousTicker": "ANET",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "N07059210": {
+      "previousTicker": "ASML",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09857L108": {
+      "previousTicker": "BKNG",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "11135F101": {
+      "previousTicker": "AVGO",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "113004105": {
+      "previousTicker": "BN",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "116794108": {
+      "previousTicker": "BRKR",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "127387108": {
+      "previousTicker": "CDNS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "149123101": {
+      "previousTicker": "CAT",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "18915M107": {
+      "previousTicker": "NET",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "191098102": {
+      "previousTicker": "KO",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "22160K105": {
+      "previousTicker": "COST",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "G25457105": {
+      "previousTicker": "CRDO",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "22788C105": {
+      "previousTicker": "CRWD",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "24703L202": {
+      "previousTicker": "DELL",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "254687106": {
+      "previousTicker": "DIS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "25809K105": {
+      "previousTicker": "DASH",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "30231G102": {
+      "previousTicker": "XOM",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "358039105": {
+      "previousTicker": "FRPT",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "369604301": {
+      "previousTicker": "GE",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "458140100": {
+      "previousTicker": "INTC",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "46120E602": {
+      "previousTicker": "INTU",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "464288513": {
+      "previousTicker": "IEFA",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "464287242": {
+      "previousTicker": "AGG",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "478160104": {
+      "previousTicker": "JNJ",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "482480100": {
+      "previousTicker": "KLAC",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "573874104": {
+      "previousTicker": "MRVL",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "580135101": {
+      "previousTicker": "MCD",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "G5960L103": {
+      "previousTicker": "MDT",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "58733R102": {
+      "previousTicker": "MELI",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "595112103": {
+      "previousTicker": "MU",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "60937P106": {
+      "previousTicker": "MDB",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "68389X105": {
+      "previousTicker": "ORCL",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "707569109": {
+      "previousTicker": "PENN",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "713448108": {
+      "previousTicker": "PEP",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "742718109": {
+      "previousTicker": "PG",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "747525103": {
+      "previousTicker": "QCOM",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "771049103": {
+      "previousTicker": "RBLX",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "81762P102": {
+      "previousTicker": "NOW",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "833445109": {
+      "previousTicker": "SNOW",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "L8681T102": {
+      "previousTicker": "SPOT",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "790148100": {
+      "previousTicker": "JOE",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "863667101": {
+      "previousTicker": "SYK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "86800U302": {
+      "previousTicker": "SMCI",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "871607107": {
+      "previousTicker": "SNPS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "92343V104": {
+      "previousTicker": "VZ",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "931142103": {
+      "previousTicker": "WMT",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "G1151C101": {
+      "previousTicker": "ACN",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "038222105": {
+      "previousTicker": "AMAT",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "11285B108": {
+      "previousTicker": "BN",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "17275R102": {
+      "previousTicker": "CSCO",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "19260Q107": {
+      "previousTicker": "COIN",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "23804L103": {
+      "previousTicker": "DDOG",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "437076102": {
+      "previousTicker": "HD",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "461202103": {
+      "previousTicker": "INTU",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "64110L106": {
+      "previousTicker": "NFLX",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "882508104": {
+      "previousTicker": "TXN",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "02079K404": {
+      "previousTicker": "GOOGL",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "02079K602": {
+      "previousTicker": "GOOGL",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "88339J105": {
+      "previousTicker": "TTD",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "G51502105": {
+      "previousTicker": "JNJ",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "34959E109": {
+      "previousTicker": "FTNT",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38141G104": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "743315103": {
+      "previousTicker": "PGR",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "12662P108": {
+      "previousTicker": "CVI",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "451100101": {
+      "previousTicker": "IEP",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "285512109": {
+      "previousTicker": "EA",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "68634K106": {
+      "previousTicker": "ORLA",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "43849R105": {
+      "previousTicker": "HON",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "438516205": {
+      "previousTicker": "HON",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "68389X204": {
+      "previousTicker": "ORCL",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "86800U500": {
+      "previousTicker": "SMCI",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "558868105": {
+      "previousTicker": "MDGL",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "714266103": {
+      "previousTicker": "PPTA",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "03784Y200": {
+      "previousTicker": "AAPL",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09251A104": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09290C509": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09290C806": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09290C103": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "092528603": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09257P105": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09257A108": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09260K101": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "113006100": {
+      "previousTicker": "BN",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "11276H106": {
+      "previousTicker": "BN",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "G25839104": {
+      "previousTicker": "KO",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "191241108": {
+      "previousTicker": "KO",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38147U107": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "381430206": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "381430107": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "381430503": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "381430438": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38149W630": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "381430230": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38150K103": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "45826J105": {
+      "previousTicker": "INTC",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "46125A100": {
+      "previousTicker": "INTU",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "464285204": {
+      "previousTicker": "IAU",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "46428Q109": {
+      "previousTicker": "SLV",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "464287432": {
+      "previousTicker": "IWF",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "464287440": {
+      "previousTicker": "TLT",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "464287515": {
+      "previousTicker": "IJR",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "464287523": {
+      "previousTicker": "IJH",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "48133Q309": {
+      "previousTicker": "JPM",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "49845K101": {
+      "previousTicker": "KLAC",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "59540G107": {
+      "previousTicker": "PENN",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "G63755105": {
+      "previousTicker": "INTC",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "70805E109": {
+      "previousTicker": "PENN",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "70932M107": {
+      "previousTicker": "PENN",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "70931T103": {
+      "previousTicker": "PENN",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "78467X109": {
+      "previousTicker": "DIA",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "92838Y100": {
+      "previousTicker": "INTC",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "G17434104": {
+      "previousTicker": "BN",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38149W622": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "45817G201": {
+      "previousTicker": "INTC",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "69764K106": {
+      "previousTicker": "INTC",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "46438F101": {
+      "previousTicker": "IBIT",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "G5279N105": {
+      "previousTicker": "KLAC",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "577345101": {
+      "previousTicker": "AAPL",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "27030F202": {
+      "previousTicker": "PPTA",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09262G108": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09260U109": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09249E101": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "092524107": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09290C616": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09290C681": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09290C715": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09290C749": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09290C772": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09290C822": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09290C830": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09290C848": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "092528207": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "092528793": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "092528801": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "092528819": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "092528843": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "092528850": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "092528868": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "092528876": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "092528884": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "091941104": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09260E105": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09250W107": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09254J102": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09254L107": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09253N104": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09254E103": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09254F100": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09258G104": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09260Q108": {
+      "previousTicker": "BLK",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "G16252101": {
+      "previousTicker": "BN",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "G16258108": {
+      "previousTicker": "BN",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "G2659M104": {
+      "previousTicker": "INTC",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "381430164": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "381430180": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "381430396": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "381430404": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38149W101": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38149W127": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38149W382": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38149W416": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38149W457": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38149W465": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38149W473": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38149W549": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38149W556": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38149W572": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38149W580": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38149W598": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38149W614": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38149W739": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38149W770": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38149W812": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38149W820": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "38150W107": {
+      "previousTicker": "GS",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "G4804S119": {
+      "previousTicker": "INTC",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "64135A101": {
+      "previousTicker": "UBER",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "64135A804": {
+      "previousTicker": "UBER",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "64135A853": {
+      "previousTicker": "UBER",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "64135A887": {
+      "previousTicker": "UBER",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "64133Q108": {
+      "previousTicker": "UBER",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "64190A103": {
+      "previousTicker": "UBER",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "70806A106": {
+      "previousTicker": "PENN",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "708062104": {
+      "previousTicker": "PENN",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "72303K405": {
+      "previousTicker": "AAPL",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "G22845104": {
+      "previousTicker": "INTC",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "833445AD1": {
+      "previousTicker": "SNOW",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "30233Q108": {
+      "previousTicker": "XOM",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "736508847": {
+      "previousTicker": "GE",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "907818108": {
+      "previousTicker": "UNP",
+      "reason": "Legacy mapping has no reviewed security-identity evidence; do not attach an issuer-level or raw-ticker quote."
+    },
+    "09247X101": {
+      "previousTicker": "BLK",
+      "reason": "Old BlackRock common stock ceased trading on 2024-10-02 and converted 1:1 into 09290D101; historical shares require conversion review, not a timeless live-quote alias.",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/000087666124000908/ruleprovisionnotice.htm"
+    }
+  },
+  "nonEquityCusips": {
+    "852234AK9": {
+      "type": "debt",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1583672/000158367226000003/xslForm13F_X02/13fJun2026.xml"
+    }
+  },
+  "aliasSources": {
+    "SQ": "https://investors.block.xyz/investor-news/news-details/2025/Block-Announces-Ticker-Symbol-Change-to-XYZ-To-Report-Fourth-Quarter-Results/default.aspx",
+    "BRK-A": "https://investor.vcm.com/assets/victoryMF/allholdings-pdf/Victory_Growth_and_Income_Fund_Holdings.pdf",
+    "BRK-B": "https://investor.vcm.com/assets/victoryMF/allholdings-pdf/Victory_Growth_and_Income_Fund_Holdings.pdf"
+  }
+}

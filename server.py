@@ -14,6 +14,7 @@ import time
 from urllib.parse import parse_qs, quote, urlsplit
 
 import requests
+from market_symbols import canonical_symbol, quote_eligible
 
 if sys.platform == "win32":
     try:
@@ -143,6 +144,9 @@ def _finite_number(value):
 
 def _fetch_price(ticker):
     """Return an observed quote, keeping missing change/time explicitly unknown."""
+    ticker = canonical_symbol(ticker)
+    if not quote_eligible(ticker):
+        return ticker, None
     try:
         clean_ticker = ticker if ("=" in ticker or ticker.startswith("^") or ticker.endswith(".NYB")) else ticker.replace(".", "-")
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{quote(clean_ticker, safe='')}?interval=1d&range=1d"
@@ -268,6 +272,7 @@ class Alpha13FHandler(SimpleHTTPRequestHandler):
             if len(ticker_params) != 1 or len(tickers) > 50 or any(not TICKER_PATTERN.fullmatch(t) for t in tickers):
                 self._json(400, {"status": "invalid_tickers", "message": "최대 50개의 올바른 티커를 입력하세요."})
                 return
+            tickers = list(dict.fromkeys(canonical_symbol(t) for t in tickers if quote_eligible(t)))
             results = {}
             if tickers:
                 with ThreadPoolExecutor(max_workers=10) as executor:
@@ -296,3 +301,4 @@ def run_server():
 
 if __name__ == "__main__":
     run_server()
+

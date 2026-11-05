@@ -160,7 +160,7 @@
       <div class="sidebar-footer">
         <div class="sync-status">
           <span class="status-dot"></span>
-          <span>SEC 13F 공식 공시 실시간 연동</span>
+          <span>SEC 13F 공식 공시 데이터</span>
         </div>
       </div>
     </aside>
@@ -190,15 +190,15 @@
         <div class="dday-banner-inner">
           <div class="dday-badge-col">
             <span class="dday-pulse-dot"></span>
-            <span class="dday-badge" id="ddayBadge">D-11</span>
+            <span class="dday-badge" id="ddayBadge">확인 중</span>
           </div>
           <div class="dday-text-col">
             <div class="dday-title-wrap">
-              <strong class="dday-headline">2026 Q3 SEC 13F 공시 시즌 카운트다운</strong>
-              <span class="dday-timer-chip" id="ddayTimerChip">11일 01시간 44분 남음</span>
+              <strong class="dday-headline" id="ddayHeadline">SEC 13F 제출 일정</strong>
+              <span class="dday-timer-chip" id="ddayTimerChip">일정 계산 중</span>
             </div>
             <p class="dday-subtext">
-              미 SEC 규정에 따라 3분기(9.30) 포트폴리오는 <strong>11월 14일(미 동부시간)</strong>까지 전원 공시됩니다. 워렌 버핏 등 월가 100대 운용사의 최신 3분기 공식 포트폴리오가 제출 즉시 실시간 자동 수집·반영됩니다.
+              <span id="ddayDeadline">분기말 이후 45일, 주말·공휴일은 다음 영업일로 조정합니다.</span> 공시는 수집 완료 후 반영되며, 기밀 취급·지연 제출 등으로 공개 시점이 다를 수 있습니다. <a href="https://www.sec.gov/rules-regulations/staff-guidance/frequently-asked-questions-about-form-13f" target="_blank" rel="noopener noreferrer">SEC 제출 규정</a>
             </p>
           </div>
           <button type="button" class="btn-dday-close" id="btnDdayClose" aria-label="배너 닫기" title="배너 닫기">&times;</button>
@@ -261,7 +261,7 @@
 
           <div class="metric-card">
             <div class="metric-header">
-              <span class="metric-title">최대 집중 매수 종목</span>
+              <span class="metric-title">주요 보유 / 신규·확대 종목</span>
             </div>
             <div class="metric-value" id="metricTopBuy">-</div>
             <div class="metric-sub" id="metricTopBuySub">-</div>
@@ -285,18 +285,19 @@
         </section>
 
         <!-- 🏆 월가 큰손 집중 매수 (Smart Money Consensus) TOP 5 하이라이트 위젯 -->
+        <p class="card-sub data-quality-note">최근 시세는 관측시각·통화가 확인된 24시간 이내 자료만 표시합니다. 공시 평가단가는 매입단가가 아니며, 주식분할 등 자본변동 조정이 검증되지 않아 분기말 대비 등락률과 하락 종목 추천을 보류합니다.</p>
         <section class="consensus-widget-section" id="consensusWidgetSection">
           <div class="consensus-widget-header">
             <div class="consensus-title-wrap">
               <div class="consensus-title-row">
-                <span class="badge consensus-badge">🔥 SMART MONEY</span>
-                <h3 id="consensusWidgetTitle">월가 큰손 집중 매수 합의 종목 (Consensus) TOP 5</h3>
+                <span class="badge consensus-badge">INSTITUTIONAL HOLDINGS</span>
+                <h3 id="consensusWidgetTitle">운용사 공통 보유 종목 TOP 5</h3>
               </div>
-              <p class="consensus-subtext">미국 100대 메이저 운용사들이 이번 분기 가장 집중적으로 신규 매수하거나 비중을 확대한 핵심 합의 종목입니다.</p>
+              <p class="consensus-subtext">수집된 13F 공시의 보유 기관수 또는 합산 평가액 순위입니다. 공동 매수나 이번 분기 매수 확대를 의미하지 않으며, 운용사별 보유 기준일이 다를 수 있습니다.</p>
             </div>
             <div class="consensus-toggle-tabs" id="consensusToggleTabs">
-              <button type="button" class="consensus-tab-btn active" data-type="HOLDERS">🥇 최다 기관 합의 (Holders TOP 5)</button>
-              <button type="button" class="consensus-tab-btn" data-type="VALUE">🥈 최대 자금 집중 (Value TOP 5)</button>
+              <button type="button" class="consensus-tab-btn active" data-type="HOLDERS">최다 기관 보유 (Holders TOP 5)</button>
+              <button type="button" class="consensus-tab-btn" data-type="VALUE">최대 합산 평가액 (Value TOP 5)</button>
             </div>
           </div>
           <div class="consensus-cards-grid" id="consensusCardsGrid">
@@ -396,7 +397,7 @@
                   <th class="col-weight sortable text-right" data-sort="weight">통합 비중 (%)</th>
                   <th class="col-estPrice sortable text-right" data-sort="estPrice" title="공시 평가액 ÷ 보유 주식 수 (실제 매입가 아님)">공시 평가단가</th>
                   <th class="col-curPrice sortable text-right" data-sort="curPrice">최근 조회 시세</th>
-                  <th class="col-discount sortable text-right" data-sort="discount" title="공시 평가단가 대비 현재 실시간 주가의 등락률">분기말 대비</th>
+                  <th class="col-discount sortable text-right" data-sort="discount" title="주식분할 등 자본변동을 검증하기 전까지 비교를 보류합니다">분기말 대비</th>
                 </tr>
               </thead>
               <tbody id="tableBody">
@@ -727,7 +728,7 @@
         </div>
         <div class="modal-price-box">
           <div class="modal-cur-price" id="modalCurPrice">$225.40</div>
-          <div class="modal-discount-tag" id="modalDiscountTag">-5.2% 할인</div>
+          <div class="modal-discount-tag" id="modalDiscountTag">비교 보류</div>
         </div>
       </div>
 
@@ -933,7 +934,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="app.js?v=98"></script>
+  <script src="app.js?v=99"></script>
 </body>
 </html>
+
 

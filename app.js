@@ -7,6 +7,8 @@
 let GURU_DATABASE = {};
 let RAW_HOLDINGS = [];
 let LIVE_PRICES = {};
+let ACTIVE_STOCK_ITEM = null;
+let ACTIVE_STOCK_GURU_KEY = null;
 
 // Firebase 설정 & 클라우드 동기화 엔진
 const firebaseConfig = {
@@ -190,59 +192,8 @@ function toggleFavorite(guruKey) {
 }
 
 // 주요 120대 미국 기업 및 ETF 공식 티커 전수 매핑 사전
-const TICKER_MAP = {
-  "78462F103": "SPY", "46090E103": "QQQ", "464287200": "IVV", "464287655": "IWM",
-  "78463V107": "GLD", "464287432": "IWF", "464288513": "IEFA", "78467X109": "DIA",
-  "464286772": "EEM", "81369Y605": "XLE", "81369Y506": "XLF", "81369Y704": "XLK",
-  "81369Y803": "XLY", "81369Y407": "XLV", "46428Q109": "SLV", "46438F101": "IBIT",
-  "464287515": "IJR", "464287523": "IJH", "464286400": "IEFA", "464287234": "EFA",
-  "464287242": "AGG", "084670702": "BRK-B", "595112103": "MU", "30303M102": "META",
-  "88160R101": "TSLA", "007903107": "AMD", "874039100": "TSM", "369604301": "GE",
-  "92826C839": "V", "615369105": "MCO", "11135F101": "AVGO", "458140100": "INTC",
-  "H1467J104": "CB", "58733R102": "MELI", "512807306": "LRCX", "81141R100": "SE",
-  "03831W108": "APP", "038222105": "AMAT", "L8681T102": "SPOT", "36828A101": "GEV",
-  "64110L106": "NFLX", "18915M107": "NET", "500754106": "KHC", "958102105": "WDC",
-  "G7997R103": "STX", "G6683N103": "NU", "532457108": "LLY", "38141G104": "GS",
-  "82509L107": "SHOP", "46625H100": "JPM", "N07059210": "ASML", "78409V104": "SPGI",
-  "86800U104": "SMCI",
-  "SPDR S&P 500": "SPY", "STATE STR SPDR S&P": "SPY", "STATE STR SPDR": "SPY",
-  "STATE STREET CORP": "STT", "STATE STREET": "STT", "INVESCO QQQ": "QQQ",
-  "ISHARES CORE S&P": "IVV", "ISHARES TR": "IVV", "ISHARES INC": "EEM",
-  "ISHARES RUSSELL": "IWM", "VANGUARD S&P 500": "VOO", "VANGUARD TOTAL": "VTI",
-  "APPLE": "AAPL", "NVIDIA": "NVDA", "ALPHABET": "GOOGL", "GOOGLE": "GOOGL",
-  "AMERICAN EXPRESS": "AXP", "AMAZON": "AMZN", "COCA COLA": "KO", "MICROSOFT": "MSFT",
-  "META PLATFORMS": "META", "BANK OF AMER": "BAC", "BANK OF AMERICA": "BAC",
-  "TESLA": "TSLA", "MICRON TECHNOLOGY": "MU", "ADVANCED MICRO DEVICES": "AMD",
-  "TAIWAN SEMICONDUCTOR": "TSM", "TSMC": "TSM", "GE AEROSPACE": "GE",
-  "GENERAL ELECTRIC": "GE", "VISA": "V", "MOODYS": "MCO", "CHEVRON": "CVX",
-  "BROADCOM": "AVGO", "OCCIDENTAL PETE": "OXY", "OCCIDENTAL PETROLEUM": "OXY",
-  "INTEL": "INTC", "CHUBB": "CB", "MERCADOLIBRE": "MELI", "LAM RESEARCH": "LRCX",
-  "SEA LTD": "SE", "APPLOVIN": "APP", "APPLIED MATLS": "AMAT", "APPLIED MATERIALS": "AMAT",
-  "SPOTIFY TECHNOLOGY": "SPOT", "SPOTIFY": "SPOT", "GE VERNOVA": "GEV",
-  "NETFLIX": "NFLX", "CLOUDFLARE": "NET", "KRAFT HEINZ": "KHC", "WESTERN DIGITAL": "WDC",
-  "SPDR GOLD": "GLD", "SEAGATE TECHNOLOGY": "STX", "NU HOLDINGS": "NU",
-  "ELI LILLY": "LLY", "GOLDMAN SACHS": "GS", "SHOPIFY": "SHOP", "JPMORGAN CHASE": "JPM",
-  "BERKSHIRE HATHAWAY": "BRK-B", "ASML HLDG": "ASML", "ASML": "ASML",
-  "S&P GLOBAL": "SPGI", "SUPER MICRO COMPUTER": "SMCI", "SUPER MICRO": "SMCI",
-  "CALLAWAY GOLF": "MODG", "TOPGOLF CALLAWAY": "MODG", "COSTCO WHOLESALE": "COST",
-  "COSTCO": "COST", "SALESFORCE": "CRM", "ADOBE": "ADBE", "ORACLE": "ORCL",
-  "QUALCOMM": "QCOM", "CISCO SYSTEMS": "CSCO", "TEXAS INSTRUMENTS": "TXN",
-  "WALT DISNEY": "DIS", "DISNEY": "DIS", "WALMART": "WMT", "PROCTER & GAMBLE": "PG",
-  "JOHNSON & JOHNSON": "JNJ", "UNITEDHEALTH": "UNH", "MASTERCARD": "MA",
-  "EXXON MOBIL": "XOM", "NOVO NORDISK": "NVO", "WELLS FARGO": "WFC", "PEPSICO": "PEP",
-  "UBER TECHNOLOGIES": "UBER", "UBER": "UBER", "PALANTIR TECHNOLOGIES": "PLTR",
-  "PALANTIR": "PLTR", "SNOWFLAKE": "SNOW", "SERVICENOW": "NOW", "INTUIT": "INTU",
-  "INTUITIVE SURGICAL": "ISRG", "BOOKING HOLDINGS": "BKNG", "AIRBNB": "ABNB",
-  "CROWDSTRIKE": "CRWD", "PALO ALTO NETWORKS": "PANW", "ARISTA NETWORKS": "ANET",
-  "MARVELL TECHNOLOGY": "MRVL", "SYNOPSYS": "SNPS", "CADENCE DESIGN": "CDNS",
-  "ANALOG DEVICES": "ADI", "KLA CORP": "KLAC", "MICROCHIP TECHNOLOGY": "MCHP",
-  "ON SEMICONDUCTOR": "ON", "MONOLITHIC POWER": "MPWR", "COSTAR GROUP": "CSGP",
-  "VERISIGN": "VRSN", "CHARTER COMMUNICATIONS": "CHTR", "COMCAST": "CMCSA",
-  "PAYPAL HOLDINGS": "PYPL", "PAYPAL": "PYPL", "BLOCK INC": "SQ", "SQUARE": "SQ",
-  "ROBLOX": "RBLX", "COINBASE GLOBAL": "COIN", "COINBASE": "COIN",
-  "ROBINHOOD MARKETS": "HOOD", "ROBINHOOD": "HOOD", "DRAFTKINGS": "DKNG",
-  "DUOLINGO": "DUOL", "DOORDASH": "DASH"
-};
+// Compatibility copy for loading older deployments; never used as identity evidence.
+const TICKER_MAP = {};
 
 // 120대 주요 종목 공식 GICS 섹터 매핑 사전 (기능 3)
 const SECTOR_MAP = {
@@ -270,9 +221,9 @@ const SECTOR_MAP = {
   // 금융 (Financials)
   "JPM": "Financials", "BAC": "Financials", "WFC": "Financials", "GS": "Financials",
   "AXP": "Financials", "V": "Financials", "MA": "Financials", "SPGI": "Financials",
-  "MCO": "Financials", "CB": "Financials", "PYPL": "Financials", "SQ": "Financials",
+  "MCO": "Financials", "CB": "Financials", "PYPL": "Financials", "XYZ": "Financials",
   "COIN": "Financials", "HOOD": "Financials", "NU": "Financials", "STT": "Financials",
-  "BRK-B": "Financials",
+  "BRK.A": "Financials", "BRK.B": "Financials",
   // 헬스케어 (Healthcare)
   "LLY": "Healthcare", "JNJ": "Healthcare", "UNH": "Healthcare", "NVO": "Healthcare",
   "ISRG": "Healthcare",
@@ -304,23 +255,98 @@ const SECTOR_COLORS = {
 };
 
 function getMappedSector(ticker, defaultSector) {
-  if (SECTOR_MAP[ticker]) return SECTOR_MAP[ticker];
+  const symbol = canonicalTicker(ticker);
+  if (SECTOR_MAP[symbol]) return SECTOR_MAP[symbol];
   if (defaultSector && defaultSector !== "Other" && defaultSector !== "General") return defaultSector;
-  return "Technology";
+  return "Other";
 }
 
 const TICKER_LOOKUP_CACHE = {};
+let MARKET_SYMBOLS = null;
 
-function getMappedTicker(name, rawTicker, cusip) {
+function canonicalTicker(ticker) {
+  const symbol = String(ticker || '').toUpperCase().trim();
+  return (MARKET_SYMBOLS && MARKET_SYMBOLS.aliases[symbol]) || symbol;
+}
+
+function quoteStatus(info, now = Date.now()) {
+  if (!info || !hasPrice(info.price)) return 'unavailable';
+  if (!Number.isFinite(info.marketTime) || info.marketTime <= 0) return 'undated';
+  const age = now / 1000 - info.marketTime;
+  if (age < -300) return 'invalid-time';
+  // Match the API/collector's conservative 24-hour window. No assumed market calendar.
+  if (info.stale === true || age > 24 * 3600) return 'stale';
+  return 'fresh';
+}
+
+function quoteFields(ticker, info) {
+  const symbol = canonicalTicker(ticker);
+  const inactive = MARKET_SYMBOLS && MARKET_SYMBOLS.inactive[symbol];
+  const status = quoteStatus(info);
+  const available = MARKET_SYMBOLS && !inactive && !/^(CUSIP:|UNMAPPED:)/.test(symbol) && status === 'fresh' && info.currency === 'USD';
+  let asOf = available ? quoteFreshness(info) : '유효한 최근 시세 없음';
+  if (inactive) {
+    asOf = `상장폐지 (${inactive.effectiveDate}) · 현재 시세 없음`;
+  } else if (!MARKET_SYMBOLS) {
+    asOf = '거래 상태 확인 불가 · 현재 시세 없음';
+  } else if (status === 'fresh' && info.currency !== 'USD') {
+    asOf = 'USD 시세 확인 불가 · 현재 시세 없음';
+  }
+  if (!available && info && hasPrice(info.price)) {
+    const observed = info.currency === 'USD' ? priceLabel(info.price) : `${info.price.toFixed(2)} ${info.currency || '통화 미확인'}`;
+    asOf += ` · 마지막 관측 ${observed} · ${quoteFreshness(info)}`;
+  }
+  return {
+    curPrice: available ? info.price : null,
+    priceChangePct: available && Number.isFinite(info.changePct) ? info.changePct : null,
+    quoteAsOf: asOf,
+    quoteMarketTime: info && info.marketTime,
+    quoteCurrency: info && info.currency,
+    quoteStatus: available ? 'fresh' : status === 'fresh' ? 'unavailable' : status
+  };
+}
+
+function mergeObservedPrices(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return;
+  for (const [rawSymbol, info] of Object.entries(data)) {
+    const symbol = canonicalTicker(rawSymbol);
+    // Do not revive an obsolete alias cache as the current security's quote.
+    if (symbol !== rawSymbol || !info || !hasPrice(info.price)) continue;
+    const previous = LIVE_PRICES[symbol];
+    const observed = info.marketTime;
+    const previousTime = previous && previous.marketTime;
+    const validTime = Number.isFinite(observed) && observed > 0 && observed <= Date.now() / 1000 + 300;
+    if (Number.isFinite(previousTime) && previousTime > 0 && previousTime <= Date.now() / 1000 + 300) {
+      if (!validTime || observed < previousTime) continue;
+      // Same observation time with conflicting values is not a newer observation.
+      if (observed === previousTime && (info.price !== previous.price || info.currency !== previous.currency)) continue;
+    } else if (Number.isFinite(observed) && !validTime) {
+      continue;
+    }
+    LIVE_PRICES[symbol] = info;
+  }
+}
+
+function getMappedTicker(name, rawTicker, cusip, shareType = 'SH', putCall = null) {
   const id = String(cusip || '').toUpperCase().trim();
-  const ticker = String(rawTicker || '').toUpperCase().trim();
-  const company = String(name || '').toUpperCase().trim();
-  // Never invent a tradable symbol from a company-name prefix.
-  if (id && TICKER_MAP[id]) return TICKER_MAP[id];
-  if (ticker && TICKER_MAP[ticker]) return TICKER_MAP[ticker];
-  if (/^[A-Z]{1,5}(?:[.-][A-Z])?$/.test(ticker)) return ticker;
-  if (company && TICKER_MAP[company]) return TICKER_MAP[company];
-  return id ? `CUSIP:${id}` : `UNMAPPED:${company || ticker || 'UNKNOWN'}`;
+  const company = String(name || '').trim();
+  const unresolved = id ? `CUSIP:${id}` : `UNMAPPED:${company || rawTicker || 'UNKNOWN'}`;
+  // Neither issuer names, inherited tickers nor the old map establish identity.
+  // Missing metadata, unreviewed CUSIPs and non-equity instruments fail closed.
+  if (!id || !MARKET_SYMBOLS || String(shareType || 'SH').toUpperCase() !== 'SH' || putCall) return unresolved;
+  if (MARKET_SYMBOLS.nonEquityCusips[id] || MARKET_SYMBOLS.quarantinedCusips[id]) return unresolved;
+  const reviewed = MARKET_SYMBOLS.reviewedCusips[id];
+  if (!reviewed || !reviewed.sourceUrl || reviewed.quoteEligible === false) return unresolved;
+  const ticker = canonicalTicker(reviewed.ticker);
+  return /^[A-Z]{1,5}(?:[.-][A-Z])?$/.test(ticker) ? ticker : unresolved;
+}
+
+function holdingIdentity(item, fallback = '') {
+  const cusip = String(item.cusip || '').toUpperCase().trim();
+  const shareType = String(item.shareType || 'SH').toUpperCase().trim();
+  const option = String(item.putCall || item.optionType || '').toUpperCase().trim();
+  // A symbol identifies a quote, not a security. Never coalesce absent identities.
+  return cusip ? `CUSIP:${cusip}|${shareType}|${option || 'EQUITY'}` : item.securityId || `UNIDENTIFIED:${fallback}`;
 }
 
 function portfolioFreshness(guru) {
@@ -335,10 +361,22 @@ function portfolioFreshness(guru) {
 
 function hasPrice(value) { return Number.isFinite(value) && value > 0; }
 function priceLabel(value) { return hasPrice(value) ? `$${value.toFixed(2)}` : '시세 없음'; }
-function priceDifference(item) {
-  return hasPrice(item.curPrice) && hasPrice(item.estPrice)
-    ? ((item.curPrice - item.estPrice) / item.estPrice) * 100 : NaN;
+function priceComparisonReason(item) {
+  if (item.isOption || item.action === 'PUT' || item.action === 'CALL') return '옵션 파생상품 · 비교 제외';
+  if (!hasPrice(item.curPrice) || item.quoteStatus !== 'fresh' || quoteStatus({ price: item.curPrice, marketTime: item.quoteMarketTime }) !== 'fresh') return '유효한 최근 시세 없음 · 비교 불가';
+  if (item.quoteCurrency !== 'USD') return '통화 확인 불가 · 비교 보류';
+  if (!hasPrice(item.estPrice)) return '공시 평가단가 없음 · 비교 불가';
+  if (item.periodRange && item.periodRange[0] !== item.periodRange[1]) return '서로 다른 분기 합산 · 비교 보류';
+  // Raw SEC value/shares is not a split-adjusted quote. The current pipeline has
+  // no verified corporate-action history, so do not turn a split into a discount.
+  return '주식분할 등 자본변동 조정 미확인 · 비교 보류';
 }
+function priceDifference(item) {
+  // Intentionally withheld until a sourced corporate-action adjustment pipeline
+  // can prove that the filing value and quote use the same per-share basis.
+  return NaN;
+}
+
 function normalizeMacroData(data) {
   if (data && data.schemaVersion === 2) return data;
   return { schemaVersion: 2, status: 'unavailable', legacyRejected: true,
@@ -353,11 +391,14 @@ function macroFreshness(data) {
   return `${statuses[data.status] || '수집 상태 미확인'}${stale ? ' · 오래된 관측값 포함' : ''}${dates.length ? ` · 관측일 ${dates[0]} ~ ${dates[dates.length - 1]}` : ' · 관측일 미확인'}`;
 }
 function quoteFreshness(info) {
-  if (!info || !Number.isFinite(info.marketTime)) return '시세 관측시각 미확인';
+  if (!info || !Number.isFinite(info.marketTime) || info.marketTime <= 0) return '시세 관측시각 미확인';
   const time = new Date(info.marketTime * 1000);
   if (!Number.isFinite(time.getTime())) return '시세 관측시각 미확인';
-  return `${Date.now() - time.getTime() > 36 * 3600000 ? '과거 시세 · ' : ''}${time.toISOString().replace('T', ' ').slice(0, 16)} UTC`;
+  const age = Date.now() / 1000 - info.marketTime;
+  const prefix = age < -300 ? '미래 관측시각 오류 · ' : info.stale === true || age > 24 * 3600 ? '과거 시세 · ' : '';
+  return `${prefix}${time.toISOString().replace('T', ' ').slice(0, 16)} UTC`;
 }
+
 function insiderCode(item) {
   return String(item.txTypeCode || item.transactionCode || item.transactionType || '').toUpperCase();
 }
@@ -385,15 +426,18 @@ function formatMoney(val) {
   }
 }
 
-function isDerivativeOrOption(name, ticker, titleOfClass) {
-  const checkStr = `${name || ''} ${ticker || ''} ${titleOfClass || ''}`.toUpperCase();
-  // 보통주 회사명 예외 처리 (Option Care Health 등)
-  if (checkStr.includes("OPTION CARE HEALTH")) return false;
-
-  if (checkStr.includes(" CALL") || checkStr.includes(" PUT") || checkStr.endsWith("CALL") || checkStr.endsWith("PUT")) return true;
-  if (checkStr.includes("/CALL") || checkStr.includes("/PUT") || checkStr.includes("-CALL") || checkStr.includes("-PUT")) return true;
-  if (checkStr.includes("WARRANT") || checkStr.includes(" WTS") || checkStr.includes("PRN") || checkStr.includes("NOTE") || checkStr.includes("BOND") || checkStr.includes("DEBENTURE")) return true;
-  return false;
+function isDerivativeOrOption(name, ticker, titleOfClass, holding = {}) {
+  // Instrument fields, not issuer wording: a bond ETF or Option Care Health
+  // still represents equity shares and must not silently disappear from AUM.
+  if (holding.isOption || holding.putCall || holding.optionType) return true;
+  const shareType = String(holding.shareType || '').toUpperCase().trim();
+  if (shareType && shareType !== 'SH') return true;
+  const securityClass = String(holding.securityClass || titleOfClass || '').toUpperCase();
+  const rawTicker = String(ticker || '').toUpperCase();
+  if (/(?:[ /-]|^)(PUT|CALL)$/.test(rawTicker)) return true;
+  if (/\b(?:PUT|CALL|WARRANT|WARRANTS|WTS)\b/.test(securityClass)) return true;
+  if (/\b(?:ETF|FUND|TRUST)\b/.test(securityClass)) return false;
+  return /\b(?:PRN|NOTE|NOTES|BOND|BONDS|DEBENTURE)\b/.test(securityClass);
 }
 
 const state = {
@@ -440,11 +484,26 @@ async function refreshMacroSnapshot(requestId) {
   await loadAndRenderMacro();
 }
 
+async function refreshMarketSymbols(requestId) {
+  const res = await fetch("market_symbols.json?_t=" + Date.now()).catch(() => null);
+  if (!res || !res.ok) return false;
+  const symbols = await res.json().catch(() => null);
+  if (requestId !== priceRequestId) return false;
+  if (!symbols || !symbols.aliases || !symbols.inactive || !symbols.nonEquityCusips || !symbols.reviewedCusips || !symbols.quarantinedCusips) return false;
+  MARKET_SYMBOLS = symbols;
+  return true;
+}
+
 async function fetchLivePricesForCurrentView() {
   const requestId = ++priceRequestId;
+  // Age retained quotes before any network wait, including a hung upstream.
+  refreshVisibleQuotes();
+  if (!MARKET_SYMBOLS) {
+    if (await refreshMarketSymbols(requestId)) processAndRenderHoldingsData(true);
+    if (requestId !== priceRequestId) return;
+  }
   const guruKey = state.currentGuruKey;
   const guru = GURU_DATABASE[guruKey];
-  const isCurrent = () => requestId === priceRequestId && guruKey === state.currentGuruKey && state.currentFilingType === "13F";
   const stockTickers = (guru && guru.holdings) 
     ? guru.holdings.slice(0, 30).map(h => h.baseTicker || h.ticker).filter(t => t && t.length <= 5 && !t.includes(" ")).join(",")
     : "";
@@ -457,26 +516,7 @@ async function fetchLivePricesForCurrentView() {
     if (res && res.ok) {
       const data = await res.json();
       if (requestId !== priceRequestId) return;
-      let updated = false;
-      Object.keys(data).forEach(t => {
-        if (data[t] && hasPrice(data[t].price)) {
-          LIVE_PRICES[t] = data[t];
-          updated = true;
-        }
-      });
-
-      // 1. 주식 포트폴리오 업데이트
-      if (updated && isCurrent() && guru && guru.holdings) {
-        applyLivePricesToHoldings(guru.holdings);
-        updateSummaryMetrics(guru);
-        renderTable();
-        if (typeof renderTreemap === "function") {
-          renderTreemap(guru.holdings);
-        }
-      }
-
-      // Macro observations retain their independently collected source/as-of metadata.
-
+      mergeObservedPrices(data);
     } else {
       // GitHub Pages 등 정적 호스팅(No-Backend) 환경 Fallback: 1분 주기로 최신 realtime_prices.json 및 latest_macro_indicators.json 폴링
       const priceRes = await fetch("realtime_prices.json?_t=" + Date.now()).catch(() => null);
@@ -484,41 +524,72 @@ async function fetchLivePricesForCurrentView() {
       if (priceRes && priceRes.ok) {
         const pData = await priceRes.json().catch(() => null);
         if (pData && requestId === priceRequestId) {
-          Object.assign(LIVE_PRICES, pData);
-          if (isCurrent() && guru && guru.holdings) {
-            applyLivePricesToHoldings(guru.holdings);
-            updateSummaryMetrics(guru);
-            renderTable();
-            if (typeof renderTreemap === "function") renderTreemap(guru.holdings);
-          }
+          mergeObservedPrices(pData);
         }
       }
 
     }
     await refreshMacroSnapshot(requestId);
-  } catch (e) {}
+  } catch (e) {
+    console.warn('Quote refresh unavailable; retained observations will age normally.', e);
+  } finally {
+    if (requestId === priceRequestId && guruKey === state.currentGuruKey) refreshVisibleQuotes();
+  }
+}
+
+function refreshVisibleQuotes() {
+  Object.values(GURU_DATABASE).forEach(g => applyLivePricesToHoldings(g.holdings));
+  const guru = GURU_DATABASE[state.currentGuruKey];
+  if (state.currentFilingType === '13F' && guru) {
+    updateSummaryMetrics(guru);
+    renderTable(true);
+    if (typeof renderTreemap === 'function') renderTreemap(guru.holdings);
+  }
+  if (typeof renderConsensusWidget === 'function') renderConsensusWidget();
+  if (typeof ACTIVE_STOCK_ITEM !== 'undefined' && ACTIVE_STOCK_ITEM) {
+    const modal = document.getElementById('stockModal');
+    if (modal && modal.classList.contains('show')) {
+      const identity = holdingIdentity(ACTIVE_STOCK_ITEM);
+      const sourceGuru = typeof ACTIVE_STOCK_GURU_KEY !== 'undefined' && ACTIVE_STOCK_GURU_KEY ? GURU_DATABASE[ACTIVE_STOCK_GURU_KEY] : guru;
+      const refreshedItem = (sourceGuru && sourceGuru.holdings || []).find(h => holdingIdentity(h) === identity);
+      if (refreshedItem && refreshedItem !== ACTIVE_STOCK_ITEM && ACTIVE_STOCK_ITEM.cusip) {
+        // Metadata recovery can replace an unresolved holding with its verified
+        // identity. Rebuild the open modal, including links and the holders list.
+        ACTIVE_STOCK_ITEM = refreshedItem;
+        openStockModal(refreshedItem);
+      } else {
+        applyLivePricesToHoldings([ACTIVE_STOCK_ITEM]);
+        renderStockQuote(ACTIVE_STOCK_ITEM);
+      }
+    }
+  }
 }
 
 function applyLivePricesToHoldings(holdings) {
   if (!holdings || !holdings.length) return;
   holdings.forEach(h => {
-    const key = h.baseTicker || h.ticker;
-    const info = LIVE_PRICES[key] || LIVE_PRICES[h.ticker];
-    h.curPrice = info && hasPrice(info.price) ? info.price : null;
-    h.priceChangePct = info && Number.isFinite(info.changePct) ? info.changePct : null;
-    h.quoteAsOf = quoteFreshness(info);
+    const key = canonicalTicker(h.baseTicker || h.ticker);
+    const info = LIVE_PRICES[key];
+    Object.assign(h, quoteFields(key, info));
   });
 }
 
 async function loadRealSecData() {
   try {
-    const [holdingsRes, tickerRes, priceRes, macroRes] = await Promise.all([
+    const [holdingsRes, tickerRes, priceRes, macroRes, symbolsRes] = await Promise.all([
       fetch("latest_13f_holdings.json"),
       fetch("ticker_map.json?_t=" + Date.now()).catch(() => null),
       fetch("realtime_prices.json?_t=" + Date.now()).catch(() => null),
-      fetch("latest_macro_indicators.json?_t=" + Date.now()).catch(() => null)
+      fetch("latest_macro_indicators.json?_t=" + Date.now()).catch(() => null),
+      fetch("market_symbols.json?_t=" + Date.now()).catch(() => null)
     ]);
 
+    if (symbolsRes && symbolsRes.ok) {
+      try {
+        const symbols = await symbolsRes.json();
+        if (symbols && symbols.aliases && symbols.inactive && symbols.nonEquityCusips && symbols.reviewedCusips && symbols.quarantinedCusips) MARKET_SYMBOLS = symbols;
+      } catch (e) {}
+    }
     if (tickerRes && tickerRes.ok) {
       try {
         const extMap = await tickerRes.json();
@@ -527,7 +598,7 @@ async function loadRealSecData() {
     }
     if (priceRes && priceRes.ok) {
       try {
-        LIVE_PRICES = await priceRes.json();
+        mergeObservedPrices(await priceRes.json());
       } catch (e) {}
     }
     if (macroRes && macroRes.ok) {
@@ -584,12 +655,12 @@ function formatQuarterDisplay(periodStr) {
 
 let DOMINANT_13F_PERIOD = null;
 
-function processAndRenderHoldingsData() {
+function processAndRenderHoldingsData(preserveView = false) {
   if (!RAW_HOLDINGS || RAW_HOLDINGS.length === 0) return;
   
   try {
-    const groups = {};
-    const grandConsensusMap = {};
+    const groups = Object.create(null);
+    const grandConsensusMap = Object.create(null);
     let grandTotalAumVal = 0;
 
     // 데이터셋 전체에서 가장 대표적인(최빈) 분기 말일 추출
@@ -611,8 +682,8 @@ function processAndRenderHoldingsData() {
     const knownPeriods = Object.keys(periodCounts).filter(p => /^\d{4}-\d{2}-\d{2}$/.test(p)).sort();
     const latestDatasetPeriod = knownPeriods.at(-1) || null;
     
-    RAW_HOLDINGS.forEach(item => {
-      if (isDerivativeOrOption(item.name, item.ticker, item.titleOfClass)) return;
+    RAW_HOLDINGS.forEach((item, rowIndex) => {
+      if (isDerivativeOrOption(item.name, item.ticker, item.titleOfClass, item)) return;
 
       const guruName = item.guru || "기타 운용사";
       const fundName = item.fund || guruName;
@@ -628,12 +699,15 @@ function processAndRenderHoldingsData() {
           filingDate: item.filingDate || null,
           latestDatasetPeriod,
           desc: `${fundName} (${guruName} 운용)의 공식 13F 보유 포트폴리오`,
-          holdingsMap: {}
+          holdingsMap: Object.create(null)
         };
       }
       
-      const baseTicker = getMappedTicker(item.name, item.ticker, item.cusip);
-      const cusip = item.cusip || baseTicker || "UNKNOWN";
+      const baseTicker = getMappedTicker(item.name, item.ticker, item.cusip, item.shareType, item.putCall || item.optionType);
+      const cusip = String(item.cusip || '').toUpperCase().trim();
+      const securityId = holdingIdentity({ ...item, securityId: null }, rowIndex);
+      const shareType = item.shareType || 'SH';
+      const putCall = item.putCall || item.optionType || null;
       const hMap = groups[guruName].holdingsMap;
       const accurateSector = getMappedSector(baseTicker, item.sector);
 
@@ -648,8 +722,8 @@ function processAndRenderHoldingsData() {
       const itemShares = Number(item.shares) || 0;
       const itemVal = Number(item.value) || 0;
 
-      if (!hMap[baseTicker]) {
-        hMap[baseTicker] = {
+      if (!hMap[securityId]) {
+        hMap[securityId] = {
           ticker: baseTicker,
           baseTicker: baseTicker,
           name: displayName,
@@ -657,32 +731,40 @@ function processAndRenderHoldingsData() {
           shares: itemShares,
           value: itemVal,
           cusip: cusip,
+          securityId, shareType, putCall,
+          securityClass: item.securityClass || item.titleOfClass || '',
+          periods: new Set(item.period ? [item.period] : []),
           action: item.action || "HOLD",
           isOption: item.isOption || false
         };
       } else {
-        hMap[baseTicker].shares += itemShares;
-        hMap[baseTicker].value += itemVal;
+        hMap[securityId].shares += itemShares;
+        hMap[securityId].value += itemVal;
+        if (item.period) hMap[securityId].periods.add(item.period);
         if (item.action && item.action !== "None" && item.action !== "HOLD") {
-          hMap[baseTicker].action = item.action;
+          hMap[securityId].action = item.action;
         }
       }
 
-      if (!grandConsensusMap[baseTicker]) {
-        grandConsensusMap[baseTicker] = {
+      if (!grandConsensusMap[securityId]) {
+        grandConsensusMap[securityId] = {
           ticker: baseTicker,
           baseTicker: baseTicker,
           name: displayName,
           sector: accurateSector,
           cusip: cusip,
+          securityId, shareType, putCall,
+          securityClass: item.securityClass || item.titleOfClass || '',
+          periods: new Set(item.period ? [item.period] : []),
           shares: itemShares,
           value: itemVal,
           holders: new Set([guruName])
         };
       } else {
-        grandConsensusMap[baseTicker].shares += itemShares;
-        grandConsensusMap[baseTicker].value += itemVal;
-        grandConsensusMap[baseTicker].holders.add(guruName);
+        grandConsensusMap[securityId].shares += itemShares;
+        grandConsensusMap[securityId].value += itemVal;
+        if (item.period) grandConsensusMap[securityId].periods.add(item.period);
+        grandConsensusMap[securityId].holders.add(guruName);
       }
       
       grandTotalAumVal += itemVal;
@@ -697,10 +779,12 @@ function processAndRenderHoldingsData() {
       
       g.holdings = holdingList.map(h => {
         const weight = totalVal > 0 ? Number(((h.value / totalVal) * 100).toFixed(2)) : 0;
-        const estP = h.shares > 0 ? (h.value / h.shares) : null;
+        const estP = h.shares > 0 && h.shareType === 'SH' && !h.putCall ? (h.value / h.shares) : null;
+        const periods = Array.from(h.periods).sort();
         
         const realInfo = LIVE_PRICES[h.baseTicker] || LIVE_PRICES[h.ticker];
-        const curP = (realInfo && hasPrice(realInfo.price)) ? realInfo.price : null;
+        const currentQuote = quoteFields(h.baseTicker || h.ticker, realInfo);
+        const curP = currentQuote.curPrice;
         
         let action = h.action || "HOLD";
         if (h.isOption || action === "PUT") {
@@ -713,6 +797,12 @@ function processAndRenderHoldingsData() {
           name: h.name,
           sector: h.sector,
           cusip: h.cusip,
+          securityId: h.securityId,
+          shareType: h.shareType,
+          putCall: h.putCall,
+          securityClass: h.securityClass,
+          periodDate: periods.length === 1 ? periods[0] : null,
+          periodRange: periods.length ? [periods[0], periods.at(-1)] : null,
           holdersDisplay: "1개사 (단독)",
           action: action,
           shares: h.shares >= 1000000 ? `${(h.shares / 1000000).toFixed(2)}M` : `${(h.shares / 1000).toFixed(1)}K`,
@@ -720,9 +810,7 @@ function processAndRenderHoldingsData() {
           value: h.value,
           weight: weight,
           estPrice: estP,
-          curPrice: curP,
-          priceChangePct: realInfo && Number.isFinite(realInfo.changePct) ? realInfo.changePct : null,
-          quoteAsOf: quoteFreshness(realInfo),
+          ...currentQuote,
           insight: `${h.name} 보통주 - ${g.name} 포트폴리오의 ${weight}% 차지 (최근 조회 시세: ${priceLabel(curP)})`
         };
       });
@@ -733,10 +821,11 @@ function processAndRenderHoldingsData() {
     const grandList = Object.values(grandConsensusMap);
     const grandHoldings = grandList.map(h => {
       const weight = grandTotalAumVal > 0 ? Number(((h.value / grandTotalAumVal) * 100).toFixed(2)) : 0;
-      const estP = h.shares > 0 ? (h.value / h.shares) : null;
+      const estP = h.shares > 0 && h.shareType === 'SH' && !h.putCall ? (h.value / h.shares) : null;
+      const periods = Array.from(h.periods).sort();
       
       const realInfo = LIVE_PRICES[h.baseTicker] || LIVE_PRICES[h.ticker];
-      const curP = (realInfo && hasPrice(realInfo.price)) ? realInfo.price : null;
+      const currentQuote = quoteFields(h.baseTicker || h.ticker, realInfo);
       
       const holderCount = h.holders.size;
       let action = h.action || "HOLD";
@@ -747,6 +836,12 @@ function processAndRenderHoldingsData() {
         name: h.name,
         sector: h.sector,
         cusip: h.cusip,
+        securityId: h.securityId,
+        shareType: h.shareType,
+        putCall: h.putCall,
+        securityClass: h.securityClass,
+        periodDate: periods.length === 1 ? periods[0] : null,
+        periodRange: periods.length ? [periods[0], periods.at(-1)] : null,
         holders: holderCount,
         holdersList: Array.from(h.holders),
         holdersDisplay: `${holderCount}개사 보유`,
@@ -756,9 +851,7 @@ function processAndRenderHoldingsData() {
         value: h.value,
         weight: weight,
         estPrice: estP,
-        curPrice: curP,
-        priceChangePct: realInfo && Number.isFinite(realInfo.changePct) ? realInfo.changePct : null,
-          quoteAsOf: quoteFreshness(realInfo),
+        ...currentQuote,
         insight: `미국 100대 운용사 중 무려 ${holderCount}개 운용사가 공통 보유 중인 대표 컨센서스 종목`
       };
     });
@@ -783,7 +876,14 @@ function processAndRenderHoldingsData() {
 
     renderCategoryTabs();
     renderGuruSidebar();
-    selectGuru("__GRAND_TOTAL__");
+    if (preserveView && state.currentGuruKey === '__CUSTOM_GROUP__') {
+      buildCustomGroupPortfolio(true);
+    } else if (preserveView) {
+      if (!GURU_DATABASE[state.currentGuruKey]) state.currentGuruKey = '__GRAND_TOTAL__';
+      if (state.currentFilingType === '13F') loadGuruData(state.currentGuruKey);
+    } else {
+      selectGuru("__GRAND_TOTAL__");
+    }
     renderConsensusWidget("HOLDERS");
 
   } catch (err) {
@@ -791,29 +891,36 @@ function processAndRenderHoldingsData() {
   }
 }
 
-function buildCustomGroupPortfolio() {
+function buildCustomGroupPortfolio(preserveView = false) {
   const favs = getFavorites();
   if (favs.length === 0) {
     alert("먼저 사이드바에서 관심 있는 운용사 옆의 별표를 1개 이상 눌러 즐겨찾기에 등록해 주세요.");
     return;
   }
 
-  const customConsensusMap = {};
+  const customConsensusMap = Object.create(null);
   let customTotalAumVal = 0;
 
   favs.forEach(guruKey => {
     const guru = GURU_DATABASE[guruKey];
     if (!guru || !guru.holdings) return;
 
-    guru.holdings.forEach(h => {
+    guru.holdings.forEach((h, rowIndex) => {
       const ticker = h.baseTicker || h.ticker;
-      if (!customConsensusMap[ticker]) {
-        customConsensusMap[ticker] = {
+      const securityId = holdingIdentity(h, `${guruKey}:${rowIndex}`);
+      const periods = h.periodRange || (h.periodDate ? [h.periodDate] : []);
+      if (!customConsensusMap[securityId]) {
+        customConsensusMap[securityId] = {
           ticker: ticker,
           baseTicker: h.baseTicker || ticker,
           name: h.name,
           sector: h.sector,
           cusip: h.cusip,
+          securityId,
+          shareType: h.shareType || 'SH',
+          putCall: h.putCall || null,
+          securityClass: h.securityClass || '',
+          periods: new Set(periods),
           shares: Number(h.rawShares) || 0,
           value: Number(h.value) || 0,
           estPrice: h.estPrice,
@@ -823,9 +930,10 @@ function buildCustomGroupPortfolio() {
           holders: new Set([guru.name])
         };
       } else {
-        customConsensusMap[ticker].shares += (Number(h.rawShares) || 0);
-        customConsensusMap[ticker].value += (Number(h.value) || 0);
-        customConsensusMap[ticker].holders.add(guru.name);
+        customConsensusMap[securityId].shares += (Number(h.rawShares) || 0);
+        customConsensusMap[securityId].value += (Number(h.value) || 0);
+        periods.forEach(period => customConsensusMap[securityId].periods.add(period));
+        customConsensusMap[securityId].holders.add(guru.name);
       }
       customTotalAumVal += Number(h.value) || 0;
     });
@@ -835,6 +943,7 @@ function buildCustomGroupPortfolio() {
   const customHoldings = customList.map(h => {
     const weight = customTotalAumVal > 0 ? Number(((h.value / customTotalAumVal) * 100).toFixed(2)) : 0;
     const holderCount = h.holders.size;
+    const periods = Array.from(h.periods).sort();
     let action = "HOLD";
     // Shared ownership alone is not evidence of a quarter-over-quarter purchase.
 
@@ -844,6 +953,12 @@ function buildCustomGroupPortfolio() {
       name: h.name,
       sector: h.sector,
       cusip: h.cusip,
+      securityId: h.securityId,
+      shareType: h.shareType,
+      putCall: h.putCall,
+      securityClass: h.securityClass,
+      periodDate: periods.length === 1 ? periods[0] : null,
+      periodRange: periods.length ? [periods[0], periods.at(-1)] : null,
       holders: holderCount,
       holdersList: Array.from(h.holders),
       holdersDisplay: `${holderCount}개사 보유`,
@@ -852,10 +967,8 @@ function buildCustomGroupPortfolio() {
       rawShares: h.shares,
       value: h.value,
       weight: weight,
-      estPrice: h.shares > 0 ? h.value / h.shares : null,
-      curPrice: h.curPrice,
-      priceChangePct: h.priceChangePct,
-          quoteAsOf: h.quoteAsOf,
+      estPrice: h.shares > 0 && h.shareType === 'SH' && !h.putCall ? h.value / h.shares : null,
+      ...quoteFields(h.baseTicker || h.ticker, LIVE_PRICES[canonicalTicker(h.baseTicker || h.ticker)]),
       insight: `내가 선택한 ${favs.length}개 즐겨찾기 운용사 중 ${holderCount}개사가 공통 보유한 핵심 자산`
     };
   });
@@ -876,7 +989,11 @@ function buildCustomGroupPortfolio() {
     holdings: customHoldings
   };
 
-  selectGuru("__CUSTOM_GROUP__");
+  if (preserveView) {
+    if (state.currentFilingType === '13F') loadGuruData('__CUSTOM_GROUP__');
+  } else {
+    selectGuru("__CUSTOM_GROUP__");
+  }
 }
 
 function renderCategoryTabs() {
@@ -1021,6 +1138,7 @@ function selectGuru(key) {
 function loadGuruData(key) {
   const guru = GURU_DATABASE[key];
   if (!guru) return;
+  applyLivePricesToHoldings(guru.holdings);
 
   const isSpecial = key === "__GRAND_TOTAL__" || key === "__CUSTOM_GROUP__";
   const elName = document.getElementById("currentGuruName");
@@ -1124,7 +1242,7 @@ function renderSectorBreakdown(holdings) {
   let totalVal = 0;
 
   holdings.forEach(h => {
-    const sec = h.sector || "Technology";
+    const sec = h.sector || "Other";
     const v = Number(h.value) || 0;
     sectorTotals[sec] = (sectorTotals[sec] || 0) + v;
     totalVal += v;
@@ -1138,7 +1256,7 @@ function renderSectorBreakdown(holdings) {
 
   sortedSectors.forEach(item => {
     if (item.pct < 0.5) return;
-    const color = SECTOR_COLORS[item.sector] || "#3b82f6";
+    const color = SECTOR_COLORS[item.sector] || SECTOR_COLORS.Other;
 
     // 스택 바 세그먼트
     const seg = document.createElement("div");
@@ -1352,7 +1470,7 @@ function renderTreemap(holdings) {
         else if (item.action === 'ADD') actionLabel = '비중 확대';
         else if (item.action === 'REDUCE') actionLabel = '비중 축소';
 
-        const diffRow = !Number.isFinite(diffVal) ? `<div class="tooltip-row">시세 없음 · 비교 불가</div>` : isOption ? `
+        const diffRow = !Number.isFinite(diffVal) ? `<div class="tooltip-row">${priceComparisonReason(item)}</div>` : isOption ? `
           <div class="tooltip-row">
             <span class="tooltip-label">기초자산 변동</span>
             <span class="tooltip-val" style="color:var(--text-subdued)">${isDown ? diffPct + '% 하락' : '+' + diffPct + '% 상승'} (옵션 비교 제외)</span>
@@ -1429,7 +1547,8 @@ let CURRENT_FILTERED_ITEMS = [];
 let CURRENT_PAGE_INDEX = 1;
 const PAGE_SIZE = 60;
 
-function renderTable() {
+function renderTable(preservePages = false) {
+  const pageCount = preservePages ? Math.max(1, CURRENT_PAGE_INDEX - 1) : 1;
   const guru = GURU_DATABASE[state.currentGuruKey];
   if (!guru) return;
 
@@ -1488,7 +1607,7 @@ function renderTable() {
     return state.sortDirection === "asc" ? valA - valB : valB - valA;
   });
 
-  appendNextPageRows();
+  for (let page = 0; page < pageCount; page++) appendNextPageRows();
 }
 
 function appendNextPageRows() {
@@ -1546,7 +1665,7 @@ function appendNextPageRows() {
       </td>
       <td class="col-discount text-right">
         ${(!Number.isFinite(diffVal) || item.action === 'PUT' || item.action === 'CALL' || item.isOption) ? `
-          <span class="discount-val" style="color: var(--text-subdued);" title="옵션 파생상품은 공시단가 비교 대상이 아닙니다">-</span>
+          <span class="discount-val" style="color: var(--text-subdued);" title="${priceComparisonReason(item)}">비교 보류</span>
         ` : `
           <span class="discount-val ${isUp ? 'positive' : (isDown ? 'discount' : '')}">
             ${isUp ? '+' : ''}${diffPct}%
@@ -1576,29 +1695,13 @@ function applyColumnVisibility() {
 function openStockModal(item) {
   const modal = document.getElementById("stockModal");
   if (!modal) return;
-  const isOption = item.action === 'PUT' || item.action === 'CALL' || item.isOption;
-  const diffVal = priceDifference(item);
-  const diffPct = diffVal.toFixed(1);
-  const isDown = diffVal < 0;
-
+  ACTIVE_STOCK_ITEM = item;
+  ACTIVE_STOCK_GURU_KEY = Object.keys(GURU_DATABASE).find(key => (GURU_DATABASE[key].holdings || []).includes(item)) || state.currentGuruKey;
+  applyLivePricesToHoldings([item]);
   document.getElementById("modalTicker").innerText = item.ticker;
   document.getElementById("modalName").innerText = item.name;
   document.getElementById("modalSector").innerText = item.sector;
-  document.getElementById("modalCurPrice").innerText = `${priceLabel(item.curPrice)}`;
-  
-  const discountTag = document.getElementById("modalDiscountTag");
-  if (discountTag) {
-    if (!Number.isFinite(diffVal)) {
-      discountTag.innerText = "시세 없음 · 비교 불가";
-      discountTag.style.color = "var(--text-subdued)";
-    } else if (isOption) {
-      discountTag.innerText = `옵션 파생상품 (공시단가 비교 제외)`;
-      discountTag.style.color = "var(--text-subdued)";
-    } else {
-      discountTag.innerText = isDown ? `공시 평가단가 대비 ${diffPct}% 하락 상태` : `공시 평가단가 대비 +${diffPct}% 상승 상태`;
-      discountTag.style.color = isDown ? "var(--negative-red)" : "var(--spotify-green)";
-    }
-  }
+  renderStockQuote(item);
 
   document.getElementById("modalWeight").innerText = `${item.weight}%`;
   document.getElementById("modalVal").innerText = formatMoney(item.value);
@@ -1612,7 +1715,7 @@ function openStockModal(item) {
   renderStockHistoryTimeline(item);
 
   // 기능 1: 100대 운용사 중 이 종목을 보유한 전체 명단 추출 & 렌더링
-  renderStockHoldersTable(item.ticker);
+  renderStockHoldersTable(item);
 
   // [NEW] 최근 경영진 내부자 거래 (Form 4) 교차 분석 렌더링
   renderModalInsiderCross(item);
@@ -1642,6 +1745,16 @@ function openStockModal(item) {
   modal.classList.add("show");
 }
 
+function renderStockQuote(item) {
+  document.getElementById('modalCurPrice').innerText = priceLabel(item.curPrice);
+  document.getElementById('modalCurPrice').title = item.quoteAsOf || '시세 관측시각 미확인';
+  const tag = document.getElementById('modalDiscountTag');
+  if (tag) {
+    tag.innerText = `${priceComparisonReason(item)} · ${item.quoteAsOf || '시세 관측시각 미확인'}`;
+    tag.style.color = 'var(--text-subdued)';
+  }
+}
+
 function renderStockHistoryTimeline(item) {
   const container = document.getElementById("modalHistoryTimeline");
   if (!container) return;
@@ -1653,7 +1766,7 @@ function renderStockHistoryTimeline(item) {
   container.appendChild(notice);
 }
 
-function renderStockHoldersTable(ticker) {
+function renderStockHoldersTable(item) {
   const tbody = document.getElementById("modalHoldersBody");
   const countEl = document.getElementById("modalHoldersCount");
   if (!tbody || !countEl) return;
@@ -1666,7 +1779,7 @@ function renderStockHoldersTable(ticker) {
     const guru = GURU_DATABASE[guruKey];
     if (!guru || !guru.holdings) return;
 
-    const match = guru.holdings.find(h => (h.baseTicker || h.ticker) === ticker);
+    const match = guru.holdings.find(h => holdingIdentity(h) === holdingIdentity(item));
     if (match) {
       holders.push({
         guruKey: guruKey,
@@ -3430,55 +3543,68 @@ function initMobileInteractions() {
 /* ==============================================================================
    🚨 1번 기능: 2026 Q3 SEC 13F 공시 시즌 실시간 D-Day 카운트다운 타이머
    ============================================================================== */
-function initFilingDdayCountdown() {
-  const banner = document.getElementById("filingDdayBanner");
-  const btnClose = document.getElementById("btnDdayClose");
-  const badgeEl = document.getElementById("ddayBadge");
-  const chipEl = document.getElementById("ddayTimerChip");
+function nextFilingDeadline(now = Date.now()) {
+  // Form 13F: 45 days after quarter-end, rolled to the next business day.
+  // The only regular federal holiday these four due-date windows can meet is
+  // Washington's Birthday (third Monday in February). Emergency SEC closures
+  // are not predicted here. Source: SEC Form 13F FAQ, questions 25/26.
+  const year = new Date(now).getUTCFullYear();
+  for (let y = year - 1; y <= year + 1; y++) {
+    for (let q = 1; q <= 4; q++) {
+      const period = new Date(Date.UTC(y, q * 3, 0));
+      const due = new Date(period.getTime() + 45 * 86400000);
+      while (due.getUTCDay() === 0 || due.getUTCDay() === 6 ||
+        (due.getUTCMonth() === 1 && due.getUTCDay() === 1 && due.getUTCDate() >= 15 && due.getUTCDate() <= 21)) {
+        due.setUTCDate(due.getUTCDate() + 1);
+      }
+      // These dates are in February/May/August/November; U.S. DST is in effect
+      // for the May/August due dates, standard time for February/November.
+      const utcHour = [4, 7].includes(due.getUTCMonth()) ? 21 : 22;
+      const deadlineTime = Date.UTC(due.getUTCFullYear(), due.getUTCMonth(), due.getUTCDate(), utcHour, 30);
+      if (deadlineTime > now) return {
+        quarter: `${y} Q${q}`,
+        periodDate: period.toISOString().slice(0, 10),
+        dueDate: due.toISOString().slice(0, 10),
+        deadlineTime
+      };
+    }
+  }
+  return null;
+}
 
+function initFilingDdayCountdown() {
+  const banner = document.getElementById('filingDdayBanner');
+  const btnClose = document.getElementById('btnDdayClose');
+  const badgeEl = document.getElementById('ddayBadge');
+  const chipEl = document.getElementById('ddayTimerChip');
+  const titleEl = document.getElementById('ddayHeadline');
+  const detailEl = document.getElementById('ddayDeadline');
   if (!banner) return;
 
-  // 사용자가 배너를 닫은 적이 있다면 24시간 동안 숨김
-  const hideUntil = localStorage.getItem("alpha13f_dday_hide_until");
+  const hideUntil = localStorage.getItem('alpha13f_dday_hide_until');
   if (hideUntil && Date.now() < Number(hideUntil)) {
-    banner.style.display = "none";
+    banner.style.display = 'none';
     return;
   }
-
-  if (btnClose) {
-    btnClose.addEventListener("click", () => {
-      banner.style.opacity = "0";
-      banner.style.transform = "translateY(-10px)";
-      setTimeout(() => {
-        banner.style.display = "none";
-      }, 300);
-      localStorage.setItem("alpha13f_dday_hide_until", Date.now() + 24 * 60 * 60 * 1000);
-    });
-  }
+  if (btnClose) btnClose.addEventListener('click', () => {
+    banner.style.display = 'none';
+    localStorage.setItem('alpha13f_dday_hide_until', Date.now() + 86400000);
+  });
 
   function tick() {
-    // 2026 Q3 SEC 13F 공시 마감: 미 동부시간 2026년 11월 14일 23:59:59 (UTC 기준 11월 15일 04:59:59)
-    const targetDate = new Date("2026-11-15T04:59:59Z").getTime();
     const now = Date.now();
-    const diff = targetDate - now;
-
-    if (diff <= 0) {
-      if (badgeEl) badgeEl.innerText = "D-DAY";
-      if (chipEl) chipEl.innerText = "3분기 공시 시즌 개막!";
-      return;
-    }
-
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const secs = Math.floor((diff % (1000 * 60)) / 1000);
-
-    if (badgeEl) badgeEl.innerText = `D-${days}`;
-    if (chipEl) {
-      chipEl.innerText = `${days}일 ${String(hours).padStart(2, '0')}시간 ${String(mins).padStart(2, '0')}분 ${String(secs).padStart(2, '0')}초 남음`;
-    }
+    const upcoming = nextFilingDeadline(now);
+    if (!upcoming) { banner.style.display = 'none'; return; }
+    const diff = upcoming.deadlineTime - now;
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    const mins = Math.floor((diff % 3600000) / 60000);
+    const secs = Math.floor((diff % 60000) / 1000);
+    if (titleEl) titleEl.innerText = `${upcoming.quarter} SEC 13F 제출 마감`;
+    if (detailEl) detailEl.innerText = `${upcoming.periodDate} 보유분의 일반 제출 마감은 ${upcoming.dueDate} 오후 5:30 (미 동부시간)입니다.`;
+    if (badgeEl) badgeEl.innerText = days ? `D-${days}` : 'D-DAY';
+    if (chipEl) chipEl.innerText = `${days}일 ${String(hours).padStart(2, '0')}시간 ${String(mins).padStart(2, '0')}분 ${String(secs).padStart(2, '0')}초 남음`;
   }
-
   tick();
   setInterval(tick, 1000);
 }
@@ -3505,14 +3631,15 @@ function renderConsensusWidget(forceType) {
   const grid = document.getElementById("consensusCardsGrid");
   if (!grid || !RAW_HOLDINGS || RAW_HOLDINGS.length === 0) return;
 
-  const stats = {};
+  const stats = Object.create(null);
 
-  RAW_HOLDINGS.forEach(item => {
-    if (isDerivativeOrOption(item.name, item.ticker, item.titleOfClass)) return;
-    const baseTicker = getMappedTicker(item.name, item.ticker, item.cusip);
+  RAW_HOLDINGS.forEach((item, rowIndex) => {
+    if (isDerivativeOrOption(item.name, item.ticker, item.titleOfClass, item)) return;
+    const baseTicker = getMappedTicker(item.name, item.ticker, item.cusip, item.shareType, item.putCall || item.optionType);
     if (!baseTicker || baseTicker === "UNKNOWN") return;
 
-    if (!stats[baseTicker]) {
+    const securityId = holdingIdentity({ ...item, securityId: null }, rowIndex);
+    if (!stats[securityId]) {
       let displayName = item.name || baseTicker;
       if (baseTicker === "SPY") displayName = "SPDR S&P 500 ETF Trust";
       else if (baseTicker === "IVV") displayName = "iShares Core S&P 500 ETF";
@@ -3525,8 +3652,9 @@ function renderConsensusWidget(forceType) {
       else if (baseTicker === "AAPL") displayName = "Apple Inc.";
       else if (baseTicker === "NVDA") displayName = "NVIDIA Corp.";
 
-      stats[baseTicker] = {
+      stats[securityId] = {
         ticker: baseTicker,
+        securityId,
         name: displayName,
         sector: getMappedSector(baseTicker, item.sector),
         holders: new Set(),
@@ -3537,8 +3665,8 @@ function renderConsensusWidget(forceType) {
     const guruName = item.guru || "기타 운용사";
     const val = Number(item.value) || 0;
 
-    stats[baseTicker].holders.add(guruName);
-    stats[baseTicker].totalValue += val;
+    stats[securityId].holders.add(guruName);
+    stats[securityId].totalValue += val;
   });
 
   const list = Object.values(stats);
@@ -3569,13 +3697,14 @@ function renderConsensusWidget(forceType) {
       : `<span class="consensus-action-tag add">AUM 집중</span>`;
 
     const realInfo = LIVE_PRICES[s.ticker];
-    const priceText = priceLabel(realInfo && realInfo.price);
-    const chgVal = realInfo && Number.isFinite(realInfo.changePct) ? realInfo.changePct : null;
+    const currentQuote = quoteFields(s.ticker, realInfo);
+    const priceText = priceLabel(currentQuote.curPrice);
+    const chgVal = currentQuote.priceChangePct;
     const chgClass = chgVal > 0 ? "up" : (chgVal < 0 ? "down" : "");
     const chgText = Number.isFinite(chgVal) ? `${chgVal > 0 ? "+" : ""}${chgVal.toFixed(2)}%` : "";
 
     return `
-      <div class="consensus-card" onclick="openConsensusStock('${s.ticker}')" title="클릭 시 ${s.name} 상세 분석 팝업을 엽니다">
+      <div class="consensus-card" onclick="openConsensusStock(decodeURIComponent('${encodeURIComponent(s.securityId).replace(/'/g, '%27')}'))" title="클릭 시 ${s.name} 상세 분석 팝업을 엽니다">
         <div>
           <div class="consensus-rank-tag">TOP ${idx + 1}</div>
           <div class="consensus-card-header">
@@ -3597,16 +3726,17 @@ function renderConsensusWidget(forceType) {
             <span class="consensus-price">${priceText}</span>
             <span class="consensus-chg ${chgClass}">${chgText}</span>
           </div>
+          <small class="consensus-quote-asof">${currentQuote.quoteAsOf}</small>
         </div>
       </div>
     `;
   }).join("");
 }
 
-function openConsensusStock(ticker) {
+function openConsensusStock(securityId) {
   const grand = GURU_DATABASE["__GRAND_TOTAL__"];
   if (grand && grand.holdings) {
-    const found = grand.holdings.find(h => h.ticker === ticker || h.baseTicker === ticker);
+    const found = grand.holdings.find(h => h.securityId === securityId);
     if (found) {
       openStockModal(found);
       return;
@@ -3732,6 +3862,7 @@ function switchToForm4WithTicker(ticker) {
     }
   }, 150);
 }
+
 
 
 
