@@ -518,6 +518,105 @@ body {
   background-color: var(--bg-base);
 }
 
+/* SEC disclosure details stay available without displacing the dashboard. */
+.disclosure-panel {
+  min-width: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-subdued);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.disclosure-panel summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.disclosure-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+.disclosure-panel > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  color: var(--text-near-white);
+  font-weight: 600;
+}
+
+.disclosure-panel summary:hover {
+  color: var(--text-base);
+}
+
+.disclosure-panel summary:focus-visible {
+  outline: 2px solid var(--spotify-green);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+}
+
+.disclosure-toggle {
+  flex-shrink: 0;
+  color: var(--spotify-green);
+  font-weight: 500;
+}
+
+.disclosure-panel:not([open]) .disclosure-toggle-close,
+.disclosure-panel[open] .disclosure-toggle-open {
+  display: none;
+}
+
+.disclosure-content {
+  padding: 0 16px 16px;
+  overflow-wrap: anywhere;
+}
+
+.disclosure-coverage,
+.disclosure-source-title {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.disclosure-coverage > summary,
+.disclosure-source-title {
+  color: var(--text-near-white);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.disclosure-coverage > summary {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+#partialCoverageList,
+.disclosure-source-list {
+  max-height: 280px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin-top: 8px;
+}
+
+#partialCoverageList {
+  padding-left: 24px;
+}
+
+#partialCoverageList li,
+.disclosure-source-list p {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.disclosure-panel a {
+  color: var(--spotify-green);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* Top Profile Header */
 .top-header {
   display: flex;

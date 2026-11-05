@@ -239,11 +239,6 @@
         </div>
       </header>
 
-      <section aria-label="SEC 공시 검증 범위" id="partialDisplayPanel">
-        <p id="partialDisplayStatus" role="status">공시 부분집합 검증 중. 확인 전 수치 표시 불가.</p>
-        <details><summary>50개 원래 추적명 및 확인 상태</summary><ol id="partialCoverageList"></ol></details>
-        <div id="partialSourceList"></div>
-      </section>
       <!-- 상단 상시 노출: 실시간 거시경제 펄스 바 (Macro Pulse Bar) -->
       <section class="macro-pulse-bar" id="macroPulseBar" title="클릭 시 거시경제 상세 요약 모달을 엽니다">
         <div class="macro-pulse-loading">
@@ -254,6 +249,22 @@
 
       <!-- [VIEW 1] Form 13F 운용사 포트폴리오 대시보드 -->
       <div id="view13F" class="filing-view-container active">
+        <details class="disclosure-panel" id="partialDisplayPanel">
+          <summary>
+            <span>공시 검증 정보 및 원문</span>
+            <span class="disclosure-toggle disclosure-toggle-open">펼치기</span>
+            <span class="disclosure-toggle disclosure-toggle-close">접기</span>
+          </summary>
+          <div class="disclosure-content">
+            <p id="partialDisplayStatus" role="status">공시 부분집합 검증 중. 확인 전 수치 표시 불가.</p>
+            <details class="disclosure-coverage">
+              <summary>50개 추적명 및 확인 상태</summary>
+              <ol id="partialCoverageList"></ol>
+            </details>
+            <h3 class="disclosure-source-title">선택한 운용사의 SEC 공시 원문</h3>
+            <div id="partialSourceList" class="disclosure-source-list"></div>
+          </div>
+        </details>
         <!-- 요약 하이라이트 카드 (Overview Cards) -->
         <section class="overview-grid">
           <div class="metric-card">
