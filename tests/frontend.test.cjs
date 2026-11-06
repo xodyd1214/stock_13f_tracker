@@ -174,8 +174,8 @@ test('insider canonical codes distinguish buys, sales, awards, exercises and unk
 });
 test('Form 4 rejects legacy rows and resolves the issuer independently of the reporter', () => {
   const snapshot = JSON.parse(fs.readFileSync(require('node:path').join(__dirname, '../latest_form4_insiders.json'), 'utf8'));
-  const c = context(['validateForm4Snapshot', 'form4IssuerForTicker', 'form4Price', 'form4Security', 'getF4ScopeDataset', 'getF4ActiveDataset'], {
-    FORM4_DATA: snapshot.transactions, state: { selectedF4Issuer: '0000070858', f4Filter: 'ALL' }
+  const c = context(['validateForm4Snapshot', 'form4IssuerForTicker', 'form4Price', 'form4Security', 'recentDirectPurchases', 'getF4ScopeDataset', 'getF4ActiveDataset'], {
+    FORM4_DATA: snapshot.transactions, recentForm4Snapshot: null, state: { selectedF4Issuer: '0000070858', f4Filter: 'ALL' }
   });
   assert.equal(c.validateForm4Snapshot(snapshot), true);
   assert.equal(c.validateForm4Snapshot([{ ticker: 'BAC', price: 6.334 }]), false);

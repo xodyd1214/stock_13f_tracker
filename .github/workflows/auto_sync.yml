@@ -1,8 +1,9 @@
-name: Alpha13F validated quotes and macro refresh
+name: Alpha13F validated data refresh
 
 on:
   schedule:
     - cron: '0 21 * * *'
+    - cron: '30 6 * * *'
   workflow_dispatch:
 
 permissions:
@@ -33,24 +34,30 @@ jobs:
       # is a separate reviewed process; this workflow cannot move its pointer.
       - name: Refresh prices
         id: prices
+        if: github.event.schedule != '30 6 * * *'
         continue-on-error: true
         run: python price_fetcher.py
       - name: Refresh macro indicators
         id: macro
+        if: github.event.schedule != '30 6 * * *'
         continue-on-error: true
         run: python macro_collector.py
+      - name: Reconcile recent Form 4 direct purchases
+        id: form4_recent
+        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 6 * * *'
+        continue-on-error: true
+        run: python sec_form4_recent.py
 
       # latest_13f_holdings.csv is a retained legacy snapshot, not regenerated or
       # published by this workflow. Use the dashboard CSV export for current data.
-      # sec_insider_collector.py and sec_13d_collector.py are
-      # intentionally paused until their parsing and failure-preservation paths
-      # are audited. Preserve existing legacy datasets; never publish their output.
+      # Preserve the historical Form 4 and 13D/13G files. The recent Form 4
+      # snapshot is reconciled independently from the legacy collectors.
       - name: Validate and publish only changed safe datasets
-        if: ${{ !cancelled() && (steps.prices.outcome == 'success' || steps.prices.outcome == 'failure' || steps.macro.outcome == 'success' || steps.macro.outcome == 'failure') }}
+        if: ${{ !cancelled() && (steps.prices.outcome == 'success' || steps.prices.outcome == 'failure' || steps.macro.outcome == 'success' || steps.macro.outcome == 'failure' || steps.form4_recent.outcome == 'success' || steps.form4_recent.outcome == 'failure') }}
         shell: bash
         run: |
           set -euo pipefail
-          outputs=(realtime_prices.json latest_macro_indicators.json)
+          outputs=(realtime_prices.json latest_macro_indicators.json latest_form4_recent.json)
           changed=()
           for file in "${outputs[@]}"; do
             if [[ -n "$(git status --porcelain -- "$file")" ]]; then
@@ -69,7 +76,7 @@ jobs:
           git push
 
       - name: Report partial collection failure
-        if: ${{ always() && (steps.prices.outcome == 'failure' || steps.macro.outcome == 'failure') }}
+        if: ${{ always() && (steps.prices.outcome == 'failure' || steps.macro.outcome == 'failure' || steps.form4_recent.outcome == 'failure') }}
         run: |
           echo '::error::One or more collectors failed or returned partial/stale data. Successful validated updates were retained; review collector logs.'
           exit 1

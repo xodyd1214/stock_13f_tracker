@@ -1736,6 +1736,14 @@ body {
   min-width: 960px;
 }
 
+#btnF4More {
+  margin-top: 12px;
+}
+
+#btnF4More[hidden] {
+  display: none;
+}
+
 #viewForm4[data-scope="direct"] :is(.form4-all-only, .form4-ownership),
 #insiderModal[data-scope="direct"] .modal-stats-grid,
 #viewForm4[data-scope="all"] .form4-direct-only {

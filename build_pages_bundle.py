@@ -22,7 +22,7 @@ from sec_filing_integrity import is_reported_equity
 CONTRACT = 'exact_43_labels_42_entities_of_50'
 ASSETS = ('index.html','app.js','style.css','google.svg','sec_display_loader.js',
           'ticker_map.json','realtime_prices.json','latest_macro_indicators.json',
-          'market_symbols.json','latest_13d_filings.json','latest_form4_insiders.json')
+          'market_symbols.json','latest_13d_filings.json','latest_form4_insiders.json','latest_form4_recent.json')
 MAX_PROJECTION = 16 * 1024 * 1024
 MAX_FILE = 100 * 1024 * 1024
 MAX_SITE = 1024 * 1024 * 1024

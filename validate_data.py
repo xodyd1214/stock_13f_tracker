@@ -1,10 +1,11 @@
-"""Fail-closed validation for the four atomically written publication datasets."""
+"""Fail-closed validation for the atomically written publication datasets."""
 import json
 import math
 from pathlib import Path
 import sys
 
-ALLOWED_OUTPUTS = {'live_13f_analytics.json', 'realtime_prices.json', 'latest_macro_indicators.json', 'latest_13f_holdings.json'}
+ALLOWED_OUTPUTS = {'live_13f_analytics.json', 'realtime_prices.json', 'latest_macro_indicators.json',
+                   'latest_13f_holdings.json', 'latest_form4_recent.json'}
 
 
 def validate_output(path):
@@ -45,6 +46,9 @@ def validate_output(path):
         successful = value.get('collection', {}).get('successfulSources', [])
         if not successful or any(key not in value['sources'] or value['sources'][key].get('fetchStatus') != 'success' for key in successful):
             raise ValueError('Macro publication requires at least one successful source')
+    if path.name == 'latest_form4_recent.json':
+        from sec_form4_recent import validate_recent_snapshot
+        validate_recent_snapshot(value)
     return value
 
 

@@ -31,9 +31,10 @@ KEY_TICKERS = [
 ]
 
 
-def ownership_xml(submission):
+def ownership_xml(submission, form="4"):
+    form_pattern = rb"\s*<TYPE>" + re.escape(form.encode("ascii")) + rb"\s"
     for document in submission.split(b"<DOCUMENT>")[1:]:
-        if re.match(rb"\s*<TYPE>4\s", document):
+        if re.match(form_pattern, document):
             match = re.search(rb"<ownershipDocument(?:\s[^>]*)?>.*?</ownershipDocument>", document, re.S)
             if match:
                 return match.group()
@@ -42,6 +43,13 @@ def ownership_xml(submission):
 
 def field(node, path):
     return (node.findtext(path) or "").strip()
+
+
+def ownership_date(value):
+    # XML Schema date can include a timezone suffix without a time of day.
+    if not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}(?:Z|[+-][0-9]{2}:[0-9]{2})?", value):
+        raise ValueError(f"Invalid Form 4 date: {value}")
+    return date.fromisoformat(value[:10]).isoformat()
 
 
 def number(node, path):
@@ -125,9 +133,8 @@ def parse_form4_xml(xml_content, accession, filing_date, source_url):
     for transaction in root.findall("nonDerivativeTable/nonDerivativeTransaction"):
         title = field(transaction, "securityTitle/value")
         code = field(transaction, "transactionCoding/transactionCode")
-        traded = field(transaction, "transactionDate/value") or None
-        if traded:
-            date.fromisoformat(traded)
+        trade_date = field(transaction, "transactionDate/value")
+        traded = ownership_date(trade_date) if trade_date else None
         shares = number(transaction, "transactionAmounts/transactionShares/value")
         price = number(transaction, "transactionAmounts/transactionPricePerShare/value")
         post = number(transaction, "postTransactionAmounts/sharesOwnedFollowingTransaction/value")

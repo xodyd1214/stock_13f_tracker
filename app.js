@@ -1970,6 +1970,8 @@ function setupEventListeners() {
       renderForm4Table();
     };
   }
+  const f4More = document.getElementById("btnF4More");
+  if (f4More) f4More.onclick = appendNextF4PageRows;
 
   // 13D 전용 필터 탭
   document.querySelectorAll("#d13FilterTabs .filter-tab").forEach(tab => {
@@ -2067,6 +2069,7 @@ function setupEventListeners() {
 
 let FORM4_DATA = [];
 let form4Snapshot = null;
+let recentForm4Snapshot = null;
 let form4Load = null;
 let FILING_13D_DATA = [];
 
@@ -2230,7 +2233,7 @@ function form4Dates(item) {
 
 function form4Security(item) {
   const title = item.securityTitle || "증권명 미기재";
-  if (/^(?:common stock|common shares?|ordinary shares?)(?:,\s*\$[\d.]+\s+par value)?$/i.test(title)) {
+  if (/^(?:common stock|common shares?|ordinary shares?)(?:,\s*(?:\$[\d.]+\s+par value|par value\s+\$[\d.]+(?:\s+per share)?))?$/i.test(title)) {
     return `<span title="${escapeHtml(title)}">보통주</span>`;
   }
   return escapeHtml(title);
@@ -2251,6 +2254,7 @@ function validateForm4Snapshot(payload) {
     Array.isArray(payload.transactions) && payload.transactions.every(row =>
       row && typeof row.issuerCik === "string" && /^\d{10}$/.test(row.issuerCik) &&
       typeof row.ticker === "string" && typeof row.companyName === "string" && row.companyName.trim() &&
+      (row.securityTitle == null || typeof row.securityTitle === "string") &&
       typeof row.insiderName === "string" && row.insiderName.trim() &&
       typeof row.officerTitle === "string" && typeof row.isOfficer === "boolean" &&
       (row.directInsiderPurchase === undefined || typeof row.directInsiderPurchase === "boolean") &&
@@ -2260,24 +2264,55 @@ function validateForm4Snapshot(payload) {
       [row.shares, row.price, row.totalValue, row.postShares].every(validNumber));
 }
 
+async function loadForm4Asset(url, timeout) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(url, { cache: "no-store", signal: controller.signal });
+    const snapshot = response.ok ? await response.json() : null;
+    return validateForm4Snapshot(snapshot) ? snapshot : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function hasForm4Coverage(snapshot) {
+  const coverage = snapshot?.coverage;
+  return coverage && typeof coverage.from === "string" && typeof coverage.through === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(coverage.from) && /^\d{4}-\d{2}-\d{2}$/.test(coverage.through) &&
+    coverage.from <= coverage.through && Number.isSafeInteger(coverage.listedIssuers) &&
+    coverage.listedIssuers > 0 && snapshot.sourceFilings === snapshot.verifiedFilings &&
+    snapshot.transactions.every(row => row.directInsiderPurchase === true && row.txTypeCode === "P" && row.ownership === "D");
+}
+
 async function loadVerifiedForm4() {
   if (form4Snapshot) return FORM4_DATA;
   if (!form4Load) {
     form4Load = (async () => {
-      try {
-        const res = await fetch("latest_form4_insiders.json", { cache: "no-store" });
-        if (!res.ok) return [];
-        const snapshot = await res.json();
-        if (!validateForm4Snapshot(snapshot)) return [];
-        form4Snapshot = snapshot;
-        FORM4_DATA = snapshot.transactions;
-        state.f4FavCompanies = [...new Set(state.f4FavCompanies.map(key =>
-          form4IssuerForTicker(FORM4_DATA, key) || key))];
-        return FORM4_DATA;
-      } catch (error) {
-        console.warn("Form 4 로드 실패:", error);
-        return [];
-      }
+      const recentFile = "latest_form4_recent.json";
+      // Scheduled bot commits are available here even before the next Pages build.
+      const isProduction = location.origin === "https://xodyd1214.github.io" &&
+        location.pathname.startsWith("/stock_13f_tracker/");
+      const [archive, deployed, refreshed] = await Promise.all([
+        loadForm4Asset("latest_form4_insiders.json", 10000),
+        loadForm4Asset(recentFile, 8000),
+        isProduction ? loadForm4Asset("https://raw.githubusercontent.com/xodyd1214/stock_13f_tracker/master/" + recentFile, 5000) : null
+      ]);
+      const localRecent = hasForm4Coverage(deployed) ? deployed : null;
+      recentForm4Snapshot = hasForm4Coverage(refreshed) &&
+        (!localRecent || refreshed.coverage.through >= localRecent.coverage.through) ? refreshed : localRecent;
+      if (!archive && !recentForm4Snapshot) return [];
+      form4Snapshot = archive || recentForm4Snapshot;
+      const archivedRows = archive?.transactions || [];
+      const archivedAccessions = new Set(archivedRows.map(row => row.accessionNumber));
+      FORM4_DATA = [...archivedRows, ...(recentForm4Snapshot?.transactions || [])
+        .filter(row => !archivedAccessions.has(row.accessionNumber))]
+        .sort((left, right) => right.filingDate.localeCompare(left.filingDate));
+      state.f4FavCompanies = [...new Set(state.f4FavCompanies.map(key =>
+        form4IssuerForTicker(FORM4_DATA, key) || key))];
+      return FORM4_DATA;
     })();
   }
   const pending = form4Load;
@@ -2286,8 +2321,12 @@ async function loadVerifiedForm4() {
   return rows;
 }
 
+function recentDirectPurchases() {
+  return recentForm4Snapshot?.transactions || FORM4_DATA.filter(row => row.directInsiderPurchase === true);
+}
+
 function getF4ScopeDataset() {
-  return state.f4Filter === "ALL" ? FORM4_DATA : FORM4_DATA.filter(row => row.directInsiderPurchase === true);
+  return state.f4Filter === "ALL" ? FORM4_DATA : recentDirectPurchases();
 }
 
 function getF4ActiveDataset() {
@@ -2327,9 +2366,16 @@ async function loadAndRenderForm4() {
   if (headerFund) headerFund.innerText = scopeLabel;
   if (headerQuarter) headerQuarter.innerText = dataset[0]
     ? `최신 공시일 ${dataset[0].filingDate}` : "표시할 공시 없음";
-  if (headerDesc) headerDesc.innerText = form4Snapshot
-    ? `확인된 자료 기준 · 발행사 ${new Set(dataset.map(row => row.issuerCik)).size.toLocaleString()}곳 · 거래 ${dataset.length.toLocaleString()}건`
-    : "발행 종목이 확인된 Form 4 자료를 불러오지 못했습니다.";
+  if (headerDesc) {
+    const counts = `발행사 ${new Set(dataset.map(row => row.issuerCik)).size.toLocaleString()}곳 · 거래 ${dataset.length.toLocaleString()}건`;
+    const coverage = recentForm4Snapshot?.coverage;
+    if (!form4Snapshot) headerDesc.innerText = "발행 종목이 확인된 Form 4 자료를 불러오지 못했습니다.";
+    else if (isDirect && coverage) {
+      headerDesc.innerText = `SEC 일일 색인 ${coverage.from}~${coverage.through} · 미국 거래소 상장사 · ${counts}`;
+    } else if (isDirect) {
+      headerDesc.innerText = `최근 색인을 불러오지 못해 저장된 공시 표시 · ${counts}`;
+    } else headerDesc.innerText = `저장된 공시 및 최근 직접 매수 · ${counts}`;
+  }
 
   renderForm4Table();
 }
@@ -2505,6 +2551,8 @@ function renderForm4Table() {
   tbody.innerHTML = "";
   CURRENT_F4_PAGE_INDEX = 1;
   CURRENT_F4_FILTERED_ITEMS = [];
+  const more = document.getElementById("btnF4More");
+  if (more) more.hidden = true;
 
   let list = getF4ActiveDataset();
 
@@ -2581,6 +2629,8 @@ function appendNextF4PageRows() {
 
   tbody.appendChild(fragment);
   CURRENT_F4_PAGE_INDEX++;
+  const more = document.getElementById("btnF4More");
+  if (more) more.hidden = end >= CURRENT_F4_FILTERED_ITEMS.length;
 }
 
 function openInsiderModal(issuerKey) {
@@ -3776,7 +3826,7 @@ async function renderModalInsiderCross(item) {
   const rows = await loadVerifiedForm4();
   if (requestId !== insiderRequestId) return;
   const issuer = form4IssuerForTicker(rows, item.baseTicker || item.ticker);
-  const matched = issuer ? rows.filter(row => row.issuerCik === issuer && row.directInsiderPurchase === true) : [];
+  const matched = issuer ? recentDirectPurchases().filter(row => row.issuerCik === issuer) : [];
 
   if (matched.length === 0) {
     container.innerHTML = `

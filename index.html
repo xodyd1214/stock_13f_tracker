@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=94">
+  <link rel="stylesheet" href="style.css?v=95">
 </head>
 <body>
   <div class="app-container">
@@ -426,8 +426,8 @@
 
       <!-- Form 4 내부자 거래 공시 대시보드 -->
       <div id="viewForm4" class="filing-view-container" data-scope="direct" style="display: none;">
-        <p class="card-sub data-quality-note form4-direct-only">추적 기업의 임원·이사 한 명이 자기 회사 보통주를 직접 매수했다고 신고한 거래입니다. 공시 단가가 확인된 매수만 표시합니다. 금액은 공시 단가에 수량을 곱한 값입니다.</p>
-        <p class="card-sub data-quality-note form4-all-only">저장된 Form 4 일반 증권 거래 전체입니다. 신고자는 개인 또는 법인일 수 있습니다.</p>
+        <p class="card-sub data-quality-note form4-direct-only">미국 거래소 상장사의 임원·이사가 자기 회사 보통주를 직접 매수했다고 단독 신고한 거래입니다. 공시 단가가 확인된 매수만 표시합니다. 금액은 공시 단가에 수량을 곱한 값입니다.</p>
+        <p class="card-sub data-quality-note form4-all-only">저장된 Form 4 거래와 새로 확인한 직접 매수입니다. 신고자는 개인 또는 법인일 수 있습니다.</p>
         <!-- Form 4 전용 테이블 섹션 -->
         <section class="table-section">
           <div class="table-toolbar">
@@ -464,6 +464,7 @@
               </tbody>
             </table>
           </div>
+          <button type="button" class="btn btn-outline" id="btnF4More" aria-controls="f4TableBody" hidden>거래 더 보기</button>
         </section>
       </div>
 
@@ -904,7 +905,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js"></script>
   <script src="sec_display_loader.js"></script>
-  <script src="app.js?v=103"></script>
+  <script src="app.js?v=104"></script>
 </body>
 </html>
 
