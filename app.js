@@ -1954,6 +1954,22 @@ function setupEventListeners() {
     };
   }
 
+  document.querySelectorAll("#congressTabs [data-congress]").forEach(button => {
+    button.onclick = () => {
+      congressTab = button.dataset.congress;
+      congressLimit = 40;
+      renderCongress();
+    };
+  });
+  document.getElementById("congressSearch").oninput = () => {
+    congressLimit = 40;
+    renderCongress();
+  };
+  document.getElementById("btnCongressMore").onclick = () => {
+    congressLimit += 40;
+    renderCongress();
+  };
+
   // Form 4 전용 필터 탭
   document.querySelectorAll("#f4FilterTabs .filter-tab").forEach(tab => {
     tab.onclick = () => {
@@ -2072,6 +2088,10 @@ let form4Snapshot = null;
 let recentForm4Snapshot = null;
 let form4Load = null;
 let FILING_13D_DATA = [];
+let congressSnapshot = null;
+let congressLoad = null;
+let congressTab = "ptr";
+let congressLimit = 40;
 
 state.currentFilingType = "13F";
 state.f4Filter = "DIRECT";
@@ -2110,6 +2130,7 @@ async function switchFilingMode(filingType) {
   if (mobileBrandH2) {
     if (filingType === "13F") mobileBrandH2.innerHTML = 'ALPHA <span>13F</span>';
     else if (filingType === "FORM4") mobileBrandH2.innerHTML = 'ALPHA <span>INSIDER</span>';
+    else if (filingType === "CONGRESS") mobileBrandH2.textContent = '미국 의회 공시';
     else if (filingType === "13D") mobileBrandH2.innerHTML = 'ALPHA <span>13D</span>';
     else if (filingType === "13G") mobileBrandH2.innerHTML = 'ALPHA <span>13G</span>';
     else if (filingType === "MACRO") mobileBrandH2.innerHTML = 'ALPHA <span>MACRO</span>';
@@ -2127,6 +2148,9 @@ async function switchFilingMode(filingType) {
   const headerFund = document.getElementById("currentFundName");
   const headerQuarter = document.getElementById("currentQuarter");
   const headerDesc = document.getElementById("currentGuruDesc");
+  const sidebarSource = document.getElementById("sidebarDataSource");
+  if (sidebarSource) sidebarSource.textContent = filingType === "CONGRESS" ? "미 하원 공식 공시 데이터" : "SEC 13F 공식 공시 데이터";
+  if (headerQuarter) headerQuarter.title = filingType === "CONGRESS" ? "하원 사무처 금융 공시" : "SEC Form 13F 분기 말일 기준 보유 현황";
 
   const ctrl13F = document.getElementById("sidebarControls13F");
   const ctrlF4 = document.getElementById("sidebarControlsForm4");
@@ -2138,11 +2162,13 @@ async function switchFilingMode(filingType) {
   const vF4 = document.getElementById("viewForm4");
   const v13D = document.getElementById("view13D");
   const vMacro = document.getElementById("viewMacro");
+  const vCongress = document.getElementById("viewCongress");
 
   if (v13F) v13F.style.display = "none";
   if (vF4) vF4.style.display = "none";
   if (v13D) v13D.style.display = "none";
   if (vMacro) vMacro.style.display = "none";
+  if (vCongress) vCongress.style.display = "none";
 
   if (filingType === "13F") {
     if (brandTitle) brandTitle.innerHTML = 'ALPHA <span>13F</span>';
@@ -2158,6 +2184,17 @@ async function switchFilingMode(filingType) {
     if (ctrlF4) ctrlF4.style.display = "flex";
     if (vF4) vF4.style.display = "flex";
     await loadAndRenderForm4();
+  } else if (filingType === "CONGRESS") {
+    if (brandTitle) brandTitle.innerHTML = 'ALPHA <span>US</span>';
+    if (brandSubtitle) brandSubtitle.innerText = '미국 의회 금융 공시';
+    if (headerName) headerName.innerText = '미국 의회 금융 공시';
+    if (headerFund) headerFund.innerText = '연방 하원의원 매매 및 연례 보유';
+    if (headerQuarter) headerQuarter.innerText = '미 하원 사무처';
+    if (headerDesc) headerDesc.innerText = '신고 의원과 자산 소유자를 구분하고, 거래일과 공시일을 함께 표시합니다.';
+    if (ctrl13F) ctrl13F.style.display = "none";
+    if (ctrlF4) ctrlF4.style.display = "none";
+    if (vCongress) vCongress.style.display = "flex";
+    await loadAndRenderCongress();
   } else if (filingType === "13D") {
     if (brandTitle) brandTitle.innerHTML = 'ALPHA <span>13D</span>';
     if (brandSubtitle) brandSubtitle.innerText = '행동주의 5% 지분 공시 (Schedule 13D)';
@@ -2205,6 +2242,108 @@ async function switchFilingMode(filingType) {
     await loadAndRenderMacro();
     fetchLivePricesForCurrentView();
   }
+}
+
+const congressAssets = { ST: "주식", EF: "ETF", OP: "옵션" };
+const congressActions = { P: "매수", S: "매도", "S (partial)": "일부 매도", E: "교환" };
+const congressOwners = { SP: "배우자", JT: "공동", DC: "부양 자녀", SELF: "본인" };
+
+function validateCongressSnapshot(payload) {
+  const isDate = value => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+  return payload?.schemaVersion === 1 && isDate(payload.asOf) && isDate(payload.ptrFrom) &&
+    payload.ptrFrom <= payload.asOf && Number.isInteger(payload.annualYear) &&
+    Array.isArray(payload.filings) && payload.filings.length > 0 && payload.filings.every(filing =>
+      filing && /^(ptr|annual)$/.test(filing.kind) && typeof filing.id === "string" &&
+      /^[0-9]{4,10}$/.test(filing.id) && Number.isInteger(filing.year) &&
+      isDate(filing.filed) && typeof filing.name === "string" && /^[A-Z]{2}\d{2}$/.test(filing.district) &&
+      typeof filing.parsed === "boolean" && Array.isArray(filing.rows) && filing.rows.every(row =>
+        row && Object.hasOwn(congressAssets, row.assetType) &&
+        ["asset", "ticker", "owner", "value"].every(key => typeof row[key] === "string") &&
+        (filing.kind === "annual" || (isDate(row.traded) && Object.hasOwn(congressActions, row.action) &&
+          typeof row.status === "string"))));
+}
+
+async function loadAndRenderCongress() {
+  if (!congressSnapshot) {
+    if (!congressLoad) {
+      const file = "latest_congress_house.json";
+      congressLoad = Promise.all([
+        loadDashboardSnapshot(file, 8000, validateCongressSnapshot),
+        loadRefreshedSnapshot(file, validateCongressSnapshot)
+      ]).then(([bundled, refreshed]) =>
+        refreshed && (!bundled || refreshed.asOf >= bundled.asOf) ? refreshed : bundled);
+    }
+    renderCongress();
+    congressSnapshot = await congressLoad;
+    congressLoad = null;
+  }
+  if (state.currentFilingType === "CONGRESS") renderCongress();
+}
+
+function renderCongress() {
+  const tab = congressTab;
+  const isDocuments = tab === "documents";
+  const isTrade = tab === "ptr";
+  const search = document.getElementById("congressSearch");
+  search.placeholder = isDocuments ? "의원, 지역구 검색" : "의원, 티커, 자산 검색";
+  const query = search.value.trim().toLowerCase();
+  document.querySelectorAll("#congressTabs [data-congress]").forEach(button => {
+    const active = button.dataset.congress === tab;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+
+  const status = document.getElementById("congressStatus");
+  const scope = document.getElementById("congressScope");
+  const header = document.getElementById("congressColumns");
+  const body = document.getElementById("congressRows");
+  const more = document.getElementById("btnCongressMore");
+  if (!congressSnapshot) {
+    status.textContent = congressLoad ? "하원 공시를 불러오는 중…" : "하원 공시를 불러오지 못했습니다. 위 공식 조회에서 확인할 수 있습니다.";
+    scope.textContent = "";
+    header.replaceChildren();
+    body.replaceChildren();
+    more.hidden = true;
+    return;
+  }
+
+  const { filings, asOf, ptrFrom, annualYear } = congressSnapshot;
+  const matches = (filing, row) =>
+    [filing.name, filing.district, row?.ticker, row?.asset].some(value => value?.toLowerCase().includes(query));
+  const entries = isDocuments ? filings.filter(filing => matches(filing)).map(filing => ({ filing })) :
+    filings.filter(filing => filing.kind === tab).flatMap(filing =>
+      filing.rows.filter(row => row.status !== "Deleted" && matches(filing, row)).map(row => ({ filing, row })));
+  if (isTrade) entries.sort((a, b) => b.filing.filed.localeCompare(a.filing.filed) || b.row.traded.localeCompare(a.row.traded));
+  scope.textContent = isDocuments
+    ? `매매 공시 ${ptrFrom}~${asOf} · 연례 보유 ${annualYear}년분 · 표로 옮기기 어려운 문서도 포함합니다.`
+    : isTrade
+      ? `공시일 ${ptrFrom}~${asOf} · 주식·ETF·옵션 · 정정 및 별도로 신고된 거래는 각각 표시합니다.`
+      : `${annualYear}년 연례 보고서의 주식·ETF·옵션 · 보고 연도 기준이며 현재 보유는 달라질 수 있습니다.`;
+  status.textContent = entries.length ? `${Math.min(congressLimit, entries.length).toLocaleString()} / ${entries.length.toLocaleString()}${isDocuments ? "개 문서" : "건"} 표시`
+    : "검색 조건에 맞는 공시가 없습니다.";
+
+  const labels = isDocuments ? ["신고 의원", "공시 종류", "공시일", "하원 원문"] :
+    isTrade ? ["거래 자산", "신고 의원", "소유자", "거래 유형", "거래일 / 공시일", "신고 금액 구간", "하원 원문"] :
+      ["보유 자산", "신고 의원", "소유자", "신고 평가액 구간", "공시일", "하원 원문"];
+  header.innerHTML = labels.map(label => `<th scope="col" role="columnheader">${label}</th>`).join("");
+  const secondary = value => `<small class="form4-secondary">${escapeHtml(value)}</small>`;
+  body.innerHTML = entries.slice(0, congressLimit).map(({ filing, row }) => {
+    const folder = filing.kind === "ptr" ? "ptr-pdfs" : "financial-pdfs";
+    const url = `https://disclosures-clerk.house.gov/public_disc/${folder}/${filing.year}/${filing.id}.pdf`;
+    const source = `<a class="congress-link" href="${url}" target="_blank" rel="noopener noreferrer">PDF 원문</a>`;
+    const person = `<strong>${escapeHtml(filing.name)}</strong>${secondary(filing.district)}`;
+    const asset = row ? `${row.ticker ? `<strong>${escapeHtml(row.ticker)}</strong> ` : ""}${escapeHtml(row.asset)}${secondary(congressAssets[row.assetType])}` : "";
+    const owner = row && Object.hasOwn(congressOwners, row.owner) ? congressOwners[row.owner] : "표기 없음";
+    const value = row ? ({ None: "신고 평가액 없음", "N/A": "해당 없음" }[row.value] || escapeHtml(row.value)) : "";
+    const cells = isDocuments
+      ? [person, filing.kind === "ptr" ? "매매 공시" : `${filing.year}년 연례 보고서`, escapeHtml(filing.filed), source]
+      : isTrade
+        ? [asset, person, owner, congressActions[row.action] + (row.status === "New" ? "" : secondary(row.status === "Amended" ? "정정" : row.status)),
+          escapeHtml(row.traded) + secondary(`공시 ${filing.filed}`), value, source]
+        : [asset, person, owner, value, escapeHtml(filing.filed), source];
+    return `<tr role="row">${cells.map((cell, index) => `<td role="cell" ${index === 0 ? 'class="form4-wide"' : ""} data-label="${labels[index]}">${cell}</td>`).join("")}</tr>`;
+  }).join("");
+  more.hidden = entries.length <= congressLimit;
 }
 
 function form4IssuerForTicker(rows, ticker) {
@@ -2264,18 +2403,25 @@ function validateForm4Snapshot(payload) {
       [row.shares, row.price, row.totalValue, row.postShares].every(validNumber));
 }
 
-async function loadForm4Asset(url, timeout) {
+async function loadDashboardSnapshot(url, timeout, validate) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
   try {
     const response = await fetch(url, { cache: "no-store", signal: controller.signal });
     const snapshot = response.ok ? await response.json() : null;
-    return validateForm4Snapshot(snapshot) ? snapshot : null;
+    return validate(snapshot) ? snapshot : null;
   } catch {
     return null;
   } finally {
     clearTimeout(timer);
   }
+}
+
+function loadRefreshedSnapshot(file, validate) {
+  // Scheduled bot commits are available here even before the next Pages build.
+  if (location.origin !== "https://xodyd1214.github.io" ||
+      !location.pathname.startsWith("/stock_13f_tracker/")) return null;
+  return loadDashboardSnapshot("https://raw.githubusercontent.com/xodyd1214/stock_13f_tracker/master/" + file, 5000, validate);
 }
 
 function hasForm4Coverage(snapshot) {
@@ -2292,13 +2438,10 @@ async function loadVerifiedForm4() {
   if (!form4Load) {
     form4Load = (async () => {
       const recentFile = "latest_form4_recent.json";
-      // Scheduled bot commits are available here even before the next Pages build.
-      const isProduction = location.origin === "https://xodyd1214.github.io" &&
-        location.pathname.startsWith("/stock_13f_tracker/");
       const [archive, deployed, refreshed] = await Promise.all([
-        loadForm4Asset("latest_form4_insiders.json", 10000),
-        loadForm4Asset(recentFile, 8000),
-        isProduction ? loadForm4Asset("https://raw.githubusercontent.com/xodyd1214/stock_13f_tracker/master/" + recentFile, 5000) : null
+        loadDashboardSnapshot("latest_form4_insiders.json", 10000, validateForm4Snapshot),
+        loadDashboardSnapshot(recentFile, 8000, validateForm4Snapshot),
+        loadRefreshedSnapshot(recentFile, validateForm4Snapshot)
       ]);
       const localRecent = hasForm4Coverage(deployed) ? deployed : null;
       recentForm4Snapshot = hasForm4Coverage(refreshed) &&

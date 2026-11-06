@@ -1736,11 +1736,11 @@ body {
   min-width: 960px;
 }
 
-#btnF4More {
+#btnF4More, #btnCongressMore {
   margin-top: 12px;
 }
 
-#btnF4More[hidden] {
+#btnF4More[hidden], #btnCongressMore[hidden] {
   display: none;
 }
 
@@ -1758,7 +1758,11 @@ body {
   white-space: nowrap;
 }
 
-.main-content[data-filing-mode="FORM4"] :is(#filingDdayBanner, #macroPulseBar) {
+.main-content:is([data-filing-mode="FORM4"], [data-filing-mode="CONGRESS"]) :is(#filingDdayBanner, #macroPulseBar) {
+  display: none;
+}
+
+.main-content[data-filing-mode="CONGRESS"] :is(#btnExportCsv, #btnMobileCsv) {
   display: none;
 }
 
@@ -1774,13 +1778,44 @@ body {
   overflow-wrap: anywhere;
 }
 
+.congress-sources {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.congress-sources p {
+  margin: 0 4px 0 0;
+}
+
+.congress-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-base);
+  text-decoration: none;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.congress-link:hover {
+  background: var(--bg-highlight);
+}
+
+#congressTable tbody tr {
+  cursor: default;
+}
+
 @media (max-width: 640px) {
-  #f4Table, #viewForm4[data-scope="direct"] #f4Table, #f4Table tbody {
+  #f4Table, #viewForm4[data-scope="direct"] #f4Table, #f4Table tbody, #congressTable, #congressTable tbody {
     display: block;
     min-width: 0;
   }
 
-  #f4Table thead {
+  :is(#f4Table, #congressTable) thead {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -1789,7 +1824,7 @@ body {
     white-space: nowrap;
   }
 
-  #f4Table tbody tr {
+  :is(#f4Table, #congressTable) tbody tr {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px 10px;
@@ -1797,7 +1832,7 @@ body {
     border-bottom: 1px solid var(--border-subtle);
   }
 
-  #f4Table tbody td {
+  :is(#f4Table, #congressTable) tbody td {
     min-width: 0;
     border: 0;
     padding: 0;
@@ -1805,11 +1840,11 @@ body {
     overflow-wrap: anywhere;
   }
 
-  #f4Table .form4-wide {
+  :is(#f4Table, #congressTable) .form4-wide {
     grid-column: 1 / -1;
   }
 
-  #f4Table td[data-label]::before {
+  :is(#f4Table, #congressTable) td[data-label]::before {
     content: attr(data-label);
     display: block;
     margin-bottom: 2px;
@@ -1822,7 +1857,7 @@ body {
     margin: 0 6px 0 0;
   }
 
-  #f4Table .sec-link-btn {
+  #f4Table .sec-link-btn, #viewCongress .congress-link {
     min-height: 36px;
   }
 }

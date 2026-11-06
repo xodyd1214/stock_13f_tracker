@@ -8,6 +8,7 @@ class PublicationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             for filename, payload in [('latest_form4_insiders.json', '{"a":1}'),
                                       ('latest_form4_recent.json', '{"schemaVersion":1}'),
+                                      ('latest_congress_house.json', '{"schemaVersion":1}'),
                                       ('realtime_prices.json', '{}'),
                                       ('realtime_prices.json', '{"AAPL":NaN}'),
                                       ('realtime_prices.json', '{"AAPL":1e400}'),
@@ -31,13 +32,13 @@ class PublicationTests(unittest.TestCase):
 
     def test_workflow_runs_safe_sources_independently_and_surfaces_errors(self):
         text = (Path(__file__).resolve().parents[1] / '.github/workflows/auto_sync.yml').read_text()
-        for script in ('price_fetcher.py', 'macro_collector.py', 'sec_form4_recent.py'):
+        for script in ('price_fetcher.py', 'macro_collector.py', 'sec_form4_recent.py', 'congress_house.py'):
             self.assertIn('run: python ' + script, text)
-        self.assertEqual(text.count('continue-on-error: true'), 3)
+        self.assertEqual(text.count('continue-on-error: true'), 4)
         self.assertNotIn('steps.filings.outcome', text)
         self.assertIn('python validate_data.py "$file"', text)
         self.assertIn('node --test tests/*.test.cjs', text)
-        self.assertIn('outputs=(realtime_prices.json latest_macro_indicators.json latest_form4_recent.json)', text)
+        self.assertIn('outputs=(realtime_prices.json latest_macro_indicators.json latest_form4_recent.json latest_congress_house.json)', text)
         self.assertIn('exit 1', text)
         for script in ('sec_insider_collector.py', 'sec_13d_collector.py', 'collector_1year.py', 'sec_collector.py'):
             self.assertNotIn('python ' + script, text)

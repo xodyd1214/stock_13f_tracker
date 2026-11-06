@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=95">
+  <link rel="stylesheet" href="style.css?v=96">
 </head>
 <body>
   <div class="app-container">
@@ -32,10 +32,10 @@
       <!-- SEC 공식 공시 모드 직관적 리스트 네비게이션 (원클릭 전환) -->
       <div class="filing-mode-nav">
         <div class="filing-mode-header">
-          <label class="filing-mode-label">SEC 공식 공시 모드</label>
-          <span class="filing-mode-count">5 MODES</span>
+          <label class="filing-mode-label">공시 및 시장 데이터</label>
+          <span class="filing-mode-count">6 MODES</span>
         </div>
-        <div class="filing-mode-list" id="filingModeList" role="tablist" aria-label="SEC 공식 공시 모드">
+        <div class="filing-mode-list" id="filingModeList" role="tablist" aria-label="공시 및 시장 데이터">
           <button type="button" class="filing-mode-item" data-mode="MACRO" role="tab" aria-selected="false" title="Macro Compass 거시경제 & FOMC">
             <div class="mode-item-content">
               <span class="mode-item-badge badge-macro">MACRO</span>
@@ -69,6 +69,17 @@
             <span class="mode-active-pill"></span>
           </button>
 
+          <button type="button" class="filing-mode-item" data-mode="CONGRESS" role="tab" aria-selected="false" title="미국 의회 금융 공시">
+            <div class="mode-item-content">
+              <span class="mode-item-badge">US</span>
+              <div class="mode-item-text">
+                <span class="mode-item-title">미국 의회</span>
+                <span class="mode-item-desc">의원 매매 및 보유 공시</span>
+              </div>
+            </div>
+            <span class="mode-active-pill"></span>
+          </button>
+
           <button type="button" class="filing-mode-item" data-mode="13D" role="tab" aria-selected="false" title="Schedule 13D 행동주의 5%">
             <div class="mode-item-content">
               <span class="mode-item-badge">13D</span>
@@ -97,6 +108,7 @@
           <option value="MACRO">Macro Compass (거시경제 &amp; FOMC 캘린더)</option>
           <option value="13F" selected>Form 13F (기관 포트폴리오)</option>
           <option value="FORM4">Form 4 (내부자 거래 추적)</option>
+          <option value="CONGRESS">미국 의회 금융 공시</option>
           <option value="13D">Schedule 13D (행동주의 5%)</option>
           <option value="13G">Schedule 13G (단순 대량보유)</option>
         </select>
@@ -160,7 +172,7 @@
       <div class="sidebar-footer">
         <div class="sync-status">
           <span class="status-dot"></span>
-          <span>SEC 13F 공식 공시 데이터</span>
+          <span id="sidebarDataSource">SEC 13F 공식 공시 데이터</span>
         </div>
       </div>
     </aside>
@@ -465,6 +477,39 @@
             </table>
           </div>
           <button type="button" class="btn btn-outline" id="btnF4More" aria-controls="f4TableBody" hidden>거래 더 보기</button>
+        </section>
+      </div>
+
+      <div id="viewCongress" class="filing-view-container" style="display: none;">
+        <div class="congress-sources">
+          <p class="card-sub">아래 표는 하원 공시를 다룹니다. 상원 공시는 공식 조회에서 열 수 있습니다.</p>
+          <a class="congress-link" href="https://disclosures-clerk.house.gov/FinancialDisclosure/ViewSearch" target="_blank" rel="noopener noreferrer">하원 공식 조회</a>
+          <a class="congress-link" href="https://efdsearch.senate.gov/search/home/" target="_blank" rel="noopener noreferrer">상원 공식 조회</a>
+        </div>
+        <section class="table-section">
+          <div class="table-toolbar">
+            <div class="toolbar-left">
+              <div class="filter-tabs" id="congressTabs" aria-label="의회 공시 종류">
+                <button type="button" class="filter-tab active" data-congress="ptr" aria-pressed="true">매매 내역</button>
+                <button type="button" class="filter-tab" data-congress="annual" aria-pressed="false">연례 보유</button>
+                <button type="button" class="filter-tab" data-congress="documents" aria-pressed="false">공시 문서</button>
+              </div>
+            </div>
+            <div class="toolbar-right">
+              <div class="search-input-wrap">
+                <input type="search" id="congressSearch" placeholder="의원, 티커, 자산 검색" aria-label="의원 이름, 지역구, 티커, 자산 검색">
+              </div>
+            </div>
+          </div>
+          <p id="congressScope" class="card-sub data-quality-note"></p>
+          <p id="congressStatus" class="card-sub data-quality-note" role="status"></p>
+          <div class="table-wrapper">
+            <table class="power-table" id="congressTable" role="table" aria-label="미국 하원 금융 공시">
+              <thead role="rowgroup"><tr id="congressColumns" role="row"></tr></thead>
+              <tbody id="congressRows" role="rowgroup"></tbody>
+            </table>
+          </div>
+          <button type="button" class="btn btn-outline" id="btnCongressMore" aria-controls="congressRows" hidden>더 보기</button>
         </section>
       </div>
 
@@ -885,6 +930,9 @@
       <span class="nav-icon">👔</span>
       <span class="nav-label">내부자</span>
     </button>
+    <button type="button" class="mobile-nav-item" data-mode="CONGRESS">
+      <span class="nav-label">미국 의회</span>
+    </button>
     <button type="button" class="mobile-nav-item" data-mode="13D">
       <span class="nav-icon">🎯</span>
       <span class="nav-label">행동주의</span>
@@ -905,7 +953,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js"></script>
   <script src="sec_display_loader.js"></script>
-  <script src="app.js?v=104"></script>
+  <script src="app.js?v=105"></script>
 </body>
 </html>
 
