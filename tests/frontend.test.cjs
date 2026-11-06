@@ -174,7 +174,7 @@ test('insider canonical codes distinguish buys, sales, awards, exercises and unk
 });
 test('Form 4 rejects legacy rows and resolves the issuer independently of the reporter', () => {
   const snapshot = JSON.parse(fs.readFileSync(require('node:path').join(__dirname, '../latest_form4_insiders.json'), 'utf8'));
-  const c = context(['validateForm4Snapshot', 'form4IssuerForTicker', 'form4Price', 'getF4ScopeDataset', 'getF4ActiveDataset'], {
+  const c = context(['validateForm4Snapshot', 'form4IssuerForTicker', 'form4Price', 'form4Security', 'getF4ScopeDataset', 'getF4ActiveDataset'], {
     FORM4_DATA: snapshot.transactions, state: { selectedF4Issuer: '0000070858', f4Filter: 'ALL' }
   });
   assert.equal(c.validateForm4Snapshot(snapshot), true);
@@ -185,6 +185,8 @@ test('Form 4 rejects legacy rows and resolves the issuer independently of the re
   assert.match(pni.insiderName, /BANK OF AMERICA.*MERRILL LYNCH/);
   assert.equal(c.form4Price(pni.price), '$6.334');
   assert.equal(c.form4Price(null), '미기재');
+  assert.match(c.form4Security({ securityTitle: 'Common Stock, $0.001 par value' }), />보통주<\/span>$/);
+  assert.equal(c.form4Security({ securityTitle: 'Class B Common Stock' }), 'Class B Common Stock');
   assert.ok(c.getF4ActiveDataset().every(row => row.ticker === 'BAC'));
   assert.ok(c.getF4ActiveDataset().length > 0);
   c.state.f4Filter = 'DIRECT';

@@ -2229,7 +2229,11 @@ function form4Dates(item) {
 }
 
 function form4Security(item) {
-  return escapeHtml(item.securityTitle || "증권명 미기재");
+  const title = item.securityTitle || "증권명 미기재";
+  if (/^(?:common stock|common shares?|ordinary shares?)(?:,\s*\$[\d.]+\s+par value)?$/i.test(title)) {
+    return `<span title="${escapeHtml(title)}">보통주</span>`;
+  }
+  return escapeHtml(title);
 }
 
 function form4Relationship(item) {
@@ -2528,6 +2532,7 @@ function appendNextF4PageRows() {
 
   const chunk = CURRENT_F4_FILTERED_ITEMS.slice(start, end);
   const fragment = document.createDocumentFragment();
+  const direct = state.f4Filter === "DIRECT";
 
   chunk.forEach(item => {
     const tr = document.createElement("tr");
@@ -2551,11 +2556,11 @@ function appendNextF4PageRows() {
     const formattedPost = item.postShares?.toLocaleString(undefined, { maximumFractionDigits: 8 }) ?? "—";
 
     tr.innerHTML = `
-      <td class="text-left form4-wrap form4-wide" role="cell" data-label="기업 / 거래 증권">
-        <strong>${escapeHtml(item.ticker || "티커 미기재")}</strong> ${escapeHtml(item.companyName)}
+      <td class="text-left form4-wrap form4-wide" role="cell" data-label="${direct ? "매수한 주식" : "거래한 증권"}">
+        <strong>${escapeHtml(item.companyName)}</strong>${item.ticker ? ` (${escapeHtml(item.ticker)})` : ""}
         <small class="form4-secondary">${form4Security(item)}</small>
       </td>
-      <td class="text-left form4-wrap form4-wide" role="cell" data-label="신고자 / 직책">
+      <td class="text-left form4-wrap form4-wide" role="cell" data-label="${direct ? "매수자 / 직책" : "신고자 / 직책"}">
         <strong>${escapeHtml(item.insiderName)}</strong>
         <span class="form4-secondary">${form4Relationship(item)}</span>
       </td>
