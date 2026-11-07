@@ -66,6 +66,47 @@
       ]
     },
     {
+      "id": "20035770",
+      "kind": "ptr",
+      "year": 2026,
+      "filed": "2026-11-05",
+      "name": "Josh Gottheimer",
+      "district": "NJ05",
+      "parsed": true,
+      "rows": [
+        {
+          "asset": "Applied Materials, Inc. - Common Stock",
+          "ticker": "AMAT",
+          "assetType": "ST",
+          "owner": "JT",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-26",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Benchmark Electronics, Inc. Common Stock",
+          "ticker": "BHE",
+          "assetType": "ST",
+          "owner": "JT",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-12",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "PT Telekomunikasi Indonesia, Tbk",
+          "ticker": "TLK",
+          "assetType": "ST",
+          "owner": "JT",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-15",
+          "action": "S",
+          "status": "New"
+        }
+      ]
+    },
+    {
       "id": "20035662",
       "kind": "ptr",
       "year": 2026,
