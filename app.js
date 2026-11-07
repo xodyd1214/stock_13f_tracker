@@ -2913,9 +2913,10 @@ function watchCompany(key) {
 }
 
 function watchCompanyButton(company) {
-  const label = [company.ticker, company.name].filter(Boolean).join(" · ") || `CIK ${company.issuer}`;
+  const label = company.ticker || company.name || `CIK ${company.issuer}`;
+  const name = company.ticker && company.name ? `<span class="watch-company-name">${escapeHtml(company.name)}</span>` : "";
   return `<button type="button" class="btn btn-outline" data-watch-company="${escapeHtml(company.key)}" ` +
-    `aria-pressed="${watchlist.selected === company.key}">${escapeHtml(label)}</button>`;
+    `aria-pressed="${watchlist.selected === company.key}"><strong>${escapeHtml(label)}</strong>${name ? ` ${name}` : ""}</button>`;
 }
 
 function renderWatchSearch() {
@@ -3056,11 +3057,12 @@ function watchHousePurchases(snapshot, ticker) {
 }
 
 function renderWatchTable(id, note, columns, rows) {
-  const heading = columns.map(label => `<th scope="col" role="columnheader">${escapeHtml(label)}</th>`).join("");
+  const heading = columns.map(([label, kind]) =>
+    `<th scope="col" role="columnheader" class="watch-${kind}">${escapeHtml(label)}</th>`).join("");
   const table = entries => `<div class="table-wrapper"><table class="power-table watch-table" role="table" aria-labelledby="${id}Title">` +
     `<thead role="rowgroup"><tr role="row">${heading}</tr></thead><tbody role="rowgroup">` +
     entries.map(cells => `<tr role="row">${cells.map((cell, index) =>
-      `<td role="cell" ${index === 0 ? 'class="form4-wide" ' : ''}data-label="${escapeHtml(columns[index])}">${cell}</td>`).join("")}</tr>`).join("") +
+      `<td role="cell" class="watch-${columns[index][1]}${index === 0 ? " form4-wide" : ""}" data-label="${escapeHtml(columns[index][0])}">${cell}</td>`).join("")}</tr>`).join("") +
     "</tbody></table></div>";
   const limit = 5;
   const remaining = rows.length - limit;
@@ -3078,8 +3080,13 @@ function selectWatchCompany(key) {
   const company = watchCompany(key);
   watchlist.selected = key;
   const title = document.getElementById("watchCompanyTitle");
-  title.textContent = company.exchange ? `${company.name} (${company.ticker}) · ${company.exchange}` :
-    company.name || company.ticker || `CIK ${company.issuer}`;
+  title.textContent = company.name || company.ticker || `CIK ${company.issuer}`;
+  if (company.exchange) {
+    const meta = document.createElement("span");
+    meta.className = "watch-company-meta";
+    meta.textContent = ` (${company.ticker}) · ${company.exchange}`;
+    title.appendChild(meta);
+  }
   renderWatchlist();
 
   const uid = CURRENT_USER.uid;
@@ -3096,7 +3103,7 @@ function selectWatchCompany(key) {
         `$${row.value.toLocaleString("en-US")}`, watchSource(safeSecUrl(row.sourceUrl), "SEC 원문")
       ]);
       renderWatchTable("watch13F", `${company.ticker} · 확인된 운용사의 분기말 보유분 중 종목이 검증된 내역`,
-        ["운용사", "보유 기준일", "보유 수량", "공시 평가액", "원문"], rows);
+        [["운용사", "entity"], ["보유 기준일", "meta"], ["보유 수량", "quantity"], ["공시 평가액", "amount"], ["원문", "reference"]], rows);
     });
     loadCongressSnapshot().then(snapshot => {
       if (!current()) return;
@@ -3109,7 +3116,7 @@ function selectWatchCompany(key) {
         escapeHtml(row.value), watchSource(`https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/${filing.year}/${filing.id}.pdf`, "PDF 원문")
       ]);
       renderWatchTable("watchHouse", `${company.ticker} · ${start}~${snapshot.asOf} 제출분`,
-        ["신고 의원", "소유자", "거래일 / 공시일", "신고 금액 구간", "원문"], rows);
+        [["신고 의원", "entity"], ["소유자", "meta"], ["거래일 / 공시일", "meta"], ["신고 금액 구간", "amount"], ["원문", "reference"]], rows);
     });
   } else {
     for (const id of ["watch13F", "watchHouse"]) message(id, "현재 SEC 상장 목록에서 종목을 확인할 수 없습니다.");
@@ -3127,7 +3134,8 @@ function selectWatchCompany(key) {
       form4PriceWithBasis(row), watchSource(safeSecUrl(row.secUrl), "SEC 원문")
     ]);
     renderWatchTable("watchForm4", `발행사 기준 · 공시일 ${from}~${through}`,
-      ["매수자 / 직책", "매수한 주식", "거래일 / 공시일", "수량", "공시 단가", "원문"], rows);
+      [["매수자 / 직책", "entity"], ["매수한 주식", "meta"], ["거래일 / 공시일", "meta"],
+        ["수량", "quantity"], ["공시 단가", "amount"], ["원문", "reference"]], rows);
   });
 }
 

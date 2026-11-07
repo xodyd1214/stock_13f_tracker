@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=107">
+  <link rel="stylesheet" href="style.css?v=108">
 </head>
 <body>
   <div class="app-container">
@@ -543,16 +543,16 @@
               <h3 id="watchCompanyTitle" tabindex="-1"></h3>
               <button type="button" class="btn btn-outline" id="btnWatchToggle"></button>
             </div>
-            <section class="table-section watch-card" aria-labelledby="watch13FTitle">
-              <h3 id="watch13FTitle">기관 보유 · Form 13F</h3>
+            <section class="table-section watch-card watch-disclosure" data-disclosure="institution" aria-labelledby="watch13FTitle">
+              <h3 id="watch13FTitle"><span class="watch-disclosure-source">Form 13F</span> 기관 보유</h3>
               <div id="watch13F" aria-live="polite"></div>
             </section>
-            <section class="table-section watch-card" aria-labelledby="watchForm4Title">
-              <h3 id="watchForm4Title">임원·이사 직접 매수 · Form 4</h3>
+            <section class="table-section watch-card watch-disclosure" data-disclosure="insider" aria-labelledby="watchForm4Title">
+              <h3 id="watchForm4Title"><span class="watch-disclosure-source">Form 4</span> 임원·이사 직접 매수</h3>
               <div id="watchForm4" aria-live="polite"></div>
             </section>
-            <section class="table-section watch-card" aria-labelledby="watchHouseTitle">
-              <h3 id="watchHouseTitle">미국 하원 최근 매수 공시</h3>
+            <section class="table-section watch-card watch-disclosure" data-disclosure="house" aria-labelledby="watchHouseTitle">
+              <h3 id="watchHouseTitle"><span class="watch-disclosure-source">미국 하원</span> 최근 매수 공시</h3>
               <div id="watchHouse" aria-live="polite"></div>
             </section>
           </div>
@@ -1070,7 +1070,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js"></script>
   <script src="sec_display_loader.js?v=2"></script>
-  <script src="app.js?v=119"></script>
+  <script src="app.js?v=120"></script>
 </body>
 </html>
 
