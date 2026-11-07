@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-11-06",
-  "ptrFrom": "2026-08-09",
+  "asOf": "2026-11-07",
+  "ptrFrom": "2026-08-10",
   "annualYear": 2025,
   "filings": [
     {
@@ -11617,7 +11617,8 @@
           "value": "$1,000,001 - $5,000,000",
           "traded": "2026-07-24",
           "action": "P",
-          "status": "New"
+          "status": "New",
+          "shares": "10000"
         },
         {
           "asset": "Bloom Energy Corporation Class A Common Stock",
@@ -11637,7 +11638,8 @@
           "value": "$500,001 - $1,000,000",
           "traded": "2026-07-28",
           "action": "P",
-          "status": "New"
+          "status": "New",
+          "shares": "5000"
         },
         {
           "asset": "Bloom Energy Corporation Class A Common Stock",
@@ -11667,7 +11669,8 @@
           "value": "$500,001 - $1,000,000",
           "traded": "2026-07-24",
           "action": "P",
-          "status": "New"
+          "status": "New",
+          "shares": "10000"
         }
       ]
     },

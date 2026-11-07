@@ -23,6 +23,8 @@ ACTIONS = {"P", "S", "S (partial)", "E"}
 DOLLARS = r"\$\d{1,3}(?:,\d{3})*"
 RANGE = rf"{DOLLARS} - {DOLLARS}"
 VALUE = rf"(?:{RANGE}|Over {DOLLARS}|None|N/A)"
+SHARE_COUNT = r"(?:[1-9][0-9]{0,2}(?:,[0-9]{3})+|[1-9][0-9]*)(?:\.[0-9]+)?|0\.[0-9]*[1-9][0-9]*"
+SHARE_ACTIONS = {"P": r"Purchased|Bought|Purchase of", "S": r"Sold|Sale of", "S (partial)": r"Sold|Sale of"}
 HEADERS = {
     "ptr": "ID Owner Asset Transaction Date Notification Amount Cap.",
     "annual": "Asset Owner Value of Asset Income Type(s) Income Tx. >",
@@ -83,6 +85,8 @@ def extract_rows(pdf_bytes, filing):
                         add_row(rows, record, filing)
                     return (rows, columns is not None) if identity_confirmed else ([], False)
                 if kind == "ptr" and line_text.startswith("* For the complete list"):
+                    if record:
+                        add_row(rows, record, filing)
                     return (rows, columns is not None) if identity_confirmed else ([], False)
 
                 if line_text == HEADERS[kind]:
@@ -99,16 +103,26 @@ def extract_rows(pdf_bytes, filing):
                 cells = [" ".join(cell) for cell in cells]
                 if kind == "ptr":
                     _, owner, asset, action, traded, _, amount, _ = cells
-                    if action in ACTIONS and traded and owner in OWNERS:
+                    if action in ACTIONS and traded:
+                        if record:
+                            add_row(rows, record, filing)
                         record = {"owner": owner, "asset": asset, "value": amount,
-                                  "action": action, "traded": traded, "status": ""}
-                    elif record and re.match(r"^F\x00+ S\x00+:", line_text):
-                        record["status"] = line_text.split(":", 1)[1].strip()
-                        add_row(rows, record, filing)
-                        record = None
-                    elif record and "\x00" not in line_text:
-                        record["asset"] += " " + asset
-                        record["value"] += " " + amount
+                                  "action": action, "traded": traded, "status": "",
+                                  "notes": []} if owner in OWNERS else None
+                    elif record:
+                        if re.match(r"^F\x00+ S\x00+:", line_text):
+                            if record["status"]:
+                                add_row(rows, record, filing)
+                                record = None
+                            else:
+                                record["status"] = line_text.split(":", 1)[1].strip()
+                        elif record["status"]:
+                            # Notes belong to the current row, after its filing-status label.
+                            if columns[2] <= line[0]["x0"] < columns[3] and re.match(r"^[DC]\x00+:", line_text):
+                                record["notes"].append(line_text.split(":", 1)[1].strip())
+                        elif "\x00" not in line_text:
+                            record["asset"] += " " + asset
+                            record["value"] += " " + amount
                 else:
                     asset, owner, amount, _, _, _ = cells
                     if "\x00" in line_text or line_text.startswith("*"):
@@ -126,7 +140,7 @@ def extract_rows(pdf_bytes, filing):
                     elif record and not re.search(r"\[[A-Z0-9]{2}\]$", record["asset"]):
                         record["asset"] = (record["asset"] + " " + asset).strip()
             page.close()
-    if kind == "annual" and record:
+    if record:
         add_row(rows, record, filing)
     return (rows, columns is not None) if identity_confirmed else ([], False)
 
@@ -151,6 +165,16 @@ def add_row(rows, record, filing):
         if traded > filing["filed"] or not record["status"]:
             return
         row.update(traded=traded, action=record["action"], status=record["status"])
+        if code in {"ST", "EF"} and record["action"] in SHARE_ACTIONS:
+            verbs = SHARE_ACTIONS[record["action"]]
+            pattern = rf"(?:(?:{verbs}) ({SHARE_COUNT}) shares?\.?|(?:Number of shares|Shares): ({SHARE_COUNT})\.?)"
+            quantities = set()
+            for note in record.get("notes", ()):
+                explicit = re.fullmatch(pattern, note, re.IGNORECASE)
+                if explicit:
+                    quantities.add((explicit[1] or explicit[2]).replace(",", ""))
+            if len(quantities) == 1:
+                row["shares"] = quantities.pop()
     rows.append(row)
 
 
@@ -187,12 +211,16 @@ def validate_snapshot(snapshot):
                                         not re.fullmatch(rf"(?:{RANGE}|Over {DOLLARS})", row["value"]) or
                                         date.fromisoformat(row["traded"]) > filed))):
                 raise ValueError(f"Invalid House disclosure row in {filing['id']}")
+            if "shares" in row and (kind != "ptr" or row["assetType"] not in {"ST", "EF"} or
+                                    row["action"] not in SHARE_ACTIONS or not isinstance(row["shares"], str) or
+                                    "," in row["shares"] or not re.fullmatch(SHARE_COUNT, row["shares"])):
+                raise ValueError(f"Invalid reported share count in {filing['id']}")
     if kinds != set(KINDS.values()):
         raise ValueError("Both House disclosure types are required")
     return snapshot
 
 
-def refresh(*, reparse=False):
+def refresh(*, reparse=False, reparse_ptr=False):
     today = datetime.now(ZoneInfo("America/New_York")).date()
     start = today - timedelta(days=89)
     old = validate_snapshot(json.loads(OUTPUT.read_text())) if OUTPUT.exists() else None
@@ -227,7 +255,8 @@ def refresh(*, reparse=False):
 
         for index, filing in enumerate(sorted(selected.values(), key=lambda item: item["filed"], reverse=True), 1):
             previous = cached.get(filing["id"], {})
-            if not reparse and all(previous.get(key) == value for key, value in filing.items()):
+            should_reparse = reparse or (reparse_ptr and filing["kind"] == "ptr")
+            if not should_reparse and all(previous.get(key) == value for key, value in filing.items()):
                 filing.update(parsed=previous["parsed"], rows=previous["rows"])
                 continue
             try:

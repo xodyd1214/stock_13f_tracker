@@ -2259,6 +2259,31 @@ const congressAssets = { ST: "주식", EF: "ETF", OP: "옵션" };
 const congressActions = { P: "매수", S: "매도", "S (partial)": "일부 매도", E: "교환" };
 const congressActionFilters = { P: ["P"], S: ["S", "S (partial)"] };
 const congressOwners = { SP: "배우자", JT: "공동", DC: "부양 자녀", SELF: "본인" };
+const congressStates = {
+  AL: "앨라배마", AK: "알래스카", AZ: "애리조나", AR: "아칸소", CA: "캘리포니아",
+  CO: "콜로라도", CT: "코네티컷", DE: "델라웨어", FL: "플로리다", GA: "조지아",
+  HI: "하와이", ID: "아이다호", IL: "일리노이", IN: "인디애나", IA: "아이오와",
+  KS: "캔자스", KY: "켄터키", LA: "루이지애나", ME: "메인", MD: "메릴랜드",
+  MA: "매사추세츠", MI: "미시간", MN: "미네소타", MS: "미시시피", MO: "미주리",
+  MT: "몬태나", NE: "네브래스카", NV: "네바다", NH: "뉴햄프셔", NJ: "뉴저지",
+  NM: "뉴멕시코", NY: "뉴욕", NC: "노스캐롤라이나", ND: "노스다코타", OH: "오하이오",
+  OK: "오클라호마", OR: "오리건", PA: "펜실베이니아", RI: "로드아일랜드", SC: "사우스캐롤라이나",
+  SD: "사우스다코타", TN: "테네시", TX: "텍사스", UT: "유타", VT: "버몬트",
+  VA: "버지니아", WA: "워싱턴주", WV: "웨스트버지니아", WI: "위스콘신", WY: "와이오밍",
+  DC: "워싱턴 D.C.", AS: "미국령 사모아", GU: "괌", MP: "북마리아나 제도", PR: "푸에르토리코", VI: "미국령 버진아일랜드"
+};
+
+function congressDistrictLabel(code) {
+  const stateName = congressStates[code.slice(0, 2)];
+  const district = Number(code.slice(2));
+  return stateName ? (district ? `${stateName} 제${district}선거구` : `${stateName} 전역`) : code;
+}
+
+function congressShareLabel(shares) {
+  const [whole, fraction] = shares.split(".");
+  const grouped = BigInt(whole).toLocaleString("ko-KR");
+  return `${grouped}${fraction === undefined ? "" : "." + fraction}주`;
+}
 
 function validateCongressSnapshot(payload) {
   const isDate = value => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
@@ -2271,6 +2296,9 @@ function validateCongressSnapshot(payload) {
       typeof filing.parsed === "boolean" && Array.isArray(filing.rows) && filing.rows.every(row =>
         row && Object.hasOwn(congressAssets, row.assetType) &&
         ["asset", "ticker", "owner", "value"].every(key => typeof row[key] === "string") &&
+        (row.shares === undefined || (filing.kind === "ptr" && ["ST", "EF"].includes(row.assetType) &&
+          ["P", "S", "S (partial)"].includes(row.action) && typeof row.shares === "string" &&
+          /^(?:[1-9][0-9]*(?:\.[0-9]+)?|0\.[0-9]*[1-9][0-9]*)$/.test(row.shares))) &&
         (filing.kind === "annual" || (isDate(row.traded) && Object.hasOwn(congressActions, row.action) &&
           typeof row.status === "string"))));
 }
@@ -2329,7 +2357,8 @@ function renderCongress() {
 
   const { filings, asOf, ptrFrom, annualYear } = congressSnapshot;
   const matches = (filing, row) =>
-    [filing.name, filing.district, row?.ticker, row?.asset].some(value => value?.toLowerCase().includes(query));
+    [filing.name, filing.district, congressDistrictLabel(filing.district), row?.ticker, row?.asset]
+      .some(value => value?.toLowerCase().includes(query));
   const entries = isDocuments ? filings.filter(filing => matches(filing)).map(filing => ({ filing })) :
     filings.filter(filing => filing.kind === tab).flatMap(filing =>
       filing.rows.filter(row => row.status !== "Deleted" && (!allowedActions || allowedActions.includes(row.action)) &&
@@ -2352,8 +2381,10 @@ function renderCongress() {
     const folder = filing.kind === "ptr" ? "ptr-pdfs" : "financial-pdfs";
     const url = `https://disclosures-clerk.house.gov/public_disc/${folder}/${filing.year}/${filing.id}.pdf`;
     const source = `<a class="congress-link" href="${url}" target="_blank" rel="noopener noreferrer">PDF 원문</a>`;
-    const person = `<strong>${escapeHtml(filing.name)}</strong>${secondary(filing.district)}`;
-    const asset = row ? `${row.ticker ? `<strong>${escapeHtml(row.ticker)}</strong> ` : ""}${escapeHtml(row.asset)}${secondary(congressAssets[row.assetType])}` : "";
+    const person = `<strong>${escapeHtml(filing.name)}</strong><small class="form4-secondary" title="${escapeHtml(filing.district)}">${escapeHtml(congressDistrictLabel(filing.district))}</small>`;
+    const assetDetails = row ? congressAssets[row.assetType] +
+      (isTrade && row.shares ? ` · 신고 수량 ${congressShareLabel(row.shares)}` : "") : "";
+    const asset = row ? `${row.ticker ? `<strong>${escapeHtml(row.ticker)}</strong> ` : ""}${escapeHtml(row.asset)}${secondary(assetDetails)}` : "";
     const owner = row && Object.hasOwn(congressOwners, row.owner) ? congressOwners[row.owner] : "표기 없음";
     const value = row ? ({ None: "신고 평가액 없음", "N/A": "해당 없음" }[row.value] || escapeHtml(row.value)) : "";
     const cells = isDocuments
