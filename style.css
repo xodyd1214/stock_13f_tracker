@@ -626,6 +626,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
   margin-bottom: 24px;
   background-color: var(--bg-surface);
   padding: 20px 24px;
@@ -638,6 +639,13 @@ body {
   display: flex;
   align-items: center;
   gap: 18px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.guru-details {
+  width: 100%;
+  min-width: 0;
 }
 
 .guru-avatar {
@@ -672,11 +680,17 @@ body {
   color: var(--text-base);
 }
 
+.filing-title {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
 .guru-desc {
   font-size: 12.5px;
   color: var(--text-subdued);
-  max-width: 960px;
   word-break: keep-all;
+  overflow-wrap: anywhere;
   line-height: 1.5;
 }
 
@@ -3156,6 +3170,10 @@ button.congress-link {
   pointer-events: none;
 }
 
+.macro-help-button[hidden] {
+  display: none;
+}
+
 .macro-help-button:hover,
 .macro-help-button[aria-expanded="true"] {
   --macro-help-ring: var(--spotify-green);
@@ -3189,6 +3207,10 @@ button.congress-link {
 .macro-help-panel strong {
   color: var(--text-base);
   font-size: 14px;
+}
+
+.macro-help-panel.above-modal {
+  z-index: 1002;
 }
 
 .macro-help-panel p {

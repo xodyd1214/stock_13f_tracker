@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=103">
+  <link rel="stylesheet" href="style.css?v=104">
 </head>
 <body>
   <div class="app-container">
@@ -222,7 +222,10 @@
         <div class="guru-profile-header">
           <div class="guru-details">
             <div class="guru-name-row">
-              <h2 id="currentGuruName">Macro Compass</h2>
+              <div class="filing-title macro-help-heading">
+                <h2 id="currentGuruName">Macro Compass</h2>
+                <button type="button" id="filingHelpButton" class="macro-help-button" aria-controls="macroHelp" aria-expanded="false" hidden>?</button>
+              </div>
               <span class="badge fund-badge" id="currentFundName">거시경제 나침반</span>
               <span class="badge quarter-badge" id="currentQuarter" title="연준과 FRED 발표 일정">미국 주요 지표</span>
               <button type="button" class="congress-link" id="btnCongressHelp" aria-haspopup="dialog" aria-controls="congressHelp">공시 도움말</button>
@@ -465,7 +468,10 @@
           <div class="table-toolbar">
             <div class="toolbar-left">
               <div class="filter-tabs" id="f4FilterTabs" aria-label="Form 4 표시 범위">
-                <button type="button" class="filter-tab active" data-f4filter="DIRECT" aria-pressed="true">임원·이사 직접 매수</button>
+                <div class="macro-help-heading">
+                  <button type="button" class="filter-tab active" data-f4filter="DIRECT" aria-pressed="true">임원·이사 직접 매수</button>
+                  <button type="button" class="macro-help-button" data-macro-help="directPurchase" aria-label="임원·이사 직접 매수 설명" aria-controls="macroHelp" aria-expanded="false">?</button>
+                </div>
                 <button type="button" class="filter-tab" data-f4filter="ALL" aria-pressed="false">전체 Form 4</button>
               </div>
             </div>
@@ -561,7 +567,7 @@
               <span class="metric-title">공시 건수</span>
             </div>
             <div class="metric-value text-purple" id="d13MetricCount">0건</div>
-            <div class="metric-sub">지분 5% 이상 공시</div>
+            <div class="metric-sub">13D·13G 신고 및 정정 공시</div>
           </div>
 
           <div class="metric-card">
@@ -782,6 +788,7 @@
     <strong id="macroHelpTitle"></strong>
     <p id="macroHelpMeaning"></p>
     <p id="macroHelpReading"><b>이렇게 읽어요</b> <span></span></p>
+    <p id="macroHelpCaution" hidden><b>주의할 점</b> <span></span></p>
   </div>
 
   <!-- 종목 상세 모달 -->
@@ -857,7 +864,9 @@
         <!-- [NEW] 최근 경영진 내부자 거래 (Form 4) 크로스 분석 섹션 -->
         <div class="modal-insider-cross-section" id="modalInsiderSection">
           <div class="modal-sub-header-row">
-            <h4>👔 이 발행사의 임원·이사 직접 매수</h4>
+            <h4 class="macro-help-heading">이 발행사의 임원·이사 직접 매수
+              <button type="button" class="macro-help-button" data-macro-help="directPurchase" aria-label="임원·이사 직접 매수 설명" aria-controls="macroHelp" aria-expanded="false">?</button>
+            </h4>
           </div>
           <div class="modal-insider-cross-wrap" id="modalInsiderContent">
             <!-- JS 동적 렌더링 -->
@@ -1007,7 +1016,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js"></script>
   <script src="sec_display_loader.js?v=2"></script>
-  <script src="app.js?v=113"></script>
+  <script src="app.js?v=114"></script>
 </body>
 </html>
 

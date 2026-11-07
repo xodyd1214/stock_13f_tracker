@@ -2077,7 +2077,7 @@ function setupEventListeners() {
   });
 
   window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
+    if (e.key === "Escape" && !e.defaultPrevented) {
       closeInsiderModal();
       closeMacroModal();
     }
@@ -2181,14 +2181,28 @@ async function switchFilingMode(filingType) {
   const sidebarSource = document.getElementById("sidebarDataSource");
   if (sidebarSource) sidebarSource.textContent = filingType === "MACRO" ? "미국 거시경제 데이터" :
     filingType === "CONGRESS" ? "미 하원 공식 공시 데이터" : "SEC 13F 공식 공시 데이터";
-  if (headerQuarter) headerQuarter.title = filingType === "MACRO" ? "연준과 FRED 발표 일정" :
-    filingType === "CONGRESS" ? "하원 사무처 금융 공시" : "SEC Form 13F 분기 말일 기준 보유 현황";
+  if (headerQuarter) headerQuarter.title = {
+    MACRO: "연준과 FRED 발표 일정",
+    CONGRESS: "하원 사무처 금융 공시",
+    "13F": "SEC Form 13F 분기 말일 기준 보유 현황",
+    FORM4: "Form 4 공시일",
+    "13D": "Schedule 13D 최초 신고 기한",
+    "13G": "Schedule 13G 신고자 유형별 요건"
+  }[filingType] || "";
 
   const ctrl13F = document.getElementById("sidebarControls13F");
   const ctrlF4 = document.getElementById("sidebarControlsForm4");
 
   const main = document.querySelector(".main-content");
   if (main) main.dataset.filingMode = filingType;
+
+  const filingHelp = document.getElementById("filingHelpButton");
+  if (filingHelp) {
+    const topic = HELP_TOPICS[filingType];
+    filingHelp.hidden = !topic;
+    filingHelp.dataset.macroHelp = filingType;
+    if (topic) filingHelp.setAttribute("aria-label", `${topic[0]} 설명`);
+  }
 
   const v13F = document.getElementById("view13F");
   const vF4 = document.getElementById("viewForm4");
@@ -2220,6 +2234,10 @@ async function switchFilingMode(filingType) {
   } else if (filingType === "FORM4") {
     if (brandTitle) brandTitle.innerHTML = 'ALPHA <span>INSIDER</span>';
     if (brandSubtitle) brandSubtitle.innerText = '내부자 거래 공시 (Form 4)';
+    if (headerName) headerName.innerText = 'Form 4 내부자 거래';
+    if (headerFund) headerFund.innerText = 'SEC Form 4';
+    if (headerQuarter) headerQuarter.innerText = '거래 내역';
+    if (headerDesc) headerDesc.innerText = '거래일과 공시일을 함께 확인할 수 있습니다.';
     if (ctrl13F) ctrl13F.style.display = "none";
     if (ctrlF4) ctrlF4.style.display = "flex";
     if (vF4) vF4.style.display = "flex";
@@ -2237,11 +2255,11 @@ async function switchFilingMode(filingType) {
     await loadAndRenderCongress();
   } else if (filingType === "13D") {
     if (brandTitle) brandTitle.innerHTML = 'ALPHA <span>13D</span>';
-    if (brandSubtitle) brandSubtitle.innerText = '행동주의 5% 지분 공시 (Schedule 13D)';
-    if (headerName) headerName.innerText = 'Schedule 13D 행동주의 지분 취득 공시';
-    if (headerFund) headerFund.innerText = '지분 5% 이상 적극적 경영 참여';
-    if (headerQuarter) headerQuarter.innerText = '취득 후 10일 이내 공시';
-    if (headerDesc) headerDesc.innerText = '거물 헤지펀드(칼 아이칸, 빌 애크먼, 넬슨 펠츠 등)의 경영권 분쟁, 주주 제안, M&A 압박 지분 포착';
+    if (brandSubtitle) brandSubtitle.innerText = '대량 지분 보유 및 목적 공시 (Schedule 13D)';
+    if (headerName) headerName.innerText = 'Schedule 13D 대량 보유 공시';
+    if (headerFund) headerFund.innerText = '지분 5% 초과 보유';
+    if (headerQuarter) headerQuarter.innerText = '최초 신고 · 통상 5영업일 이내';
+    if (headerDesc) headerDesc.innerText = '신고자의 지분율과 보유 목적은 SEC 원문에서 확인할 수 있습니다.';
     if (ctrl13F) ctrl13F.style.display = "flex";
     if (ctrlF4) ctrlF4.style.display = "none";
     if (v13D) v13D.style.display = "flex";
@@ -2256,9 +2274,9 @@ async function switchFilingMode(filingType) {
     if (brandTitle) brandTitle.innerHTML = 'ALPHA <span>13G</span>';
     if (brandSubtitle) brandSubtitle.innerText = '단순 대량 보유 5% 공시 (Schedule 13G)';
     if (headerName) headerName.innerText = 'Schedule 13G 단순 대량 보유 공시';
-    if (headerFund) headerFund.innerText = '지분 5% 이상 패시브 투자';
-    if (headerQuarter) headerQuarter.innerText = '패시브 기관 대량 지분 공시';
-    if (headerDesc) headerDesc.innerText = '블랙록, 뱅가드 등 초대형 기관 투자자의 5% 이상 단순 수동적 지분 보유 내역 추적';
+    if (headerFund) headerFund.innerText = '간소화된 대량 보유 공시';
+    if (headerQuarter) headerQuarter.innerText = '신고자 유형별 요건 적용';
+    if (headerDesc) headerDesc.innerText = '신고자와 신고 기준일, 해당 증권의 지분율을 함께 확인할 수 있습니다.';
     if (ctrl13F) ctrl13F.style.display = "flex";
     if (ctrlF4) ctrlF4.style.display = "none";
     if (v13D) v13D.style.display = "flex";
@@ -3099,7 +3117,7 @@ function render13DTable() {
     const tr = document.createElement("tr");
     
     // 지분율 포맷팅
-    let pctDisplay = `<span style="color: var(--text-muted); font-size: 12px;">5%+</span>`;
+    let pctDisplay = `<span style="color: var(--text-muted); font-size: 12px;">미확인</span>`;
     if (item.percentOwned !== null && item.percentOwned !== undefined) {
       const pctVal = typeof item.percentOwned === "number" ? item.percentOwned.toFixed(1) : item.percentOwned;
       const pctColor = item.isActivist ? '#c084fc' : '#60a5fa';
@@ -3141,7 +3159,43 @@ function render13DTable() {
 // Macro Compass & Economic Pulse Engine (Fed Rates, BLS CPI/Labor, Calendar)
 // ==============================================================================
 
-const MACRO_HELP = {
+const HELP_TOPICS = {
+  "13F": [
+    "Form 13F 기관 보유 공시",
+    "일정 규모 이상 기관 운용사가 분기 말에 보유한 신고 대상 증권을 미국 SEC에 제출하는 공시예요.",
+    "운용사와 보유 기준일을 먼저 보고, 종목별 수량과 평가액을 확인해요. 공시 평가단가는 평가액을 수량으로 나눈 값이에요.",
+    "통상 분기 말부터 45일 안에 제출해요. 매매 시점과 실제 매입가는 별도 자료가 필요해요. 사이트의 종합 화면은 기준일이 다른 검증된 일부 공시를 합산해요."
+  ],
+  FORM4: [
+    "Form 4 내부자 거래 공시",
+    "상장사 임원·이사나 해당 주식 종류의 10%를 초과해 보유한 주요 주주 등이 증권 보유 변동을 SEC에 신고하는 공시예요.",
+    "거래일과 공시일을 구분하고 거래 코드를 먼저 봐요. P는 매수, S는 매도, A는 보상 취득, M은 옵션 등 파생증권의 행사·전환에 쓰여요.",
+    "보상 지급이나 세금 처리에 따른 보유 변동도 포함돼요. 거래의 성격과 배경은 SEC 원문 주석에서 확인해요."
+  ],
+  directPurchase: [
+    "임원·이사 직접 매수",
+    "이 화면은 미국 거래소 상장사의 임원·이사가 자기 회사 보통주를 직접 보유로 신고한 매수 중 단가가 확인된 건을 보여줘요.",
+    "거래일과 공시 단가, 수량을 함께 봐요. 표시 금액은 공시 단가에 수량을 곱한 값이에요.",
+    "매수 코드 P에는 장내 매수와 사적 매수가 모두 포함될 수 있어요. 거래 장소와 조건은 SEC 원문 주석에 기재된 범위에서 확인해요."
+  ],
+  "13D": [
+    "Schedule 13D 대량 보유 공시",
+    "해당 증권 종류의 5%를 초과해 실질 보유한 투자자가 지분과 취득 목적 등을 밝히는 상세 공시예요.",
+    "신고자와 지분율을 확인한 뒤, SEC 원문 4번 항목에서 취득 목적과 이사회 변경 같은 계획이 적혀 있는지 살펴봐요.",
+    "정정 공시는 기존 보유분의 변동이나 계획 변경을 담을 수 있어요. 공시일과 실제 취득일, 최초 신고인지 정정인지 함께 확인해요."
+  ],
+  "13G": [
+    "Schedule 13G 대량 보유 공시",
+    "해당 증권 종류의 5%를 초과해 실질 보유한 투자자 중 요건을 충족하는 기관, 수동적 투자자 등이 사용하는 간소화 공시예요.",
+    "신고자 유형, 신고 기준일, 지분율을 함께 보고 이전 공시와 비교해요.",
+    "신고 주기는 투자자 유형과 보유 상황에 따라 달라요. 실제 보유 시점을 파악하려면 공시일과 원문의 기준일을 각각 확인해요."
+  ],
+  CONGRESS: [
+    "미국 하원 금융 공시",
+    "하원의원 등이 제출한 거래 보고서와 연례 보유 내역이에요. 거래 보고서에는 일정 기준을 넘는 증권 거래가 담겨요.",
+    "신고 의원, 자산 소유자, 거래일과 공시일을 각각 봐요. 금액은 공시에서 제시한 구간으로 표시돼요.",
+    "배우자나 부양 자녀의 거래도 포함될 수 있어요. 주식 수량과 체결 단가는 원문에 공개된 범위에서 확인해요."
+  ],
   fed: [
     "연준 기준금리",
     "미국 중앙은행인 연준이 은행끼리 하룻밤 돈을 빌릴 때 적용되는 금리에 대해 정하는 목표 범위예요.",
@@ -3224,6 +3278,8 @@ function setupMacroHelp() {
   const title = document.getElementById("macroHelpTitle");
   const meaning = document.getElementById("macroHelpMeaning");
   const reading = document.querySelector("#macroHelpReading span");
+  const caution = document.getElementById("macroHelpCaution");
+  const cautionText = caution.querySelector("span");
   const buttonSelector = ".macro-help-button";
   let trigger = null;
   let pinned = false;
@@ -3257,12 +3313,17 @@ function setupMacroHelp() {
   }
 
   function open(button, keepOpen) {
-    const help = MACRO_HELP[button.dataset.macroHelp];
+    const help = HELP_TOPICS[button.dataset.macroHelp];
     if (!help) return;
     close();
     trigger = button;
     pinned = keepOpen;
     [title.textContent, meaning.textContent, reading.textContent] = help;
+    cautionText.textContent = help[3] || "";
+    caution.hidden = !help[3];
+    panel.setAttribute("aria-describedby", caution.hidden
+      ? "macroHelpMeaning macroHelpReading" : "macroHelpMeaning macroHelpReading macroHelpCaution");
+    panel.classList.toggle("above-modal", !!button.closest(".modal-backdrop"));
     trigger.setAttribute("aria-expanded", "true");
     panel.hidden = false;
     position();
@@ -3293,6 +3354,7 @@ function setupMacroHelp() {
   });
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape" || !trigger) return;
+    event.preventDefault();
     if (document.activeElement === panel) trigger.focus({ preventScroll: true });
     close();
   });
@@ -3303,12 +3365,16 @@ function setupMacroHelp() {
   window.addEventListener("scroll", position, { capture: true, passive: true });
   window.addEventListener("resize", position);
   const observer = new MutationObserver(() => {
-    if (trigger && !trigger.getClientRects().length) close();
+    if (trigger && (!trigger.getClientRects().length ||
+      HELP_TOPICS[trigger.dataset.macroHelp]?.[0] !== title.textContent)) close();
   });
   for (const id of ["macroPulseBar", "macroMarketProxyGrid", "macroCalendarGrid"]) {
     observer.observe(document.getElementById(id), { childList: true });
   }
   observer.observe(document.getElementById("viewMacro"), { attributes: true, attributeFilter: ["style"] });
+  observer.observe(document.getElementById("filingHelpButton"), { attributes: true, attributeFilter: ["hidden", "data-macro-help"] });
+  observer.observe(document.getElementById("viewForm4"), { attributes: true, attributeFilter: ["style"] });
+  observer.observe(document.getElementById("stockModal"), { attributes: true, attributeFilter: ["class"] });
 }
 
 let MACRO_DATA = null;
