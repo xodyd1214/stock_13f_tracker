@@ -18,6 +18,7 @@ function escapeHtml(value) {
 let GURU_DATABASE = {};
 let RAW_HOLDINGS = [];
 let SEC_DISPLAY = null;
+let secDisplayLoad = null;
 let SEC_DISPLAY_ROWS = new WeakSet();
 let LIVE_PRICES = {};
 let ACTIVE_STOCK_ITEM = null;
@@ -480,11 +481,11 @@ document.addEventListener("DOMContentLoaded", () => {
   initFilingDdayCountdown();
   initConsensusTabs();
   switchFilingMode("MACRO");
-  loadRealSecData();
 
   // 1분마다 조용히 최신 실시간 시장가 백그라운드 갱신
   setInterval(() => {
-    fetchLivePricesForCurrentView();
+    if (SEC_DISPLAY) fetchLivePricesForCurrentView();
+    else refreshMacroSnapshot(priceRequestId);
   }, 60000);
 });
 
@@ -588,60 +589,40 @@ function applyLivePricesToHoldings(holdings) {
 }
 
 async function loadRealSecData() {
-  try {
-    const [displayResult, tickerRes, priceRes, macroData, symbolsRes] = await Promise.all([
-      Promise.resolve().then(() => SECDisplayLoader.load({ baseURL: new URL("./", document.baseURI) })).then(value => ({ value }), error => ({ error })),
-      fetch("ticker_map.json?_t=" + Date.now()).catch(() => null),
-      fetch("realtime_prices.json?_t=" + Date.now()).catch(() => null),
-      fetchMacroSnapshot(),
-      fetch("market_symbols.json?_t=" + Date.now()).catch(() => null)
-    ]);
-
-    if (symbolsRes && symbolsRes.ok) {
+  if (SEC_DISPLAY) return;
+  if (!secDisplayLoad) {
+    const view = document.getElementById("view13F");
+    const status = document.getElementById("sec13FLoading");
+    view?.setAttribute("data-loading", "");
+    if (status) status.hidden = false;
+    secDisplayLoad = (async () => {
+      const isRecord = value => value && typeof value === "object" && !Array.isArray(value);
       try {
-        const symbols = await symbolsRes.json();
-        if (symbols && symbols.aliases && symbols.inactive && symbols.nonEquityCusips && symbols.reviewedCusips && symbols.quarantinedCusips) MARKET_SYMBOLS = symbols;
-      } catch (e) {}
-    }
-    if (tickerRes && tickerRes.ok) {
-      try {
-        const extMap = await tickerRes.json();
-        Object.assign(TICKER_MAP, extMap);
-      } catch (e) {}
-    }
-    if (priceRes && priceRes.ok) {
-      try {
-        mergeObservedPrices(await priceRes.json());
-      } catch (e) {}
-    }
-    if (macroData && !MACRO_DATA) {
-      MACRO_DATA = normalizeMacroData(macroData);
-      renderMacroPulseBar();
-    }
-    SEC_DISPLAY = displayResult.value || null;
-    RAW_HOLDINGS = SEC_DISPLAY ? SEC_DISPLAY.rows : [];
-    SEC_DISPLAY_ROWS = new WeakSet(RAW_HOLDINGS);
-    renderPartialCoverage(displayResult.error);
-    if (!SEC_DISPLAY) showUnavailableHoldings();
-
-    // 최신 데이터로 화면 연산 및 렌더링
-    processAndRenderHoldingsData();
-
-    // 초기 로드 직후 현재 화면 실시간가 즉시 온디맨드 fetch
-    fetchLivePricesForCurrentView();
-
-    // 백그라운드 프리페치 (Form 4 및 13D 데이터)
-    if (window.requestIdleCallback) {
-      requestIdleCallback(() => prefetchOtherFilings());
-    } else {
-      setTimeout(prefetchOtherFilings, 1000);
-    }
-  } catch (e) {
-    SEC_DISPLAY = null;
-    showUnavailableHoldings();
-    renderPartialCoverage(e);
-    console.error("데이터 로드 실패:", e);
+        const [display, tickerMap, prices, symbols] = await Promise.all([
+          SECDisplayLoader.load({ baseURL: new URL("./", document.baseURI) }),
+          loadDashboardSnapshot("ticker_map.json", 5000, isRecord),
+          loadDashboardSnapshot("realtime_prices.json", 5000, isRecord),
+          loadDashboardSnapshot("market_symbols.json", 5000, value =>
+            value?.aliases && value.inactive && value.nonEquityCusips && value.reviewedCusips && value.quarantinedCusips)
+        ]);
+        if (symbols) MARKET_SYMBOLS = symbols;
+        if (tickerMap) Object.assign(TICKER_MAP, tickerMap);
+        mergeObservedPrices(prices);
+        RAW_HOLDINGS = display.rows;
+        SEC_DISPLAY_ROWS = new WeakSet(RAW_HOLDINGS);
+        SEC_DISPLAY = display;
+      } catch (error) {
+        showUnavailableHoldings();
+        console.error("13F 공시 로드 실패:", error);
+      } finally {
+        view?.removeAttribute("data-loading");
+        if (status) status.hidden = true;
+      }
+      renderPartialCoverage();
+      if (SEC_DISPLAY) processAndRenderHoldingsData();
+    })().finally(() => { secDisplayLoad = null; });
   }
+  await secDisplayLoad;
 }
 
 function formatQuarterDisplay(periodStr) {
@@ -1917,7 +1898,7 @@ function setupEventListeners() {
   if (btnExport) {
     btnExport.onclick = () => {
       const guru = GURU_DATABASE[state.currentGuruKey];
-      if (!guru || !guru.holdings) return;
+      if (!SEC_DISPLAY || !guru?.holdings) return;
       
       const csvContent = buildPartialCsv(guru);
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -2106,7 +2087,8 @@ let FORM4_DATA = [];
 let form4Snapshot = null;
 let recentForm4Snapshot = null;
 let form4Load = null;
-let FILING_13D_DATA = [];
+let FILING_13D_DATA = null;
+let schedule13DLoad = null;
 let congressSnapshot = null;
 let congressLoad = null;
 let congressTab = "ptr";
@@ -2199,7 +2181,15 @@ async function switchFilingMode(filingType) {
     if (ctrl13F) ctrl13F.style.display = "flex";
     if (ctrlF4) ctrlF4.style.display = "none";
     if (v13F) v13F.style.display = "flex";
-    selectGuru(state.currentGuruKey || "__GRAND_TOTAL__");
+    if (SEC_DISPLAY) {
+      selectGuru(state.currentGuruKey || "__GRAND_TOTAL__");
+    } else {
+      if (headerName) headerName.innerText = "13F 기관 보유 현황";
+      if (headerFund) headerFund.innerText = "SEC 13F";
+      if (headerQuarter) headerQuarter.innerText = "공시 검증";
+      if (headerDesc) headerDesc.innerText = "";
+      await loadRealSecData();
+    }
   } else if (filingType === "FORM4") {
     if (brandTitle) brandTitle.innerHTML = 'ALPHA <span>INSIDER</span>';
     if (brandSubtitle) brandSubtitle.innerText = '내부자 거래 공시 (Form 4)';
@@ -2604,6 +2594,10 @@ function getF4ActiveDataset() {
 }
 
 async function loadAndRenderForm4() {
+  if (!form4Snapshot) {
+    const body = document.getElementById("f4TableBody");
+    if (body) body.innerHTML = '<tr><td colspan="9" role="status">Form 4 공시 자료를 불러오고 있습니다.</td></tr>';
+  }
   await loadVerifiedForm4();
   if (state.currentFilingType !== "FORM4") return;
 
@@ -2986,15 +2980,17 @@ function closeInsiderModal() {
 }
 
 async function loadAndRender13D() {
-  if (FILING_13D_DATA.length === 0) {
-    try {
-      const res = await fetch("latest_13d_filings.json");
-      if (res.ok) {
-        FILING_13D_DATA = await res.json();
-      }
-    } catch (e) {
-      console.warn("13D 로드 실패:", e);
-    }
+  if (!FILING_13D_DATA) {
+    schedule13DLoad ??= loadDashboardSnapshot("latest_13d_filings.json", 8000, Array.isArray)
+      .then(snapshot => { FILING_13D_DATA = snapshot; })
+      .finally(() => { schedule13DLoad = null; });
+    render13DTable();
+    await schedule13DLoad;
+  }
+  if (!["13D", "13G"].includes(state.currentFilingType)) return;
+  if (!FILING_13D_DATA) {
+    render13DTable();
+    return;
   }
 
   const activistItems = FILING_13D_DATA.filter(item => item.isActivist);
@@ -3042,6 +3038,11 @@ async function loadAndRender13D() {
 function render13DTable() {
   const tbody = document.getElementById("d13TableBody");
   if (!tbody) return;
+  if (!FILING_13D_DATA) {
+    const status = schedule13DLoad ? "지분 공시 자료를 불러오고 있습니다." : "지분 공시 자료를 불러오지 못했습니다.";
+    tbody.innerHTML = `<tr><td colspan="7" role="status">${status}</td></tr>`;
+    return;
+  }
   tbody.innerHTML = "";
 
   let list = [...FILING_13D_DATA];
@@ -3107,17 +3108,6 @@ function render13DTable() {
     `;
     tbody.appendChild(tr);
   });
-}
-
-// 백그라운드 프리페치 (탭 클릭 시 지연 없이 즉시 전환)
-async function prefetchOtherFilings() {
-  await loadVerifiedForm4();
-  if (FILING_13D_DATA.length === 0) {
-    try {
-      const res = await fetch("latest_13d_filings.json?v=" + Date.now());
-      if (res.ok) FILING_13D_DATA = await res.json();
-    } catch (e) {}
-  }
 }
 
 // ==============================================================================

@@ -145,12 +145,55 @@ test('coverage pending values, wrong aliases, unsafe provenance and numeric sums
   f.rebuild();await assert.rejects(loader.load(f.options),/unavailable/);
  }
 });
-test('failed partial generation retains independent macro and price fetches and never fetches legacy holdings',async()=>{
- const fetched=[]; const {ctx}=context([],false);
- Object.assign(ctx,{URL,Promise,SECDisplayLoader:{load:async()=>{throw new Error('corrupt generation')}},document:{baseURI:'https://example.com/repo/index.html',getElementById:()=>null},window:{requestIdleCallback:true},requestIdleCallback:()=>{},SEC_DISPLAY_ROWS:new WeakSet(),TICKER_MAP:{},fetch:async url=>{fetched.push(url);return{ok:true,json:async()=>url.startsWith('latest_macro')?{schemaVersion:2,status:'available'}:{}}},normalizeMacroData:x=>x,renderMacroPulseBar(){},mergeObservedPrices(){},renderPartialCoverage(){},fetchLivePricesForCurrentView(){},prefetchOtherFilings(){}});
- ctx.MACRO_DATA=null;ctx.fetchMacroSnapshot=async()=>({schemaVersion:2,status:'available'});
- vm.runInContext(extract('loadRealSecData'),ctx); await ctx.loadRealSecData();
- assert.equal(ctx.SEC_DISPLAY,null);assert.equal(ctx.GURU_DATABASE.__GRAND_TOTAL__.rawAum,null);assert.equal(ctx.MACRO_DATA.status,'available');assert.ok(fetched.some(x=>x.startsWith('realtime_prices')));assert.ok(!fetched.some(x=>x.includes('latest_13f')));
+test('startup opens Macro without loading filings, and 13F shares in-flight loads and retries failures', async () => {
+ const {ctx, display} = context([row()], false);
+ const fetched = [];
+ const modes = [];
+ let enter, poll, rejectLoad, loadCount = 0;
+ Object.assign(ctx, {
+   secDisplayLoad: null, priceRequestId: 0, console: {error() {}},
+   document: {
+     baseURI: 'https://example.com/repo/index.html',
+     addEventListener(event, handler) { assert.equal(event, 'DOMContentLoaded'); enter = handler; },
+     getElementById: () => null
+   },
+   SECDisplayLoader: {
+     load() {
+       if (++loadCount === 1) return new Promise((resolve, reject) => { rejectLoad = reject; });
+       return Promise.resolve(display);
+     }
+   },
+   loadDashboardSnapshot: async file => { fetched.push(file); return null; },
+   mergeObservedPrices() {}, renderPartialCoverage() {}, initFirebase() {}, setupEventListeners() {},
+   initMobileInteractions() {}, initFilingDdayCountdown() {}, initConsensusTabs() {},
+   switchFilingMode(mode) { modes.push(mode); },
+   setInterval(handler) { poll = handler; },
+   refreshMacroSnapshot() { modes.push('macro-refresh'); }
+ });
+ vm.runInContext(extract('loadRealSecData'), ctx);
+ const startup = app.indexOf('document.addEventListener("DOMContentLoaded"');
+ vm.runInContext(app.slice(startup, app.indexOf('\n});', startup) + 4), ctx);
+ enter();
+ poll();
+ assert.deepEqual(modes, ['MACRO', 'macro-refresh']);
+ assert.equal(loadCount, 0);
+ assert.deepEqual(fetched, []);
+
+ const first = ctx.loadRealSecData();
+ const concurrent = ctx.loadRealSecData();
+ assert.equal(loadCount, 1);
+ rejectLoad(new Error('corrupt generation'));
+ await Promise.all([first, concurrent]);
+ assert.equal(ctx.SEC_DISPLAY, null);
+ assert.equal(ctx.GURU_DATABASE.__GRAND_TOTAL__.rawAum, null);
+ await ctx.loadRealSecData();
+ await ctx.loadRealSecData();
+ assert.equal(loadCount, 2);
+ assert.equal(ctx.SEC_DISPLAY, display);
+ assert.deepEqual(fetched, [
+   'ticker_map.json', 'realtime_prices.json', 'market_symbols.json',
+   'ticker_map.json', 'realtime_prices.json', 'market_symbols.json'
+ ]);
 });
 test('redirects and unsafe config paths fail closed',async()=>{
  const f=transportFixture();f.options.fetch=async()=>({ok:true,redirected:true});await assert.rejects(loader.load(f.options),/redirected/);

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=101">
+  <link rel="stylesheet" href="style.css?v=102">
 </head>
 <body>
   <div class="app-container">
@@ -280,6 +280,7 @@
 
       <!-- [VIEW 1] Form 13F 운용사 포트폴리오 대시보드 -->
       <div id="view13F" class="filing-view-container" style="display: none;">
+        <p id="sec13FLoading" class="card-sub data-quality-note" role="status" hidden>13F 공시 자료를 불러와 검증하고 있습니다.</p>
         <details class="disclosure-panel" id="partialDisplayPanel">
           <summary>
             <span>공시 검증 정보 및 원문</span>
@@ -1006,7 +1007,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js"></script>
   <script src="sec_display_loader.js"></script>
-  <script src="app.js?v=111"></script>
+  <script src="app.js?v=112"></script>
 </body>
 </html>
 

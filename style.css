@@ -519,6 +519,10 @@ body {
 }
 
 /* SEC disclosure details stay available without displacing the dashboard. */
+#view13F[data-loading] > :not(#sec13FLoading) {
+  display: none;
+}
+
 .disclosure-panel {
   min-width: 0;
   border: 1px solid var(--border-subtle);
