@@ -209,7 +209,7 @@ test('adjacent SEC and macro feeds escape hostile text and reject executable or 
  const macro=element();nodes.set('macroCalendarGrid',macro);
  const event={name:attack,category:'FED',date:attack,releaseDate:attack,releaseAt:new Date(Date.now()+86400000).toISOString().replace(/\.\d+Z$/,'Z')};
  ctx.MACRO_DATA={calendar:[{...event,sourceUrl:'https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm'},{...event,sourceUrl:'javascript:alert(1)'}]};
- for(const fn of ['upcomingMacroEvents','renderMacroCalendar'])vm.runInContext(extract(fn),ctx);
+ for(const fn of ['upcomingMacroEvents','macroHelpButton','renderMacroCalendar'])vm.runInContext(extract(fn),ctx);
  ctx.renderMacroCalendar();assert.doesNotMatch(macro.innerHTML,/<img|href="javascript:/);assert.match(macro.innerHTML,/&lt;img/);
  const f4=element();nodes.set('f4TableBody',f4);
  Object.assign(ctx,{state:{f4Filter:'DIRECT'},CURRENT_F4_FILTERED_ITEMS:[{filingDate:attack,transDate:attack,ticker:attack,companyName:attack,securityTitle:attack,insiderName:attack,officerTitle:attack,txTypeCode:attack,ownership:attack,secUrl:'data:text/html,test'}],CURRENT_F4_PAGE_INDEX:1,F4_PAGE_SIZE:60});

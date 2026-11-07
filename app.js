@@ -2040,8 +2040,11 @@ function setupEventListeners() {
   // 거시경제 펄스 바 & 모달 이벤트
   const pulseBar = document.getElementById("macroPulseBar");
   if (pulseBar) {
-    pulseBar.onclick = () => openMacroModal();
+    pulseBar.onclick = (event) => {
+      if (!event.target.closest(".macro-help-button")) openMacroModal();
+    };
   }
+  setupMacroHelp();
 
   const btnCloseMacro = document.getElementById("btnMacroModalClose");
   if (btnCloseMacro) {
@@ -3121,6 +3124,176 @@ async function prefetchOtherFilings() {
 // Macro Compass & Economic Pulse Engine (Fed Rates, BLS CPI/Labor, Calendar)
 // ==============================================================================
 
+const MACRO_HELP = {
+  fed: [
+    "연준 기준금리",
+    "미국 중앙은행인 연준이 은행끼리 하룻밤 돈을 빌릴 때 적용되는 금리에 대해 정하는 목표 범위예요.",
+    "범위는 연준의 목표이고, 실효금리(EFFR)는 실제 거래에서 관측된 금리예요."
+  ],
+  cpi: [
+    "소비자물가지수 (CPI)",
+    "식료품, 집세, 교통비처럼 가계가 자주 쓰는 상품과 서비스의 가격이 얼마나 달라졌는지 보여줘요.",
+    "전년 대비(YoY) +3%는 같은 소비 장바구니가 작년 같은 달보다 평균 3% 비싸졌다는 뜻이에요."
+  ],
+  unemployment: [
+    "실업률",
+    "일하는 사람과 구직자 등을 합친 경제활동인구 중 실업 상태인 사람의 비율이에요.",
+    "실업률 4%는 경제활동인구 100명 중 약 4명이 실업 상태라는 뜻이에요."
+  ],
+  spread: [
+    "장단기 금리차 (10년물 − 3개월물)",
+    "미국 10년물 국채 수익률에서 3개월물 국채 수익률을 뺀 값이에요.",
+    "4.8%에서 4.0%를 빼면 +0.8%p예요. 0 아래는 단기 금리가 더 높은 ‘역전’ 구간으로, 경기 둔화 가능성을 살필 때 참고해요."
+  ],
+  benchmark: [
+    "지표와 비교 기준선",
+    "기준선은 관측값을 읽는 눈금이에요. 비교하기 전에 같은 지표와 단위인지 살펴봐요.",
+    "장단기 금리차의 0%p는 두 금리가 같은 지점이에요. 연준의 장기 물가 목표 2%는 개인소비지출 물가지수(PCE)를 기준으로 해요."
+  ],
+  yieldChart: [
+    "만기별 미국 국채 수익률 차트",
+    "미국 정부가 돈을 빌리는 기간에 따라 시장 수익률이 어떻게 움직였는지 보여줘요. 3M은 3개월, 5Y와 10Y는 5년과 10년이에요.",
+    "같은 날짜에서 세 선의 높이를 비교해 보세요. 10년물 선이 3개월물 선보다 아래면 그날은 단기 수익률이 더 높았어요."
+  ],
+  yield10Y: [
+    "미국 10년물 국채 수익률",
+    "만기가 10년인 미국 국채의 연간 시장 수익률을 보여줘요.",
+    "장기 금리의 대표적인 눈금이에요. 주택담보대출처럼 돈을 오래 빌리는 시장의 금리와 함께 보면 좋아요."
+  ],
+  yield3M: [
+    "미국 3개월물 국채 수익률",
+    "미국 정부가 약 3개월 동안 돈을 빌릴 때의 수익률을 연간 기준으로 표시한 값이에요.",
+    "화면의 4%는 1년 기준으로 환산한 값이에요. 만기가 다른 채권도 같은 단위로 비교할 수 있어요."
+  ],
+  yield5Y: [
+    "미국 5년물 국채 수익률",
+    "만기가 5년인 미국 국채의 연간 시장 수익률을 보여줘요.",
+    "3개월물과 10년물 사이에 놓고 보면 단기·중기·장기 수익률이 어떻게 다른지 한눈에 볼 수 있어요."
+  ],
+  dxy: [
+    "달러 인덱스 (DXY)",
+    "유로와 엔화 등 주요 6개 통화에 견줘 미국 달러가 얼마나 강한지 보여주는 지수예요.",
+    "DXY가 100에서 102로 오르면 이 통화 묶음에 대한 달러 가치가 오른 거예요."
+  ],
+  wti: [
+    "WTI 국제유가",
+    "WTI는 미국의 대표 원유 가격 기준이에요. 이 화면은 WTI 원유 선물의 배럴당 달러 가격을 보여줘요.",
+    "유가가 오르면 휘발유와 운송 비용에도 영향을 줄 수 있어 물가 지표와 함께 살펴봐요."
+  ],
+  gold: [
+    "국제 금 시세",
+    "이 화면은 국제 금 선물 가격을 트로이온스당 달러로 보여줘요.",
+    "금값은 달러, 금리, 금을 찾는 수요의 영향을 함께 받아요. 금 시세와 달러 지수를 나란히 비교해 볼 수 있어요."
+  ],
+  FED: [
+    "FOMC 금리 결정",
+    "연준에서 통화정책을 결정하는 위원회(FOMC)가 기준금리 목표 범위와 결정 이유를 발표하는 일정이에요.",
+    "이번 금리를 올렸는지, 내렸는지, 유지했는지부터 보세요. 결정문에는 그 판단에 영향을 준 물가와 고용 상황도 나와요."
+  ],
+  LABOR: [
+    "미국 고용보고서 (NFP)",
+    "미국의 월간 고용보고서예요. 비농업 고용(NFP)은 농업을 제외한 사업체의 급여 일자리가 얼마나 늘거나 줄었는지 보여주는 대표 숫자예요.",
+    "‘+15만’은 전달보다 일자리가 약 15만 개 늘었다는 뜻이에요. 같은 보고서에 나오는 실업률과 함께 읽어 보세요."
+  ]
+};
+
+function macroHelpButton(key, label) {
+  return `<button type="button" class="macro-help-button" data-macro-help="${key}" aria-label="${escapeHtml(label)} 설명" aria-controls="macroHelp" aria-expanded="false" title="">?</button>`;
+}
+
+function setupMacroHelp() {
+  const panel = document.getElementById("macroHelp");
+  if (!panel) return;
+  const title = document.getElementById("macroHelpTitle");
+  const meaning = document.getElementById("macroHelpMeaning");
+  const reading = document.querySelector("#macroHelpReading span");
+  const buttonSelector = ".macro-help-button";
+  let trigger = null;
+  let pinned = false;
+  let hideTimer;
+
+  function close() {
+    clearTimeout(hideTimer);
+    trigger?.setAttribute("aria-expanded", "false");
+    trigger = null;
+    pinned = false;
+    panel.hidden = true;
+  }
+
+  function position() {
+    if (!trigger) return;
+    const rect = trigger.getBoundingClientRect();
+    const { clientWidth: width, clientHeight: height } = document.documentElement;
+    if (!rect.width || rect.bottom <= 0 || rect.top >= height || rect.right <= 0 || rect.left >= width) {
+      close();
+      return;
+    }
+    const margin = 12;
+    const gap = 5;
+    const below = height - rect.bottom;
+    const above = rect.top;
+    const panelHeight = panel.offsetHeight;
+    const top = below >= panelHeight + gap + margin || below >= above
+      ? rect.bottom + gap : rect.top - panelHeight - gap;
+    panel.style.left = `${Math.max(margin, Math.min(rect.left, width - panel.offsetWidth - margin))}px`;
+    panel.style.top = `${Math.max(margin, Math.min(top, height - panelHeight - margin))}px`;
+  }
+
+  function open(button, keepOpen) {
+    const help = MACRO_HELP[button.dataset.macroHelp];
+    if (!help) return;
+    close();
+    trigger = button;
+    pinned = keepOpen;
+    [title.textContent, meaning.textContent, reading.textContent] = help;
+    trigger.setAttribute("aria-expanded", "true");
+    panel.hidden = false;
+    position();
+  }
+
+  document.addEventListener("pointerover", (event) => {
+    if (event.pointerType === "touch" || pinned) return;
+    const button = event.target.closest(buttonSelector);
+    if (button === trigger || panel.contains(event.target)) clearTimeout(hideTimer);
+    if (button && button !== trigger) open(button, false);
+  });
+  document.addEventListener("pointerout", (event) => {
+    if (!trigger || pinned || event.pointerType === "touch") return;
+    const inHelp = (node) => trigger.contains(node) || panel.contains(node);
+    if (inHelp(event.target) && !inHelp(event.relatedTarget)) {
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(close, 180);
+    }
+  });
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest(buttonSelector);
+    if (button && !(button === trigger && pinned)) {
+      open(button, true);
+      if (event.detail === 0 && !panel.hidden) panel.focus({ preventScroll: true });
+    } else if (!panel.contains(event.target) && trigger) {
+      close();
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !trigger) return;
+    if (document.activeElement === panel) trigger.focus({ preventScroll: true });
+    close();
+  });
+  document.addEventListener("focusin", (event) => {
+    if (pinned && event.target !== trigger && event.target !== panel) close();
+  });
+
+  window.addEventListener("scroll", position, { capture: true, passive: true });
+  window.addEventListener("resize", position);
+  const observer = new MutationObserver(() => {
+    if (trigger && !trigger.getClientRects().length) close();
+  });
+  for (const id of ["macroPulseBar", "macroMarketProxyGrid", "macroCalendarGrid"]) {
+    observer.observe(document.getElementById(id), { childList: true });
+  }
+  observer.observe(document.getElementById("viewMacro"), { attributes: true, attributeFilter: ["style"] });
+}
+
 let MACRO_DATA = null;
 let macroSnapshotLoad = null;
 state.macroCalFilter = "ALL";
@@ -3146,10 +3319,7 @@ function renderMacroPulseBar() {
   const cpi = MACRO_DATA.inflation || {};
   const spread = (MACRO_DATA.treasury && MACRO_DATA.treasury.spread10Y_13W) || {};
   const calendar = upcomingMacroEvents(MACRO_DATA);
-  const benchmarks = MACRO_DATA.benchmarks || {};
-
-  const fedGap = benchmarks.fedRate?.gapToNeutral != null ? `(중립선 ${benchmarks.fedRate.gapToNeutral})` : "(비교 불가)";
-  const cpiGap = benchmarks.inflation?.gapToTarget != null ? `(목표선 ${benchmarks.inflation.gapToTarget})` : "(비교 불가)";
+  const fedGap = MACRO_DATA.benchmarks?.fedRate?.gapToNeutral;
 
   // 가장 임박한 주요 이벤트 찾기
   const nearest = calendar[0];
@@ -3175,20 +3345,22 @@ function renderMacroPulseBar() {
         <span>MACRO PULSE</span><small>${escapeHtml(macroFreshness(MACRO_DATA))}</small>
       </div>
       <div class="macro-pulse-items">
-        <div class="macro-pulse-pill" title="연준 기준금리 및 장기 중립선(2.90%) 대비 갭">
+        <div class="macro-pulse-pill">
           <span class="pill-label">연준 금리:</span>
+          ${macroHelpButton("fed", "연준 기준금리")}
           <span class="pill-val">${escapeHtml(fed.targetRange || "확인 불가")}</span>
-          <span class="pill-sub" style="color: #ffa42b; font-size: 11px;">${escapeHtml(fedGap)}</span>
+          ${fedGap == null ? "" : `<span class="pill-sub" style="color: #ffa42b;">(중립선 ${escapeHtml(fedGap)})</span>`}
         </div>
         <div class="macro-pulse-sep"></div>
-        <div class="macro-pulse-pill" title="미국 소비자물가(CPI) 및 법정 목표치(2.00%) 대비 갭">
+        <div class="macro-pulse-pill">
           <span class="pill-label">CPI (YoY):</span>
+          ${macroHelpButton("cpi", "소비자물가지수")}
           <span class="pill-val" style="color: #c084fc;">${escapeHtml(cpi.cpiYoY || "확인 불가")}</span>
-          <span class="pill-sub" style="color: #c084fc; font-size: 11px;">${escapeHtml(cpiGap)}</span>
         </div>
         <div class="macro-pulse-sep"></div>
-        <div class="macro-pulse-pill" title="10년물 국채 - 3개월물 T-Bill 금리 스프레드 (침체 역전선 0.00%p 기준)">
+        <div class="macro-pulse-pill">
           <span class="pill-label">10Y-3M 스프레드:</span>
+          ${macroHelpButton("spread", "장단기 금리차")}
           <span class="pill-val" style="color: ${spread.spread >= 0 ? '#1ed760' : '#f3727f'};">${spreadValStr}</span>
           <span class="pill-sub">(${!Number.isFinite(spread.spread) ? '확인 불가' : spread.spread >= 0 ? '양의 스프레드' : '음의 스프레드'})</span>
         </div>
@@ -3225,17 +3397,15 @@ async function loadAndRenderMacro() {
   const fedSubEl = document.getElementById("macroFedSub");
   if (fedEl) fedEl.innerText = fed.targetRange || "확인 불가";
   if (fedSubEl) {
-    const fedGap = b.fedRate?.gapToNeutral ?? "확인 불가";
-    fedSubEl.innerText = `중립금리 참고값 대비 ${fedGap} · 실효금리(EFFR) ${fed.effr || "확인 불가"}`;
+    const fedGap = b.fedRate?.gapToNeutral;
+    const neutral = fedGap == null ? "" : `중립금리 참고값 대비 ${fedGap} · `;
+    fedSubEl.innerText = `${neutral}실효금리(EFFR) ${fed.effr || "확인 불가"}`;
   }
 
   const cpiEl = document.getElementById("macroCpiVal");
   const cpiSubEl = document.getElementById("macroCpiSub");
   if (cpiEl) cpiEl.innerText = cpi.cpiYoY || "확인 불가";
-  if (cpiSubEl) {
-    const cpiGap = b.inflation?.gapToTarget ?? "확인 불가";
-    cpiSubEl.innerText = `물가목표 참고값 대비 ${cpiGap} 상회`;
-  }
+  if (cpiSubEl) cpiSubEl.innerText = "작년 같은 달 대비 · 미 노동통계국(BLS)";
 
   const unempEl = document.getElementById("macroUnemploymentVal");
   const unempSubEl = document.getElementById("macroUnemploymentSub");
@@ -3250,9 +3420,7 @@ async function loadAndRenderMacro() {
     spreadEl.className = `metric-value ${spreadVal >= 0 ? 'text-green' : 'text-red'}`;
   }
   if (spreadSubEl) {
-    spreadSubEl.innerText = !Number.isFinite(spreadVal) ? "비교 불가" : spreadVal >= 0 
-      ? `뉴욕 연준 침체 역전선(0.00%p) 상회 (+${spreadVal.toFixed(2)}%p)` 
-      : `침체 역전선(0.00%p) 하회 (경기침체 경고 구간)`;
+    spreadSubEl.innerText = spread.desc || "10년물과 3개월물 수익률 비교";
   }
 
   // 2. 공식 기준선 팩트 대조 카드 렌더링
@@ -3585,9 +3753,9 @@ function renderSpreadTimeSeriesChart(period = '6M') {
       <!-- X축 날짜 틱 -->
       ${dateTicksSvg}
 
-      <!-- 0.00%p 침체 역전 기준선 (빨간색 얇은 점선) -->
+      <!-- 0.00%p 역전 기준선 (빨간색 얇은 점선) -->
       <line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${padL + chartW}" y2="${zeroY.toFixed(1)}" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,4" opacity="0.85" />
-      <text x="${padL + chartW - 4}" y="${(zeroY - 5).toFixed(1)}" fill="#ef4444" font-size="10" font-weight="600" text-anchor="end">0.00%p 침체 역전선</text>
+      <text x="${padL + chartW - 4}" y="${(zeroY - 5).toFixed(1)}" fill="#ef4444" font-size="10" font-weight="600" text-anchor="end">0.00%p 역전 기준선</text>
 
       <!-- 스프레드 영역 채우기 (은은한 그라데이션) -->
       <path d="${areaSpread}" fill="url(#spreadAreaGrad)" />
@@ -3678,36 +3846,42 @@ function renderMacroMarketProxies() {
   const items = [
     {
       label: "미국 10년물 국채",
+      help: "yield10Y",
       val: Number.isFinite(treasury.yield10Y?.val) ? `${treasury.yield10Y.val.toFixed(2)}%` : "확인 불가",
       chg: Number.isFinite(treasury.yield10Y?.val) ? treasury.yield10Y.change : null,
       desc: "글로벌 자산 가격 할인율(무위험 수익률 척도)"
     },
     {
       label: "미국 3개월물 T-Bill",
+      help: "yield3M",
       val: Number.isFinite(treasury.yield13W?.val) ? `${treasury.yield13W.val.toFixed(2)}%` : "확인 불가",
       chg: Number.isFinite(treasury.yield13W?.val) ? treasury.yield13W.change : null,
       desc: "단기 기준금리 및 현금성 자산 벤치마크"
     },
     {
       label: "미국 5년물 국채",
+      help: "yield5Y",
       val: Number.isFinite(treasury.yield5Y?.val) ? `${treasury.yield5Y.val.toFixed(2)}%` : "확인 불가",
       chg: Number.isFinite(treasury.yield5Y?.val) ? treasury.yield5Y.change : null,
       desc: "중기 경제 성장 및 인플레이션 기대치"
     },
     {
       label: "달러 인덱스 (DXY)",
+      help: "dxy",
       val: Number.isFinite(cm.dxy?.val) ? `${cm.dxy.val.toFixed(2)}` : "확인 불가",
       chg: Number.isFinite(cm.dxy?.val) ? cm.dxy.change : null,
       desc: "주요 6개 통화 대비 달러화 가치 (글로벌 유동성)"
     },
     {
       label: "WTI 국제유가",
+      help: "wti",
       val: Number.isFinite(cm.wtiOil?.val) ? `$${cm.wtiOil.val.toFixed(2)}` : "확인 불가",
       chg: Number.isFinite(cm.wtiOil?.val) ? cm.wtiOil.change : null,
       desc: "원유 배럴당 가격 (헤드라인 물가 직결)"
     },
     {
       label: "국제 금 시세",
+      help: "gold",
       val: Number.isFinite(cm.gold?.val) ? `$${cm.gold.val.toLocaleString()}` : "확인 불가",
       chg: Number.isFinite(cm.gold?.val) ? cm.gold.change : null,
       desc: "대표 안전자산 및 통화가치 하락 헷지 수단"
@@ -3719,7 +3893,10 @@ function renderMacroMarketProxies() {
     const chgSign = !Number.isFinite(it.chg) ? "확인 불가" : it.chg > 0 ? `+${it.chg}%` : (it.chg < 0 ? `${it.chg}%` : "0.0%");
     return `
       <div class="proxy-card">
-        <span class="proxy-label">${it.label}</span>
+        <div class="macro-help-heading">
+          <span class="proxy-label">${it.label}</span>
+          ${macroHelpButton(it.help, it.label)}
+        </div>
         <div class="proxy-value-row">
           <span class="proxy-val">${it.val}</span>
           <span class="proxy-chg ${chgClass}">${chgSign}</span>
@@ -3782,7 +3959,10 @@ function renderMacroCalendar() {
         <span class="cal-cat-badge ${event.category.toLowerCase()}">${categories[event.category]}</span>
         <span class="cal-dday-pill ${event.daysDiff <= 7 ? "imminent" : ""}">${event.dDay}</span>
       </div>
-      <div class="cal-card-title">${escapeHtml(event.name)}</div>
+      <div class="cal-card-title macro-help-heading">
+        ${escapeHtml(event.name)}
+        ${macroHelpButton(event.category === "INFLATION" ? "cpi" : event.category, event.name)}
+      </div>
       <div class="cal-card-date"><strong>${escapeHtml(event.koreaTime)}</strong> KST</div>
       ${event.category === "FED" ? `<div class="cal-card-desc">미 동부 회의 일정 ${escapeHtml(event.date)} ~ ${escapeHtml(event.releaseDate)}</div>` : ""}
       <a class="cal-source" href="${escapeHtml(event.sourceUrl)}" target="_blank" rel="noopener noreferrer">${event.category === "FED" ? "연준 일정 원문" : "FRED 일정 원문"}</a>

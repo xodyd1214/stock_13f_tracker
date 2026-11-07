@@ -267,13 +267,14 @@ test('late quote response does not redraw the previously selected manager', asyn
 });
 test('macro null observations display unknown instead of fabricated defaults', () => {
   const elements = {};
-  const c = context(['macroFreshness', 'upcomingMacroEvents', 'renderMacroPulseBar', 'renderMacroMarketProxies', 'renderMacroBenchmarks'], { MACRO_DATA: { schemaVersion: 2, benchmarks: { fedRate: { gapToNeutral: null }, inflation: { gapToTarget: null } }, treasury: { spread10Y_13W: { spread: null }, yield10Y: { val: null } }, commoditiesAndFx: { gold: { val: null } } }, document: { getElementById: id => elements[id] ||= {} } });
+  const c = context(['macroFreshness', 'upcomingMacroEvents', 'macroHelpButton', 'renderMacroPulseBar', 'renderMacroMarketProxies', 'renderMacroBenchmarks'], { MACRO_DATA: { schemaVersion: 2, benchmarks: { fedRate: { gapToNeutral: null }, inflation: { gapToTarget: null } }, treasury: { spread10Y_13W: { spread: null }, yield10Y: { val: null } }, commoditiesAndFx: { gold: { val: null } } }, document: { getElementById: id => elements[id] ||= {} } });
   c.renderMacroPulseBar();
   c.renderMacroMarketProxies();
   c.renderMacroBenchmarks();
   const html = elements.macroPulseBar.innerHTML + elements.macroMarketProxyGrid.innerHTML;
   assert.match(html, /확인 불가/);
   assert.doesNotMatch(html, /4\.80|3\.77|3\.4|92\.36|4430|null|NaN/);
+  assert.equal((html.match(/aria-controls="macroHelp"/g) || []).length, 9);
 });
 test('invalid treasury observations cannot turn null into zero-yield chart points', () => {
   const c = context(['getFilteredTreasuryData'], { MACRO_DATA: { timeSeries: { treasuryDaily: [{ date: '2026-01-01', y3m: null, y5y: 2, y10y: 3, spread: 1 }, { date: '2026-01-02', y3m: 1, y5y: 2, y10y: 3, spread: 2 }] } } });
@@ -315,7 +316,7 @@ test('legacy macro observations and synthetic history are withheld', () => {
 test('v2 source age and stale status are visible and genuine zero quote change stays zero', () => {
   const elements = {};
   const data = { schemaVersion: 2, status: 'partial', sources: { gold: { status: 'stale', asOf: '2026-01-01' } }, commoditiesAndFx: { gold: { val: 100, change: 0 } } };
-  const c = context(['normalizeMacroData', 'macroFreshness', 'quoteFreshness', 'renderMacroMarketProxies'], { MACRO_DATA: data, document: { getElementById: id => elements[id] ||= {} } });
+  const c = context(['normalizeMacroData', 'macroFreshness', 'quoteFreshness', 'macroHelpButton', 'renderMacroMarketProxies'], { MACRO_DATA: data, document: { getElementById: id => elements[id] ||= {} } });
   assert.equal(c.normalizeMacroData(data), data);
   assert.match(c.macroFreshness(data), /오래된 관측값 포함/);
   assert.match(c.macroFreshness(data), /2026-01-01/);

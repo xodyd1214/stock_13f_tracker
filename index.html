@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=100">
+  <link rel="stylesheet" href="style.css?v=101">
 </head>
 <body>
   <div class="app-container">
@@ -633,6 +633,7 @@
           <div class="metric-card">
             <div class="metric-header">
               <span class="metric-title">연준 기준금리 (Fed Funds)</span>
+              <button type="button" class="macro-help-button" data-macro-help="fed" aria-label="연준 기준금리 설명" aria-controls="macroHelp" aria-expanded="false">?</button>
             </div>
             <div class="metric-value text-green" id="macroFedTarget">-</div>
             <div class="metric-sub" id="macroFedSub">실효금리(EFFR): - · SOFR: -</div>
@@ -641,6 +642,7 @@
           <div class="metric-card">
             <div class="metric-header">
               <span class="metric-title">미국 CPI 소비자물가 (YoY)</span>
+              <button type="button" class="macro-help-button" data-macro-help="cpi" aria-label="소비자물가지수 설명" aria-controls="macroHelp" aria-expanded="false">?</button>
             </div>
             <div class="metric-value text-purple" id="macroCpiVal">-</div>
             <div class="metric-sub" id="macroCpiSub">미 노동통계국(BLS) 공식 지수</div>
@@ -649,6 +651,7 @@
           <div class="metric-card">
             <div class="metric-header">
               <span class="metric-title">실업률 (Unemployment)</span>
+              <button type="button" class="macro-help-button" data-macro-help="unemployment" aria-label="실업률 설명" aria-controls="macroHelp" aria-expanded="false">?</button>
             </div>
             <div class="metric-value text-blue" id="macroUnemploymentVal">-</div>
             <div class="metric-sub" id="macroUnemploymentSub">고용시장 체력 척도</div>
@@ -657,6 +660,7 @@
           <div class="metric-card">
             <div class="metric-header">
               <span class="metric-title">국채 장단기 금리차 (10Y-3M)</span>
+              <button type="button" class="macro-help-button" data-macro-help="spread" aria-label="장단기 금리차 설명" aria-controls="macroHelp" aria-expanded="false">?</button>
             </div>
             <div class="metric-value" id="macroSpreadVal">-</div>
             <div class="metric-sub" id="macroSpreadSub">경기 침체 선행 신호</div>
@@ -667,8 +671,10 @@
         <section class="macro-benchmark-section">
           <div class="benchmark-header">
             <div class="section-title-wrap">
-              <h4>공식 정책 기준선(Benchmark) 대비 거시 지표 대조</h4>
-              <span class="section-tooltip">주관적 해석과 서술을 배제하고 법정 물가목표(2.0%), 공식 중립선(2.90%), 침체 역전 기준선(0.00%p)과 현재 계량 데이터를 1:1 대조한 객관적 지표입니다.</span>
+              <h4 class="macro-help-heading">거시 지표와 비교 기준선
+                <button type="button" class="macro-help-button" data-macro-help="benchmark" aria-label="거시 지표 비교 기준선 설명" aria-controls="macroHelp" aria-expanded="false">?</button>
+              </h4>
+              <span class="section-tooltip">지표를 기준선과 비교할 때는 기준이 어떤 숫자에 적용되는지 먼저 확인하세요.</span>
             </div>
           </div>
           <div class="benchmark-grid" id="macroBenchmarkGrid">
@@ -683,7 +689,9 @@
             <div class="card-title-wrap">
               <div class="title-with-controls">
                 <div>
-                  <h4>미국 국채 만기별 금리 시계열 추이 (3M · 5Y · 10Y)</h4>
+                  <h4 class="macro-help-heading">미국 국채 만기별 금리 시계열 추이 (3M · 5Y · 10Y)
+                    <button type="button" class="macro-help-button" data-macro-help="yieldChart" aria-label="국채 금리 차트 설명" aria-controls="macroHelp" aria-expanded="false">?</button>
+                  </h4>
                   <span class="card-sub">단기(3M) · 중기(5Y) · 장기(10Y) 국채 금리의 일별 변동 궤적</span>
                 </div>
                 <div class="chart-period-tabs" id="yieldPeriodTabs">
@@ -710,8 +718,10 @@
             <div class="card-title-wrap">
               <div class="title-with-controls">
                 <div>
-                  <h4>10Y-3M 장단기 금리차 시계열 궤적</h4>
-                  <span class="card-sub">뉴욕 연준 침체 역전 기준선(0.00%p) 대조 일별 스프레드 궤적</span>
+                  <h4 class="macro-help-heading">10Y-3M 장단기 금리차 시계열 궤적
+                    <button type="button" class="macro-help-button" data-macro-help="spread" aria-label="장단기 금리차 차트 설명" aria-controls="macroHelp" aria-expanded="false">?</button>
+                  </h4>
+                  <span class="card-sub">일별 장단기 금리차와 역전 기준선(0.00%p)</span>
                 </div>
                 <div class="chart-period-tabs" id="spreadPeriodTabs">
                   <button class="period-btn" data-period="1M">1M</button>
@@ -724,7 +734,7 @@
             <!-- 범례 및 현재 스프레드 -->
             <div class="chart-legend-row">
               <div class="legend-item"><span class="legend-dot green"></span> 현재 스프레드: <strong id="legendSpreadVal">-</strong></div>
-              <div class="legend-item"><span class="legend-dot red"></span> 침체 역전 기준선: <strong>0.00%p</strong></div>
+              <div class="legend-item"><span class="legend-dot red"></span> 역전 기준선: <strong>0.00%p</strong></div>
             </div>
             <div class="time-series-chart-wrap" id="spreadTimeSeriesContainer">
               <!-- JS SVG 스프레드 시계열 차트 렌더링 -->
@@ -765,6 +775,12 @@
         </section>
       </div>
     </main>
+  </div>
+
+  <div id="macroHelp" class="macro-help-panel" role="group" tabindex="-1" aria-labelledby="macroHelpTitle" aria-describedby="macroHelpMeaning macroHelpReading" hidden>
+    <strong id="macroHelpTitle"></strong>
+    <p id="macroHelpMeaning"></p>
+    <p id="macroHelpReading"><b>이렇게 읽어요</b> <span></span></p>
   </div>
 
   <!-- 종목 상세 모달 -->
@@ -990,7 +1006,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js"></script>
   <script src="sec_display_loader.js"></script>
-  <script src="app.js?v=110"></script>
+  <script src="app.js?v=111"></script>
 </body>
 </html>
 

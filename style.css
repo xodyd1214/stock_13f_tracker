@@ -3119,6 +3119,72 @@ button.congress-link {
   gap: 4px;
 }
 
+.macro-help-heading,
+#viewMacro .metric-header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 6px;
+}
+
+.macro-help-button {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-circle);
+  background: transparent;
+  color: var(--text-subdued);
+  font: 700 12px/1 var(--font-sans);
+  cursor: pointer;
+}
+
+.macro-help-button:hover,
+.macro-help-button[aria-expanded="true"] {
+  border-color: var(--spotify-green);
+  color: var(--spotify-green);
+}
+
+.macro-help-button:focus-visible,
+.macro-help-panel:focus-visible {
+  outline: 2px solid var(--spotify-green);
+  outline-offset: 2px;
+}
+
+.macro-help-panel {
+  position: fixed;
+  z-index: 60;
+  width: min(320px, calc(100% - 24px));
+  max-height: calc(100vh - 24px);
+  overflow: auto;
+  padding: 14px 16px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-highlight);
+  box-shadow: var(--shadow-heavy);
+  color: var(--text-near-white);
+  font-size: 13px;
+  line-height: 1.6;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.macro-help-panel strong {
+  color: var(--text-base);
+  font-size: 14px;
+}
+
+.macro-help-panel p {
+  margin-top: 6px;
+}
+
+.macro-help-panel b {
+  color: var(--spotify-green);
+  margin-right: 4px;
+}
+
 /* 거시 시각화 차트 섹션 (국채 만기별 시계열 & 10Y-3M 스프레드 시계열) */
 .macro-charts-grid {
   display: grid;
@@ -4182,6 +4248,14 @@ button.congress-link {
 }
 
 @media (max-width: 768px) {
+  .title-with-controls {
+    flex-wrap: wrap;
+  }
+
+  .title-with-controls > div:first-child {
+    flex-basis: 100%;
+  }
+
   /* 1. 모바일 앱 컨테이너 */
   .app-container {
     flex-direction: column;
