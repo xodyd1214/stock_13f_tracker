@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=96">
+  <link rel="stylesheet" href="style.css?v=97">
 </head>
 <body>
   <div class="app-container">
@@ -225,6 +225,7 @@
               <h2 id="currentGuruName">확인된 공시 부분집합</h2>
               <span class="badge fund-badge" id="currentFundName">공시 검증 대기</span>
               <span class="badge quarter-badge" id="currentQuarter" title="SEC Form 13F 분기 말일 기준 보유 현황">보유 기준일 확인 중</span>
+              <button type="button" class="congress-link" id="btnCongressHelp" aria-haspopup="dialog" aria-controls="congressHelp">공시 도움말</button>
             </div>
             <p class="guru-desc" id="currentGuruDesc">확인된 공시 부분집합만 표시합니다. 7개 추적명은 검증 중이며 현재 실시간 포트폴리오가 아닙니다.</p>
           </div>
@@ -250,6 +251,24 @@
           </div>
         </div>
       </header>
+
+      <dialog id="congressHelp" class="congress-help" aria-labelledby="congressHelpTitle">
+        <h3 id="congressHelpTitle">미국 의회 금융 공시 읽는 법</h3>
+        <dl>
+          <dt>거래일과 공시일</dt>
+          <dd>거래일은 신고자가 기재한 매수·매도일입니다. 공시일은 하원 기록에 표시된 신고 제출일입니다. 거래일은 정정 신고로 바뀔 수 있습니다.</dd>
+          <dt>장내 매수 여부</dt>
+          <dd>신고 양식에는 거래소나 체결 경로를 적는 항목이 없어 장내 매수인지 확인하기 어렵습니다. 배당 재투자나 기업공개(IPO) 배정도 매수에 포함될 수 있습니다.</dd>
+          <dt>신고 금액과 수량</dt>
+          <dd>금액 구간은 해당 거래의 총액입니다. 주당 체결가와 수량은 필수 공개 항목이 아니며, 수량이 기재된 경우 PDF 원문의 설명란에서 확인할 수 있습니다.</dd>
+          <dt>신고 의원과 소유자</dt>
+          <dd>의원이 제출한 공시에 배우자, 부양 자녀, 공동 소유 자산의 거래도 포함될 수 있습니다. 연례 보유 탭은 해당 보고 연도에 신고한 자산과 평가액 구간을 보여줍니다.</dd>
+        </dl>
+        <form method="dialog" class="congress-help-actions">
+          <a class="congress-link" href="https://ethics.house.gov/financial-disclosure-forms-and-filing/" target="_blank" rel="noopener noreferrer">하원 공식 신고 안내</a>
+          <button type="submit" class="congress-link" autofocus>닫기</button>
+        </form>
+      </dialog>
 
       <!-- 상단 상시 노출: 실시간 거시경제 펄스 바 (Macro Pulse Bar) -->
       <section class="macro-pulse-bar" id="macroPulseBar" title="클릭 시 거시경제 상세 요약 모달을 엽니다">
@@ -953,7 +972,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js"></script>
   <script src="sec_display_loader.js"></script>
-  <script src="app.js?v=105"></script>
+  <script src="app.js?v=106"></script>
 </body>
 </html>
 

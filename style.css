@@ -1766,6 +1766,10 @@ body {
   display: none;
 }
 
+.main-content:not([data-filing-mode="CONGRESS"]) #btnCongressHelp {
+  display: none;
+}
+
 .form4-secondary {
   display: block;
   margin-top: 3px;
@@ -1796,13 +1800,56 @@ body {
   border: 1px solid var(--border-light);
   border-radius: var(--radius-sm);
   color: var(--text-base);
+  background: transparent;
   text-decoration: none;
   font-size: 11px;
   white-space: nowrap;
 }
 
+button.congress-link {
+  min-height: 30px;
+  cursor: pointer;
+}
+
 .congress-link:hover {
   background: var(--bg-highlight);
+}
+
+.congress-help {
+  width: min(560px, calc(100% - 28px));
+  max-height: calc(100% - 28px);
+  margin: auto;
+  padding: 22px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-base);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow: auto;
+}
+
+.congress-help::backdrop {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.congress-help dt {
+  margin-top: 12px;
+  font-weight: 700;
+}
+
+.congress-help dd {
+  margin: 2px 0 0;
+  color: var(--text-subdued);
+  word-break: keep-all;
+}
+
+.congress-help-actions {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
 }
 
 #congressTable tbody tr {
@@ -1857,7 +1904,7 @@ body {
     margin: 0 6px 0 0;
   }
 
-  #f4Table .sec-link-btn, #viewCongress .congress-link {
+  #f4Table .sec-link-btn, .congress-link {
     min-height: 36px;
   }
 }

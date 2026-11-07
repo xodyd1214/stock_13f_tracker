@@ -1954,6 +1954,9 @@ function setupEventListeners() {
     };
   }
 
+  document.getElementById("btnCongressHelp").onclick = () => {
+    document.getElementById("congressHelp").showModal();
+  };
   document.querySelectorAll("#congressTabs [data-congress]").forEach(button => {
     button.onclick = () => {
       congressTab = button.dataset.congress;
