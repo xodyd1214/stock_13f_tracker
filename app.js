@@ -2678,10 +2678,13 @@ async function loadAndRenderForm4() {
   const periods = document.getElementById("f4PeriodTabs");
   if (periods) {
     periods.hidden = !isDirect || !recentForm4Snapshot;
+    const coverage = recentForm4Snapshot?.coverage;
+    const span = coverage ? (Date.parse(coverage.through) - Date.parse(coverage.from)) / 86400000 + 1 : 0;
     periods.querySelectorAll("[data-f4period]").forEach(button => {
       const active = button.dataset.f4period === state.f4Period;
       button.classList.toggle("active", active);
       button.setAttribute("aria-pressed", String(active));
+      if (button.dataset.f4period === "all") button.textContent = span === 30 ? "최근 30일" : "확인된 전체 기간";
     });
   }
   renderF4SidebarCompanyList();

@@ -1,4 +1,5 @@
 from datetime import date
+import gzip
 import json
 import unittest
 
@@ -103,12 +104,61 @@ class RecentForm4Tests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "does not match its index"):
             collect(self.get, date(2026, 11, 5))
 
-    def test_verified_window_expands_before_rolling_at_thirty_days(self):
+    def test_thirty_day_window_stays_anchored_to_latest_index(self):
         previous = collect(self.get, date(2026, 11, 5))
-        self.assertEqual(previous["coverage"]["from"], "2026-10-23")
+        self.assertEqual(previous["coverage"]["from"], "2026-10-07")
+        directory = json.loads(self.responses[self.directory])
+        for day in ("20261119", "20261125"):
+            name = f"master.{day}.idx"
+            directory["directory"]["item"].append({"name": name})
+            self.responses[self.directory.replace("index.json", name)] = (INDEX_HEADER + "\n").encode()
+        self.responses[self.directory] = json.dumps(directory).encode()
         self.calls.clear()
-        expanded = collect(self.get, date(2026, 11, 18), previous)
-        self.assertEqual(expanded["coverage"]["from"], "2026-10-23")
-        rolled = collect(self.get, date(2026, 11, 25), expanded)
+        weekend = collect(self.get, date(2026, 11, 21), previous)
+        self.assertEqual(weekend["coverage"]["from"], "2026-10-21")
+        self.assertEqual(weekend["coverage"]["through"], "2026-11-19")
+        rolled = collect(self.get, date(2026, 11, 25), weekend)
         self.assertEqual(rolled["coverage"]["from"], "2026-10-27")
+        self.assertEqual(collect(self.get, date(2026, 11, 26), rolled), rolled)
         self.assertFalse(any(path.endswith(".txt") for path in self.calls))
+
+    def test_shorter_snapshot_backfills_missing_days_and_reuses_verified_days(self):
+        previous = collect(self.get, date(2026, 11, 5))
+        previous["coverage"]["from"] = "2026-10-23"
+        directory = json.loads(self.responses[self.directory])
+        older_index = "master.20261007.idx"
+        directory["directory"]["item"].append({"name": older_index})
+        self.responses[self.directory] = json.dumps(directory).encode()
+        self.responses[self.directory.replace("index.json", older_index)] = (INDEX_HEADER + "\n").encode()
+        self.calls.clear()
+        full = collect(self.get, date(2026, 11, 5), previous)
+        self.assertEqual(full["coverage"]["from"], "2026-10-07")
+        self.assertEqual(full["days"][0]["date"], "2026-10-07")
+        self.assertEqual(full["transactions"], previous["transactions"])
+        self.assertFalse(any(path.endswith(".txt") for path in self.calls))
+
+    def test_missing_original_only_skips_when_rebuilt_index_confirms_removal(self):
+        missing = filing_path("1000", SECOND) + ".txt"
+        quarter_path = "/Archives/edgar/full-index/2026/QTR4/master.gz"
+        retained = f"1000|Issuer|4|2026-11-04|edgar/data/1000/{AMENDED}.txt"
+        missing_row = f"1000|Issuer|4|2026-11-04|edgar/data/1000/{SECOND}.txt"
+
+        def get(path):
+            if path == missing:
+                raise FileNotFoundError(path)
+            return self.get(path)
+
+        def use_quarter(rows):
+            index = "\n".join(["Last Data Received: November 6, 2026",
+                               "CIK|Company Name|Form Type|Date Filed|Filename", *rows])
+            self.responses[quarter_path] = gzip.compress(index.encode())
+
+        use_quarter([retained, missing_row])
+        with self.assertRaises(FileNotFoundError):
+            collect(get, date(2026, 11, 5))
+
+        use_quarter([retained])
+        result = collect(get, date(2026, 11, 5))
+        self.assertEqual(result["days"][0]["removedAccessions"], [SECOND])
+        self.assertEqual([row["accessionNumber"] for row in result["transactions"]], [BUY])
+        self.assertEqual(collect(get, date(2026, 11, 5), result), result)

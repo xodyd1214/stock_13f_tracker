@@ -1,7 +1,9 @@
 """Reconcile recent exchange-listed issuers' direct purchases against EDGAR."""
 from collections import defaultdict
 from datetime import date, datetime, timedelta
+import gzip
 import hashlib
+from io import BytesIO
 import json
 import re
 import time
@@ -17,12 +19,13 @@ SEC = "https://www.sec.gov"
 OUTPUT = "latest_form4_recent.json"
 MARKETS = ("NYSE", "Nasdaq", "CBOE", "TXSE")
 WINDOW_DAYS = 30
-INITIAL_WINDOW_DAYS = 14
 RULESET_VERSION = 1
 MAX_RESPONSE_BYTES = 8_000_000
+MAX_QUARTER_INDEX_BYTES = 64_000_000
 ACCESSION = r"[0-9]{10}-[0-9]{2}-[0-9]{6}"
 INDEX_PATH = re.compile(rf"edgar/data/([0-9]+)/({ACCESSION})\.txt")
 INDEX_HEADER = "CIK|Company Name|Form Type|Date Filed|File Name"
+QUARTER_INDEX_HEADER = "CIK|Company Name|Form Type|Date Filed|Filename"
 FUND_FILE_NUMBER = re.compile(rb"(?m)^\s*SEC FILE NUMBER:\s*(?:811|814)-")
 
 
@@ -82,6 +85,36 @@ def indexed_filings(raw, issuers):
             raise ValueError(f"Conflicting index entries for {accession}")
         filing[2].add(cik)
     return {key: (form, filed, sorted(ciks)) for key, (form, filed, ciks) in sorted(candidates.items())}
+
+
+def quarter_index(get, day):
+    """Use the rebuilt SEC index to distinguish a removed filing from a temporary 404."""
+    quarter = (day.month - 1) // 3 + 1
+    path = f"/Archives/edgar/full-index/{day.year}/QTR{quarter}/master.gz"
+    with gzip.GzipFile(fileobj=BytesIO(get(path))) as zipped:
+        raw = zipped.read(MAX_QUARTER_INDEX_BYTES + 1)
+    if len(raw) > MAX_QUARTER_INDEX_BYTES:
+        raise ValueError("Oversized SEC full index")
+    lines = raw.decode("latin-1").splitlines()
+    received = next((line.split(":", 1)[1].strip() for line in lines if line.startswith("Last Data Received:")), "")
+    updated = datetime.strptime(received, "%B %d, %Y").date()
+    try:
+        offset = lines.index(QUARTER_INDEX_HEADER)
+    except ValueError as error:
+        raise ValueError("SEC full-index header missing") from error
+    accessions = set()
+    form4_days = set()
+    for line in lines[offset + 1:]:
+        if not line.strip() or not line.strip("-"):
+            continue
+        _, _, form, filed, filename = line.split("|")
+        match = INDEX_PATH.fullmatch(filename)
+        if not match:
+            raise ValueError("Invalid SEC full-index filing path")
+        accessions.add(match[2])
+        if form in ("4", "4/A"):
+            form4_days.add(date.fromisoformat(filed))
+    return updated, accessions, form4_days
 
 
 def filing_path(cik, accession):
@@ -152,18 +185,19 @@ def compile_transactions(days):
 
 
 def collect(get, cutoff, previous=None):
-    window_start = cutoff - timedelta(days=WINDOW_DAYS - 1)
-    if previous:
-        validate_recent_snapshot(previous)
-        # Expand the published window as daily indexes arrive, without re-fetching
-        # filings before the earliest reconciled date on each scheduled run.
-        start = max(window_start, date.fromisoformat(previous["coverage"]["from"]))
-    else:
-        start = cutoff - timedelta(days=INITIAL_WINDOW_DAYS - 1)
-    issuers = listed_issuers(get)
+    start = cutoff - timedelta(days=WINDOW_DAYS - 1)
     dates = index_dates(get, start, cutoff)
+    through = dates[-1]
+    if through < cutoff:
+        # Keep the same filing-date range over weekends and market holidays.
+        start = through - timedelta(days=WINDOW_DAYS - 1)
+        dates = index_dates(get, start, through)
+        if dates[-1] != through:
+            raise ValueError("The latest confirmed EDGAR index changed during collection")
+    issuers = listed_issuers(get)
     old_days = {}
     if previous:
+        validate_recent_snapshot(previous)
         if dates[-1].isoformat() < previous["coverage"]["through"]:
             raise ValueError("EDGAR index coverage regressed")
         old_days = {day["date"]: day for day in previous["days"]}
@@ -171,23 +205,43 @@ def collect(get, cutoff, previous=None):
         if not retained_dates.issubset(dates):
             raise ValueError("A previously confirmed EDGAR index is missing")
     days = []
+    rebuilt_indexes = {}
+
+    def removed_from_edgar(accession, candidate, day):
+        key = (day.year, (day.month - 1) // 3 + 1)
+        if key not in rebuilt_indexes:
+            rebuilt_indexes[key] = quarter_index(get, day)
+        updated, active_accessions, form4_days = rebuilt_indexes[key]
+        filed = date.fromisoformat(candidate[1])
+        return updated > day and filed in form4_days and accession not in active_accessions
+
     for day in dates:
         date_key = day.isoformat()
         path = f"/Archives/edgar/daily-index/{day.year}/QTR{(day.month - 1) // 3 + 1}/master.{day:%Y%m%d}.idx"
         filings = indexed_filings(get(path), issuers)
         digest = hashlib.sha256(json.dumps([RULESET_VERSION, filings], sort_keys=True).encode()).hexdigest()
         cached = old_days.get(date_key)
-        if cached and cached["indexSha256"] == digest:
+        if (cached and cached["indexSha256"] == digest and
+                all(accession in filings and removed_from_edgar(accession, filings[accession], day)
+                    for accession in cached.get("removedAccessions", []))):
             days.append(cached)
             continue
-        purchases, amendments = [], []
+        purchases, amendments, removed = [], [], []
         for accession, candidate in filings.items():
-            rows, corrections = filing_findings(get, accession, candidate, issuers)
+            try:
+                rows, corrections = filing_findings(get, accession, candidate, issuers)
+            except FileNotFoundError:
+                if not removed_from_edgar(accession, candidate, day):
+                    raise
+                removed.append(accession)
+                continue
             purchases.extend(rows)
             amendments.extend(corrections)
         print(f"EDGAR {date_key}: checked {len(filings)} filings, found {len(purchases)} direct purchase rows", flush=True)
         days.append({"date": date_key, "indexSha256": digest, "filings": len(filings),
                      "purchases": purchases, "amendments": amendments})
+        if removed:
+            days[-1]["removedAccessions"] = removed
     count = sum(day["filings"] for day in days)
     result = {
         "schemaVersion": 1,
@@ -226,12 +280,16 @@ def validate_recent_snapshot(snapshot):
     require(count > 0 and snapshot.get("sourceFilings") == snapshot.get("verifiedFilings") == count)
     for day in days:
         require(isinstance(day["purchases"], list) and isinstance(day["amendments"], list))
+        removed = day.get("removedAccessions", [])
+        require(isinstance(removed, list) and all(isinstance(key, str) and re.fullmatch(ACCESSION, key) for key in removed)
+                and len(set(removed)) == len(removed) <= day["filings"])
         for key in day["amendments"]:
             require(isinstance(key, list) and len(key) == 3 and re.fullmatch(r"[0-9]{10}", key[0])
                     and isinstance(key[1], str) and key[1] and (key[2] == "" or iso_day(key[2])))
         for row in day["purchases"]:
             accession = row.get("accessionNumber", "")
             require(row.get("directInsiderPurchase") is True and row.get("txTypeCode") == "P"
+                    and accession not in removed
                     and row.get("ownership") == "D" and iso_day(row["transDate"]) and iso_day(row["filingDate"])
                     and row["filingDate"] <= day["date"] and row["transDate"] <= row["filingDate"]
                     and re.fullmatch(r"[0-9]{10}", row["issuerCik"])
