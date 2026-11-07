@@ -2817,42 +2817,6 @@ button.congress-link {
   flex: 1;
 }
 
-.mode-item-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-  height: 20px;
-  padding: 0 5px;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.3px;
-  border-radius: var(--radius-xs);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--text-subdued);
-  transition: all 0.18s ease;
-  flex-shrink: 0;
-}
-
-.mode-item-badge.badge-macro {
-  min-width: 42px;
-  font-size: 9px;
-}
-
-.filing-mode-item:hover .mode-item-badge {
-  background: rgba(255, 255, 255, 0.09);
-  color: var(--text-base);
-  border-color: rgba(255, 255, 255, 0.18);
-}
-
-.filing-mode-item.active .mode-item-badge {
-  background: rgba(30, 215, 96, 0.2);
-  border-color: rgba(30, 215, 96, 0.55);
-  color: var(--spotify-green);
-  box-shadow: 0 0 8px rgba(30, 215, 96, 0.2);
-}
-
 .mode-item-text {
   display: flex;
   flex-direction: column;

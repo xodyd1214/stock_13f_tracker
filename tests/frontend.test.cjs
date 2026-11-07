@@ -75,6 +75,42 @@ test('watchlist House activity includes only matched stock purchases in the fili
     [['2026-11-01', 'Amended'], ['2026-10-09', 'New']]);
 });
 
+test('Form 4 watchlist import resolves stored CIKs and legacy tickers without guessing ambiguous issuers', () => {
+  const c = context(['resolveForm4Favorites', 'watchSymbol'], {WATCH_KEY: /^\d{10}:[A-Z0-9]{1,10}(?:[.-][A-Z0-9]{1,10})?$/});
+  const listings = new Map([
+    ['0000000001', 'ABC'], ['0000000001', 'ABC-PB'], ['0000000002', 'XYZ-B'],
+    ['0000000003', 'OLD'], ['0000000004', 'DUPE'], ['0000000006', 'MULT-A'], ['0000000006', 'MULT-B']
+  ].map(([issuer, ticker]) => {
+    const key = `${issuer}:${ticker}`;
+    return [key, {issuer, ticker, key}];
+  }));
+  const result = c.resolveForm4Favorites(['0000000001', 'XYZ.B', 'OLD', 'DUPE', '0000000006', 'MISSING'], listings, [
+    {issuerCik: '0000000001', ticker: 'ABC-PB', securityTitle: 'Preferred Stock'},
+    {issuerCik: '0000000001', ticker: 'ABC', securityTitle: 'Class A Common Stock'},
+    {issuerCik: '0000000002', ticker: 'XYZ.B'},
+    {issuerCik: '0000000005', ticker: 'OLD'},
+    {issuerCik: '0000000004', ticker: 'DUPE'}, {issuerCik: '0000000005', ticker: 'DUPE'}
+  ]);
+  assert.deepEqual(Array.from(result, ([issuer, key]) => [issuer, key]), [
+    ['0000000001', '0000000001:ABC'], ['0000000002', '0000000002:XYZ-B'], ['0000000005', '0000000005:OLD']
+  ]);
+});
+
+test('Form 4 watchlist import preserves existing choices and remembers removals across devices', () => {
+  const c = context(['planForm4WatchImport'], {WATCH_LIMIT: 2});
+  const resolved = new Map([['1', '1:AAA'], ['2', '2:BBB'], ['3', '3:CCC']]);
+  const initial = {watchCompanies: ['1:AAAB'], favorites: ['Existing manager']};
+  const plan = c.planForm4WatchImport(initial, resolved);
+  assert.deepEqual(Array.from(plan.keys), ['1:AAAB', '2:BBB']);
+  assert.deepEqual(Array.from(plan.imported), ['1', '2']);
+  assert.equal(plan.added, 1);
+  assert.equal(plan.remaining, 1);
+  assert.deepEqual(initial.watchCompanies, ['1:AAAB']);
+  const next = c.planForm4WatchImport({watchCompanies: ['1:AAAB'], form4ImportedIssuers: plan.imported}, resolved);
+  assert.deepEqual(Array.from(next.keys), ['1:AAAB', '3:CCC']);
+  assert.deepEqual(Array.from(next.imported), ['1', '2', '3']);
+});
+
 test('delisted JHG retains history but has no current quote, daily change or discount', () => {
   const observed = { price: 51.95, changePct: -0.04, marketTime: 1782849603 };
   const c = context([...helpers, 'applyLivePricesToHoldings'], { LIVE_PRICES: { JHG: observed } });

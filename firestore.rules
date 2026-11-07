@@ -8,10 +8,12 @@ service cloud.firestore {
 
       function validPreferences() {
         let preferences = request.resource.data;
-        return preferences.keys().hasOnly(['favorites', 'updatedAt', 'watchCompanies'])
+        return preferences.keys().hasOnly(['favorites', 'updatedAt', 'watchCompanies', 'form4ImportedIssuers'])
           && preferences.get('favorites', []) is list
           && preferences.get('watchCompanies', []) is list
           && preferences.get('watchCompanies', []).size() <= 100
+          && preferences.get('form4ImportedIssuers', []) is list
+          && preferences.get('form4ImportedIssuers', []).size() <= 10000
           && preferences.get('updatedAt', request.time) is timestamp;
       }
 

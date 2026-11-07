@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=106">
+  <link rel="stylesheet" href="style.css?v=107">
 </head>
 <body>
   <div class="app-container">
@@ -38,7 +38,6 @@
         <div class="filing-mode-list" id="filingModeList" role="tablist" aria-label="공시 및 시장 데이터">
           <button type="button" class="filing-mode-item active" data-mode="MACRO" role="tab" aria-selected="true" title="Macro Compass 거시경제 나침반">
             <div class="mode-item-content">
-              <span class="mode-item-badge badge-macro">MACRO</span>
               <div class="mode-item-text">
                 <span class="mode-item-title">Macro Compass</span>
                 <span class="mode-item-desc">거시경제 나침반</span>
@@ -79,7 +78,6 @@
 
           <button type="button" class="filing-mode-item" data-mode="CONGRESS" role="tab" aria-selected="false" title="미국 의회 금융 공시">
             <div class="mode-item-content">
-              <span class="mode-item-badge">US</span>
               <div class="mode-item-text">
                 <span class="mode-item-title">미국 의회</span>
                 <span class="mode-item-desc">의원 매매 및 보유 공시</span>
@@ -90,7 +88,6 @@
 
           <button type="button" class="filing-mode-item" data-mode="13D" role="tab" aria-selected="false" title="Schedule 13D 행동주의 5%">
             <div class="mode-item-content">
-              <span class="mode-item-badge">13D</span>
               <div class="mode-item-text">
                 <span class="mode-item-title">Schedule 13D</span>
                 <span class="mode-item-desc">행동주의 5% 지분</span>
@@ -101,7 +98,6 @@
 
           <button type="button" class="filing-mode-item" data-mode="13G" role="tab" aria-selected="false" title="Schedule 13G 단순 대량보유">
             <div class="mode-item-content">
-              <span class="mode-item-badge">13G</span>
               <div class="mode-item-text">
                 <span class="mode-item-title">Schedule 13G</span>
                 <span class="mode-item-desc">단순 대량보유</span>
@@ -523,7 +519,10 @@
         <section class="table-section watch-card" id="watchLogin">
           <h3>내 관심 기업</h3>
           <p class="card-sub">구글 계정으로 로그인하면 관심 종목을 저장하고 다른 기기에서도 열 수 있습니다.</p>
-          <button type="button" class="btn btn-outline" id="btnWatchLogin">구글 로그인</button>
+          <button type="button" class="btn-header-action btn-google-login" id="btnWatchLogin">
+            <img src="google.svg" class="google-icon" alt="Google">
+            <span>구글 로그인</span>
+          </button>
         </section>
         <div class="watch-content" id="watchContent" hidden>
           <section class="table-section watch-card" aria-labelledby="watchListTitle">
@@ -1070,7 +1069,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js"></script>
   <script src="sec_display_loader.js?v=2"></script>
-  <script src="app.js?v=117"></script>
+  <script src="app.js?v=118"></script>
 </body>
 </html>
 

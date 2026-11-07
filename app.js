@@ -126,10 +126,15 @@ function setupCloudFavoritesListener(uid) {
   }
 
   const docRef = db.collection("users").doc(uid);
+  let importStarted = false;
   unsubscribeFavsListener = docRef.onSnapshot({ includeMetadataChanges: true }, (doc) => {
     if (CURRENT_USER?.uid !== uid || doc.metadata.fromCache || doc.metadata.hasPendingWrites) return;
     const data = doc.data();
     updateWatchlist(data?.watchCompanies);
+    if (!importStarted) {
+      importStarted = true;
+      importForm4Favorites(uid, docRef, data?.form4ImportedIssuers);
+    }
     if (Array.isArray(data?.favorites)) {
       saveFavorites(data.favorites);
     } else {
@@ -2145,7 +2150,12 @@ state.d13Query = "";
 state.selectedF4Issuer = null;
 state.isF4FavGroupActive = false;
 state.f4SidebarSearchQuery = "";
-state.f4FavCompanies = JSON.parse(localStorage.getItem("alpha13f_f4_fav_tickers") || "[]");
+try {
+  const saved = JSON.parse(localStorage.getItem("alpha13f_f4_fav_tickers"));
+  state.f4FavCompanies = Array.isArray(saved) ? saved.filter(key => typeof key === "string" && key.trim()) : [];
+} catch {
+  state.f4FavCompanies = [];
+}
 
 function saveF4Favs() {
   localStorage.setItem("alpha13f_f4_fav_tickers", JSON.stringify(state.f4FavCompanies));
@@ -2687,6 +2697,7 @@ function getF4ActiveDataset() {
 
 const watchlist = { catalog: null, catalogLoad: null, keys: [], selected: "", ready: false, saving: false, status: "" };
 const WATCH_KEY = /^\d{10}:[A-Z0-9]{1,10}(?:[.-][A-Z0-9]{1,10})?$/;
+const WATCH_LIMIT = 100;
 
 function resetWatchlistAccount() {
   Object.assign(watchlist, { keys: [], selected: "", ready: false, saving: false, status: "" });
@@ -2728,23 +2739,139 @@ function validateWatchCatalog(payload) {
 async function loadWatchCompanies() {
   if (watchlist.catalog) {
     if (!watchlist.selected && watchlist.keys.length) selectWatchCompany(watchlist.keys[0]);
-    return;
+    return watchlist.catalog;
   }
-  if (watchlist.catalogLoad) return;
-  watchlist.catalogLoad = loadDashboardSnapshot("listed_companies.json", 8000, validateWatchCatalog);
-  renderWatchSearch();
-  const data = await watchlist.catalogLoad;
-  watchlist.catalogLoad = null;
-  if (data) {
-    watchlist.catalog = new Map(data.data.map(([cik, name, ticker, exchange]) => {
-      const issuer = String(cik).padStart(10, "0");
-      const key = `${issuer}:${ticker}`;
-      return [key, { key, issuer, name, ticker, exchange }];
-    }));
+  if (!watchlist.catalogLoad) {
+    watchlist.catalogLoad = loadDashboardSnapshot("listed_companies.json", 8000, validateWatchCatalog).then(data => {
+      if (data) {
+        watchlist.catalog = new Map(data.data.map(([cik, name, ticker, exchange]) => {
+          const issuer = String(cik).padStart(10, "0");
+          const key = `${issuer}:${ticker}`;
+          return [key, { key, issuer, name, ticker, exchange }];
+        }));
+      }
+      return watchlist.catalog;
+    }).finally(() => {
+      watchlist.catalogLoad = null;
+      if (!CURRENT_USER || state.currentFilingType !== "WATCHLIST") return;
+      if (watchlist.selected || watchlist.keys.length) selectWatchCompany(watchlist.selected || watchlist.keys[0]);
+      else renderWatchlist();
+    });
+    if (state.currentFilingType === "WATCHLIST") renderWatchSearch();
   }
-  if (!CURRENT_USER || state.currentFilingType !== "WATCHLIST") return;
-  if (watchlist.selected || watchlist.keys.length) selectWatchCompany(watchlist.selected || watchlist.keys[0]);
-  else renderWatchlist();
+  return watchlist.catalogLoad;
+}
+
+function resolveForm4Favorites(favorites, companies, filings) {
+  const listings = new Map();
+  const byIssuer = new Map();
+  for (const company of companies.values()) {
+    listings.set(watchSymbol(company.ticker), company);
+    if (!byIssuer.has(company.issuer)) byIssuer.set(company.issuer, []);
+    byIssuer.get(company.issuer).push(company);
+  }
+  const filingsByIssuer = new Map();
+  const filingIssuers = new Map();
+  for (const row of filings) {
+    if (!filingsByIssuer.has(row.issuerCik)) filingsByIssuer.set(row.issuerCik, []);
+    filingsByIssuer.get(row.issuerCik).push(row);
+    for (const ticker of row.ticker.split(",").map(watchSymbol).filter(Boolean)) {
+      if (!filingIssuers.has(ticker)) filingIssuers.set(ticker, new Set());
+      filingIssuers.get(ticker).add(row.issuerCik);
+    }
+  }
+
+  const resolved = new Map();
+  for (const favorite of favorites) {
+    const value = favorite.trim();
+    const symbol = watchSymbol(value);
+    const directListing = listings.get(symbol);
+    const seenIssuers = filingIssuers.get(symbol);
+    if (seenIssuers?.size > 1) continue;
+    const issuer = /^\d{10}$/.test(value) ? value : seenIssuers?.values().next().value || directListing?.issuer;
+    if (!issuer || resolved.has(issuer)) continue;
+
+    const issuerListings = byIssuer.get(issuer) || [];
+    const issuerFilings = filingsByIssuer.get(issuer) || [];
+    // A stored CIK represents the whole issuer. Prefer its filed common-stock
+    // ticker when the exchange list has several classes or preferred shares.
+    const commonStock = /^(?:class [\w-]+ )?(?:common (?:stock|shares?)|ordinary shares?)\b/i;
+    const orderedFilings = [...issuerFilings.filter(row => row.directInsiderPurchase || commonStock.test(row.securityTitle || "")),
+      ...issuerFilings];
+    const reportedTickers = orderedFilings.flatMap(row => row.ticker.split(",").map(watchSymbol));
+    const filedListing = reportedTickers.map(ticker => listings.get(ticker)).find(company => company?.issuer === issuer);
+    const listing = directListing?.issuer === issuer ? directListing : filedListing || (issuerListings.length === 1 ? issuerListings[0] : null);
+    const archivedTicker = !issuerListings.length && reportedTickers.find(ticker => WATCH_KEY.test(`${issuer}:${ticker}`));
+    const key = listing?.key || (archivedTicker && `${issuer}:${archivedTicker}`);
+    if (key) resolved.set(issuer, key);
+  }
+  return resolved;
+}
+
+function planForm4WatchImport(data, resolved) {
+  const keys = Array.isArray(data?.watchCompanies) ? [...data.watchCompanies] : [];
+  const imported = new Set(Array.isArray(data?.form4ImportedIssuers) ? data.form4ImportedIssuers : []);
+  const previousCount = imported.size;
+  const savedIssuers = new Set(keys.filter(key => typeof key === "string").map(key => key.split(":", 1)[0]));
+  let added = 0;
+  let remaining = 0;
+  for (const [issuer, key] of resolved) {
+    if (imported.has(issuer)) continue;
+    if (!savedIssuers.has(issuer)) {
+      if (keys.length >= WATCH_LIMIT) {
+        remaining++;
+        continue;
+      }
+      keys.push(key);
+      added++;
+    }
+    imported.add(issuer);
+  }
+  return { keys, imported: [...imported], changed: imported.size !== previousCount, added, remaining };
+}
+
+async function importForm4Favorites(uid, docRef, importedIssuers) {
+  const imported = new Set(Array.isArray(importedIssuers) ? importedIssuers : []);
+  const favorites = state.f4FavCompanies.filter(key => !imported.has(key.trim()));
+  if (!favorites.length) return;
+  const ownerKey = "alpha13f_f4_watch_import_owner";
+  try {
+    const owner = localStorage.getItem(ownerKey);
+    if (owner && owner !== uid) return;
+    const [companies, filings] = await Promise.all([loadWatchCompanies(), loadVerifiedForm4()]);
+    if (CURRENT_USER?.uid !== uid) return;
+    if (!companies || !form4Snapshot) throw new Error("Form 4 import sources unavailable");
+    const resolved = resolveForm4Favorites(favorites, companies, filings);
+    if (!resolved.size) return;
+
+    const currentOwner = localStorage.getItem(ownerKey);
+    if (currentOwner && currentOwner !== uid) return;
+    // The old favorites belong to the browser. Bind their import to its first
+    // account so switching accounts cannot silently copy the same list again.
+    if (!currentOwner) localStorage.setItem(ownerKey, uid);
+    const result = await db.runTransaction(async transaction => {
+      const doc = await transaction.get(docRef);
+      if (CURRENT_USER?.uid !== uid) return null;
+      const plan = planForm4WatchImport(doc.data(), resolved);
+      if (plan.changed) transaction.set(docRef, {
+        watchCompanies: plan.keys,
+        form4ImportedIssuers: plan.imported,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      return plan;
+    });
+    if (!result || CURRENT_USER?.uid !== uid || (!result.added && !result.remaining)) return;
+    const added = result.added ? `Form 4 즐겨찾기에서 ${result.added}개 기업을 가져왔습니다.` : "";
+    const limit = result.remaining ? `${WATCH_LIMIT}개 저장 한도로 ${result.remaining}개는 가져오지 못했습니다.` : "";
+    watchlist.status = [added, limit].filter(Boolean).join(" ");
+    if (state.currentFilingType === "WATCHLIST") renderWatchlist();
+  } catch (error) {
+    if (CURRENT_USER?.uid === uid) {
+      watchlist.status = "Form 4 즐겨찾기를 가져오지 못했습니다. 다음 로그인 때 다시 시도합니다.";
+      if (state.currentFilingType === "WATCHLIST") renderWatchlist();
+    }
+    console.warn("Form 4 즐겨찾기 가져오기 실패:", error);
+  }
 }
 
 function watchCompany(key) {
@@ -2805,8 +2932,8 @@ async function toggleWatchCompany() {
   if (!uid || !db || !key || !watchlist.ready || watchlist.saving) return;
   const saved = watchlist.keys.includes(key);
   if (!saved && !watchlist.catalog?.has(key)) return;
-  if (!saved && watchlist.keys.length >= 100) {
-    watchlist.status = "관심 기업은 최대 100개까지 저장할 수 있습니다.";
+  if (!saved && watchlist.keys.length >= WATCH_LIMIT) {
+    watchlist.status = `관심 기업은 최대 ${WATCH_LIMIT}개까지 저장할 수 있습니다.`;
     renderWatchlist();
     return;
   }
@@ -2815,10 +2942,12 @@ async function toggleWatchCompany() {
   renderWatchlist();
   try {
     const fields = firebase.firestore.FieldValue;
-    await db.collection("users").doc(uid).set({
+    const update = {
       watchCompanies: saved ? fields.arrayRemove(key) : fields.arrayUnion(key),
       updatedAt: fields.serverTimestamp()
-    }, { merge: true });
+    };
+    if (saved) update.form4ImportedIssuers = fields.arrayUnion(key.split(":", 1)[0]);
+    await db.collection("users").doc(uid).set(update, { merge: true });
   } catch (error) {
     if (CURRENT_USER?.uid === uid) watchlist.status = "관심 기업을 저장하지 못했습니다. 다시 시도해 주세요.";
     console.warn("관심 기업 저장 실패:", error);
