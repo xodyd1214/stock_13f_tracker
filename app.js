@@ -588,6 +588,33 @@ function applyLivePricesToHoldings(holdings) {
   });
 }
 
+async function loadSecDisplayInWorker() {
+  const baseURL = new URL("./", document.baseURI);
+  if (typeof Worker === "undefined") return SECDisplayLoader.load({ baseURL });
+
+  const worker = new Worker(new URL("sec_display_worker.js?v=1", baseURL));
+  return new Promise((resolve, reject) => {
+    function finish(callback, value) {
+      clearTimeout(timeout);
+      worker.terminate();
+      callback(value);
+    }
+
+    const timeout = setTimeout(() => finish(reject, new Error("13F verification timed out")), 60000);
+    worker.onmessage = ({ data }) => {
+      if (data?.display) finish(resolve, data.display);
+      else finish(reject, new Error(data?.error || "13F verification failed"));
+    };
+    worker.onerror = (event) => finish(reject, new Error(event.message || "13F worker failed to start"));
+    worker.onmessageerror = () => finish(reject, new Error("13F worker result could not be read"));
+    try {
+      worker.postMessage(globalThis.SEC_DISPLAY_CONFIG);
+    } catch (error) {
+      finish(reject, error);
+    }
+  });
+}
+
 async function loadRealSecData() {
   if (SEC_DISPLAY) return;
   if (!secDisplayLoad) {
@@ -599,7 +626,7 @@ async function loadRealSecData() {
       const isRecord = value => value && typeof value === "object" && !Array.isArray(value);
       try {
         const [display, tickerMap, prices, symbols] = await Promise.all([
-          SECDisplayLoader.load({ baseURL: new URL("./", document.baseURI) }),
+          loadSecDisplayInWorker(),
           loadDashboardSnapshot("ticker_map.json", 5000, isRecord),
           loadDashboardSnapshot("realtime_prices.json", 5000, isRecord),
           loadDashboardSnapshot("market_symbols.json", 5000, value =>

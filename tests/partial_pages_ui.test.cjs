@@ -106,10 +106,23 @@ function transportFixture() {
  const options={baseURL:base,config,fetch,crypto:crypto.webcrypto,now:Date.parse('2026-11-05T01:00:00Z')};
  return {rows,projection,coverage,manifest,files,calls,options,rebuild};
 }
-test('hashed transport preserves rows exactly, pins one pointer, and resolves repo subpath',async()=>{
- const f=transportFixture(); const result=await loader.load(f.options);
+test('hashed transport overlaps independent reads, preserves rows, and pins one pointer', {timeout: 3000}, async () => {
+ const f = transportFixture();
+ const fetch = f.options.fetch;
+ let releasePolicy, releaseProjection, policyReads = 0, metadataReads = 0;
+ const policyGate = new Promise(resolve => { releasePolicy = resolve; });
+ const projectionGate = new Promise(resolve => { releaseProjection = resolve; });
+ f.options.fetch = async (url, options) => {
+   if (url.endsWith('/display-policy.json') && ++policyReads === 1) await policyGate;
+   if (url.endsWith('/current.json')) releasePolicy();
+   if (url.endsWith('/projection.json')) await projectionGate;
+   if (/\/(manifest|coverage)\.json$/.test(url) && ++metadataReads === 2) releaseProjection();
+   return fetch(url, options);
+ };
+ const result = await loader.load(f.options);
  assert.deepEqual(result.rows,f.rows); assert.equal(result.coverage.labels.length,50); assert.equal(result.manifest.availableEntityCount,42); assert.equal(result.freshness.stale,false);
  assert.equal(f.calls.filter(x=>x.endsWith('/current.json')).length,1); assert.equal(f.calls.filter(x=>x.endsWith('/display-policy.json')).length,2);
+ assert.ok(f.calls.at(-1).endsWith('/display-policy.json'));
  assert.ok(f.calls.every(x=>x.startsWith('https://example.com/repo/'))); assert.ok(!f.calls.some(x=>/history|latest_13f/.test(x)));
 });
 test('loader rejects corrupt/missing/oversized payloads without legacy fallback',async()=>{
@@ -157,11 +170,9 @@ test('startup opens Macro without loading filings, and 13F shares in-flight load
      addEventListener(event, handler) { assert.equal(event, 'DOMContentLoaded'); enter = handler; },
      getElementById: () => null
    },
-   SECDisplayLoader: {
-     load() {
-       if (++loadCount === 1) return new Promise((resolve, reject) => { rejectLoad = reject; });
-       return Promise.resolve(display);
-     }
+   loadSecDisplayInWorker() {
+     if (++loadCount === 1) return new Promise((resolve, reject) => { rejectLoad = reject; });
+     return Promise.resolve(display);
    },
    loadDashboardSnapshot: async file => { fetched.push(file); return null; },
    mergeObservedPrices() {}, renderPartialCoverage() {}, initFirebase() {}, setupEventListeners() {},

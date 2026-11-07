@@ -58,9 +58,15 @@
       for (const values of group.rows) {
         check(Array.isArray(values) && values.length === group.columns.length, 'row width');
         const row = {};
-        const assign = (path,value) => { let cursor = row; for (const key of path.slice(0,-1)) cursor = cursor[key] ||= {}; cursor[path.at(-1)] = value; };
-        group.common.forEach(([path,value]) => assign(path, structuredClone(value)));
-        group.columns.forEach((path,i) => assign(path, structuredClone(values[i])));
+        const assign = (path, value) => {
+          let cursor = row;
+          for (let i = 0; i < path.length - 1; i++) cursor = cursor[path[i]] ||= {};
+          const type = typeof value;
+          cursor[path.at(-1)] = value === null || type === 'string' || type === 'number' || type === 'boolean'
+            ? value : structuredClone(value);
+        };
+        group.common.forEach(([path,value]) => assign(path, value));
+        group.columns.forEach((path,i) => assign(path, values[i]));
         rows.push(row); check(rows.length <= projection.rowCount, 'excess rows');
       }
     }
@@ -175,10 +181,13 @@
     const now = readNow();
     check(Number.isFinite(now), 'clock unavailable');
     const policyURL = safeURL(base,config.policyPath), pointerURL = safeURL(base,config.pointerPath);
-    const policyBefore = await bytes(fetcher,policyURL,LIMITS.policy);
+    const [policyBefore, pointerBytes] = await Promise.all([
+      bytes(fetcher, policyURL, LIMITS.policy),
+      bytes(fetcher, pointerURL, LIMITS.pointer)
+    ]);
     check(await digest(crypto,policyBefore) === config.expectedScopeSha256, 'policy revoked or changed');
     const policy = parse(policyBefore);
-    const pointer = parse(await bytes(fetcher,pointerURL,LIMITS.pointer));
+    const pointer = parse(pointerBytes);
     check(pointer.schemaVersion === 1 && pointer.contract === CONTRACT && HEX.test(pointer.generationId), 'pointer schema');
     const generationBase = new URL(`generations/${pointer.generationId}/`, new URL('./',pointerURL));
     const descriptorBytes = await bytes(fetcher,safeURL(generationBase,'generation.json'),LIMITS.descriptor);
@@ -186,15 +195,18 @@
     const descriptor = parse(descriptorBytes);
     check(descriptor.schemaVersion === 1 && descriptor.artifactType === 'sec_13f_partial_pages_generation' && descriptor.scopeSha256 === config.expectedScopeSha256, 'generation schema');
     check(descriptor.files && Object.keys(descriptor.files).sort().join(',') === 'coverage.json,manifest.json,projection.json', 'unexpected generation files');
-    const payload = {};
-    for (const name of ['projection.json','manifest.json','coverage.json']) {
-      const ref = descriptor.files[name], limit = LIMITS[name.split('.')[0]];
+    const artifacts = ['projection', 'manifest', 'coverage'].map(kind => {
+      const name = kind + '.json';
+      const ref = descriptor.files[name], limit = LIMITS[kind];
       check(ref && HEX.test(ref.sha256) && integer(ref.bytes) && ref.bytes > 0 && ref.bytes <= limit, 'artifact reference or budget');
-      const data = await bytes(fetcher,safeURL(generationBase,name),limit,ref.bytes);
-      check(await digest(crypto,data) === ref.sha256, 'artifact hash mismatch'); payload[name] = parse(data);
-    }
-    const rows = decode(payload['projection.json']);
-    const manifest = payload['manifest.json'], coverage = payload['coverage.json'];
+      return { ref, limit, url: safeURL(generationBase, name) };
+    });
+    const [projection, manifest, coverage] = await Promise.all(artifacts.map(async ({ ref, limit, url }) => {
+      const data = await bytes(fetcher, url, limit, ref.bytes);
+      check(await digest(crypto,data) === ref.sha256, 'artifact hash mismatch');
+      return parse(data);
+    }));
+    const rows = decode(projection);
     const policyAfter = await bytes(fetcher,policyURL,LIMITS.policy);
     check(await digest(crypto,policyAfter) === config.expectedScopeSha256, 'policy revoked during load');
     const finalNow = readNow(); check(Number.isFinite(finalNow), 'clock unavailable');

@@ -27,5 +27,6 @@ jobs:
         run: |
           node --check app.js
           node --check sec_display_loader.js
+          node --check sec_display_worker.js
       - name: Run frontend regressions
         run: SEC_REAL_BUNDLE=. node --test tests/*.test.cjs

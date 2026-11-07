@@ -20,7 +20,7 @@ import sec_partial_stage as stage
 from sec_filing_integrity import is_reported_equity
 
 CONTRACT = 'exact_43_labels_42_entities_of_50'
-ASSETS = ('index.html','app.js','style.css','google.svg','sec_display_loader.js',
+ASSETS = ('index.html','app.js','style.css','google.svg','sec_display_loader.js','sec_display_worker.js',
           'ticker_map.json','realtime_prices.json','latest_macro_indicators.json',
           'market_symbols.json','latest_13d_filings.json','latest_form4_insiders.json','latest_form4_recent.json',
           'latest_congress_house.json')
