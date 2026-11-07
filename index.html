@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=97">
+  <link rel="stylesheet" href="style.css?v=98">
 </head>
 <body>
   <div class="app-container">
@@ -515,6 +515,11 @@
               </div>
             </div>
             <div class="toolbar-right">
+              <div class="filter-tabs" id="congressTradeFilter" role="group" aria-label="거래 유형">
+                <button type="button" class="filter-tab active" data-congress-action="all" aria-pressed="true">전체 거래</button>
+                <button type="button" class="filter-tab" data-congress-action="P" aria-pressed="false">매수</button>
+                <button type="button" class="filter-tab" data-congress-action="S" aria-pressed="false">매도</button>
+              </div>
               <div class="search-input-wrap">
                 <input type="search" id="congressSearch" placeholder="의원, 티커, 자산 검색" aria-label="의원 이름, 지역구, 티커, 자산 검색">
               </div>
@@ -972,7 +977,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js"></script>
   <script src="sec_display_loader.js"></script>
-  <script src="app.js?v=106"></script>
+  <script src="app.js?v=107"></script>
 </body>
 </html>
 

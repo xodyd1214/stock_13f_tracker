@@ -1856,6 +1856,20 @@ button.congress-link {
   cursor: default;
 }
 
+#congressTradeFilter[hidden] {
+  display: none;
+}
+
+#viewCongress .toolbar-right {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  #viewCongress .toolbar-right .search-input-wrap {
+    flex: 1 1 150px;
+  }
+}
+
 @media (max-width: 640px) {
   #f4Table, #viewForm4[data-scope="direct"] #f4Table, #f4Table tbody, #congressTable, #congressTable tbody {
     display: block;

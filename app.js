@@ -1964,6 +1964,13 @@ function setupEventListeners() {
       renderCongress();
     };
   });
+  document.querySelectorAll("#congressTradeFilter [data-congress-action]").forEach(button => {
+    button.onclick = () => {
+      congressAction = button.dataset.congressAction;
+      congressLimit = 40;
+      renderCongress();
+    };
+  });
   document.getElementById("congressSearch").oninput = () => {
     congressLimit = 40;
     renderCongress();
@@ -2094,6 +2101,7 @@ let FILING_13D_DATA = [];
 let congressSnapshot = null;
 let congressLoad = null;
 let congressTab = "ptr";
+let congressAction = "all";
 let congressLimit = 40;
 
 state.currentFilingType = "13F";
@@ -2249,6 +2257,7 @@ async function switchFilingMode(filingType) {
 
 const congressAssets = { ST: "주식", EF: "ETF", OP: "옵션" };
 const congressActions = { P: "매수", S: "매도", "S (partial)": "일부 매도", E: "교환" };
+const congressActionFilters = { P: ["P"], S: ["S", "S (partial)"] };
 const congressOwners = { SP: "배우자", JT: "공동", DC: "부양 자녀", SELF: "본인" };
 
 function validateCongressSnapshot(payload) {
@@ -2287,6 +2296,14 @@ function renderCongress() {
   const tab = congressTab;
   const isDocuments = tab === "documents";
   const isTrade = tab === "ptr";
+  const actionFilter = document.getElementById("congressTradeFilter");
+  actionFilter.hidden = !isTrade;
+  actionFilter.querySelectorAll("[data-congress-action]").forEach(button => {
+    const active = button.dataset.congressAction === congressAction;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+  const allowedActions = isTrade ? congressActionFilters[congressAction] : undefined;
   const search = document.getElementById("congressSearch");
   search.placeholder = isDocuments ? "의원, 지역구 검색" : "의원, 티커, 자산 검색";
   const query = search.value.trim().toLowerCase();
@@ -2315,7 +2332,8 @@ function renderCongress() {
     [filing.name, filing.district, row?.ticker, row?.asset].some(value => value?.toLowerCase().includes(query));
   const entries = isDocuments ? filings.filter(filing => matches(filing)).map(filing => ({ filing })) :
     filings.filter(filing => filing.kind === tab).flatMap(filing =>
-      filing.rows.filter(row => row.status !== "Deleted" && matches(filing, row)).map(row => ({ filing, row })));
+      filing.rows.filter(row => row.status !== "Deleted" && (!allowedActions || allowedActions.includes(row.action)) &&
+        matches(filing, row)).map(row => ({ filing, row })));
   if (isTrade) entries.sort((a, b) => b.filing.filed.localeCompare(a.filing.filed) || b.row.traded.localeCompare(a.row.traded));
   scope.textContent = isDocuments
     ? `매매 공시 ${ptrFrom}~${asOf} · 연례 보유 ${annualYear}년분 · 표로 옮기기 어려운 문서도 포함합니다.`
