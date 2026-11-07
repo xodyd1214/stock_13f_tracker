@@ -267,7 +267,7 @@ test('late quote response does not redraw the previously selected manager', asyn
 });
 test('macro null observations display unknown instead of fabricated defaults', () => {
   const elements = {};
-  const c = context(['macroFreshness', 'renderMacroPulseBar', 'renderMacroMarketProxies', 'renderMacroBenchmarks'], { MACRO_DATA: { schemaVersion: 2, benchmarks: { fedRate: { gapToNeutral: null }, inflation: { gapToTarget: null } }, treasury: { spread10Y_13W: { spread: null }, yield10Y: { val: null } }, commoditiesAndFx: { gold: { val: null } } }, document: { getElementById: id => elements[id] ||= {} } });
+  const c = context(['macroFreshness', 'upcomingMacroEvents', 'renderMacroPulseBar', 'renderMacroMarketProxies', 'renderMacroBenchmarks'], { MACRO_DATA: { schemaVersion: 2, benchmarks: { fedRate: { gapToNeutral: null }, inflation: { gapToTarget: null } }, treasury: { spread10Y_13W: { spread: null }, yield10Y: { val: null } }, commoditiesAndFx: { gold: { val: null } } }, document: { getElementById: id => elements[id] ||= {} } });
   c.renderMacroPulseBar();
   c.renderMacroMarketProxies();
   c.renderMacroBenchmarks();
@@ -333,11 +333,11 @@ test('v2 unavailable summary handles explicit null benchmark gaps', async () => 
 test('late static macro fallback cannot replace a newer snapshot', async () => {
   let release;
   const snapshot = { schemaVersion: 2, status: 'success' };
-  const c = context(['hasPrice', 'normalizeMacroData', 'refreshMacroSnapshot', 'fetchLivePricesForCurrentView'], { refreshMacroSnapshot: async () => {}, priceRequestId: 0, state: { currentGuruKey: 'A', currentFilingType: '13F' }, GURU_DATABASE: { A: { holdings: [] } }, LIVE_PRICES: {}, MACRO_DATA: snapshot, fetch: async url => url.startsWith('/api/') ? { ok: false } : url.startsWith('realtime_') ? { ok: false } : new Promise(resolve => { release = resolve; }), updateSummaryMetrics() {}, renderTable() {}, renderMacroPulseBar() { throw new Error('Stale macro render'); } });
+  const c = context(['hasPrice', 'normalizeMacroData', 'refreshMacroSnapshot', 'fetchLivePricesForCurrentView'], { priceRequestId: 0, state: { currentGuruKey: 'A', currentFilingType: '13F' }, GURU_DATABASE: { A: { holdings: [] } }, LIVE_PRICES: {}, MACRO_DATA: snapshot, fetch: async () => ({ ok: false }), fetchMacroSnapshot: () => new Promise(resolve => { release = resolve; }), updateSummaryMetrics() {}, renderTable() {}, renderMacroPulseBar() { throw new Error('Stale macro render'); } });
   const pending = c.fetchLivePricesForCurrentView();
   while (!release) await new Promise(resolve => setImmediate(resolve));
   c.priceRequestId++;
-  release({ ok: true, json: async () => ({ schemaVersion: 2, status: 'stale' }) });
+  release({ schemaVersion: 2, status: 'stale' });
   await pending;
   assert.equal(c.MACRO_DATA, snapshot);
 });
@@ -345,7 +345,7 @@ test('API and static quote paths both fully redraw refreshed macro snapshots', a
   for (const apiOk of [true, false]) {
     let redraws = 0;
     const next = { schemaVersion: 2, status: 'success', treasury: {} };
-    const c = context(['hasPrice', 'normalizeMacroData', 'refreshMacroSnapshot', 'fetchLivePricesForCurrentView'], { priceRequestId: 0, state: { currentGuruKey: 'A', currentFilingType: 'MACRO' }, GURU_DATABASE: { A: { holdings: [] } }, LIVE_PRICES: {}, MACRO_DATA: {}, fetch: async url => url.startsWith('/api/') ? { ok: apiOk, json: async () => ({}) } : url.startsWith('realtime_') ? { ok: false } : { ok: true, json: async () => next }, loadAndRenderMacro: async () => { redraws++; } });
+    const c = context(['hasPrice', 'normalizeMacroData', 'refreshMacroSnapshot', 'fetchLivePricesForCurrentView'], { priceRequestId: 0, state: { currentGuruKey: 'A', currentFilingType: 'MACRO' }, GURU_DATABASE: { A: { holdings: [] } }, LIVE_PRICES: {}, MACRO_DATA: {}, fetch: async url => url.startsWith('/api/') ? { ok: apiOk, json: async () => ({}) } : { ok: false }, fetchMacroSnapshot: async () => next, loadAndRenderMacro: async () => { redraws++; } });
     await c.fetchLivePricesForCurrentView();
     assert.equal(c.MACRO_DATA, next);
     assert.equal(redraws, 1);

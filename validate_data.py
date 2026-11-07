@@ -46,6 +46,8 @@ def validate_output(path):
         successful = value.get('collection', {}).get('successfulSources', [])
         if not successful or any(key not in value['sources'] or value['sources'][key].get('fetchStatus') != 'success' for key in successful):
             raise ValueError('Macro publication requires at least one successful source')
+        from macro_calendar import validate_calendar
+        validate_calendar(value.get('calendar', []))
     if path.name == 'latest_form4_recent.json':
         from sec_form4_recent import validate_recent_snapshot
         validate_recent_snapshot(value)

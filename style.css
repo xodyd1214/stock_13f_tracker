@@ -1762,7 +1762,8 @@ body {
   display: none;
 }
 
-.main-content[data-filing-mode="CONGRESS"] :is(#btnExportCsv, #btnMobileCsv) {
+.main-content:is([data-filing-mode="CONGRESS"], [data-filing-mode="MACRO"]) :is(#btnExportCsv, #btnMobileCsv),
+.main-content[data-filing-mode="MACRO"] #filingDdayBanner {
   display: none;
 }
 
@@ -3380,9 +3381,21 @@ button.congress-link {
 
 .macro-calendar-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
   gap: 16px;
   margin-top: 20px;
+}
+
+#macroCalendarStatus {
+  color: var(--text-subdued);
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.cal-source {
+  align-self: flex-start;
+  color: var(--text-subdued);
+  font-size: 12px;
 }
 
 .cal-event-card {

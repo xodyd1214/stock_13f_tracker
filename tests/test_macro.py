@@ -57,6 +57,16 @@ def all_sources(url, payload=None):
         return bls_fixture()
     if "query1.finance.yahoo.com" in url:
         return chart(3.0 if "%5EIRX" in url else 4.5, history="range=1y" in url)
+    if url == macro.FOMC_URL:
+        return ('<h4><a id="year">2028 FOMC Meetings</a></h4>'
+                '<div class="fomc-meeting__month"><strong>April</strong></div>'
+                '<div class="fomc-meeting__date">25-26</div>')
+    if url.startswith(macro.FRED_CALENDAR):
+        year = url.rsplit("=", 1)[-1]
+        release_id = "10" if "rid=10" in url else "50"
+        return ("All times are US Central Time."
+                f"<tr><td><span>Wednesday April 12, {year}</span></td></tr>"
+                f'<tr><td>7:30 am</td><td><a href="/release?rid={release_id}">Release</a></td></tr>')
     raise AssertionError(f"Unexpected fixture URL: {url}")
 
 
@@ -93,6 +103,17 @@ class MacroTests(unittest.TestCase):
         self.assertEqual(data["status"], "unavailable")
         self.assertIsNone(data["lastUpdated"])
         self.assertEqual(data["sources"]["nyFed"]["status"], "error")
+
+    def test_official_release_times_and_retained_calendar(self):
+        events, sources = macro.collect_release_calendar({}, NOW, all_sources)
+        times = {(event["source"], event["date"]): event["releaseAt"] for event in events}
+        self.assertEqual(times[("calendarFomc", "2028-04-25")], "2028-04-26T18:00:00Z")
+        self.assertEqual(times[("calendarCpi", "2028-04-12")], "2028-04-12T12:30:00Z")
+        self.assertEqual(times[("calendarLabor", "2029-04-12")], "2029-04-12T12:30:00Z")
+        retained, status = macro.collect_release_calendar(
+            {"schemaVersion": 2, "calendar": events, "sources": sources}, NOW, failed_fetch)
+        self.assertEqual(retained, events)
+        self.assertEqual(status["calendarCpi"]["status"], "stale")
 
     def test_failed_collection_preserves_existing_bytes(self):
         with tempfile.TemporaryDirectory() as directory:

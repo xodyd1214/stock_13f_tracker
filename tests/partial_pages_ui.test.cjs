@@ -148,6 +148,7 @@ test('coverage pending values, wrong aliases, unsafe provenance and numeric sums
 test('failed partial generation retains independent macro and price fetches and never fetches legacy holdings',async()=>{
  const fetched=[]; const {ctx}=context([],false);
  Object.assign(ctx,{URL,Promise,SECDisplayLoader:{load:async()=>{throw new Error('corrupt generation')}},document:{baseURI:'https://example.com/repo/index.html',getElementById:()=>null},window:{requestIdleCallback:true},requestIdleCallback:()=>{},SEC_DISPLAY_ROWS:new WeakSet(),TICKER_MAP:{},fetch:async url=>{fetched.push(url);return{ok:true,json:async()=>url.startsWith('latest_macro')?{schemaVersion:2,status:'available'}:{}}},normalizeMacroData:x=>x,renderMacroPulseBar(){},mergeObservedPrices(){},renderPartialCoverage(){},fetchLivePricesForCurrentView(){},prefetchOtherFilings(){}});
+ ctx.MACRO_DATA=null;ctx.fetchMacroSnapshot=async()=>({schemaVersion:2,status:'available'});
  vm.runInContext(extract('loadRealSecData'),ctx); await ctx.loadRealSecData();
  assert.equal(ctx.SEC_DISPLAY,null);assert.equal(ctx.GURU_DATABASE.__GRAND_TOTAL__.rawAum,null);assert.equal(ctx.MACRO_DATA.status,'available');assert.ok(fetched.some(x=>x.startsWith('realtime_prices')));assert.ok(!fetched.some(x=>x.includes('latest_13f')));
 });
@@ -205,8 +206,11 @@ test('adjacent SEC and macro feeds escape hostile text and reject executable or 
  assert.equal(ctx.safeSecUrl('https://www.sec.gov/Archives/example.htm'),'https://www.sec.gov/Archives/example.htm');
  const d13=element();nodes.set('d13TableBody',d13);ctx.FILING_13D_DATA=[{filingDate:attack,formType:attack,investorName:attack,fundName:attack,targetCompany:attack,targetTicker:attack,percentOwned:attack,docUrl:'javascript:alert(1)'}];
  vm.runInContext(extract('render13DTable'),ctx);ctx.render13DTable();assert.doesNotMatch(d13.children[0].innerHTML,/<img|href="javascript:/);assert.match(d13.children[0].innerHTML,/&lt;img/);
- const macro=element();nodes.set('macroCalendarGrid',macro);ctx.MACRO_DATA={calendar:[{name:attack,category:attack,impact:attack,dDay:attack,date:attack,description:attack,previous:attack}]};
- vm.runInContext(extract('renderMacroCalendar'),ctx);ctx.renderMacroCalendar();assert.doesNotMatch(macro.innerHTML,/<img/);assert.match(macro.innerHTML,/&lt;img/);
+ const macro=element();nodes.set('macroCalendarGrid',macro);
+ const event={name:attack,category:'FED',date:attack,releaseDate:attack,releaseAt:new Date(Date.now()+86400000).toISOString().replace(/\.\d+Z$/,'Z')};
+ ctx.MACRO_DATA={calendar:[{...event,sourceUrl:'https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm'},{...event,sourceUrl:'javascript:alert(1)'}]};
+ for(const fn of ['upcomingMacroEvents','renderMacroCalendar'])vm.runInContext(extract(fn),ctx);
+ ctx.renderMacroCalendar();assert.doesNotMatch(macro.innerHTML,/<img|href="javascript:/);assert.match(macro.innerHTML,/&lt;img/);
  const f4=element();nodes.set('f4TableBody',f4);
  Object.assign(ctx,{state:{f4Filter:'DIRECT'},CURRENT_F4_FILTERED_ITEMS:[{filingDate:attack,transDate:attack,ticker:attack,companyName:attack,securityTitle:attack,insiderName:attack,officerTitle:attack,txTypeCode:attack,ownership:attack,secUrl:'data:text/html,test'}],CURRENT_F4_PAGE_INDEX:1,F4_PAGE_SIZE:60});
  for(const fn of ['appendNextF4PageRows','form4Dates','form4Security','form4Relationship','form4Price','form4PriceWithBasis','insiderCode','insiderLabel'])vm.runInContext(extract(fn),ctx);

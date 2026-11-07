@@ -70,7 +70,360 @@
       "asOf": "2026-11-06"
     }
   },
-  "calendar": [],
+  "calendar": [
+    {
+      "name": "미국 고용보고서 (NFP)",
+      "category": "LABOR",
+      "date": "2026-01-09",
+      "releaseAt": "2026-01-09T13:30:00Z",
+      "source": "calendarLabor",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=50&y=2026"
+    },
+    {
+      "name": "소비자물가지수 (CPI)",
+      "category": "INFLATION",
+      "date": "2026-01-13",
+      "releaseAt": "2026-01-13T13:30:00Z",
+      "source": "calendarCpi",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=10&y=2026"
+    },
+    {
+      "name": "FOMC 금리 결정",
+      "category": "FED",
+      "date": "2026-01-27",
+      "releaseDate": "2026-01-28",
+      "releaseAt": "2026-01-28T19:00:00Z",
+      "source": "calendarFomc",
+      "sourceUrl": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "timeSourceUrl": "https://www.federalreserve.gov/economy-at-a-glance-policy-rate.htm"
+    },
+    {
+      "name": "미국 고용보고서 (NFP)",
+      "category": "LABOR",
+      "date": "2026-02-11",
+      "releaseAt": "2026-02-11T13:30:00Z",
+      "source": "calendarLabor",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=50&y=2026"
+    },
+    {
+      "name": "소비자물가지수 (CPI)",
+      "category": "INFLATION",
+      "date": "2026-02-13",
+      "releaseAt": "2026-02-13T13:30:00Z",
+      "source": "calendarCpi",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=10&y=2026"
+    },
+    {
+      "name": "미국 고용보고서 (NFP)",
+      "category": "LABOR",
+      "date": "2026-03-06",
+      "releaseAt": "2026-03-06T13:30:00Z",
+      "source": "calendarLabor",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=50&y=2026"
+    },
+    {
+      "name": "소비자물가지수 (CPI)",
+      "category": "INFLATION",
+      "date": "2026-03-11",
+      "releaseAt": "2026-03-11T12:30:00Z",
+      "source": "calendarCpi",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=10&y=2026"
+    },
+    {
+      "name": "FOMC 금리 결정",
+      "category": "FED",
+      "date": "2026-03-17",
+      "releaseDate": "2026-03-18",
+      "releaseAt": "2026-03-18T18:00:00Z",
+      "source": "calendarFomc",
+      "sourceUrl": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "timeSourceUrl": "https://www.federalreserve.gov/economy-at-a-glance-policy-rate.htm"
+    },
+    {
+      "name": "미국 고용보고서 (NFP)",
+      "category": "LABOR",
+      "date": "2026-04-03",
+      "releaseAt": "2026-04-03T12:30:00Z",
+      "source": "calendarLabor",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=50&y=2026"
+    },
+    {
+      "name": "소비자물가지수 (CPI)",
+      "category": "INFLATION",
+      "date": "2026-04-10",
+      "releaseAt": "2026-04-10T12:30:00Z",
+      "source": "calendarCpi",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=10&y=2026"
+    },
+    {
+      "name": "FOMC 금리 결정",
+      "category": "FED",
+      "date": "2026-04-28",
+      "releaseDate": "2026-04-29",
+      "releaseAt": "2026-04-29T18:00:00Z",
+      "source": "calendarFomc",
+      "sourceUrl": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "timeSourceUrl": "https://www.federalreserve.gov/economy-at-a-glance-policy-rate.htm"
+    },
+    {
+      "name": "미국 고용보고서 (NFP)",
+      "category": "LABOR",
+      "date": "2026-05-08",
+      "releaseAt": "2026-05-08T12:30:00Z",
+      "source": "calendarLabor",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=50&y=2026"
+    },
+    {
+      "name": "소비자물가지수 (CPI)",
+      "category": "INFLATION",
+      "date": "2026-05-12",
+      "releaseAt": "2026-05-12T12:30:00Z",
+      "source": "calendarCpi",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=10&y=2026"
+    },
+    {
+      "name": "미국 고용보고서 (NFP)",
+      "category": "LABOR",
+      "date": "2026-06-05",
+      "releaseAt": "2026-06-05T12:30:00Z",
+      "source": "calendarLabor",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=50&y=2026"
+    },
+    {
+      "name": "소비자물가지수 (CPI)",
+      "category": "INFLATION",
+      "date": "2026-06-10",
+      "releaseAt": "2026-06-10T12:30:00Z",
+      "source": "calendarCpi",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=10&y=2026"
+    },
+    {
+      "name": "FOMC 금리 결정",
+      "category": "FED",
+      "date": "2026-06-16",
+      "releaseDate": "2026-06-17",
+      "releaseAt": "2026-06-17T18:00:00Z",
+      "source": "calendarFomc",
+      "sourceUrl": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "timeSourceUrl": "https://www.federalreserve.gov/economy-at-a-glance-policy-rate.htm"
+    },
+    {
+      "name": "미국 고용보고서 (NFP)",
+      "category": "LABOR",
+      "date": "2026-07-02",
+      "releaseAt": "2026-07-02T12:30:00Z",
+      "source": "calendarLabor",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=50&y=2026"
+    },
+    {
+      "name": "소비자물가지수 (CPI)",
+      "category": "INFLATION",
+      "date": "2026-07-14",
+      "releaseAt": "2026-07-14T12:30:00Z",
+      "source": "calendarCpi",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=10&y=2026"
+    },
+    {
+      "name": "FOMC 금리 결정",
+      "category": "FED",
+      "date": "2026-07-28",
+      "releaseDate": "2026-07-29",
+      "releaseAt": "2026-07-29T18:00:00Z",
+      "source": "calendarFomc",
+      "sourceUrl": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "timeSourceUrl": "https://www.federalreserve.gov/economy-at-a-glance-policy-rate.htm"
+    },
+    {
+      "name": "미국 고용보고서 (NFP)",
+      "category": "LABOR",
+      "date": "2026-08-07",
+      "releaseAt": "2026-08-07T12:30:00Z",
+      "source": "calendarLabor",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=50&y=2026"
+    },
+    {
+      "name": "소비자물가지수 (CPI)",
+      "category": "INFLATION",
+      "date": "2026-08-12",
+      "releaseAt": "2026-08-12T12:30:00Z",
+      "source": "calendarCpi",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=10&y=2026"
+    },
+    {
+      "name": "미국 고용보고서 (NFP)",
+      "category": "LABOR",
+      "date": "2026-09-04",
+      "releaseAt": "2026-09-04T12:30:00Z",
+      "source": "calendarLabor",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=50&y=2026"
+    },
+    {
+      "name": "소비자물가지수 (CPI)",
+      "category": "INFLATION",
+      "date": "2026-09-11",
+      "releaseAt": "2026-09-11T12:30:00Z",
+      "source": "calendarCpi",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=10&y=2026"
+    },
+    {
+      "name": "FOMC 금리 결정",
+      "category": "FED",
+      "date": "2026-09-15",
+      "releaseDate": "2026-09-16",
+      "releaseAt": "2026-09-16T18:00:00Z",
+      "source": "calendarFomc",
+      "sourceUrl": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "timeSourceUrl": "https://www.federalreserve.gov/economy-at-a-glance-policy-rate.htm"
+    },
+    {
+      "name": "미국 고용보고서 (NFP)",
+      "category": "LABOR",
+      "date": "2026-10-02",
+      "releaseAt": "2026-10-02T12:30:00Z",
+      "source": "calendarLabor",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=50&y=2026"
+    },
+    {
+      "name": "소비자물가지수 (CPI)",
+      "category": "INFLATION",
+      "date": "2026-10-14",
+      "releaseAt": "2026-10-14T12:30:00Z",
+      "source": "calendarCpi",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=10&y=2026"
+    },
+    {
+      "name": "FOMC 금리 결정",
+      "category": "FED",
+      "date": "2026-10-27",
+      "releaseDate": "2026-10-28",
+      "releaseAt": "2026-10-28T18:00:00Z",
+      "source": "calendarFomc",
+      "sourceUrl": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "timeSourceUrl": "https://www.federalreserve.gov/economy-at-a-glance-policy-rate.htm"
+    },
+    {
+      "name": "미국 고용보고서 (NFP)",
+      "category": "LABOR",
+      "date": "2026-11-06",
+      "releaseAt": "2026-11-06T13:30:00Z",
+      "source": "calendarLabor",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=50&y=2026"
+    },
+    {
+      "name": "소비자물가지수 (CPI)",
+      "category": "INFLATION",
+      "date": "2026-11-10",
+      "releaseAt": "2026-11-10T13:30:00Z",
+      "source": "calendarCpi",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=10&y=2026"
+    },
+    {
+      "name": "미국 고용보고서 (NFP)",
+      "category": "LABOR",
+      "date": "2026-12-04",
+      "releaseAt": "2026-12-04T13:30:00Z",
+      "source": "calendarLabor",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=50&y=2026"
+    },
+    {
+      "name": "FOMC 금리 결정",
+      "category": "FED",
+      "date": "2026-12-08",
+      "releaseDate": "2026-12-09",
+      "releaseAt": "2026-12-09T19:00:00Z",
+      "source": "calendarFomc",
+      "sourceUrl": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "timeSourceUrl": "https://www.federalreserve.gov/economy-at-a-glance-policy-rate.htm"
+    },
+    {
+      "name": "소비자물가지수 (CPI)",
+      "category": "INFLATION",
+      "date": "2026-12-10",
+      "releaseAt": "2026-12-10T13:30:00Z",
+      "source": "calendarCpi",
+      "sourceUrl": "https://fred.stlouisfed.org/releases/calendar?rid=10&y=2026"
+    },
+    {
+      "name": "FOMC 금리 결정",
+      "category": "FED",
+      "date": "2027-01-26",
+      "releaseDate": "2027-01-27",
+      "releaseAt": "2027-01-27T19:00:00Z",
+      "source": "calendarFomc",
+      "sourceUrl": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "timeSourceUrl": "https://www.federalreserve.gov/economy-at-a-glance-policy-rate.htm"
+    },
+    {
+      "name": "FOMC 금리 결정",
+      "category": "FED",
+      "date": "2027-03-16",
+      "releaseDate": "2027-03-17",
+      "releaseAt": "2027-03-17T18:00:00Z",
+      "source": "calendarFomc",
+      "sourceUrl": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "timeSourceUrl": "https://www.federalreserve.gov/economy-at-a-glance-policy-rate.htm"
+    },
+    {
+      "name": "FOMC 금리 결정",
+      "category": "FED",
+      "date": "2027-04-27",
+      "releaseDate": "2027-04-28",
+      "releaseAt": "2027-04-28T18:00:00Z",
+      "source": "calendarFomc",
+      "sourceUrl": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "timeSourceUrl": "https://www.federalreserve.gov/economy-at-a-glance-policy-rate.htm"
+    },
+    {
+      "name": "FOMC 금리 결정",
+      "category": "FED",
+      "date": "2027-06-08",
+      "releaseDate": "2027-06-09",
+      "releaseAt": "2027-06-09T18:00:00Z",
+      "source": "calendarFomc",
+      "sourceUrl": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "timeSourceUrl": "https://www.federalreserve.gov/economy-at-a-glance-policy-rate.htm"
+    },
+    {
+      "name": "FOMC 금리 결정",
+      "category": "FED",
+      "date": "2027-07-27",
+      "releaseDate": "2027-07-28",
+      "releaseAt": "2027-07-28T18:00:00Z",
+      "source": "calendarFomc",
+      "sourceUrl": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "timeSourceUrl": "https://www.federalreserve.gov/economy-at-a-glance-policy-rate.htm"
+    },
+    {
+      "name": "FOMC 금리 결정",
+      "category": "FED",
+      "date": "2027-09-14",
+      "releaseDate": "2027-09-15",
+      "releaseAt": "2027-09-15T18:00:00Z",
+      "source": "calendarFomc",
+      "sourceUrl": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "timeSourceUrl": "https://www.federalreserve.gov/economy-at-a-glance-policy-rate.htm"
+    },
+    {
+      "name": "FOMC 금리 결정",
+      "category": "FED",
+      "date": "2027-10-26",
+      "releaseDate": "2027-10-27",
+      "releaseAt": "2027-10-27T18:00:00Z",
+      "source": "calendarFomc",
+      "sourceUrl": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "timeSourceUrl": "https://www.federalreserve.gov/economy-at-a-glance-policy-rate.htm"
+    },
+    {
+      "name": "FOMC 금리 결정",
+      "category": "FED",
+      "date": "2027-12-07",
+      "releaseDate": "2027-12-08",
+      "releaseAt": "2027-12-08T19:00:00Z",
+      "source": "calendarFomc",
+      "sourceUrl": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "timeSourceUrl": "https://www.federalreserve.gov/economy-at-a-glance-policy-rate.htm"
+    }
+  ],
   "timeSeries": {
     "treasuryDaily": [
       {
@@ -2089,11 +2442,38 @@
       "lastSuccessAt": "2026-11-07T00:33:04Z",
       "error": null
     },
-    "calendar": {
-      "status": "unavailable",
-      "fetchStatus": "not_configured",
-      "asOf": null,
-      "error": "No verified event-calendar source is configured"
+    "calendarFomc": {
+      "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "status": "success",
+      "fetchStatus": "success",
+      "asOf": "2026-11-07",
+      "ageDays": 0,
+      "maxAgeDays": 7,
+      "checkedAt": "2026-11-07T07:02:10Z",
+      "lastSuccessAt": "2026-11-07T07:02:10Z",
+      "error": null
+    },
+    "calendarCpi": {
+      "url": "https://fred.stlouisfed.org/releases/calendar?rid=10",
+      "status": "success",
+      "fetchStatus": "success",
+      "asOf": "2026-11-07",
+      "ageDays": 0,
+      "maxAgeDays": 7,
+      "checkedAt": "2026-11-07T07:02:10Z",
+      "lastSuccessAt": "2026-11-07T07:02:10Z",
+      "error": null
+    },
+    "calendarLabor": {
+      "url": "https://fred.stlouisfed.org/releases/calendar?rid=50",
+      "status": "success",
+      "fetchStatus": "success",
+      "asOf": "2026-11-07",
+      "ageDays": 0,
+      "maxAgeDays": 7,
+      "checkedAt": "2026-11-07T07:02:10Z",
+      "lastSuccessAt": "2026-11-07T07:02:10Z",
+      "error": null
     }
   },
   "collection": {
@@ -2107,7 +2487,10 @@
       "dxy",
       "wtiOil",
       "gold",
-      "treasuryDaily"
+      "treasuryDaily",
+      "calendarFomc",
+      "calendarCpi",
+      "calendarLabor"
     ],
     "failedSources": [
       "nyFed"

@@ -15,6 +15,7 @@ import urllib.parse
 import urllib.request
 
 from data_io import atomic_write_json, load_json
+from macro_calendar import CENTRAL, FOMC_URL, FRED_CALENDAR, RELEASES, parse_fomc, parse_fred_calendar, validate_calendar
 
 NY_FED_URL = "https://markets.newyorkfed.org/api/rates/all/latest.json"
 BLS_URL = "https://api.bls.gov/publicAPI/v1/timeseries/data/"
@@ -61,16 +62,28 @@ def _percent(value, digits=2):
     return f"{value:.{digits}f}%" if value is not None else None
 
 
-def fetch_json(url, payload=None):
-    """Use certificate/hostname verification and bounded HTTP timeouts."""
-    headers = {"User-Agent": "Alpha13F macro collector", "Accept": "application/json"}
+def _fetch_text(url, payload=None, accept="application/json"):
+    headers = {"Accept": accept}
+    if accept == "application/json" or url == FOMC_URL:
+        headers["User-Agent"] = "Alpha13F macro collector"
     body = None
     if payload is not None:
         headers["Content-Type"] = "application/json"
         body = json.dumps(payload).encode("utf-8")
     request = urllib.request.Request(url, data=body, headers=headers)
     with urllib.request.urlopen(request, timeout=10, context=ssl.create_default_context()) as response:
-        return json.loads(response.read().decode("utf-8"))
+        return response.read().decode("utf-8")
+
+
+def fetch_json(url, payload=None):
+    """Use certificate/hostname verification and bounded HTTP timeouts."""
+    return json.loads(_fetch_text(url, payload))
+
+
+def fetch_macro_source(url, payload=None):
+    if url == FOMC_URL or url.startswith(FRED_CALENDAR + "?"):
+        return _fetch_text(url, accept="text/html")
+    return fetch_json(url, payload)
 
 
 def _chart_url(symbol, period):
@@ -261,6 +274,39 @@ def _set_path(data, path, value):
     data[path[-1]] = copy.deepcopy(value)
 
 
+def collect_release_calendar(previous, now, fetcher):
+    year = now.astimezone(CENTRAL).year
+    urls = {"calendarFomc": FOMC_URL, **{
+        key: f"{FRED_CALENDAR}?rid={release_id}" for key, (release_id, _, _) in RELEASES.items()
+    }}
+    events, sources = [], {}
+    for key, url in urls.items():
+        prior = _trusted_previous(previous, key, url)
+        try:
+            if key == "calendarFomc":
+                scheduled = parse_fomc(fetcher(url), year)
+            else:
+                scheduled = [
+                    event for calendar_year in (year, year + 1)
+                    for event in parse_fred_calendar(fetcher(f"{url}&y={calendar_year}"), calendar_year, key)
+                ]
+                if not scheduled:
+                    raise ValueError("No current or next-year releases published in FRED")
+            validate_calendar(scheduled)
+            events.extend(scheduled)
+            sources[key] = _source_meta(url, now, now.date().isoformat())
+        except Exception as exc:
+            if prior:
+                try:
+                    retained = [event for event in previous.get("calendar", []) if event.get("source") == key]
+                    validate_calendar(retained)
+                    events.extend(retained)
+                except (AttributeError, KeyError, TypeError, ValueError):
+                    prior = None
+            sources[key] = _source_meta(url, now, prior["asOf"] if prior else None, error=exc, previous=prior)
+    return sorted(events, key=lambda event: event["releaseAt"]), sources
+
+
 def _derive(data):
     y10, y3 = data["treasury"]["yield10Y"], data["treasury"]["yield13W"]
     # Do not combine an old cached point with a different observation date.
@@ -289,7 +335,7 @@ def _derive(data):
 
 def collect_macro(previous=None, *, now=None, fetcher=None):
     """Return a snapshot plus per-source freshness; never write as a side effect."""
-    now, fetcher = _utc(now), fetcher or fetch_json
+    now, fetcher = _utc(now), fetcher or fetch_macro_source
     previous = previous or {}
     data = empty_macro()
     data["collectedAt"] = _stamp(now)
@@ -362,8 +408,9 @@ def collect_macro(previous=None, *, now=None, fetcher=None):
 
     collect("treasuryDaily", "https://query1.finance.yahoo.com/v8/finance/chart/", ("timeSeries", "treasuryDaily"),
             treasury_history, lambda value: value[-1]["date"])
-    data["sources"]["calendar"] = {"status": "unavailable", "fetchStatus": "not_configured", "asOf": None,
-                                     "error": "No verified event-calendar source is configured"}
+    data["calendar"], calendar_sources = collect_release_calendar(previous, now, fetcher)
+    data["sources"].update(calendar_sources)
+    successful.extend(key for key, source in calendar_sources.items() if source["fetchStatus"] == "success")
     data["collection"] = {"successfulSources": successful,
                           "failedSources": [key for key, source in data["sources"].items() if source["fetchStatus"] == "error"]}
     data["lastUpdated"] = _stamp(now) if successful else (previous.get("lastUpdated") if previous.get("schemaVersion") == 2 else None)

@@ -400,7 +400,8 @@ function macroFreshness(data) {
   const statuses = { success: '수집 완료', partial: '일부 수집 실패', stale: '오래된 관측값 포함', unavailable: '데이터 확인 불가' };
   const sources = Object.values(data.sources || {});
   const stale = sources.some(s => s.status === 'stale');
-  const dates = sources.map(s => s.asOf).filter(d => /^\d{4}-\d{2}-\d{2}/.test(d || '')).map(d => d.slice(0, 10)).sort();
+  const dates = Object.entries(data.sources || {}).filter(([key]) => !key.startsWith('calendar'))
+    .map(([, source]) => source.asOf).filter(d => /^\d{4}-\d{2}-\d{2}/.test(d || '')).map(d => d.slice(0, 10)).sort();
   return `${statuses[data.status] || '수집 상태 미확인'}${stale ? ' · 오래된 관측값 포함' : ''}${dates.length ? ` · 관측일 ${dates[0]} ~ ${dates[dates.length - 1]}` : ' · 관측일 미확인'}`;
 }
 function quoteFreshness(info) {
@@ -478,6 +479,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initMobileInteractions();
   initFilingDdayCountdown();
   initConsensusTabs();
+  switchFilingMode("MACRO");
   loadRealSecData();
 
   // 1분마다 조용히 최신 실시간 시장가 백그라운드 갱신
@@ -488,9 +490,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // 브라우저에서 현재 화면 종목들의 실시간 주가 및 거시경제 지표 온디맨드 조회 (1분 주기 갱신)
 async function refreshMacroSnapshot(requestId) {
-  const res = await fetch("latest_macro_indicators.json?_t=" + Date.now()).catch(() => null);
-  if (!res || !res.ok) return;
-  const data = await res.json().catch(() => null);
+  const data = await fetchMacroSnapshot();
   if (!data || requestId !== priceRequestId) return;
   MACRO_DATA = normalizeMacroData(data);
   // All macro surfaces redraw from the same complete snapshot.
@@ -589,11 +589,11 @@ function applyLivePricesToHoldings(holdings) {
 
 async function loadRealSecData() {
   try {
-    const [displayResult, tickerRes, priceRes, macroRes, symbolsRes] = await Promise.all([
+    const [displayResult, tickerRes, priceRes, macroData, symbolsRes] = await Promise.all([
       Promise.resolve().then(() => SECDisplayLoader.load({ baseURL: new URL("./", document.baseURI) })).then(value => ({ value }), error => ({ error })),
       fetch("ticker_map.json?_t=" + Date.now()).catch(() => null),
       fetch("realtime_prices.json?_t=" + Date.now()).catch(() => null),
-      fetch("latest_macro_indicators.json?_t=" + Date.now()).catch(() => null),
+      fetchMacroSnapshot(),
       fetch("market_symbols.json?_t=" + Date.now()).catch(() => null)
     ]);
 
@@ -614,11 +614,9 @@ async function loadRealSecData() {
         mergeObservedPrices(await priceRes.json());
       } catch (e) {}
     }
-    if (macroRes && macroRes.ok) {
-      try {
-        MACRO_DATA = normalizeMacroData(await macroRes.json());
-        renderMacroPulseBar();
-      } catch (e) {}
+    if (macroData && !MACRO_DATA) {
+      MACRO_DATA = normalizeMacroData(macroData);
+      renderMacroPulseBar();
     }
     SEC_DISPLAY = displayResult.value || null;
     RAW_HOLDINGS = SEC_DISPLAY ? SEC_DISPLAY.rows : [];
@@ -1147,7 +1145,7 @@ function selectGuru(key) {
   const sInput = document.getElementById("searchInput");
   if (sInput) sInput.value = "";
   
-  document.querySelectorAll(".filter-tab").forEach(tab => {
+  document.querySelectorAll("#view13F .filter-tab").forEach(tab => {
     tab.classList.toggle("active", tab.dataset.filter === "ALL");
   });
 
@@ -2113,7 +2111,7 @@ let congressAction = "all";
 let congressTicker = "";
 let congressLimit = 40;
 
-state.currentFilingType = "13F";
+state.currentFilingType = "MACRO";
 state.f4Filter = "DIRECT";
 state.f4Query = "";
 state.d13Filter = "ALL";
@@ -2169,8 +2167,10 @@ async function switchFilingMode(filingType) {
   const headerQuarter = document.getElementById("currentQuarter");
   const headerDesc = document.getElementById("currentGuruDesc");
   const sidebarSource = document.getElementById("sidebarDataSource");
-  if (sidebarSource) sidebarSource.textContent = filingType === "CONGRESS" ? "미 하원 공식 공시 데이터" : "SEC 13F 공식 공시 데이터";
-  if (headerQuarter) headerQuarter.title = filingType === "CONGRESS" ? "하원 사무처 금융 공시" : "SEC Form 13F 분기 말일 기준 보유 현황";
+  if (sidebarSource) sidebarSource.textContent = filingType === "MACRO" ? "미국 거시경제 데이터" :
+    filingType === "CONGRESS" ? "미 하원 공식 공시 데이터" : "SEC 13F 공식 공시 데이터";
+  if (headerQuarter) headerQuarter.title = filingType === "MACRO" ? "연준과 FRED 발표 일정" :
+    filingType === "CONGRESS" ? "하원 사무처 금융 공시" : "SEC Form 13F 분기 말일 기준 보유 현황";
 
   const ctrl13F = document.getElementById("sidebarControls13F");
   const ctrlF4 = document.getElementById("sidebarControlsForm4");
@@ -2251,16 +2251,15 @@ async function switchFilingMode(filingType) {
     await loadAndRender13D();
   } else if (filingType === "MACRO") {
     if (brandTitle) brandTitle.innerHTML = 'ALPHA <span>MACRO</span>';
-    if (brandSubtitle) brandSubtitle.innerText = '거시경제 & FOMC 나침반';
-    if (headerName) headerName.innerText = 'Macro Compass (거시경제 & FOMC 캘린더)';
-    if (headerFund) headerFund.innerText = '연준 금리 · 물가(CPI) · 고용(NFP) · 국채 수익률';
-    if (headerQuarter) headerQuarter.innerText = '실시간 공식 데이터 연동';
-    if (headerDesc) headerDesc.innerText = '미 뉴욕 연준(FRBNY), 미 노동통계국(BLS) 공식 지표 및 국채 수익률 곡선을 확인된 SEC 공시 부분집합와 입체적으로 연계 분석합니다.';
+    if (brandSubtitle) brandSubtitle.innerText = '거시경제 나침반';
+    if (headerName) headerName.innerText = 'Macro Compass';
+    if (headerFund) headerFund.innerText = '거시경제 나침반';
+    if (headerQuarter) headerQuarter.innerText = '미국 주요 지표';
+    if (headerDesc) headerDesc.innerText = '미국 금리, 물가, 고용과 다음 주요 발표 일정을 한눈에 확인합니다.';
     if (ctrl13F) ctrl13F.style.display = "none";
     if (ctrlF4) ctrlF4.style.display = "none";
     if (vMacro) vMacro.style.display = "block";
     await loadAndRenderMacro();
-    fetchLivePricesForCurrentView();
   }
 }
 
@@ -3123,7 +3122,21 @@ async function prefetchOtherFilings() {
 // ==============================================================================
 
 let MACRO_DATA = null;
+let macroSnapshotLoad = null;
 state.macroCalFilter = "ALL";
+
+function fetchMacroSnapshot() {
+  if (!macroSnapshotLoad) {
+    const file = "latest_macro_indicators.json";
+    const isMacro = snapshot => snapshot?.schemaVersion === 2;
+    macroSnapshotLoad = Promise.all([
+      loadDashboardSnapshot(file, 5000, isMacro),
+      loadRefreshedSnapshot(file, isMacro)
+    ]).then(([local, refreshed]) => refreshed && (!local || refreshed.collectedAt > local.collectedAt) ? refreshed : local)
+      .finally(() => { macroSnapshotLoad = null; });
+  }
+  return macroSnapshotLoad;
+}
 
 function renderMacroPulseBar() {
   const bar = document.getElementById("macroPulseBar");
@@ -3132,25 +3145,25 @@ function renderMacroPulseBar() {
   const fed = MACRO_DATA.fedRate || {};
   const cpi = MACRO_DATA.inflation || {};
   const spread = (MACRO_DATA.treasury && MACRO_DATA.treasury.spread10Y_13W) || {};
-  const calendar = MACRO_DATA.calendar || [];
+  const calendar = upcomingMacroEvents(MACRO_DATA);
   const benchmarks = MACRO_DATA.benchmarks || {};
 
   const fedGap = benchmarks.fedRate?.gapToNeutral != null ? `(중립선 ${benchmarks.fedRate.gapToNeutral})` : "(비교 불가)";
   const cpiGap = benchmarks.inflation?.gapToTarget != null ? `(목표선 ${benchmarks.inflation.gapToTarget})` : "(비교 불가)";
 
   // 가장 임박한 주요 이벤트 찾기
-  const nearestFedOrCritical = calendar.find(c => c.category === "FED" || c.impact === "CRITICAL") || calendar[0];
+  const nearest = calendar[0];
 
   const spreadValStr = Number.isFinite(spread.spread) ? (spread.spread >= 0 ? `+${spread.spread.toFixed(2)}%p` : `${spread.spread.toFixed(2)}%p`) : "확인 불가";
 
   let ddayBadgeHtml = "";
-  if (nearestFedOrCritical) {
-    const isFed = nearestFedOrCritical.category === "FED";
-    const dotClass = isFed ? "red" : (nearestFedOrCritical.daysDiff <= 5 ? "orange" : "");
+  if (nearest) {
+    const isFed = nearest.category === "FED";
+    const dotClass = isFed ? "red" : (nearest.daysDiff <= 5 ? "orange" : "");
     ddayBadgeHtml = `
-      <div class="macro-pulse-dday-badge ${isFed ? 'fed' : ''}" title="${escapeHtml(nearestFedOrCritical.name)} (${escapeHtml(nearestFedOrCritical.date)})">
+      <div class="macro-pulse-dday-badge ${isFed ? 'fed' : ''}" title="${escapeHtml(nearest.name)} (${escapeHtml(nearest.koreaTime)} KST)">
         <span class="pulse-dot ${dotClass}"></span>
-        <span>${escapeHtml(nearestFedOrCritical.dDay)} ${escapeHtml(nearestFedOrCritical.name.replace(/🏛️|미국\s*/g, '').trim())}</span>
+        <span>${escapeHtml(nearest.dDay)} ${escapeHtml(nearest.name)}</span>
       </div>
     `;
   }
@@ -3190,14 +3203,13 @@ function renderMacroPulseBar() {
 
 async function loadAndRenderMacro() {
   if (!MACRO_DATA) {
-    try {
-      const res = await fetch("latest_macro_indicators.json?_t=" + Date.now());
-      if (res.ok) MACRO_DATA = normalizeMacroData(await res.json());
-    } catch (e) {
-      console.warn("Macro data load error:", e);
-    }
+    const snapshot = await fetchMacroSnapshot();
+    if (snapshot && !MACRO_DATA) MACRO_DATA = normalizeMacroData(snapshot);
   }
-  if (!MACRO_DATA) return;
+  if (!MACRO_DATA) {
+    renderMacroCalendar();
+    return;
+  }
 
   renderMacroPulseBar();
 
@@ -3718,90 +3730,64 @@ function renderMacroMarketProxies() {
   }).join("");
 }
 
+function upcomingMacroEvents(data, now = Date.now()) {
+  const koreanOffset = 9 * 3600000;
+  const dayMs = 86400000;
+  const today = Math.floor((now + koreanOffset) / dayMs);
+  const calendar = Array.isArray(data?.calendar) ? data.calendar : [];
+  const sourceUrl = /^https:\/\/(?:www\.federalreserve\.gov\/monetarypolicy\/fomccalendars\.htm|fred\.stlouisfed\.org\/releases\/calendar\?rid=(?:10|50)&y=20\d{2})$/;
+  const events = [];
+  for (const event of calendar) {
+    if (!event || typeof event.name !== "string" || !["FED", "INFLATION", "LABOR"].includes(event.category) ||
+        !sourceUrl.test(event.sourceUrl) || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(event.releaseAt)) continue;
+    const timestamp = Date.parse(event.releaseAt);
+    if (!Number.isFinite(timestamp) || timestamp < now) continue;
+    const daysDiff = Math.floor((timestamp + koreanOffset) / dayMs) - today;
+    if (daysDiff > 90) continue;
+    const koreaTime = new Date(timestamp + koreanOffset).toISOString().slice(0, 16).replace("T", " ");
+    events.push({ ...event, timestamp, koreaTime, daysDiff, dDay: daysDiff === 0 ? "D-Day" : `D-${daysDiff}` });
+  }
+  return events.sort((a, b) => a.timestamp - b.timestamp);
+}
+
 function renderMacroCalendar() {
   const container = document.getElementById("macroCalendarGrid");
-  if (!container || !MACRO_DATA) return;
+  if (!container) return;
 
-  const calendar = MACRO_DATA.calendar || [];
-  
-  // 카운트 배지 갱신
-  const countAll = calendar.length;
-  const countFed = calendar.filter(c => c.category === "FED").length;
-  const countInf = calendar.filter(c => c.category === "INFLATION").length;
-  const countLab = calendar.filter(c => c.category === "LABOR" || c.category === "CONSUMER").length;
-
-  const elAll = document.getElementById("macroCalCountAll");
-  const elFed = document.getElementById("macroCalCountFed");
-  const elInf = document.getElementById("macroCalCountInf");
-  const elLab = document.getElementById("macroCalCountLab");
-
-  if (elAll) elAll.innerText = countAll;
-  if (elFed) elFed.innerText = countFed;
-  if (elInf) elInf.innerText = countInf;
-  if (elLab) elLab.innerText = countLab;
-
-  // 필터 적용
+  const calendar = upcomingMacroEvents(MACRO_DATA);
+  const categories = { FED: "연준 FOMC", INFLATION: "물가 지표", LABOR: "고용 지표" };
   const filter = state.macroCalFilter || "ALL";
-  const filtered = calendar.filter(item => {
-    if (filter === "ALL") return true;
-    if (filter === "FED") return item.category === "FED";
-    if (filter === "INFLATION") return item.category === "INFLATION";
-    if (filter === "LABOR") return item.category === "LABOR" || item.category === "CONSUMER";
-    return true;
-  });
-
-  if (filtered.length === 0) {
-    container.innerHTML = `<div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--text-subdued);">해당 카테고리의 일정이 없습니다.</div>`;
-    return;
+  const filtered = filter === "ALL" ? calendar : calendar.filter(event => event.category === filter);
+  for (const [id, category] of [["All", "ALL"], ["Fed", "FED"], ["Inf", "INFLATION"], ["Lab", "LABOR"]]) {
+    const count = document.getElementById("macroCalCount" + id);
+    if (count) count.textContent = category === "ALL" ? calendar.length : calendar.filter(event => event.category === category).length;
+  }
+  const sourceNames = { calendarFomc: "FOMC", calendarCpi: "CPI", calendarLabor: "고용" };
+  const failed = Object.keys(sourceNames).filter(key => MACRO_DATA?.sources?.[key]?.fetchStatus !== "success");
+  const status = document.getElementById("macroCalendarStatus");
+  if (status) {
+    status.textContent = failed.length === Object.keys(sourceNames).length && !calendar.length
+      ? "공식 발표 일정을 불러오지 못했습니다."
+      : failed.length ? `${failed.map(key => sourceNames[key]).join("·")} 일정 최신 확인 불가. 확인된 저장 일정이 있으면 표시합니다.` : "";
   }
 
-  container.innerHTML = filtered.map(ev => {
-    const impactClass = (ev.impact || "").toLowerCase();
-    const catClass = (ev.category || "").toLowerCase();
-    const isImminent = ev.daysDiff <= 7;
-    const catLabels = {
-      "FED": "연준 FOMC",
-      "INFLATION": "물가 지표",
-      "LABOR": "고용 지표",
-      "CONSUMER": "소비 지표"
-    };
-    const catName = catLabels[ev.category] || ev.category;
-
-    return `
-      <div class="cal-event-card ${escapeHtml(impactClass)}">
-        <div class="cal-card-top">
-          <div class="cal-tag-group">
-            <span class="cal-cat-badge ${escapeHtml(catClass)}">${escapeHtml(catName)}</span>
-            <span class="cal-impact-badge ${escapeHtml(impactClass)}">${escapeHtml(ev.impact)} IMPACT</span>
-          </div>
-          <span class="cal-dday-pill ${isImminent ? 'imminent' : ''}">
-            ${isImminent ? '<span class="pulse-dot"></span>' : ''}
-            ${escapeHtml(ev.dDay)}
-          </span>
-        </div>
-        <div class="cal-card-title">${escapeHtml(ev.name)}</div>
-        <div class="cal-card-date">${ev.releaseDate ? `회의 개막: <strong>${escapeHtml(ev.date)}</strong> · 결과 발표: <strong>${escapeHtml(ev.releaseDate)}</strong>` : `발표일: <strong>${escapeHtml(ev.date)}</strong>`} (${escapeHtml(ev.daysDiff)}일 남음)</div>
-
-        <!-- 3열 팩트 비교 박스 (이전치 vs 시장 예상치 vs 발표 결과) -->
-        <div class="cal-compare-box">
-          <div class="cal-compare-item">
-            <span class="cal-compare-label">이전 발표치 (전월)</span>
-            <span class="cal-compare-val">${escapeHtml(ev.previous || "확인 불가")}</span>
-          </div>
-          <div class="cal-compare-item">
-            <span class="cal-compare-label">월가 시장 예상치</span>
-            <span class="cal-compare-val" style="color: #c084fc;">${escapeHtml(ev.forecast || "확인 불가")}</span>
-          </div>
-          <div class="cal-compare-item">
-            <span class="cal-compare-label">실제 발표치</span>
-            <span class="cal-compare-val" style="color: #1ed760;">${escapeHtml(ev.actual || '발표 대기')}</span>
-          </div>
-        </div>
-
-        <div class="cal-card-desc">${escapeHtml(ev.description)}</div>
+  if (!filtered.length) {
+    container.innerHTML = !calendar.length && failed.length === Object.keys(sourceNames).length ? "" :
+      '<p class="card-sub">선택한 범위에 예정된 일정이 없습니다.</p>';
+    return;
+  }
+  container.innerHTML = filtered.map(event => `
+    <div class="cal-event-card">
+      <div class="cal-card-top">
+        <span class="cal-cat-badge ${event.category.toLowerCase()}">${categories[event.category]}</span>
+        <span class="cal-dday-pill ${event.daysDiff <= 7 ? "imminent" : ""}">${event.dDay}</span>
       </div>
-    `;
-  }).join("");
+      <div class="cal-card-title">${escapeHtml(event.name)}</div>
+      <div class="cal-card-date"><strong>${escapeHtml(event.koreaTime)}</strong> KST</div>
+      ${event.category === "FED" ? `<div class="cal-card-desc">미 동부 회의 일정 ${escapeHtml(event.date)} ~ ${escapeHtml(event.releaseDate)}</div>` : ""}
+      <a class="cal-source" href="${escapeHtml(event.sourceUrl)}" target="_blank" rel="noopener noreferrer">${event.category === "FED" ? "연준 일정 원문" : "FRED 일정 원문"}</a>
+    </div>
+  `).join("");
 }
 
 function openMacroModal() {
