@@ -3128,26 +3128,37 @@ button.congress-link {
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  gap: 6px;
+  gap: 3px;
 }
 
 .macro-help-button {
+  --macro-help-ring: var(--border-light);
+  position: relative;
   display: inline-grid;
   place-items: center;
   flex: 0 0 24px;
   width: 24px;
   height: 24px;
-  border: 1px solid var(--border-light);
+  border: 0;
   border-radius: var(--radius-circle);
   background: transparent;
   color: var(--text-subdued);
-  font: 700 12px/1 var(--font-sans);
+  font: 700 10px/1 var(--font-sans);
   cursor: pointer;
+}
+
+.macro-help-button::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid var(--macro-help-ring);
+  border-radius: inherit;
+  pointer-events: none;
 }
 
 .macro-help-button:hover,
 .macro-help-button[aria-expanded="true"] {
-  border-color: var(--spotify-green);
+  --macro-help-ring: var(--spotify-green);
   color: var(--spotify-green);
 }
 
