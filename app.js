@@ -153,7 +153,7 @@ function setupCloudFavoritesListener(uid) {
     if (CURRENT_USER?.uid === uid) {
       watchlist.ready = false;
       watchlist.status = "저장된 관심 기업을 불러오지 못했습니다.";
-      renderWatchlist();
+      renderCompanyPreferences();
     }
     console.warn("Firestore 실시간 리스너 에러:", err);
   });
@@ -2270,6 +2270,7 @@ async function switchFilingMode(filingType) {
     if (ctrl13F) ctrl13F.style.display = "none";
     if (ctrlF4) ctrlF4.style.display = "flex";
     if (vF4) vF4.style.display = "flex";
+    if (CURRENT_USER) loadWatchCompanies();
     await loadAndRenderForm4();
   } else if (filingType === "WATCHLIST") {
     if (brandTitle) brandTitle.textContent = "ALPHA13F";
@@ -2689,37 +2690,64 @@ function getF4ActiveDataset() {
   if (state.selectedF4Issuer) {
     return rows.filter(item => item.issuerCik === state.selectedF4Issuer);
   }
-  if (state.isF4FavGroupActive && state.f4FavCompanies.length > 0) {
-    return rows.filter(item => state.f4FavCompanies.includes(item.issuerCik));
+  if (state.isF4FavGroupActive) {
+    const favorites = form4FavoriteIssuers();
+    return rows.filter(item => favorites.has(item.issuerCik));
   }
   return rows;
 }
 
-const watchlist = { catalog: null, catalogLoad: null, keys: [], selected: "", ready: false, saving: false, status: "" };
-const WATCH_KEY = /^\d{10}:[A-Z0-9]{1,10}(?:[.-][A-Z0-9]{1,10})?$/;
+const watchlist = { catalog: null, catalogLoad: null, keys: [], selected: "", ready: false, pending: null, status: "" };
+const WATCH_KEY = /^\d{10}:(?:[A-Z0-9]{1,10}(?:[.-][A-Z0-9]{1,10})?)?$/;
 const WATCH_LIMIT = 100;
 
+function applyWatchPreference(keys, { issuer, key, add }) {
+  const isIssuer = value => typeof value === "string" && value.startsWith(`${issuer}:`);
+  if (!add) return keys.filter(value => !isIssuer(value));
+  return keys.some(isIssuer) ? keys : [...keys, key];
+}
+
+function effectiveWatchKeys() {
+  return watchlist.pending ? applyWatchPreference(watchlist.keys, watchlist.pending) : watchlist.keys;
+}
+
+function form4FavoriteIssuers() {
+  return new Set(CURRENT_USER ? effectiveWatchKeys().map(key => key.split(":", 1)[0]) : state.f4FavCompanies);
+}
+
+function renderCompanyPreferences() {
+  if (state.currentFilingType === "WATCHLIST") renderWatchlist();
+  if (state.currentFilingType !== "FORM4") return;
+  if (state.isF4FavGroupActive) loadAndRenderForm4();
+  else renderF4SidebarCompanyList();
+}
+
 function resetWatchlistAccount() {
-  Object.assign(watchlist, { keys: [], selected: "", ready: false, saving: false, status: "" });
+  Object.assign(watchlist, { keys: [], selected: "", ready: false, pending: null, status: "" });
+  state.isF4FavGroupActive = false;
   document.getElementById("watchSearch").value = "";
   document.getElementById("watchCompanyList").replaceChildren();
   document.getElementById("watchCompanyTitle").textContent = "";
   for (const id of ["watch13F", "watchForm4", "watchHouse"]) document.getElementById(id).replaceChildren();
   renderWatchlist();
   if (CURRENT_USER && state.currentFilingType === "WATCHLIST") loadWatchCompanies();
+  if (state.currentFilingType === "FORM4") {
+    if (CURRENT_USER) loadWatchCompanies();
+    loadAndRenderForm4();
+  }
 }
 
 function updateWatchlist(keys) {
-  const previous = watchlist.keys;
-  watchlist.keys = Array.isArray(keys) ? [...new Set(keys.filter(key => typeof key === "string" && WATCH_KEY.test(key)))] : [];
+  const verified = Array.isArray(keys) ? [...new Set(keys.filter(key => typeof key === "string" && WATCH_KEY.test(key)))] : [];
+  const changed = verified.join() !== watchlist.keys.join();
+  if (changed) watchlist.keys = verified;
   const firstLoad = !watchlist.ready;
   watchlist.ready = true;
   if (firstLoad) watchlist.status = "";
-  if (state.currentFilingType !== "WATCHLIST") return;
-  if (!watchlist.selected && watchlist.keys.length) {
-    selectWatchCompany(watchlist.keys[0]);
-  } else if (firstLoad || previous.join() !== watchlist.keys.join()) {
-    renderWatchlist();
+  if (state.currentFilingType === "WATCHLIST" && !watchlist.selected && effectiveWatchKeys().length) {
+    selectWatchCompany(effectiveWatchKeys()[0]);
+  } else if (firstLoad || changed) {
+    renderCompanyPreferences();
   }
 }
 
@@ -2731,14 +2759,15 @@ function validateWatchCatalog(payload) {
   return payload?.fields?.join?.() === "cik,name,ticker,exchange" && Array.isArray(payload.data) &&
     payload.data.length >= 1000 && payload.data.every(row => Array.isArray(row) && row.length === 4 &&
       Number.isSafeInteger(row[0]) && row[0] > 0 && row[0] <= 9999999999 &&
-      typeof row[1] === "string" && row[1].trim() && typeof row[2] === "string" &&
+      typeof row[1] === "string" && row[1].trim() && typeof row[2] === "string" && row[2] &&
       WATCH_KEY.test(`0000000000:${row[2]}`) && ["NYSE", "Nasdaq", "CBOE", "TXSE"].includes(row[3])) &&
     new Set(payload.data.map(row => watchSymbol(row[2]))).size === payload.data.length;
 }
 
 async function loadWatchCompanies() {
   if (watchlist.catalog) {
-    if (!watchlist.selected && watchlist.keys.length) selectWatchCompany(watchlist.keys[0]);
+    const keys = effectiveWatchKeys();
+    if (state.currentFilingType === "WATCHLIST" && !watchlist.selected && keys.length) selectWatchCompany(keys[0]);
     return watchlist.catalog;
   }
   if (!watchlist.catalogLoad) {
@@ -2754,7 +2783,8 @@ async function loadWatchCompanies() {
     }).finally(() => {
       watchlist.catalogLoad = null;
       if (!CURRENT_USER || state.currentFilingType !== "WATCHLIST") return;
-      if (watchlist.selected || watchlist.keys.length) selectWatchCompany(watchlist.selected || watchlist.keys[0]);
+      const keys = effectiveWatchKeys();
+      if (watchlist.selected || keys.length) selectWatchCompany(watchlist.selected || keys[0]);
       else renderWatchlist();
     });
     if (state.currentFilingType === "WATCHLIST") renderWatchSearch();
@@ -2801,7 +2831,7 @@ function resolveForm4Favorites(favorites, companies, filings) {
     const reportedTickers = orderedFilings.flatMap(row => row.ticker.split(",").map(watchSymbol));
     const filedListing = reportedTickers.map(ticker => listings.get(ticker)).find(company => company?.issuer === issuer);
     const listing = directListing?.issuer === issuer ? directListing : filedListing || (issuerListings.length === 1 ? issuerListings[0] : null);
-    const archivedTicker = !issuerListings.length && reportedTickers.find(ticker => WATCH_KEY.test(`${issuer}:${ticker}`));
+    const archivedTicker = !issuerListings.length && reportedTickers.find(ticker => ticker && WATCH_KEY.test(`${issuer}:${ticker}`));
     const key = listing?.key || (archivedTicker && `${issuer}:${archivedTicker}`);
     if (key) resolved.set(issuer, key);
   }
@@ -2878,11 +2908,12 @@ function watchCompany(key) {
   const listed = watchlist.catalog?.get(key);
   if (listed) return listed;
   const [issuer, ticker] = key.split(":");
-  return { key, issuer, ticker, name: "", exchange: "" };
+  const name = FORM4_DATA.find(row => row.issuerCik === issuer)?.companyName || "";
+  return { key, issuer, ticker, name, exchange: "" };
 }
 
 function watchCompanyButton(company) {
-  const label = company.name ? `${company.ticker} · ${company.name}` : company.ticker;
+  const label = [company.ticker, company.name].filter(Boolean).join(" · ") || `CIK ${company.issuer}`;
   return `<button type="button" class="btn btn-outline" data-watch-company="${escapeHtml(company.key)}" ` +
     `aria-pressed="${watchlist.selected === company.key}">${escapeHtml(label)}</button>`;
 }
@@ -2914,47 +2945,83 @@ function renderWatchlist() {
   document.getElementById("watchContent").hidden = !loggedIn;
   document.getElementById("watchDetails").hidden = !loggedIn || !watchlist.selected;
   if (!loggedIn) return;
+  const keys = effectiveWatchKeys();
   const list = document.getElementById("watchCompanyList");
-  list.innerHTML = watchlist.keys.map(key => watchCompanyButton(watchCompany(key))).join("");
+  list.innerHTML = keys.map(key => watchCompanyButton(watchCompany(key))).join("");
   document.getElementById("watchSyncStatus").textContent = watchlist.status || (!watchlist.ready
     ? "저장된 관심 기업을 불러오는 중입니다."
-    : watchlist.keys.length ? "" : "기업을 검색해 관심 목록에 추가할 수 있습니다.");
+    : keys.length ? "" : "기업을 검색해 관심 목록에 추가할 수 있습니다.");
   const toggle = document.getElementById("btnWatchToggle");
-  const saved = watchlist.keys.includes(watchlist.selected);
-  toggle.textContent = watchlist.saving ? "저장 중" : saved ? "관심 해제" : "관심 기업 추가";
-  toggle.disabled = !watchlist.ready || watchlist.saving || (!saved && !watchlist.catalog?.has(watchlist.selected));
+  const issuer = watchlist.selected.split(":", 1)[0];
+  const saved = keys.filter(key => key.startsWith(`${issuer}:`)).length;
+  toggle.textContent = watchlist.pending ? "저장 중" : saved > 1 ? `기업 관심 해제 (${saved}종목)` : saved ? "관심 해제" : "관심 기업 추가";
+  toggle.disabled = !watchlist.ready || !!watchlist.pending || (!saved && !watchlist.catalog?.has(watchlist.selected));
   renderWatchSearch();
 }
 
-async function toggleWatchCompany() {
-  const uid = CURRENT_USER?.uid;
+function toggleWatchCompany() {
   const key = watchlist.selected;
-  if (!uid || !db || !key || !watchlist.ready || watchlist.saving) return;
-  const saved = watchlist.keys.includes(key);
-  if (!saved && !watchlist.catalog?.has(key)) return;
-  if (!saved && watchlist.keys.length >= WATCH_LIMIT) {
-    watchlist.status = `관심 기업은 최대 ${WATCH_LIMIT}개까지 저장할 수 있습니다.`;
-    renderWatchlist();
+  const issuer = key.split(":", 1)[0];
+  const add = !form4FavoriteIssuers().has(issuer);
+  if (!add || watchlist.catalog?.has(key)) changeWatchPreference(issuer, add, key);
+}
+
+async function changeWatchPreference(issuer, add, key = "") {
+  const uid = CURRENT_USER?.uid;
+  if (!uid || !db || !/^\d{10}$/.test(issuer) || !watchlist.ready || watchlist.pending) return;
+  const limit = `관심 기업은 최대 ${WATCH_LIMIT}개까지 저장할 수 있습니다.`;
+  if (add && watchlist.keys.length >= WATCH_LIMIT) {
+    watchlist.status = limit;
+    renderCompanyPreferences();
     return;
   }
-  watchlist.saving = true;
+
+  const operation = { issuer, add, key: key || `${issuer}:` };
+  watchlist.pending = operation;
   watchlist.status = "";
-  renderWatchlist();
+  renderCompanyPreferences();
+  const current = () => CURRENT_USER?.uid === uid && watchlist.pending === operation;
   try {
+    if (add && !key) {
+      const companies = await loadWatchCompanies();
+      if (!current()) return;
+      const filings = FORM4_DATA.filter(row => row.issuerCik === issuer);
+      const listing = resolveForm4Favorites([issuer], companies || new Map(), filings).get(issuer);
+      if (listing) {
+        const selected = watchlist.selected === operation.key;
+        operation.key = listing;
+        if (selected && state.currentFilingType === "WATCHLIST") selectWatchCompany(listing);
+      }
+    }
+
+    const confirmed = watchlist.keys;
+    const docRef = db.collection("users").doc(uid);
     const fields = firebase.firestore.FieldValue;
-    const update = {
-      watchCompanies: saved ? fields.arrayRemove(key) : fields.arrayUnion(key),
-      updatedAt: fields.serverTimestamp()
-    };
-    if (saved) update.form4ImportedIssuers = fields.arrayUnion(key.split(":", 1)[0]);
-    await db.collection("users").doc(uid).set(update, { merge: true });
+    const result = await db.runTransaction(async transaction => {
+      const doc = await transaction.get(docRef);
+      if (!current()) return null;
+      const stored = doc.data()?.watchCompanies;
+      const keys = Array.isArray(stored) ? stored : [];
+      const next = applyWatchPreference(keys, operation);
+      if (add && next.length > WATCH_LIMIT) return null;
+      const update = { watchCompanies: next, updatedAt: fields.serverTimestamp() };
+      if (!add) update.form4ImportedIssuers = fields.arrayUnion(issuer);
+      transaction.set(docRef, update, { merge: true });
+      return next;
+    });
+    if (!current()) return;
+    if (!result) watchlist.status = limit;
+    else if (watchlist.keys === confirmed) updateWatchlist(result);
   } catch (error) {
-    if (CURRENT_USER?.uid === uid) watchlist.status = "관심 기업을 저장하지 못했습니다. 다시 시도해 주세요.";
+    if (current()) watchlist.status = "관심 기업을 저장하지 못했습니다. 다시 시도해 주세요.";
     console.warn("관심 기업 저장 실패:", error);
   } finally {
-    if (CURRENT_USER?.uid === uid) {
-      watchlist.saving = false;
-      renderWatchlist();
+    if (current()) {
+      watchlist.pending = null;
+      if (watchlist.selected && !watchlist.catalog?.has(watchlist.selected) && !watchlist.keys.includes(watchlist.selected)) {
+        watchlist.selected = "";
+      }
+      renderCompanyPreferences();
     }
   }
 }
@@ -3007,11 +3074,12 @@ function watchSource(url, label) {
 }
 
 function selectWatchCompany(key) {
-  if (!CURRENT_USER || (!watchlist.catalog?.has(key) && !watchlist.keys.includes(key))) return;
+  if (!CURRENT_USER || (!watchlist.catalog?.has(key) && !effectiveWatchKeys().includes(key))) return;
   const company = watchCompany(key);
   watchlist.selected = key;
   const title = document.getElementById("watchCompanyTitle");
-  title.textContent = company.name ? `${company.name} (${company.ticker}) · ${company.exchange}` : company.ticker;
+  title.textContent = company.exchange ? `${company.name} (${company.ticker}) · ${company.exchange}` :
+    company.name || company.ticker || `CIK ${company.issuer}`;
   renderWatchlist();
 
   const uid = CURRENT_USER.uid;
@@ -3049,6 +3117,8 @@ function selectWatchCompany(key) {
 
   loadVerifiedForm4().then(() => {
     if (!current()) return;
+    if (!company.exchange) title.textContent = watchCompany(key).name || title.textContent;
+    if (effectiveWatchKeys().some(value => !watchlist.catalog?.has(value))) renderWatchlist();
     if (!recentForm4Snapshot) return message("watchForm4", "최근 직접 매수 공시를 불러오지 못했습니다.");
     const { from, through } = recentForm4Snapshot.coverage;
     const rows = recentForm4Snapshot.transactions.filter(row => row.issuerCik === company.issuer).map(row => [
@@ -3122,6 +3192,12 @@ function renderF4SidebarCompanyList() {
   const container = document.getElementById("f4CompanyList");
   if (!container) return;
   container.innerHTML = "";
+  const favorites = form4FavoriteIssuers();
+  if (!favorites.size && !watchlist.pending) state.isF4FavGroupActive = false;
+  const syncStatus = document.getElementById("f4FavStatus");
+  syncStatus.textContent = CURRENT_USER ? watchlist.status || (watchlist.pending ? "관심 기업 저장 중" :
+    watchlist.ready ? "" : "저장된 관심 기업을 불러오는 중입니다.") : "";
+  syncStatus.hidden = !syncStatus.textContent;
 
   const issuers = new Map();
   for (const item of getF4ScopeDataset()) {
@@ -3166,9 +3242,9 @@ function renderF4SidebarCompanyList() {
   }
 
   if (btnFav) {
-    if (state.f4FavCompanies.length > 0) {
+    if (favorites.size > 0) {
       btnFav.style.display = "block";
-      if (subFav) subFav.innerText = `${state.f4FavCompanies.length}개 기업 거래 합산`;
+      if (subFav) subFav.innerText = `${favorites.size}개 기업 거래 합산`;
       if (state.isF4FavGroupActive) {
         btnFav.classList.add("active");
       } else {
@@ -3181,9 +3257,6 @@ function renderF4SidebarCompanyList() {
       };
     } else {
       btnFav.style.display = "none";
-      if (state.isF4FavGroupActive) {
-        state.isF4FavGroupActive = false;
-      }
     }
   }
 
@@ -3199,28 +3272,34 @@ function renderF4SidebarCompanyList() {
   // 개별 기업 렌더링 헬퍼 함수
   const renderRow = (c) => {
     const isSelected = state.selectedF4Issuer === c.key;
-    const isFav = state.f4FavCompanies.includes(c.key);
+    const isFav = favorites.has(c.key);
 
     const row = document.createElement("div");
     row.className = "guru-row-item";
+    row.dataset.issuerCik = c.key;
 
     // 좌측 즐겨찾기 별표 버튼
     const starBtn = document.createElement("button");
+    starBtn.type = "button";
     starBtn.className = `star-btn ${isFav ? 'starred' : ''}`;
     starBtn.innerHTML = isFav ? "★" : "☆";
     starBtn.title = isFav ? "즐겨찾기 해제" : "즐겨찾기 추가";
+    starBtn.setAttribute("aria-label", `${c.ticker || c.name} ${starBtn.title}`);
+    starBtn.setAttribute("aria-pressed", String(isFav));
+    starBtn.disabled = !!CURRENT_USER && (!watchlist.ready || !!watchlist.pending);
     starBtn.onclick = (e) => {
       e.stopPropagation();
-      if (state.f4FavCompanies.includes(c.key)) {
+      if (CURRENT_USER) {
+        changeWatchPreference(c.key, !form4FavoriteIssuers().has(c.key));
+        return;
+      }
+      if (isFav) {
         state.f4FavCompanies = state.f4FavCompanies.filter(t => t !== c.key);
       } else {
         state.f4FavCompanies.push(c.key);
       }
       saveF4Favs();
-      renderF4SidebarCompanyList();
-      if (state.isF4FavGroupActive) {
-        loadAndRenderForm4();
-      }
+      renderCompanyPreferences();
     };
     row.appendChild(starBtn);
 
@@ -3250,8 +3329,8 @@ function renderF4SidebarCompanyList() {
   };
 
   // 즐겨찾기 목록과 일반 목록 분리
-  const favList = comps.filter(c => state.f4FavCompanies.includes(c.key));
-  const otherList = comps.filter(c => !state.f4FavCompanies.includes(c.key));
+  const favList = comps.filter(c => favorites.has(c.key));
+  const otherList = comps.filter(c => !favorites.has(c.key));
 
   favList.sort((a, b) => b.count - a.count || a.ticker.localeCompare(b.ticker));
   otherList.sort((a, b) => b.count - a.count || a.ticker.localeCompare(b.ticker));

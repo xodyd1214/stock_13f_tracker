@@ -111,6 +111,23 @@ test('Form 4 watchlist import preserves existing choices and remembers removals 
   assert.deepEqual(Array.from(next.imported), ['1', '2', '3']);
 });
 
+test('Form 4 and the watchlist share issuer favorites while preserving signed-out local choices', () => {
+  const keys = ['0000000001:AAA', '0000000001:AAB', '0000000002:BBB'];
+  const state = {f4FavCompanies: ['0000000003']};
+  const watchlist = {keys, pending: null};
+  const c = context(['applyWatchPreference', 'effectiveWatchKeys', 'form4FavoriteIssuers'], {state, watchlist, CURRENT_USER: {uid: 'owner'}});
+  assert.deepEqual(Array.from(c.form4FavoriteIssuers()), ['0000000001', '0000000002']);
+  assert.equal(c.applyWatchPreference(keys, {issuer: '0000000001', key: '0000000001:AAC', add: true}), keys);
+  watchlist.pending = {issuer: '0000000001', add: false};
+  assert.deepEqual(Array.from(c.effectiveWatchKeys()), ['0000000002:BBB']);
+  assert.deepEqual(Array.from(c.form4FavoriteIssuers()), ['0000000002']);
+  assert.equal(keys.length, 3);
+  watchlist.pending = {issuer: '0000000004', key: '0000000004:', add: true};
+  assert.deepEqual(Array.from(c.effectiveWatchKeys()), [...keys, '0000000004:']);
+  c.CURRENT_USER = null;
+  assert.deepEqual(Array.from(c.form4FavoriteIssuers()), ['0000000003']);
+});
+
 test('delisted JHG retains history but has no current quote, daily change or discount', () => {
   const observed = { price: 51.95, changePct: -0.04, marketTime: 1782849603 };
   const c = context([...helpers, 'applyLivePricesToHoldings'], { LIVE_PRICES: { JHG: observed } });
