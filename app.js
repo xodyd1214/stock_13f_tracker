@@ -1971,6 +1971,14 @@ function setupEventListeners() {
       renderCongress();
     };
   });
+  document.getElementById("congressTickerSummary").onclick = event => {
+    const button = event.target.closest("[data-congress-ticker]");
+    if (!button) return;
+    congressTicker = button.dataset.congressTicker;
+    if (congressTicker) document.getElementById("congressSearch").value = "";
+    congressLimit = 40;
+    renderCongress();
+  };
   document.getElementById("congressSearch").oninput = () => {
     congressLimit = 40;
     renderCongress();
@@ -2102,6 +2110,7 @@ let congressSnapshot = null;
 let congressLoad = null;
 let congressTab = "ptr";
 let congressAction = "all";
+let congressTicker = "";
 let congressLimit = 40;
 
 state.currentFilingType = "13F";
@@ -2285,6 +2294,51 @@ function congressShareLabel(shares) {
   return `${grouped}${fraction === undefined ? "" : "." + fraction}주`;
 }
 
+function congressFilingLag(traded, filed) {
+  const days = (Date.parse(filed) - Date.parse(traded)) / 86400000;
+  return Number.isInteger(days) && days >= 0 ? days : null;
+}
+
+function summarizeCongressTickers(filings, through) {
+  const end = Date.parse(through);
+  if (!Number.isFinite(end)) return { from: "", tickers: [] };
+  const from = new Date(end - 29 * 86400000).toISOString().slice(0, 10);
+  const tickers = new Map();
+  for (const filing of filings) {
+    if (filing.kind !== "ptr" || filing.filed < from || filing.filed > through) continue;
+    const reporter = `${filing.district}:${filing.name.trim().toLowerCase()}`;
+    for (const row of filing.rows) {
+      if (row.status !== "New" || row.assetType !== "ST" || !row.ticker.trim() || row.action === "E") continue;
+      const ticker = row.ticker.trim().toUpperCase();
+      if (!tickers.has(ticker)) tickers.set(ticker, { buy: new Set(), sell: new Set() });
+      const counts = tickers.get(ticker);
+      (row.action === "P" ? counts.buy : counts.sell).add(reporter);
+    }
+  }
+  const counts = [...tickers].map(([ticker, sides]) => ({
+    ticker, buy: sides.buy.size, sell: sides.sell.size
+  }));
+  counts.sort((a, b) => (b.buy + b.sell) - (a.buy + a.sell) || a.ticker.localeCompare(b.ticker));
+  return { from, tickers: counts };
+}
+
+function renderCongressTickerSummary(snapshot) {
+  const { from, tickers } = summarizeCongressTickers(snapshot.filings, snapshot.asOf);
+  document.getElementById("congressTickerScope").textContent = from
+    ? `${from}~${snapshot.asOf} 제출 기준 · 티커가 있는 주식의 신규 신고 · 매수·매도별 의원 중복 제외`
+    : "집계 기간을 확인할 수 없습니다.";
+  const cards = tickers.map(({ ticker, buy, sell }) =>
+    `<button type="button" class="congress-ticker" data-congress-ticker="${escapeHtml(ticker)}" aria-controls="congressRows" aria-pressed="false">
+      <strong>${escapeHtml(ticker)}</strong><span>매수 ${buy}명 · 매도 ${sell}명</span>
+    </button>`);
+  document.getElementById("congressTickerList").innerHTML = cards.slice(0, 6).join("") ||
+    '<p class="card-sub">최근 30일에 집계할 신고가 없습니다.</p>';
+  const more = document.getElementById("congressTickerMore");
+  more.hidden = cards.length <= 6;
+  more.querySelector("summary").textContent = `나머지 ${cards.length - 6}개 종목 보기`;
+  more.querySelector(".congress-ticker-extra").innerHTML = cards.slice(6).join("");
+}
+
 function validateCongressSnapshot(payload) {
   const isDate = value => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
   return payload?.schemaVersion === 1 && isDate(payload.asOf) && isDate(payload.ptrFrom) &&
@@ -2310,8 +2364,11 @@ async function loadAndRenderCongress() {
       congressLoad = Promise.all([
         loadDashboardSnapshot(file, 8000, validateCongressSnapshot),
         loadRefreshedSnapshot(file, validateCongressSnapshot)
-      ]).then(([bundled, refreshed]) =>
-        refreshed && (!bundled || refreshed.asOf >= bundled.asOf) ? refreshed : bundled);
+      ]).then(([bundled, refreshed]) => {
+        const snapshot = refreshed && (!bundled || refreshed.asOf >= bundled.asOf) ? refreshed : bundled;
+        if (snapshot) renderCongressTickerSummary(snapshot);
+        return snapshot;
+      });
     }
     renderCongress();
     congressSnapshot = await congressLoad;
@@ -2324,6 +2381,11 @@ function renderCongress() {
   const tab = congressTab;
   const isDocuments = tab === "documents";
   const isTrade = tab === "ptr";
+  const tickerSummary = document.getElementById("congressTickerSummary");
+  tickerSummary.hidden = !isTrade || !congressSnapshot;
+  tickerSummary.querySelectorAll("[data-congress-ticker]").forEach(button => {
+    button.setAttribute("aria-pressed", String(button.dataset.congressTicker === congressTicker));
+  });
   const actionFilter = document.getElementById("congressTradeFilter");
   actionFilter.hidden = !isTrade;
   actionFilter.querySelectorAll("[data-congress-action]").forEach(button => {
@@ -2362,6 +2424,7 @@ function renderCongress() {
   const entries = isDocuments ? filings.filter(filing => matches(filing)).map(filing => ({ filing })) :
     filings.filter(filing => filing.kind === tab).flatMap(filing =>
       filing.rows.filter(row => row.status !== "Deleted" && (!allowedActions || allowedActions.includes(row.action)) &&
+        (!isTrade || !congressTicker || row.ticker.trim().toUpperCase() === congressTicker) &&
         matches(filing, row)).map(row => ({ filing, row })));
   if (isTrade) entries.sort((a, b) => b.filing.filed.localeCompare(a.filing.filed) || b.row.traded.localeCompare(a.row.traded));
   scope.textContent = isDocuments
@@ -2369,8 +2432,9 @@ function renderCongress() {
     : isTrade
       ? `공시일 ${ptrFrom}~${asOf} · 주식·ETF·옵션 · 정정 및 별도로 신고된 거래는 각각 표시합니다.`
       : `${annualYear}년 연례 보고서의 주식·ETF·옵션 · 보고 연도 기준이며 현재 보유는 달라질 수 있습니다.`;
-  status.textContent = entries.length ? `${Math.min(congressLimit, entries.length).toLocaleString()} / ${entries.length.toLocaleString()}${isDocuments ? "개 문서" : "건"} 표시`
+  const resultCount = entries.length ? `${Math.min(congressLimit, entries.length).toLocaleString()} / ${entries.length.toLocaleString()}${isDocuments ? "개 문서" : "건"} 표시`
     : "검색 조건에 맞는 공시가 없습니다.";
+  status.textContent = isTrade && congressTicker ? `${congressTicker} · ${resultCount}` : resultCount;
 
   const labels = isDocuments ? ["신고 의원", "공시 종류", "공시일", "하원 원문"] :
     isTrade ? ["거래 자산", "신고 의원", "소유자", "거래 유형", "거래일 / 공시일", "신고 금액 구간", "하원 원문"] :
@@ -2387,11 +2451,13 @@ function renderCongress() {
     const asset = row ? `${row.ticker ? `<strong>${escapeHtml(row.ticker)}</strong> ` : ""}${escapeHtml(row.asset)}${secondary(assetDetails)}` : "";
     const owner = row && Object.hasOwn(congressOwners, row.owner) ? congressOwners[row.owner] : "표기 없음";
     const value = row ? ({ None: "신고 평가액 없음", "N/A": "해당 없음" }[row.value] || escapeHtml(row.value)) : "";
+    const lag = isTrade ? congressFilingLag(row.traded, filing.filed) : null;
+    const lagLabel = lag === null ? "" : secondary(lag === 0 ? "당일 제출" : `제출까지 ${lag}일`);
     const cells = isDocuments
       ? [person, filing.kind === "ptr" ? "매매 공시" : `${filing.year}년 연례 보고서`, escapeHtml(filing.filed), source]
       : isTrade
         ? [asset, person, owner, congressActions[row.action] + (row.status === "New" ? "" : secondary(row.status === "Amended" ? "정정" : row.status)),
-          escapeHtml(row.traded) + secondary(`공시 ${filing.filed}`), value, source]
+          escapeHtml(row.traded) + secondary(`공시 ${filing.filed}`) + lagLabel, value, source]
         : [asset, person, owner, value, escapeHtml(filing.filed), source];
     return `<tr role="row">${cells.map((cell, index) => `<td role="cell" ${index === 0 ? 'class="form4-wide"' : ""} data-label="${labels[index]}">${cell}</td>`).join("")}</tr>`;
   }).join("");

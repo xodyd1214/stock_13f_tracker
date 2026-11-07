@@ -1864,6 +1864,81 @@ button.congress-link {
   flex-wrap: wrap;
 }
 
+.congress-ticker-summary {
+  padding: 14px;
+  margin-bottom: 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.congress-ticker-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.congress-ticker-header h3 {
+  font-size: 14px;
+}
+
+.congress-ticker-header .card-sub {
+  color: var(--text-subdued);
+  font-size: 11px;
+  margin-top: 3px;
+}
+
+.congress-ticker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 110px), 1fr));
+  gap: 6px;
+}
+
+.congress-ticker {
+  display: grid;
+  gap: 2px;
+  padding: 7px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  color: var(--text-base);
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.congress-ticker span,
+#congressTickerMore summary {
+  color: var(--text-subdued);
+  font-size: 11px;
+}
+
+.congress-ticker:hover,
+.congress-ticker-summary [aria-pressed="true"]:is(.congress-ticker, .congress-link) {
+  background: var(--bg-highlight);
+  border-color: var(--border-light);
+}
+
+#congressTickerMore summary {
+  margin-top: 8px;
+  cursor: pointer;
+  list-style: none;
+  text-decoration: underline;
+}
+
+#congressTickerMore summary::-webkit-details-marker {
+  display: none;
+}
+
+.congress-ticker-extra {
+  max-height: 210px;
+  overflow: auto;
+  margin-top: 8px;
+  padding: 2px;
+}
+
 @media (max-width: 768px) {
   #viewCongress .toolbar-right .search-input-wrap {
     flex: 1 1 150px;

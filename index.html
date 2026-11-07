@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=98">
+  <link rel="stylesheet" href="style.css?v=99">
 </head>
 <body>
   <div class="app-container">
@@ -525,6 +525,20 @@
               </div>
             </div>
           </div>
+          <section id="congressTickerSummary" class="congress-ticker-summary" aria-labelledby="congressTickerTitle" hidden>
+            <div class="congress-ticker-header">
+              <div>
+                <h3 id="congressTickerTitle">최근 30일 종목별 신고 의원 수</h3>
+                <p id="congressTickerScope" class="card-sub"></p>
+              </div>
+              <button type="button" class="congress-link" data-congress-ticker="" aria-controls="congressRows" aria-pressed="true">전체 종목</button>
+            </div>
+            <div id="congressTickerList" class="congress-ticker-grid"></div>
+            <details id="congressTickerMore" hidden>
+              <summary></summary>
+              <div class="congress-ticker-grid congress-ticker-extra"></div>
+            </details>
+          </section>
           <p id="congressScope" class="card-sub data-quality-note"></p>
           <p id="congressStatus" class="card-sub data-quality-note" role="status"></p>
           <div class="table-wrapper">
@@ -977,7 +991,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js"></script>
   <script src="sec_display_loader.js"></script>
-  <script src="app.js?v=108"></script>
+  <script src="app.js?v=109"></script>
 </body>
 </html>
 

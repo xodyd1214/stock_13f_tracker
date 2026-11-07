@@ -20,6 +20,30 @@ function context(names, extra = {}) {
   return ctx;
 }
 const helpers = ['hasPrice', 'priceLabel', 'priceDifference', 'insiderCode', 'insiderLabel', 'quoteFreshness'];
+test('congress ticker summaries count unique reporters per direction across 30 filing dates', () => {
+  const c = context(['summarizeCongressTickers', 'congressFilingLag']);
+  const stock = { ticker: 'NVDA', action: 'P', assetType: 'ST', status: 'New' };
+  const filing = (filed, name, district, rows) => ({ kind: 'ptr', filed, name, district, rows });
+  const snapshot = [
+    filing('2026-10-08', 'Outside window', 'FL01', [stock]),
+    filing('2026-10-09', 'First reporter', 'NJ05', [stock, stock, { ...stock, action: 'S (partial)' }]),
+    filing('2026-10-13', 'FIRST REPORTER', 'NJ05', [stock, { ...stock, action: 'S' }]),
+    filing('2026-11-07', 'Second reporter', 'FL27', [
+      { ...stock, action: 'S' }, { ...stock, ticker: 'NVDA', assetType: 'OP' },
+      { ...stock, status: 'Amended' }, { ...stock, status: 'Deleted' }, { ...stock, action: 'E' },
+      { ...stock, ticker: '' }, { ...stock, ticker: 'AMAT' }
+    ]),
+    filing('2026-11-08', 'Future filing', 'PA01', [stock]),
+  ];
+  const result = c.summarizeCongressTickers(snapshot, '2026-11-07');
+  assert.equal(result.from, '2026-10-09');
+  assert.deepEqual(Array.from(result.tickers, ({ ticker, buy, sell }) => [ticker, buy, sell]),
+    [['NVDA', 1, 2], ['AMAT', 1, 0]]);
+  assert.equal(c.congressFilingLag('2026-10-23', '2026-11-05'), 13);
+  assert.equal(c.congressFilingLag('2026-11-05', '2026-11-05'), 0);
+  assert.equal(c.congressFilingLag('2026-11-06', '2026-11-05'), null);
+});
+
 test('delisted JHG retains history but has no current quote, daily change or discount', () => {
   const observed = { price: 51.95, changePct: -0.04, marketTime: 1782849603 };
   const c = context([...helpers, 'applyLivePricesToHoldings'], { LIVE_PRICES: { JHG: observed } });
