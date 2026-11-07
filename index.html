@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=105">
+  <link rel="stylesheet" href="style.css?v=106">
 </head>
 <body>
   <div class="app-container">
@@ -33,7 +33,7 @@
       <div class="filing-mode-nav">
         <div class="filing-mode-header">
           <label class="filing-mode-label">공시 및 시장 데이터</label>
-          <span class="filing-mode-count">6 MODES</span>
+          <span class="filing-mode-count">7 MODES</span>
         </div>
         <div class="filing-mode-list" id="filingModeList" role="tablist" aria-label="공시 및 시장 데이터">
           <button type="button" class="filing-mode-item active" data-mode="MACRO" role="tab" aria-selected="true" title="Macro Compass 거시경제 나침반">
@@ -47,23 +47,31 @@
             <span class="mode-active-pill"></span>
           </button>
 
-          <button type="button" class="filing-mode-item" data-mode="13F" role="tab" aria-selected="false" title="Form 13F 기관 포트폴리오">
+          <button type="button" class="filing-mode-item" data-mode="WATCHLIST" role="tab" aria-selected="false" aria-controls="viewWatchlist">
             <div class="mode-item-content">
-              <span class="mode-item-badge">13F</span>
               <div class="mode-item-text">
-                <span class="mode-item-title">Form 13F</span>
-                <span class="mode-item-desc">기관 포트폴리오</span>
+                <span class="mode-item-title">관심 기업</span>
+                <span class="mode-item-desc">기업별 공시 모아보기</span>
               </div>
             </div>
             <span class="mode-active-pill"></span>
           </button>
 
-          <button type="button" class="filing-mode-item" data-mode="FORM4" role="tab" aria-selected="false" title="Form 4 내부자 거래 추적">
+          <button type="button" class="filing-mode-item" data-mode="13F" role="tab" aria-selected="false" title="Form 13F 기관 보유">
             <div class="mode-item-content">
-              <span class="mode-item-badge">F4</span>
+              <div class="mode-item-text">
+                <span class="mode-item-title">Form 13F</span>
+                <span class="mode-item-desc">기관 보유</span>
+              </div>
+            </div>
+            <span class="mode-active-pill"></span>
+          </button>
+
+          <button type="button" class="filing-mode-item" data-mode="FORM4" role="tab" aria-selected="false" title="Form 4 내부자 거래">
+            <div class="mode-item-content">
               <div class="mode-item-text">
                 <span class="mode-item-title">Form 4</span>
-                <span class="mode-item-desc">내부자 거래 추적</span>
+                <span class="mode-item-desc">내부자 거래</span>
               </div>
             </div>
             <span class="mode-active-pill"></span>
@@ -106,8 +114,9 @@
         <!-- 기존 하위 호환성 유지용 숨김 셀렉터 -->
         <select id="filingSelector" class="filing-select" style="display: none;" aria-hidden="true">
           <option value="MACRO" selected>Macro Compass (거시경제 나침반)</option>
-          <option value="13F">Form 13F (기관 포트폴리오)</option>
-          <option value="FORM4">Form 4 (내부자 거래 추적)</option>
+          <option value="WATCHLIST">관심 기업</option>
+          <option value="13F">Form 13F (기관 보유)</option>
+          <option value="FORM4">Form 4 (내부자 거래)</option>
           <option value="CONGRESS">미국 의회 금융 공시</option>
           <option value="13D">Schedule 13D (행동주의 5%)</option>
           <option value="13G">Schedule 13G (단순 대량보유)</option>
@@ -508,6 +517,46 @@
           </div>
           <button type="button" class="btn btn-outline" id="btnF4More" aria-controls="f4TableBody" hidden>거래 더 보기</button>
         </section>
+      </div>
+
+      <div id="viewWatchlist" class="filing-view-container" style="display: none;">
+        <section class="table-section watch-card" id="watchLogin">
+          <h3>내 관심 기업</h3>
+          <p class="card-sub">구글 계정으로 로그인하면 관심 종목을 저장하고 다른 기기에서도 열 수 있습니다.</p>
+          <button type="button" class="btn btn-outline" id="btnWatchLogin">구글 로그인</button>
+        </section>
+        <div class="watch-content" id="watchContent" hidden>
+          <section class="table-section watch-card" aria-labelledby="watchListTitle">
+            <h3 id="watchListTitle">내 관심 기업</h3>
+            <div class="watch-company-list" id="watchCompanyList"></div>
+            <p class="card-sub" id="watchSyncStatus" role="status"></p>
+            <label for="watchSearch">기업 검색</label>
+            <div class="search-input-wrap">
+              <input type="search" id="watchSearch" placeholder="기업명 또는 티커" autocomplete="off">
+            </div>
+            <p class="card-sub" id="watchSearchStatus" role="status"></p>
+            <div class="watch-company-list" id="watchSearchResults"></div>
+          </section>
+
+          <div class="watch-content" id="watchDetails" hidden>
+            <div class="watch-heading">
+              <h3 id="watchCompanyTitle" tabindex="-1"></h3>
+              <button type="button" class="btn btn-outline" id="btnWatchToggle"></button>
+            </div>
+            <section class="table-section watch-card" aria-labelledby="watch13FTitle">
+              <h3 id="watch13FTitle">기관 보유 · Form 13F</h3>
+              <div id="watch13F" aria-live="polite"></div>
+            </section>
+            <section class="table-section watch-card" aria-labelledby="watchForm4Title">
+              <h3 id="watchForm4Title">임원·이사 직접 매수 · Form 4</h3>
+              <div id="watchForm4" aria-live="polite"></div>
+            </section>
+            <section class="table-section watch-card" aria-labelledby="watchHouseTitle">
+              <h3 id="watchHouseTitle">미국 하원 최근 매수 공시</h3>
+              <div id="watchHouse" aria-live="polite"></div>
+            </section>
+          </div>
+        </div>
       </div>
 
       <div id="viewCongress" class="filing-view-container" style="display: none;">
@@ -989,13 +1038,14 @@
 
   <!-- 모바일 전용 하단 플로팅 탭 바 (768px 이하 전용) -->
   <nav class="mobile-bottom-nav" id="mobileBottomNav">
+    <button type="button" class="mobile-nav-item" data-mode="WATCHLIST">
+      <span class="nav-label">관심 기업</span>
+    </button>
     <button type="button" class="mobile-nav-item" data-mode="13F">
-      <span class="nav-icon">📊</span>
-      <span class="nav-label">13F 기관</span>
+      <span class="nav-label">Form 13F</span>
     </button>
     <button type="button" class="mobile-nav-item" data-mode="FORM4">
-      <span class="nav-icon">👔</span>
-      <span class="nav-label">내부자</span>
+      <span class="nav-label">Form 4</span>
     </button>
     <button type="button" class="mobile-nav-item" data-mode="CONGRESS">
       <span class="nav-label">미국 의회</span>
@@ -1020,7 +1070,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js"></script>
   <script src="sec_display_loader.js?v=2"></script>
-  <script src="app.js?v=116"></script>
+  <script src="app.js?v=117"></script>
 </body>
 </html>
 

@@ -44,6 +44,37 @@ test('congress ticker summaries count unique reporters per direction across 30 f
   assert.equal(c.congressFilingLag('2026-11-06', '2026-11-05'), null);
 });
 
+test('watchlist 13F uses reviewed security identities and keeps each reported period', () => {
+  const c = context(['watchInstitutionHoldings', 'watchSymbol', 'getMappedTicker'], {RAW_HOLDINGS: [
+    { guru: 'Earlier manager', cusip: '594918104', value: 100, shares: 10 },
+    { guru: 'Earlier manager', cusip: '594918104', value: 20, shares: 2 },
+    { guru: 'Latest manager', cusip: '594918104', value: 100, shares: 1, period: '2026-09-30', filingDate: '2026-10-30' },
+    { guru: 'Inherited ticker only', ticker: 'MSFT', cusip: '123456789', value: 100 },
+    { guru: 'Option position', cusip: '594918104', putCall: 'CALL', value: 100 },
+    { guru: 'Unrelated holding', cusip: '037833100', value: 100 }
+  ]});
+  assert.deepEqual(Array.from(c.watchInstitutionHoldings(c.RAW_HOLDINGS, 'MSFT'), row => [row.legalName, row.shares, row.value]),
+    [['Latest manager', 1, 100], ['Earlier manager', 12, 120]]);
+});
+
+test('watchlist House activity includes only matched stock purchases in the filing window', () => {
+  const c = context(['watchHousePurchases', 'watchSymbol']);
+  const trade = { ticker: 'BRK.B', action: 'P', assetType: 'ST', status: 'New', traded: '2026-10-01' };
+  const filing = (filed, rows, kind = 'ptr') => ({ filed, rows, kind });
+  const snapshot = { asOf: '2026-11-07', ptrFrom: '2026-08-10', filings: [
+    filing('2026-10-08', [trade]),
+    filing('2026-10-09', [trade, { ...trade, ticker: 'BRK.A' }, { ...trade, action: 'S' },
+      { ...trade, status: 'Deleted' }, { ...trade, assetType: 'OP' }, { ...trade, ticker: '' }]),
+    filing('2026-11-01', [{ ...trade, status: 'Amended' }]),
+    filing('2026-11-05', [trade], 'annual'),
+    filing('2026-11-08', [trade])
+  ] };
+  const result = c.watchHousePurchases(snapshot, 'BRK-B');
+  assert.equal(result.start, '2026-10-09');
+  assert.deepEqual(Array.from(result.entries, ({ filing, row }) => [filing.filed, row.status]),
+    [['2026-11-01', 'Amended'], ['2026-10-09', 'New']]);
+});
+
 test('delisted JHG retains history but has no current quote, daily change or discount', () => {
   const observed = { price: 51.95, changePct: -0.04, marketTime: 1782849603 };
   const c = context([...helpers, 'applyLivePricesToHoldings'], { LIVE_PRICES: { JHG: observed } });

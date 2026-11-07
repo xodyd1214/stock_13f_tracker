@@ -61,7 +61,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          outputs=(realtime_prices.json latest_macro_indicators.json latest_form4_recent.json latest_congress_house.json)
+          outputs=(realtime_prices.json latest_macro_indicators.json latest_form4_recent.json latest_congress_house.json listed_companies.json)
           changed=()
           for file in "${outputs[@]}"; do
             if [[ -n "$(git status --porcelain -- "$file")" ]]; then

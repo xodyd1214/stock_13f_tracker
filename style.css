@@ -1784,17 +1784,82 @@ body {
   white-space: nowrap;
 }
 
-.main-content:is([data-filing-mode="FORM4"], [data-filing-mode="CONGRESS"]) :is(#filingDdayBanner, #macroPulseBar) {
+.main-content:is([data-filing-mode="FORM4"], [data-filing-mode="CONGRESS"], [data-filing-mode="WATCHLIST"]) :is(#filingDdayBanner, #macroPulseBar) {
   display: none;
 }
 
-.main-content:is([data-filing-mode="CONGRESS"], [data-filing-mode="MACRO"]) :is(#btnExportCsv, #btnMobileCsv),
+.main-content:is([data-filing-mode="CONGRESS"], [data-filing-mode="MACRO"], [data-filing-mode="WATCHLIST"]) :is(#btnExportCsv, #btnMobileCsv),
 .main-content[data-filing-mode="MACRO"] #filingDdayBanner {
   display: none;
 }
 
 .main-content:not([data-filing-mode="CONGRESS"]) #btnCongressHelp {
   display: none;
+}
+
+.watch-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  min-width: 0;
+}
+
+.watch-content[hidden], #watchLogin[hidden] {
+  display: none;
+}
+
+.watch-card h3, .watch-card p, .watch-card .watch-company-list {
+  margin-bottom: 10px;
+}
+
+.watch-card :is(p, .watch-company-list):empty {
+  display: none;
+}
+
+.watch-card label {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.watch-card .search-input-wrap {
+  max-width: 360px;
+  margin-bottom: 8px;
+}
+
+.watch-card .search-input-wrap input {
+  width: 100%;
+}
+
+.watch-company-list, .watch-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.watch-company-list .btn {
+  text-align: left;
+  white-space: normal;
+  max-width: 100%;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.watch-company-list .btn[aria-pressed="true"] {
+  background: var(--text-base);
+  color: var(--bg-base);
+}
+
+.watch-heading {
+  justify-content: space-between;
+}
+
+.watch-card summary {
+  color: var(--text-subdued);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 8px 0;
 }
 
 .form4-secondary {
@@ -1973,12 +2038,12 @@ button.congress-link {
 }
 
 @media (max-width: 640px) {
-  #f4Table, #viewForm4[data-scope="direct"] #f4Table, #f4Table tbody, #congressTable, #congressTable tbody {
+  #f4Table, #viewForm4[data-scope="direct"] #f4Table, #f4Table tbody, #congressTable, #congressTable tbody, .watch-table, .watch-table tbody {
     display: block;
     min-width: 0;
   }
 
-  :is(#f4Table, #congressTable) thead {
+  :is(#f4Table, #congressTable, .watch-table) thead {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -1987,7 +2052,7 @@ button.congress-link {
     white-space: nowrap;
   }
 
-  :is(#f4Table, #congressTable) tbody tr {
+  :is(#f4Table, #congressTable, .watch-table) tbody tr {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px 10px;
@@ -1995,7 +2060,7 @@ button.congress-link {
     border-bottom: 1px solid var(--border-subtle);
   }
 
-  :is(#f4Table, #congressTable) tbody td {
+  :is(#f4Table, #congressTable, .watch-table) tbody td {
     min-width: 0;
     border: 0;
     padding: 0;
@@ -2003,11 +2068,11 @@ button.congress-link {
     overflow-wrap: anywhere;
   }
 
-  :is(#f4Table, #congressTable) .form4-wide {
+  :is(#f4Table, #congressTable, .watch-table) .form4-wide {
     grid-column: 1 / -1;
   }
 
-  :is(#f4Table, #congressTable) td[data-label]::before {
+  :is(#f4Table, #congressTable, .watch-table) td[data-label]::before {
     content: attr(data-label);
     display: block;
     margin-bottom: 2px;

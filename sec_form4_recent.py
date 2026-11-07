@@ -17,6 +17,8 @@ from sec_insider_collector import COMMON_SHARE_TITLE, field, ownership_date, own
 
 SEC = "https://www.sec.gov"
 OUTPUT = "latest_form4_recent.json"
+LISTINGS_OUTPUT = "listed_companies.json"
+LISTING_FIELDS = ["cik", "name", "ticker", "exchange"]
 MARKETS = ("NYSE", "Nasdaq", "CBOE", "TXSE")
 WINDOW_DAYS = 30
 RULESET_VERSION = 1
@@ -52,14 +54,32 @@ def index_dates(get, start, cutoff):
     return sorted(dates)
 
 
-def listed_issuers(get):
-    data = json.loads(get("/files/company_tickers_exchange.json"))
-    if data["fields"] != ["cik", "name", "ticker", "exchange"]:
+def validate_listed_companies(snapshot):
+    if snapshot.get("fields") != LISTING_FIELDS or not isinstance(snapshot.get("data"), list):
         raise ValueError("Unexpected SEC exchange listing schema")
-    issuers = {str(int(cik)) for cik, _, _, exchange in data["data"] if exchange in MARKETS}
+    issuers = set()
+    symbols = set()
+    for cik, name, ticker, exchange in snapshot["data"]:
+        symbol = ticker.replace("-", ".")
+        if (type(cik) is not int or not 0 < cik <= 9999999999 or not isinstance(name, str) or not name.strip()
+                or not re.fullmatch(r"[A-Z0-9]{1,10}(?:[.-][A-Z0-9]{1,10})?", ticker)
+                or exchange not in MARKETS or symbol in symbols):
+            raise ValueError(f"Invalid or ambiguous SEC listing: {ticker}")
+        issuers.add(str(cik))
+        symbols.add(symbol)
     if len(issuers) < 1000:
         raise ValueError("Incomplete SEC exchange listing")
     return issuers
+
+
+def listed_companies(get):
+    data = json.loads(get("/files/company_tickers_exchange.json"))
+    if data["fields"] != LISTING_FIELDS:
+        raise ValueError("Unexpected SEC exchange listing schema")
+    snapshot = {"fields": LISTING_FIELDS, "data": sorted(
+        (row for row in data["data"] if row[3] in MARKETS), key=lambda row: row[2])}
+    validate_listed_companies(snapshot)
+    return snapshot
 
 
 def indexed_filings(raw, issuers):
@@ -184,7 +204,7 @@ def compile_transactions(days):
     return sorted(rows, key=lambda row: (row["filingDate"], row["transDate"], row["accessionNumber"]), reverse=True)
 
 
-def collect(get, cutoff, previous=None):
+def collect(get, cutoff, previous=None, *, listings=None):
     start = cutoff - timedelta(days=WINDOW_DAYS - 1)
     dates = index_dates(get, start, cutoff)
     through = dates[-1]
@@ -194,7 +214,7 @@ def collect(get, cutoff, previous=None):
         dates = index_dates(get, start, through)
         if dates[-1] != through:
             raise ValueError("The latest confirmed EDGAR index changed during collection")
-    issuers = listed_issuers(get)
+    issuers = validate_listed_companies(listings if listings is not None else listed_companies(get))
     old_days = {}
     if previous:
         validate_recent_snapshot(previous)
@@ -326,7 +346,10 @@ def main():
 
         cutoff = datetime.now(ZoneInfo("America/New_York")).date() - timedelta(days=1)
         previous = load_json(OUTPUT)
-        result = collect(get, cutoff, previous)
+        listings = listed_companies(get)
+        if listings != load_json(LISTINGS_OUTPUT):
+            atomic_write_json(LISTINGS_OUTPUT, listings)
+        result = collect(get, cutoff, previous, listings=listings)
     if result != previous:
         atomic_write_json(OUTPUT, result)
     print(f"Verified {result['verifiedFilings']} Form 4 filings through {result['coverage']['through']}; "

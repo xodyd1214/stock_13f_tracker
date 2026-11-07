@@ -5,7 +5,8 @@ from pathlib import Path
 import sys
 
 ALLOWED_OUTPUTS = {'live_13f_analytics.json', 'realtime_prices.json', 'latest_macro_indicators.json',
-                   'latest_13f_holdings.json', 'latest_form4_recent.json', 'latest_congress_house.json'}
+                   'latest_13f_holdings.json', 'latest_form4_recent.json', 'latest_congress_house.json',
+                   'listed_companies.json'}
 
 
 def validate_output(path):
@@ -51,6 +52,9 @@ def validate_output(path):
     if path.name == 'latest_form4_recent.json':
         from sec_form4_recent import validate_recent_snapshot
         validate_recent_snapshot(value)
+    if path.name == 'listed_companies.json':
+        from sec_form4_recent import validate_listed_companies
+        validate_listed_companies(value)
     if path.name == 'latest_congress_house.json':
         from congress_house import validate_snapshot
         validate_snapshot(value)

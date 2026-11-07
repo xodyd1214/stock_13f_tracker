@@ -38,7 +38,8 @@ class PublicationTests(unittest.TestCase):
         self.assertNotIn('steps.filings.outcome', text)
         self.assertIn('python validate_data.py "$file"', text)
         self.assertIn('node --test tests/*.test.cjs', text)
-        self.assertIn('outputs=(realtime_prices.json latest_macro_indicators.json latest_form4_recent.json latest_congress_house.json)', text)
+        self.assertIn('outputs=(realtime_prices.json latest_macro_indicators.json latest_form4_recent.json '
+                      'latest_congress_house.json listed_companies.json)', text)
         self.assertIn('exit 1', text)
         for script in ('sec_insider_collector.py', 'sec_13d_collector.py', 'collector_1year.py', 'sec_collector.py'):
             self.assertNotIn('python ' + script, text)

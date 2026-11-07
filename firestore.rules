@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid} {
+      function ownsDocument() {
+        return request.auth != null && request.auth.uid == uid;
+      }
+
+      function validPreferences() {
+        let preferences = request.resource.data;
+        return preferences.keys().hasOnly(['favorites', 'updatedAt', 'watchCompanies'])
+          && preferences.get('favorites', []) is list
+          && preferences.get('watchCompanies', []) is list
+          && preferences.get('watchCompanies', []).size() <= 100
+          && preferences.get('updatedAt', request.time) is timestamp;
+      }
+
+      allow get: if ownsDocument();
+      allow create, update: if ownsDocument() && validPreferences();
+    }
+  }
+}
