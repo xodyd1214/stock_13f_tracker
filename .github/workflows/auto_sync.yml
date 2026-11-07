@@ -44,7 +44,6 @@ jobs:
         run: python macro_collector.py
       - name: Reconcile recent Form 4 direct purchases
         id: form4_recent
-        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 6 * * *'
         continue-on-error: true
         run: python sec_form4_recent.py
       - name: Refresh U.S. House financial disclosures

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=104">
+  <link rel="stylesheet" href="style.css?v=105">
 </head>
 <body>
   <div class="app-container">
@@ -482,6 +482,10 @@
             </div>
           </div>
 
+          <div class="filter-tabs form4-direct-only" id="f4PeriodTabs" role="group" aria-label="Form 4 공시 기간" hidden>
+            <button type="button" class="filter-tab active" data-f4period="all" aria-pressed="true">확인된 전체 기간</button>
+            <button type="button" class="filter-tab" data-f4period="week" aria-pressed="false">최근 7일</button>
+          </div>
           <div class="table-wrapper">
             <table class="power-table" id="f4Table" role="table" aria-label="Form 4 거래 내역">
               <thead role="rowgroup">
@@ -1016,7 +1020,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js"></script>
   <script src="sec_display_loader.js?v=2"></script>
-  <script src="app.js?v=114"></script>
+  <script src="app.js?v=115"></script>
 </body>
 </html>
 

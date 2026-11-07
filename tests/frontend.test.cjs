@@ -198,7 +198,7 @@ test('insider canonical codes distinguish buys, sales, awards, exercises and unk
 });
 test('Form 4 rejects legacy rows and resolves the issuer independently of the reporter', () => {
   const snapshot = JSON.parse(fs.readFileSync(require('node:path').join(__dirname, '../latest_form4_insiders.json'), 'utf8'));
-  const c = context(['validateForm4Snapshot', 'form4IssuerForTicker', 'form4Price', 'form4Security', 'recentDirectPurchases', 'getF4ScopeDataset', 'getF4ActiveDataset'], {
+  const c = context(['validateForm4Snapshot', 'form4IssuerForTicker', 'form4Price', 'form4Security', 'recentDirectPurchases', 'form4DirectFrom', 'getF4ScopeDataset', 'getF4ActiveDataset'], {
     FORM4_DATA: snapshot.transactions, recentForm4Snapshot: null, state: { selectedF4Issuer: '0000070858', f4Filter: 'ALL' }
   });
   assert.equal(c.validateForm4Snapshot(snapshot), true);
@@ -219,6 +219,18 @@ test('Form 4 rejects legacy rows and resolves the issuer independently of the re
   assert.equal(c.getF4ActiveDataset().length, snapshot.transactions.filter(row => row.directInsiderPurchase === true).length);
   assert.ok(c.getF4ActiveDataset().every(row => row.ownership === 'D' && row.txTypeCode === 'P'));
   assert.ok(!c.getF4ActiveDataset().some(row => row.ticker === 'TSM'));
+});
+test('Form 4 direct purchase period uses the latest verified filing day', () => {
+  const transactions = ['2026-11-06', '2026-10-31', '2026-10-30', '2026-10-26']
+    .map(filingDate => ({ filingDate, directInsiderPurchase: true }));
+  const c = context(['recentDirectPurchases', 'form4DirectFrom', 'getF4ScopeDataset'], {
+    FORM4_DATA: [], recentForm4Snapshot: { transactions, coverage: { from: '2026-10-24', through: '2026-11-06' } },
+    state: { f4Filter: 'DIRECT', f4Period: 'all' },
+  });
+  assert.equal(c.getF4ScopeDataset(), transactions);
+  c.state.f4Period = 'week';
+  assert.equal(c.form4DirectFrom(), '2026-10-31');
+  assert.deepEqual(c.getF4ScopeDataset(), transactions.slice(0, 2));
 });
 test('history displays an honest unavailable state, never synthesized quarters', () => {
   const children = [];

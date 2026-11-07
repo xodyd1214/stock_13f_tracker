@@ -2001,6 +2001,12 @@ function setupEventListeners() {
       loadAndRenderForm4();
     };
   });
+  document.querySelectorAll("#f4PeriodTabs [data-f4period]").forEach(button => {
+    button.onclick = () => {
+      state.f4Period = button.dataset.f4period;
+      loadAndRenderForm4();
+    };
+  });
 
   // Form 4 검색바
   const f4Search = document.getElementById("f4SearchInput");
@@ -2125,6 +2131,7 @@ let congressLimit = 40;
 
 state.currentFilingType = "MACRO";
 state.f4Filter = "DIRECT";
+state.f4Period = "all";
 state.f4Query = "";
 state.d13Filter = "ALL";
 state.d13Query = "";
@@ -2599,8 +2606,10 @@ async function loadVerifiedForm4() {
         loadRefreshedSnapshot(recentFile, validateForm4Snapshot)
       ]);
       const localRecent = hasForm4Coverage(deployed) ? deployed : null;
-      recentForm4Snapshot = hasForm4Coverage(refreshed) &&
-        (!localRecent || refreshed.coverage.through >= localRecent.coverage.through) ? refreshed : localRecent;
+      const preferredRefresh = hasForm4Coverage(refreshed) && (!localRecent ||
+        refreshed.coverage.through > localRecent.coverage.through ||
+        (refreshed.coverage.through === localRecent.coverage.through && refreshed.coverage.from <= localRecent.coverage.from));
+      recentForm4Snapshot = preferredRefresh ? refreshed : localRecent;
       if (!archive && !recentForm4Snapshot) return [];
       form4Snapshot = archive || recentForm4Snapshot;
       const archivedRows = archive?.transactions || [];
@@ -2623,8 +2632,19 @@ function recentDirectPurchases() {
   return recentForm4Snapshot?.transactions || FORM4_DATA.filter(row => row.directInsiderPurchase === true);
 }
 
+function form4DirectFrom() {
+  const coverage = recentForm4Snapshot?.coverage;
+  if (!coverage || state.f4Period !== "week") return coverage?.from;
+  const weekStart = new Date(Date.parse(coverage.through) - 6 * 86400000).toISOString().slice(0, 10);
+  return weekStart > coverage.from ? weekStart : coverage.from;
+}
+
 function getF4ScopeDataset() {
-  return state.f4Filter === "ALL" ? FORM4_DATA : recentDirectPurchases();
+  if (state.f4Filter === "ALL") return FORM4_DATA;
+  const rows = recentDirectPurchases();
+  if (state.f4Period !== "week") return rows;
+  const from = form4DirectFrom();
+  return from ? rows.filter(row => row.filingDate >= from) : rows;
 }
 
 function getF4ActiveDataset() {
@@ -2655,6 +2675,15 @@ async function loadAndRenderForm4() {
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   });
+  const periods = document.getElementById("f4PeriodTabs");
+  if (periods) {
+    periods.hidden = !isDirect || !recentForm4Snapshot;
+    periods.querySelectorAll("[data-f4period]").forEach(button => {
+      const active = button.dataset.f4period === state.f4Period;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+  }
   renderF4SidebarCompanyList();
 
   const headerName = document.getElementById("currentGuruName");
@@ -2673,7 +2702,8 @@ async function loadAndRenderForm4() {
     const coverage = recentForm4Snapshot?.coverage;
     if (!form4Snapshot) headerDesc.innerText = "발행 종목이 확인된 Form 4 자료를 불러오지 못했습니다.";
     else if (isDirect && coverage) {
-      headerDesc.innerText = `SEC 일일 색인 ${coverage.from}~${coverage.through} · 미국 거래소 상장사 · ${counts}`;
+      const dateLabel = state.f4Period === "week" ? "공시일" : "SEC 일일 색인";
+      headerDesc.innerText = `${dateLabel} ${form4DirectFrom()}~${coverage.through} · 미국 거래소 상장사 · ${counts}`;
     } else if (isDirect) {
       headerDesc.innerText = `최근 색인을 불러오지 못해 저장된 공시 표시 · ${counts}`;
     } else headerDesc.innerText = `저장된 공시 및 최근 직접 매수 · ${counts}`;

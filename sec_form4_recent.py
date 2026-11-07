@@ -16,7 +16,8 @@ from sec_insider_collector import COMMON_SHARE_TITLE, field, ownership_date, own
 SEC = "https://www.sec.gov"
 OUTPUT = "latest_form4_recent.json"
 MARKETS = ("NYSE", "Nasdaq", "CBOE", "TXSE")
-WINDOW_DAYS = 7
+WINDOW_DAYS = 30
+INITIAL_WINDOW_DAYS = 14
 RULESET_VERSION = 1
 MAX_RESPONSE_BYTES = 8_000_000
 ACCESSION = r"[0-9]{10}-[0-9]{2}-[0-9]{6}"
@@ -151,12 +152,18 @@ def compile_transactions(days):
 
 
 def collect(get, cutoff, previous=None):
-    start = cutoff - timedelta(days=WINDOW_DAYS - 1)
+    window_start = cutoff - timedelta(days=WINDOW_DAYS - 1)
+    if previous:
+        validate_recent_snapshot(previous)
+        # Expand the published window as daily indexes arrive, without re-fetching
+        # filings before the earliest reconciled date on each scheduled run.
+        start = max(window_start, date.fromisoformat(previous["coverage"]["from"]))
+    else:
+        start = cutoff - timedelta(days=INITIAL_WINDOW_DAYS - 1)
     issuers = listed_issuers(get)
     dates = index_dates(get, start, cutoff)
     old_days = {}
     if previous:
-        validate_recent_snapshot(previous)
         if dates[-1].isoformat() < previous["coverage"]["through"]:
             raise ValueError("EDGAR index coverage regressed")
         old_days = {day["date"]: day for day in previous["days"]}

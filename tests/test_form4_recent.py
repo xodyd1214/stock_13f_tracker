@@ -102,3 +102,13 @@ class RecentForm4Tests(unittest.TestCase):
         self.responses[path] = submission(BUY, "20261104")
         with self.assertRaisesRegex(ValueError, "does not match its index"):
             collect(self.get, date(2026, 11, 5))
+
+    def test_verified_window_expands_before_rolling_at_thirty_days(self):
+        previous = collect(self.get, date(2026, 11, 5))
+        self.assertEqual(previous["coverage"]["from"], "2026-10-23")
+        self.calls.clear()
+        expanded = collect(self.get, date(2026, 11, 18), previous)
+        self.assertEqual(expanded["coverage"]["from"], "2026-10-23")
+        rolled = collect(self.get, date(2026, 11, 25), expanded)
+        self.assertEqual(rolled["coverage"]["from"], "2026-10-27")
+        self.assertFalse(any(path.endswith(".txt") for path in self.calls))
