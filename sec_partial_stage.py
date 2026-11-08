@@ -194,7 +194,7 @@ class Evidence:
             observations.append(item)
         return observations
 
-    def manager(self, manager, spec):
+    def manager(self, manager, spec, *, comparison_periods=None):
         cik = canonical_cik(spec['cik']); root_url = f'https://data.sec.gov/submissions/CIK{cik}.json'
         check('acquisitionError' not in manager, manager.get('acquisitionError', 'Acquisition failure'))
         check(manager['cik'] == cik and manager['label'] == spec['label'], 'Manager/request identity mismatch')
@@ -226,10 +226,13 @@ class Evidence:
             check(key not in merged or row == merged[key], 'Conflicting submission metadata')
             merged[key] = row
         check(bool(merged), 'No known 13F filings')
-        period = max(r['reportDate'] for r in merged.values())
-        check(spec.get('latestPeriods') == 1 and 'reportPeriods' not in spec and manager['reportPeriods'] == [period], 'Latest period required including notices')
-        selected = [r for r in merged.values() if r['reportDate'] == period]
-        check(not any(r['form'].startswith('13F-NT') for r in selected), 'Latest period notice: reporting manager review required')
+        periods = [max(r['reportDate'] for r in merged.values())] if comparison_periods is None else comparison_periods
+        if comparison_periods is None:
+            check(spec.get('latestPeriods') == 1 and 'reportPeriods' not in spec and manager['reportPeriods'] == periods, 'Latest period required including notices')
+        else:
+            check(spec.get('reportPeriods') == manager['reportPeriods'] == periods, 'Explicit comparison periods required')
+        selected = [r for r in merged.values() if r['reportDate'] in periods]
+        check(not any(r['form'].startswith('13F-NT') for r in selected), 'Period notice: reporting manager review required')
         required = {r['accessionNumber'] for r in selected}
         check(set(manager['filings']) == required, 'Every known accession for latest period required')
         used = [path for path, _ in originals]; results = []; raw_filings = []
@@ -265,6 +268,12 @@ class Evidence:
             final_orders.append(self.order[final])
         check(final_orders[0] == max(final_orders), 'Final root must be last')
         results = [reconcile_filing(*args) for args in raw_filings]
+        if comparison_periods is not None:
+            snapshots = {}
+            for period in periods:
+                rows = [filing for filing in results if filing['reportDate'] == period]
+                snapshots[period] = resolve_period_snapshot(rows, [filing['accession'] for filing in rows], self.share_class_policy)
+            return snapshots
         return resolve_period_snapshot(results, sorted(required), self.share_class_policy), results
 
 def build_candidate(evidence_manifest, ledger_path, request_path, *, as_of=None, now=None):

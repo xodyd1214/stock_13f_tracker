@@ -17,7 +17,7 @@ function context(rows, valid = true) {
    state: { currentGuruKey: '__GRAND_TOTAL__' }, isDerivativeOrOption: () => false, getMappedTicker: () => 'ABC', getMappedSector: () => 'Other', quoteFields: () => ({curPrice:null}), priceLabel: () => '미검증',
    renderCategoryTabs() {}, renderGuruSidebar() {}, selectGuru() {}, renderConsensusWidget() {},
    holdingIdentity: r => [r.cusip, r.shareType, r.putCall].join('|') });
- for (const name of ['safeSecUrl', 'escapeHtml', 'verifiedDisplayRow','showUnavailableHoldings','formatMoney','formatQuarterDisplay','processAndRenderHoldingsData','buildPartialCsv']) vm.runInContext(extract(name), ctx);
+ for (const name of ['safeSecUrl', 'escapeHtml', 'verifiedDisplayRow','showUnavailableHoldings','formatMoney','formatQuarterDisplay','reportedHoldingChange','holdingChangeText','holdingChangeDetail','processAndRenderHoldingsData','buildPartialCsv']) vm.runInContext(extract(name), ctx);
  return {ctx, nodes, display};
 }
 test('real processing rejects legacy rows and produces null total rather than zero holdings claim', () => {
@@ -27,7 +27,7 @@ test('real processing rejects legacy rows and produces null total rather than ze
  assert.throws(() => ctx.buildPartialCsv(ctx.GURU_DATABASE.__GRAND_TOTAL__), /unavailable/);
  assert.doesNotMatch(extract('loadRealSecData'), /latest_13f_holdings/);
 });
-test('processing and CSV use legal entity, UNKNOWN actions, no inferred cost and immutable sources', () => {
+test('processing and CSV use legal entity, withhold unverified changes and preserve immutable sources', () => {
  const rows = [Object.freeze(row({guru:'Tom Gayner', action:'ADD'}))]; const before = JSON.stringify(rows);
  const {ctx} = context(rows); ctx.processAndRenderHoldingsData();
  const g = ctx.GURU_DATABASE['MARKEL GROUP INC'];
@@ -35,8 +35,25 @@ test('processing and CSV use legal entity, UNKNOWN actions, no inferred cost and
  assert.equal(g.rawAum, 900); assert.equal(g.holdings[0].estPrice, null); assert.equal(g.holdings[0].action, 'UNKNOWN');
  assert.equal(ctx.GURU_DATABASE.__GRAND_TOTAL__.holdings[0].holders, 1);
  const csv = ctx.buildPartialCsv(g);
- assert.match(csv, /43\/50/); assert.match(csv, /42 SEC/); assert.match(csv, /UNKNOWN/); assert.match(csv, /2026-06-30/); assert.match(csv, /2026-08-01/); assert.match(csv, /www.sec.gov/);
+ assert.match(csv, /43\/50/); assert.match(csv, /42 SEC/); assert.match(csv, /비교 자료 없음/); assert.match(csv, /2026-06-30/); assert.match(csv, /2026-08-01/); assert.match(csv, /www.sec.gov/);
  assert.equal(JSON.stringify(rows), before);
+});
+test('admitted comparisons use exact filer and security with separate aggregate counts', () => {
+ const rows = [row(), row({legalName:'Another filer', cik:'0001096344', shares:60, sourceRowId:'source:2'}), row({cusip:'123456780', shares:20, sourceRowId:'source:3'})];
+ const {ctx,display} = context(rows);
+ display.comparisons = new Map([
+  ['0001096343', {previousPeriod:'2026-03-31', positions:new Map([['123456789',80],['123456780',null]]), sources:[]}],
+  ['0001096344', {previousPeriod:'2026-03-31', positions:new Map([['123456789',90]]), sources:[]}]
+ ]);
+ ctx.processAndRenderHoldingsData();
+ const h = ctx.GURU_DATABASE['MARKEL GROUP INC'].holdings.find(item=>item.cusip==='123456789');
+ assert.equal(ctx.holdingChangeText(h),'수량 증가');
+ assert.equal(h.change.delta,20);
+ assert.match(ctx.holdingChangeDetail(h),/2026-03-31 80주 · \+20주/);
+ const total = ctx.GURU_DATABASE.__GRAND_TOTAL__.holdings;
+ assert.equal(ctx.holdingChangeText(total.find(item=>item.cusip==='123456789')),'증가 1 · 감소 1');
+ assert.equal(ctx.holdingChangeText(total.find(item=>item.cusip==='123456780')),'신규 1');
+ assert.equal(total[0].action,'UNKNOWN');
 });
 test('missing shares, option flags or provenance never enter numeric processing or CSV', () => {
  for (const bad of [{shares:null}, {putCall:undefined}, {shareType:null}, {sourceRowId:undefined}, {tableSha256:'bad'}]) {
@@ -131,6 +148,32 @@ test('loader rejects corrupt/missing/oversized payloads without legacy fallback'
   if(mode==='missing') f.files.delete(target); else f.files.set(target,mode==='corrupt'?Buffer.from('{}'):Buffer.alloc(loader.LIMITS.projection+1));
   await assert.rejects(loader.load(f.options),/unavailable/); assert.ok(!f.calls.some(x=>x.includes('latest_13f')));
  }
+});
+test('optional comparisons fail closed when the generation, prior quarter or asset hash differs', async () => {
+ const f = transportFixture();
+ const file = f.options.baseURL + 'sec-data/holding-comparisons.json';
+ const pointer = JSON.parse(f.files.get(f.options.baseURL + f.options.config.pointerPath));
+ const row = f.rows[0];
+ const source = {accession:row.accession, filingDate:'2026-05-01', sourceUrl:row.sourceUrl};
+ const payload = {schemaVersion:1, generationId:pointer.generationId, managers:[
+  {cik:row.cik, period:row.period, previousPeriod:'2026-03-31', positions:[[row.cusip,80]], sources:[source]}
+ ]};
+ const publish = data => {
+  const bytes = Buffer.from(JSON.stringify(data));
+  f.files.set(file,bytes);
+  f.options.config.comparisonSha256 = crypto.createHash('sha256').update(bytes).digest('hex');
+ };
+ publish(payload);
+ assert.equal((await loader.load(f.options)).comparisons.get(row.cik).positions.get(row.cusip),80);
+ f.files.set(file, Buffer.from('{}'));
+ assert.equal((await loader.load(f.options)).comparisons,null);
+ publish({...payload,generationId:'0'.repeat(64)});
+ assert.equal((await loader.load(f.options)).comparisons,null);
+ payload.managers[0].previousPeriod='2025-12-31';
+ publish(payload);
+ const result = await loader.load(f.options);
+ assert.equal(result.comparisons,null);
+ assert.equal(result.rows.length,42);
 });
 test('policy revocation after payload fails, while pointer change does not alter pinned generation',async()=>{
  const f=transportFixture(); const fetch=f.options.fetch; let policy=0;
@@ -285,8 +328,9 @@ if (process.env.SEC_REAL_BUNDLE) test('real exported generation reconciles exact
  for(const entity of new Set(result.rows.map(r=>r.cik))){const source=result.coverage.labels.find(x=>x.cik===entity&&x.status==='available');assert.equal(ctx.GURU_DATABASE[source.legalName].rawAum,source.valueUsd);}
  const bonds=result.rows.filter(r=>ctx.isDerivativeOrOption(r.name,r.ticker,r.titleOfClass,r));assert.equal(bonds.length,6);assert.equal(bonds.reduce((s,r)=>s+r.value,0),44155721);
  for(const r of bonds)assert.ok(ctx.GURU_DATABASE[r.legalName].holdings.some(h=>h.cusip===r.cusip));
- const csv=ctx.buildPartialCsv(grand);assert.match(csv,/1548461288506|확인된 공시 부분집합/);assert.match(csv,/43\/50/);assert.match(csv,/UNKNOWN/);
- let csvTotal=0,csvCount=0;for(const line of csv.split('\n')){const cells=[...line.matchAll(/"((?:[^"]|"")*)"(?:,|$)/g)].map(m=>m[1].replace(/""/g,'"'));if(cells.length===14&&cells[6]==='UNKNOWN'){csvTotal+=Number(cells[8]);csvCount++;}}assert.equal(csvTotal,result.manifest.totalEquityValueUsd);assert.equal(csvCount,grand.holdings.length);
+ if(configContext.SEC_DISPLAY_CONFIG.comparisonSha256){assert.equal(result.comparisons.size,39);assert.ok(grand.holdings.some(item=>item.changeCounts?.ADD>0));}
+ const csv=ctx.buildPartialCsv(grand);assert.match(csv,/1548461288506|확인된 공시 부분집합/);assert.match(csv,/43\/50/);assert.match(csv,/공시 보유 변화/);
+ let csvTotal=0,csvCount=0;for(const line of csv.split('\n')){const cells=[...line.matchAll(/"((?:[^"]|"")*)"(?:,|$)/g)].map(m=>m[1].replace(/""/g,'"'));if(cells.length===14&&/^[A-Z0-9*@#]{9}$/i.test(cells[2])){csvTotal+=Number(cells[8]);csvCount++;}}assert.equal(csvTotal,result.manifest.totalEquityValueUsd);assert.equal(csvCount,grand.holdings.length);
  const grid={innerHTML:''};nodes.set('consensusCardsGrid',grid);vm.runInContext(extract('renderConsensusWidget'),ctx);ctx.renderConsensusWidget();assert.match(grid.innerHTML,/개 SEC 신고 법인/);
  assert.equal(crypto.createHash('sha256').update(JSON.stringify(result.rows)).digest('hex'),before);assert.equal(calls.filter(x=>x.endsWith('current.json')).length,1);
  console.log(`REAL VERIFIED: ${result.rows.length} rows; $${grand.rawAum}; 42 entities; six bond-share rows $44155721; ${calls.length} bounded artifact reads.`);

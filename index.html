@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=108">
+  <link rel="stylesheet" href="style.css?v=109">
 </head>
 <body>
   <div class="app-container">
@@ -318,7 +318,7 @@
 
           <div class="metric-card">
             <div class="metric-header">
-              <span class="metric-title">주요 보유 / 신규·확대 종목</span>
+              <span class="metric-title">주요 보유 / 신규 공시·수량 증가</span>
             </div>
             <div class="metric-value" id="metricTopBuy">-</div>
             <div class="metric-sub" id="metricTopBuySub">-</div>
@@ -388,10 +388,10 @@
               <span class="section-tooltip">타일 크기는 포트폴리오 내 비중(%)을 나타냅니다. 클릭 시 상세 정보를 확인하세요.</span>
             </div>
             <div class="treemap-legend">
-              <span class="legend-item"><span class="color-box new"></span>신규 매수 (NEW)</span>
-              <span class="legend-item"><span class="color-box add"></span>비중 확대 (ADD)</span>
-              <span class="legend-item"><span class="color-box hold"></span>유지 (HOLD)</span>
-              <span class="legend-item"><span class="color-box reduce"></span>비중 축소 (REDUCE)</span>
+              <span class="legend-item"><span class="color-box new"></span>신규 공시</span>
+              <span class="legend-item"><span class="color-box add"></span>수량 증가</span>
+              <span class="legend-item"><span class="color-box hold"></span>수량 동일</span>
+              <span class="legend-item"><span class="color-box reduce"></span>수량 감소</span>
               <span class="legend-item"><span class="color-box discount-badge"></span>분기말 대비 하락</span>
             </div>
           </div>
@@ -408,8 +408,9 @@
               <!-- 빠른 원클릭 토글 필터 -->
               <div class="filter-tabs" id="filterTabs">
                 <button class="filter-tab active" data-filter="ALL">전체 보기 (<span id="countAll">0</span>)</button>
-                <button class="filter-tab" data-filter="NEW">신규 매수 (<span id="countNew">0</span>)</button>
-                <button class="filter-tab" data-filter="ADD">비중 확대 (<span id="countAdd">0</span>)</button>
+                <button class="filter-tab" data-filter="NEW">신규 공시 (<span id="countNew">0</span>)</button>
+                <button class="filter-tab" data-filter="ADD">수량 증가 (<span id="countAdd">0</span>)</button>
+                <button class="filter-tab" data-filter="REDUCE">수량 감소 (<span id="countReduce">0</span>)</button>
                 <button class="filter-tab" data-filter="DISCOUNT">분기말 대비 하락 종목 (<span id="countDiscount">0</span>)</button>
                 <button class="filter-tab" data-filter="CONVICTION">비중 5%+ 집중 (<span id="countConviction">0</span>)</button>
               </div>
@@ -440,6 +441,7 @@
             </div>
           </div>
 
+          <p class="card-sub data-quality-note">같은 법인과 증권의 연속 두 분기 공시 수량을 비교합니다. 전체 보기와 즐겨찾기 묶어보기에서는 운용사별 결과를 건수로 표시합니다. 거래일·체결가는 공시되지 않으며, 수량에는 주식분할 등 자본변동이 반영될 수 있습니다.</p>
           <!-- 메인 데이터 테이블 -->
           <div class="table-wrapper">
             <table class="power-table fullwidth-table" id="holdingsTable">
@@ -448,7 +450,7 @@
                   <th class="sortable text-left" data-sort="ticker">종목 / 티커</th>
                   <th class="col-sector sortable text-left" data-sort="sector">섹터</th>
                   <th class="col-holders sortable text-center" data-sort="holders">보유 운용사</th>
-                  <th class="sortable text-center" data-sort="action">매매 액션</th>
+                  <th class="col-holding-change sortable text-center" data-sort="action">공시 보유 변화</th>
                   <th class="col-shares sortable text-right" data-sort="shares">주식 수</th>
                   <th class="col-value sortable text-right" data-sort="value">총 평가 금액 ($)</th>
                   <th class="col-weight sortable text-right" data-sort="weight">통합 비중 (%)</th>
@@ -882,7 +884,7 @@
 
         <!-- 최근 분기별 비중 변천 추이 -->
         <div class="modal-history-section">
-          <h4>최근 분기별 비중 변천 추이</h4>
+          <h4>공시 보유 수량 비교</h4>
           <div class="history-timeline-bars" id="modalHistoryTimeline">
             <!-- JS 렌더링 -->
           </div>
@@ -1068,9 +1070,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="sec-display-config.js"></script>
-  <script src="sec_display_loader.js?v=2"></script>
-  <script src="app.js?v=120"></script>
+  <script src="sec-display-config.js?v=2"></script>
+  <script src="sec_display_loader.js?v=3"></script>
+  <script src="app.js?v=121"></script>
 </body>
 </html>
 

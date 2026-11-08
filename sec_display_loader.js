@@ -1,9 +1,9 @@
-/* Static, same-origin, fail-closed partial SEC display loader. No history or legacy fallback. */
+/* Static, same-origin, fail-closed partial SEC display loader. */
 (function(root) {
   'use strict';
   const CONTRACT = 'exact_43_labels_42_entities_of_50';
   const HEX = /^[a-f0-9]{64}$/;
-  const LIMITS = { pointer: 4096, policy: 262144, descriptor: 16384, projection: 16 * 1024 * 1024, manifest: 1024 * 1024, coverage: 1024 * 1024 };
+  const LIMITS = { pointer: 4096, policy: 262144, descriptor: 16384, projection: 16 * 1024 * 1024, manifest: 1024 * 1024, coverage: 1024 * 1024, comparisons: 2 * 1024 * 1024 };
   const fail = message => { throw new Error('SEC partial display unavailable: ' + message); };
   const check = (condition, message) => { if (!condition) fail(message); };
   const date = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0,10) === value;
@@ -170,6 +170,38 @@
     const ageHours = (now-times.acquisitionStartedAt)/3600000;
     return {loadedAt:new Date(now).toISOString(),lastCheckedAt:manifest.lastChecked,acquisitionStartedAt:manifest.acquisitionStartedAt,ageHours,stale:ageHours>24,label:ageHours>24?'불러온 시점 기준 오래된 확인 · 과거 공시 스냅샷':'불러온 시점 기준 24시간 이내 확인 · 과거 공시 스냅샷'};
   }
+  function validateComparisons(payload, generation, rows, now) {
+    check(payload?.schemaVersion === 1 && payload.generationId === generation && Array.isArray(payload.managers), 'comparison generation');
+    const current = new Map();
+    for (const row of rows) {
+      if (!current.has(row.cik)) current.set(row.cik, {period: row.period, positions: new Set()});
+      current.get(row.cik).positions.add(row.cusip.toUpperCase());
+    }
+    const comparisons = new Map();
+    for (const item of payload.managers) {
+      const entity = current.get(item.cik);
+      check(entity && entity.period === item.period && !comparisons.has(item.cik), 'comparison reporting entity');
+      const currentDate = new Date(item.period);
+      const previous = new Date(Date.UTC(currentDate.getUTCFullYear(), currentDate.getUTCMonth() - 2, 0));
+      check(previous.toISOString().slice(0, 10) === item.previousPeriod, 'comparison quarter');
+      check(Array.isArray(item.sources) && item.sources.length > 0 && item.sources.length <= 100 && item.sources.every(source => {
+        if (!/^\d{10}-\d{2}-\d{6}$/.test(source.accession) || !date(source.filingDate) ||
+            source.filingDate < item.previousPeriod || Date.parse(source.filingDate) > now) return false;
+        const prefix = `https://www.sec.gov/Archives/edgar/data/${Number(item.cik)}/${source.accession.replace(/-/g, '')}/`;
+        return typeof source.sourceUrl === 'string' && source.sourceUrl.startsWith(prefix) &&
+          /^[A-Za-z0-9_-][A-Za-z0-9_.-]*\.xml$/i.test(source.sourceUrl.slice(prefix.length)) && !source.sourceUrl.includes('..');
+      }), 'comparison sources');
+      check(Array.isArray(item.positions) && item.positions.length > 0 && item.positions.length <= entity.positions.size, 'comparison positions');
+      const positions = new Map();
+      for (const pair of item.positions) {
+        check(Array.isArray(pair) && pair.length === 2 && entity.positions.has(pair[0]) && !positions.has(pair[0]) &&
+          (pair[1] === null || integer(pair[1])), 'comparison security identity or shares');
+        positions.set(pair[0], pair[1]);
+      }
+      comparisons.set(item.cik, {previousPeriod: item.previousPeriod, sources: item.sources, positions});
+    }
+    return comparisons;
+  }
   async function load(options = {}) {
     const config = options.config || root.SEC_DISPLAY_CONFIG;
     const base = new URL(options.baseURL || './', root.document?.baseURI);
@@ -211,9 +243,22 @@
     check(await digest(crypto,policyAfter) === config.expectedScopeSha256, 'policy revoked during load');
     const finalNow = readNow(); check(Number.isFinite(finalNow), 'clock unavailable');
     const freshness = validate(rows,coverage,manifest,policy,config.expectedScopeSha256,finalNow);
-    return {rows,coverage,manifest,classificationPolicy:policy.equityShareClassOverrides || [],sources:manifest.sources,freshness,generation:pointer.generationId};
+    let comparisons = null;
+    if (HEX.test(config.comparisonSha256 || '')) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 5000);
+      try {
+        const url = safeURL(base, 'sec-data/holding-comparisons.json');
+        const data = await bytes((url, options) => fetcher(url, {...options, signal: controller.signal}), url, LIMITS.comparisons);
+        check(await digest(crypto, data) === config.comparisonSha256, 'comparison hash mismatch');
+        comparisons = validateComparisons(parse(data), pointer.generationId, rows, finalNow);
+      } catch (_) {
+        // Preserve the verified current snapshot when the optional comparison is unavailable.
+      } finally { clearTimeout(timer); }
+    }
+    return {rows,coverage,manifest,classificationPolicy:policy.equityShareClassOverrides || [],sources:manifest.sources,freshness,generation:pointer.generationId,comparisons};
   }
-  const api = {load,decode,validate,isReportedEquity,validateClassificationPolicy,LIMITS};
+  const api = {load,decode,validate,validateComparisons,isReportedEquity,validateClassificationPolicy,LIMITS};
   root.SECDisplayLoader = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

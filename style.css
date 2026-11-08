@@ -2208,6 +2208,30 @@ button.congress-link {
   background-color: var(--bg-highlight) !important;
 }
 
+#holdingsTable {
+  min-width: 900px !important;
+}
+
+#holdingsTable th.col-holding-change {
+  width: 180px;
+}
+
+#holdingsTable .col-holding-change,
+#holdingsTable .col-holding-change .action-badge {
+  white-space: normal;
+  word-break: keep-all;
+}
+
+#holdingsTable .col-holding-change .action-badge {
+  padding-inline: 0;
+  letter-spacing: normal;
+}
+
+#holdingsTable .col-holding-change .action-badge span {
+  display: inline-block;
+  white-space: nowrap;
+}
+
 .text-right {
   text-align: right !important;
 }

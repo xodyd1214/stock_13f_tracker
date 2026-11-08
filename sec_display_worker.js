@@ -1,6 +1,6 @@
 'use strict';
 
-importScripts('sec_display_loader.js?v=2');
+importScripts('sec_display_loader.js?v=3');
 
 self.addEventListener('message', async ({ data: config }) => {
   try {

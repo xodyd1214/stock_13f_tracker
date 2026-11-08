@@ -321,7 +321,7 @@ test('history displays an honest unavailable state, never synthesized quarters',
   const c = context(['renderStockHistoryTimeline'], { document: { getElementById: () => ({ appendChild: el => children.push(el) }), createElement: () => ({}) } });
   c.renderStockHistoryTimeline({ weight: 5 });
   assert.equal(children.length, 1);
-  assert.match(children[0].textContent, /데이터가 없어/);
+  assert.match(children[0].textContent, /비교 가능한 직전 분기 공시 자료가 없습니다/);
 });
 test('custom common holdings are UNKNOWN and inferred cost is unavailable', () => {
   const h = { ticker: 'ABC', baseTicker: 'ABC', cusip: '111111111', rawShares: 10, value: 100, estPrice: 10, curPrice: null };
@@ -774,7 +774,7 @@ test('polling preserves aggregate modal context while an individual manager is s
 test('quote-only table redraw retains already expanded pages', () => {
   const elements = {};
   let pageCount = 0;
-  const c = context([...helpers, 'renderTable'], {
+  const c = context([...helpers, 'hasHoldingChange', 'renderTable'], {
     state: { currentGuruKey: 'A', activeFilter: 'ALL', searchQuery: '', sortColumn: 'value', sortDirection: 'desc' },
     GURU_DATABASE: { A: { holdings: Array.from({ length: 135 }, (_, i) => ({ ticker: `T${i}`, name: `Issuer ${i}`, sector: 'Other', value: i })) } },
     CURRENT_PAGE_INDEX: 4, CURRENT_FILTERED_ITEMS: [],

@@ -103,7 +103,7 @@ def _url(value, cik, accession):
     prefix = '/Archives/edgar/data/' + str(int(cik)) + '/' + accession.replace('-', '') + '/'
     if (parsed.scheme != 'https' or parsed.netloc != 'www.sec.gov' or
             parsed.query or parsed.fragment or not parsed.path.startswith(prefix) or
-            not re.fullmatch(r'[A-Za-z0-9_.-]+\.xml', parsed.path[len(prefix):]) or
+            not re.fullmatch(r'[A-Za-z0-9_.-]+\.xml', parsed.path[len(prefix):], re.IGNORECASE) or
             '..' in parsed.path[len(prefix):]):
         _fail('Source URL does not bind official SEC CIK/accession XML')
     return value

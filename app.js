@@ -593,7 +593,7 @@ async function loadSecDisplayInWorker() {
   const baseURL = new URL("./", document.baseURI);
   if (typeof Worker === "undefined") return SECDisplayLoader.load({ baseURL });
 
-  const worker = new Worker(new URL("sec_display_worker.js?v=1", baseURL));
+  const worker = new Worker(new URL("sec_display_worker.js?v=2", baseURL));
   return new Promise((resolve, reject) => {
     function finish(callback, value) {
       clearTimeout(timeout);
@@ -679,6 +679,35 @@ function formatQuarterDisplay(periodStr) {
 }
 
 let DOMINANT_13F_PERIOD = null;
+
+function reportedHoldingChange(shares, priorShares, previousPeriod) {
+  const delta = priorShares === null ? null : shares - priorShares;
+  const action = delta === null ? "NEW" : delta > 0 ? "ADD" : delta < 0 ? "REDUCE" : "HOLD";
+  return {action, delta, priorShares, previousPeriod};
+}
+
+function holdingChangeText(item) {
+  if (item.change) {
+    return {NEW: "신규 공시", ADD: "수량 증가", REDUCE: "수량 감소", HOLD: "수량 동일"}[item.change.action];
+  }
+  if (item.changeCounts) {
+    return [["NEW", "신규"], ["ADD", "증가"], ["REDUCE", "감소"], ["HOLD", "동일"]]
+      .filter(([action]) => item.changeCounts[action] > 0)
+      .map(([action, label]) => `${label} ${item.changeCounts[action]}`).join(" · ");
+  }
+  return "비교 자료 없음";
+}
+
+function holdingChangeDetail(item) {
+  if (!item.change) return "";
+  const { previousPeriod, priorShares, delta } = item.change;
+  return priorShares === null ? `직전 ${previousPeriod} 공시에서 미확인` :
+    `${previousPeriod} ${priorShares.toLocaleString()}주 · ${delta > 0 ? "+" : ""}${delta.toLocaleString()}주`;
+}
+
+function hasHoldingChange(item, action) {
+  return item.change?.action === action || (item.changeCounts?.[action] || 0) > 0;
+}
 
 function processAndRenderHoldingsData(preserveView = false) {
   if (!SEC_DISPLAY || !RAW_HOLDINGS || RAW_HOLDINGS.length === 0) { showUnavailableHoldings(); return; }
@@ -801,6 +830,9 @@ function processAndRenderHoldingsData(preserveView = false) {
     Object.keys(groups).forEach(key => {
       const g = groups[key];
       const holdingList = Object.values(g.holdingsMap);
+      const comparison = SEC_DISPLAY.comparisons?.get(g.cik);
+      if (comparison) g.sources.push(...comparison.sources.map(source => ({...source,
+        cik: g.cik, legalName: g.name, period: comparison.previousPeriod})));
       const totalVal = holdingList.reduce((sum, h) => sum + h.value, 0);
       g.rawAum = totalVal;
       g.aum = formatMoney(totalVal);
@@ -814,10 +846,13 @@ function processAndRenderHoldingsData(preserveView = false) {
         const currentQuote = quoteFields(h.baseTicker || h.ticker, realInfo);
         const curP = currentQuote.curPrice;
         
-        let action = "UNKNOWN";
-        if (h.isOption || action === "PUT") {
-          action = "PUT";
+        const change = comparison?.positions.has(h.cusip) ?
+          reportedHoldingChange(h.shares, comparison.positions.get(h.cusip), comparison.previousPeriod) : null;
+        if (change) {
+          const counts = grandConsensusMap[h.securityId].changeCounts ||= {};
+          counts[change.action] = (counts[change.action] || 0) + 1;
         }
+        const action = change?.action || (h.isOption ? "PUT" : "UNKNOWN");
 
         return {
           ticker: h.ticker,
@@ -833,6 +868,7 @@ function processAndRenderHoldingsData(preserveView = false) {
           periodRange: periods.length ? [periods[0], periods.at(-1)] : null,
           holdersDisplay: "1개사 (단독)",
           action: action,
+          change,
           shares: h.shares >= 1000000 ? `${(h.shares / 1000000).toFixed(2)}M` : `${(h.shares / 1000).toFixed(1)}K`,
           rawShares: h.shares,
           value: h.value,
@@ -874,6 +910,7 @@ function processAndRenderHoldingsData(preserveView = false) {
         holdersList: Array.from(h.holders),
         holdersDisplay: `${holderCount}개사 보유`,
         action: action,
+        changeCounts: h.changeCounts,
         shares: h.shares >= 1000000 ? `${(h.shares / 1000000).toFixed(2)}M` : `${(h.shares / 1000).toFixed(1)}K`,
         rawShares: h.shares,
         value: h.value,
@@ -897,6 +934,7 @@ function processAndRenderHoldingsData(preserveView = false) {
         periodDate: dominantPeriod,
         periodRange: knownPeriods.length ? [knownPeriods[0], latestDatasetPeriod] : null,
         desc: "서로 다른 기준일의 확인된 SEC 공시 부분집합만 합산합니다. 전체 커버리지나 현재 실시간 포트폴리오가 아닙니다.",
+        sources: Object.values(groups).flatMap(group => group.sources),
         holdings: grandHoldings
       },
       ...groups
@@ -963,6 +1001,10 @@ function buildCustomGroupPortfolio(preserveView = false) {
         periods.forEach(period => customConsensusMap[securityId].periods.add(period));
         customConsensusMap[securityId].holders.add(guru.name);
       }
+      if (h.change) {
+        const counts = customConsensusMap[securityId].changeCounts ||= {};
+        counts[h.change.action] = (counts[h.change.action] || 0) + 1;
+      }
       customTotalAumVal += Number(h.value) || 0;
     });
   });
@@ -972,9 +1014,6 @@ function buildCustomGroupPortfolio(preserveView = false) {
     const weight = customTotalAumVal > 0 ? Number(((h.value / customTotalAumVal) * 100).toFixed(2)) : 0;
     const holderCount = h.holders.size;
     const periods = Array.from(h.periods).sort();
-    let action = "UNKNOWN";
-    // Shared ownership alone is not evidence of a quarter-over-quarter purchase.
-
     return {
       ticker: h.ticker,
       baseTicker: h.baseTicker,
@@ -990,7 +1029,8 @@ function buildCustomGroupPortfolio(preserveView = false) {
       holders: holderCount,
       holdersList: Array.from(h.holders),
       holdersDisplay: `${holderCount}개사 보유`,
-      action: action,
+      action: "UNKNOWN",
+      changeCounts: h.changeCounts,
       shares: h.shares >= 1000000 ? `${(h.shares / 1000000).toFixed(2)}M` : `${(h.shares / 1000).toFixed(1)}K`,
       rawShares: h.shares,
       value: h.value,
@@ -1014,7 +1054,7 @@ function buildCustomGroupPortfolio(preserveView = false) {
     periodDate: DOMINANT_13F_PERIOD,
     periodRange: selectedPeriods.length ? [selectedPeriods[0], selectedPeriods.at(-1)] : null,
     desc: `선택한 SEC 신고 법인들의 확인된 공시 부분집합 합산입니다. 현재 실시간 포트폴리오가 아닙니다.`,
-    sources: (SEC_DISPLAY?.sources || []).filter(source => favs.some(key => GURU_DATABASE[key]?.cik === source.cik)),
+    sources: (GURU_DATABASE.__GRAND_TOTAL__?.sources || SEC_DISPLAY?.sources || []).filter(source => favs.some(key => GURU_DATABASE[key]?.cik === source.cik)),
     holdings: customHoldings
   };
 
@@ -1238,7 +1278,7 @@ function updateSummaryMetrics(guru) {
     const buyPicks = guru.holdings.filter(h => h.action === "NEW" || h.action === "ADD");
     if (buyPicks.length > 0 && elTopBuy) {
       const topBuy = buyPicks[0];
-      elTopBuy.innerHTML = `${escapeHtml(topBuy.ticker)} <small class="text-green">${topBuy.action === 'NEW' ? 'NEW' : 'ADD'}</small>`;
+      elTopBuy.innerHTML = `${escapeHtml(topBuy.ticker)} <small class="text-green">${escapeHtml(holdingChangeText(topBuy))}</small>`;
       if (elTopBuySub) elTopBuySub.innerText = `${topBuy.name} (${formatMoney(topBuy.value)})`;
     }
 
@@ -1481,7 +1521,7 @@ function renderTreemap(holdings) {
         <span class="tile-ticker">${escapeHtml(item.ticker)}</span>
         <div class="tile-badges">
           ${(isDown && hasRoomForDiscount && !isOption) ? '<span class="tile-discount-badge" title="분기말 대비 하락">▼</span>' : ''}
-          <span class="tile-action ${escapeHtml(item.action)}">${escapeHtml(item.action === 'NEW' ? 'NEW' : item.action)}</span>
+          ${item.change ? `<span class="tile-action ${escapeHtml(item.action)}">${escapeHtml(holdingChangeText(item))}</span>` : ''}
         </div>
       </div>
       ${hasRoomForName ? `<div class="tile-name" title="${escapeHtml(item.name)}">${escapeHtml(cleanName)}</div>` : ''}
@@ -1494,13 +1534,6 @@ function renderTreemap(holdings) {
     // 인터랙티브 플로팅 툴팁(Toast) 이벤트
     if (tooltip) {
       tile.addEventListener("mouseenter", (e) => {
-        let actionLabel = '거래 방향 미검증';
-        if (item.action === 'PUT') actionLabel = '풋옵션 (하락 베팅)';
-        else if (item.action === 'CALL') actionLabel = '콜옵션 (상승 베팅)';
-        else if (item.action === 'NEW') actionLabel = '신규 매수';
-        else if (item.action === 'ADD') actionLabel = '비중 확대';
-        else if (item.action === 'REDUCE') actionLabel = '비중 축소';
-
         const diffRow = !Number.isFinite(diffVal) ? `<div class="tooltip-row">${escapeHtml(priceComparisonReason(item))}</div>` : isOption ? `
           <div class="tooltip-row">
             <span class="tooltip-label">기초자산 변동</span>
@@ -1518,7 +1551,7 @@ function renderTreemap(holdings) {
             <span class="tooltip-ticker">${escapeHtml(item.ticker)}</span>
             <div class="tooltip-badges">
               ${(isDown && !isOption) ? '<span class="tile-discount-badge" title="분기말 대비 하락">▼</span>' : ''}
-              <span class="tile-action ${escapeHtml(item.action)}">${escapeHtml(item.action)} (${actionLabel})</span>
+              <span class="tile-action ${escapeHtml(item.action)}">${escapeHtml(holdingChangeText(item))}</span>
             </div>
           </div>
           <div class="tooltip-name">${escapeHtml(item.name || cleanName)}</div>
@@ -1597,8 +1630,7 @@ function renderTable(preservePages = false) {
       if (!match) return false;
     }
 
-    if (state.activeFilter === "NEW") return item.action === "NEW";
-    if (state.activeFilter === "ADD") return item.action === "ADD";
+    if (["NEW", "ADD", "REDUCE"].includes(state.activeFilter)) return hasHoldingChange(item, state.activeFilter);
     if (state.activeFilter === "DISCOUNT") {
       const isOption = item.action === "PUT" || item.action === "CALL" || item.isOption;
       return !isOption && priceDifference(item) < 0;
@@ -1611,9 +1643,11 @@ function renderTable(preservePages = false) {
   const cAll = document.getElementById("countAll");
   if (cAll) cAll.innerText = guru.holdings.length;
   const cNew = document.getElementById("countNew");
-  if (cNew) cNew.innerText = guru.holdings.filter(h => h.action === "NEW").length;
+  if (cNew) cNew.innerText = guru.holdings.filter(h => hasHoldingChange(h, "NEW")).length;
   const cAdd = document.getElementById("countAdd");
-  if (cAdd) cAdd.innerText = guru.holdings.filter(h => h.action === "ADD").length;
+  if (cAdd) cAdd.innerText = guru.holdings.filter(h => hasHoldingChange(h, "ADD")).length;
+  const cReduce = document.getElementById("countReduce");
+  if (cReduce) cReduce.innerText = guru.holdings.filter(h => hasHoldingChange(h, "REDUCE")).length;
   const cDisc = document.getElementById("countDiscount");
   if (cDisc) cDisc.innerText = guru.holdings.filter(h => !(h.action === "PUT" || h.action === "CALL" || h.isOption) && priceDifference(h) < 0).length;
   const cConv = document.getElementById("countConviction");
@@ -1622,6 +1656,11 @@ function renderTable(preservePages = false) {
   CURRENT_FILTERED_ITEMS.sort((a, b) => {
     let valA = a[state.sortColumn];
     let valB = b[state.sortColumn];
+
+    if (state.sortColumn === "action") {
+      valA = a.change?.action || (a.changeCounts ? holdingChangeText(a) : null);
+      valB = b.change?.action || (b.changeCounts ? holdingChangeText(b) : null);
+    }
 
     if (state.sortColumn === "discount") {
       const isOptionA = a.action === "PUT" || a.action === "CALL" || a.isOption;
@@ -1660,6 +1699,9 @@ function appendNextPageRows() {
     const diffPct = diffVal.toFixed(1);
     const isUp = diffVal > 0;
     const isDown = diffVal < 0;
+    const changeText = holdingChangeText(item);
+    const changeBadge = item.changeCounts ? changeText.split(" · ")
+      .map(part => `<span>${escapeHtml(part)}</span>`).join(" ") : escapeHtml(changeText);
 
     tr.innerHTML = `
       <td class="text-left">
@@ -1676,10 +1718,11 @@ function appendNextPageRows() {
           ${escapeHtml(item.holdersDisplay || '1개사 보유')}
         </span>
       </td>
-      <td class="text-center">
+      <td class="col-holding-change text-center">
         <span class="action-badge ${escapeHtml(item.action)}">
-          ${escapeHtml(item.action === 'NEW' ? 'NEW' : item.action)}
+          ${changeBadge}
         </span>
+        ${item.change ? `<small class="form4-secondary">${escapeHtml(holdingChangeDetail(item))}</small>` : ""}
       </td>
       <td class="col-shares text-right">${escapeHtml(item.shares)}</td>
       <td class="col-value text-right">${formatMoney(item.value)}</td>
@@ -1793,7 +1836,8 @@ function renderStockHistoryTimeline(item) {
 
   const notice = document.createElement('p');
   notice.className = 'history-unavailable';
-  notice.textContent = '검증된 과거 분기별 데이터가 없어 추이를 표시하지 않습니다.';
+  notice.textContent = item.change ? `${holdingChangeText(item)} · ${holdingChangeDetail(item)} · ${item.periodDate} ${item.rawShares.toLocaleString()}주` :
+    item.changeCounts ? `운용사별 공시 보유 변화 · ${holdingChangeText(item)}` : '비교 가능한 직전 분기 공시 자료가 없습니다.';
   container.appendChild(notice);
 }
 
@@ -4970,7 +5014,7 @@ function renderPartialCoverage(error) {
     if (status) status.textContent = '공시 부분집합 사용 불가. 검증되지 않은 기존 자료는 표시하지 않습니다.';
     return;
   }
-  if (status) status.textContent = `43/50 추적명 확인 · 42개 SEC 신고 법인 · 7개 검증 중. ${SEC_DISPLAY.freshness.label} · 불러온 UTC ${SEC_DISPLAY.freshness.loadedAt || "미확인"} · 최초 원천 확인 UTC ${SEC_DISPLAY.freshness.acquisitionStartedAt || SEC_DISPLAY.manifest?.acquisitionStartedAt || "미확인"} · 마지막 확인 UTC ${SEC_DISPLAY.freshness.lastCheckedAt}. 전체 커버리지 및 현재 실시간 포트폴리오가 아닙니다. 숫자 합계는 검증된 비파생 주식 부분집합입니다. 매매 방향 UNKNOWN · 추정 매입가 및 가격 비교 미제공.`;
+  if (status) status.textContent = `43/50 추적명 확인 · 42개 SEC 신고 법인 · 7개 검증 중. ${SEC_DISPLAY.freshness.label} · 불러온 UTC ${SEC_DISPLAY.freshness.loadedAt || "미확인"} · 최초 원천 확인 UTC ${SEC_DISPLAY.freshness.acquisitionStartedAt || SEC_DISPLAY.manifest?.acquisitionStartedAt || "미확인"} · 마지막 확인 UTC ${SEC_DISPLAY.freshness.lastCheckedAt}. 전체 커버리지 및 현재 실시간 포트폴리오가 아닙니다. 숫자 합계는 검증된 비파생 주식 부분집합입니다. 직전 분기 비교 자료가 확인된 법인 ${SEC_DISPLAY.comparisons?.size || 0}곳 · 추정 매입가 및 가격 비교 미제공.`;
   for (const item of SEC_DISPLAY.coverage.labels) {
     const li = document.createElement('li');
     li.textContent = `${item.label} (원래 추적명) · ${item.status === 'available' ? `확인됨 · SEC 신고 법인 ${item.legalName} · CIK ${item.cik}` : `검증 중 · ${item.reason || '원천 무결성 확인 대기'} · 보유 수치 없음`}`;
@@ -5002,11 +5046,11 @@ function buildPartialCsv(guru) {
     ['최초 원천 확인 UTC', SEC_DISPLAY.freshness.acquisitionStartedAt || SEC_DISPLAY.manifest?.acquisitionStartedAt || '미확인'],
     ['마지막 확인 UTC', SEC_DISPLAY.freshness.lastCheckedAt, SEC_DISPLAY.freshness.label],
     ['법인/부분집합', guru.name],
-    ['종목', '티커', 'CUSIP', '주식 유형', '옵션', '보유 신고 법인 수', '매매 방향', '주식수', '평가금액 USD', '부분집합 비중 %', '보유 기준일 시작', '보유 기준일 끝', '매입가', '가격 비교']
+    ['종목', '티커', 'CUSIP', '주식 유형', '옵션', '보유 신고 법인 수', '공시 보유 변화', '주식수', '평가금액 USD', '부분집합 비중 %', '보유 기준일 시작', '보유 기준일 끝', '매입가', '가격 비교']
   ];
   for (const h of guru.holdings || []) {
     if (!Number.isSafeInteger(h.value) || !Number.isSafeInteger(h.rawShares) || !h.shareType || !h.cusip) continue;
-    rows.push([h.name, h.ticker, h.cusip, h.shareType, h.putCall || '', h.holders || 1, 'UNKNOWN', h.rawShares, h.value, h.weight,
+    rows.push([h.name, h.ticker, h.cusip, h.shareType, h.putCall || '', h.holders || 1, holdingChangeText(h), h.rawShares, h.value, h.weight,
       h.periodRange?.[0] || '', h.periodRange?.[1] || '', '미검증', '미검증']);
   }
   rows.push(['출처', '법인', '보유 기준일', '공시/수정 공시일', 'SEC accession', 'SEC 원문']);
