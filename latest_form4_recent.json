@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "sourceFilings": 7482,
-  "verifiedFilings": 7482,
+  "sourceFilings": 7522,
+  "verifiedFilings": 7522,
   "coverage": {
     "from": "2026-10-08",
     "through": "2026-11-06",
-    "listedIssuers": 6065,
+    "listedIssuers": 6067,
     "markets": [
       "NYSE",
       "Nasdaq",
@@ -16,8 +16,8 @@
   "days": [
     {
       "date": "2026-10-08",
-      "indexSha256": "2c5536428dc05364307a7e86bb4d4ce2db39fe43572e825ccbc1dec8b3c07262",
-      "filings": 278,
+      "indexSha256": "b1e9bf7be34358cab79828394e510fa26fa4f22d919464ac31b360ff7aa3c61e",
+      "filings": 279,
       "purchases": [
         {
           "filingDate": "2026-10-08",
@@ -222,6 +222,11 @@
           "0002058707",
           "fu tao",
           "2026-08-06"
+        ],
+        [
+          "0001609151",
+          "newton tyler",
+          "2026-06-12"
         ],
         [
           "0002058707",
@@ -1766,8 +1771,8 @@
     },
     {
       "date": "2026-10-19",
-      "indexSha256": "3f13471724a2367ba86df1703364a729044e9dd712f1326480fb97f95b11ed71",
-      "filings": 446,
+      "indexSha256": "25c558198a14b0e3902214757b856a8ccfdceda706384cb84c457345fd6d329a",
+      "filings": 447,
       "purchases": [
         {
           "filingDate": "2026-10-19",
@@ -2687,8 +2692,8 @@
     },
     {
       "date": "2026-10-23",
-      "indexSha256": "4ae06082089caf504e1654cc1cd00457f774cf74c22971a6d7e2e955aff14286",
-      "filings": 197,
+      "indexSha256": "3949b0c9637d28407d0d6d4881836fce014aabd07f38f84cce7c79634586d960",
+      "filings": 211,
       "purchases": [
         {
           "filingDate": "2026-10-23",
@@ -2879,8 +2884,8 @@
     },
     {
       "date": "2026-10-26",
-      "indexSha256": "495482259bbc85c8028f667a47f0862a1e61752bd55b6e60291174908980389c",
-      "filings": 260,
+      "indexSha256": "b43b6745d66de78603da9eb4ef45153036e4057a9ad6e0d4262db6530e6d89a3",
+      "filings": 271,
       "purchases": [
         {
           "filingDate": "2026-10-26",
@@ -3504,8 +3509,8 @@
     },
     {
       "date": "2026-10-28",
-      "indexSha256": "2bf80bfb8fdbd2b642830daf8939a7cff19331eb8ca39f65c713d2a5092cd3b5",
-      "filings": 221,
+      "indexSha256": "4d2bc53b0fb63d6b3961c9f31333acecc37aa4c24c0c5a8207588240b5394059",
+      "filings": 234,
       "purchases": [
         {
           "filingDate": "2026-10-28",
