@@ -337,12 +337,6 @@
       "NYSE"
     ],
     [
-      1739445,
-      "Arcosa, Inc.",
-      "ACA",
-      "NYSE"
-    ],
-    [
       2096900,
       "Averin Capital Acquisition Corp.",
       "ACAA",
@@ -1247,6 +1241,18 @@
       "agilon health, inc.",
       "AGL",
       "NYSE"
+    ],
+    [
+      2074973,
+      "Churchill Capital Corp XI",
+      "AGLT",
+      "Nasdaq"
+    ],
+    [
+      2074973,
+      "Churchill Capital Corp XI",
+      "AGLTW",
+      "Nasdaq"
     ],
     [
       845877,
@@ -2615,6 +2621,12 @@
       "Andersen Group Inc.",
       "ANDG",
       "NYSE"
+    ],
+    [
+      1815974,
+      "Anebulo Pharmaceuticals, Inc.",
+      "ANEB",
+      "Nasdaq"
     ],
     [
       1596532,
@@ -5314,6 +5326,12 @@
       1101215,
       "BREAD FINANCIAL HOLDINGS, INC.",
       "BFH-PB",
+      "NYSE"
+    ],
+    [
+      1101215,
+      "BREAD FINANCIAL HOLDINGS, INC.",
+      "BFH-PC",
       "NYSE"
     ],
     [
@@ -8275,8 +8293,8 @@
       "Nasdaq"
     ],
     [
-      1978867,
-      "Cadeler A/S",
+      2063345,
+      "Cadeler plc",
       "CDLR",
       "NYSE"
     ],
@@ -12897,12 +12915,6 @@
     [
       2028699,
       "Dynamix Corp",
-      "DYNCU",
-      "Nasdaq"
-    ],
-    [
-      2028699,
-      "Dynamix Corp",
       "DYNCW",
       "Nasdaq"
     ],
@@ -13528,12 +13540,6 @@
       1488917,
       "Electromed, Inc.",
       "ELMD",
-      "NYSE"
-    ],
-    [
-      104894,
-      "Elme Communities",
-      "ELME",
       "NYSE"
     ],
     [
@@ -19618,7 +19624,7 @@
       1585689,
       "Hilton Worldwide Holdings Inc.",
       "HLT",
-      "NYSE"
+      "Nasdaq"
     ],
     [
       2099656,
@@ -21292,6 +21298,12 @@
       2109150,
       "INNIO N.V.",
       "INIO",
+      "Nasdaq"
+    ],
+    [
+      2073616,
+      "Canary Staked INJ ETF",
+      "INJC",
       "Nasdaq"
     ],
     [
@@ -23606,7 +23618,7 @@
     ],
     [
       1007587,
-      "KVH INDUSTRIES INC \\DE\\",
+      "KVH INDUSTRIES INC DE",
       "KVHI",
       "Nasdaq"
     ],
@@ -23792,7 +23804,7 @@
     ],
     [
       1807887,
-      "Laser Photonics Corp",
+      "LASE Corp.",
       "LASE",
       "Nasdaq"
     ],
@@ -23997,7 +24009,19 @@
     [
       2109823,
       "Leader's Advantage Acquisition Corp.",
+      "LEDR",
+      "Nasdaq"
+    ],
+    [
+      2109823,
+      "Leader's Advantage Acquisition Corp.",
       "LEDRU",
+      "Nasdaq"
+    ],
+    [
+      2109823,
+      "Leader's Advantage Acquisition Corp.",
+      "LEDRW",
       "Nasdaq"
     ],
     [
@@ -24104,7 +24128,7 @@
     ],
     [
       1005286,
-      "LIFECORE BIOMEDICAL, INC. DE",
+      "LIFECORE BIOMEDICAL, INC. \\DE\\",
       "LFCR",
       "Nasdaq"
     ],
@@ -27925,12 +27949,6 @@
       "NYSE"
     ],
     [
-      69733,
-      "NATHANS FAMOUS, INC.",
-      "NATH",
-      "Nasdaq"
-    ],
-    [
       1974138,
       "NCR Atleos Corp",
       "NATL",
@@ -28064,7 +28082,7 @@
     ],
     [
       818851,
-      "NUVEEN CALIFORNIA MUNICIPAL VALUE FUND",
+      "NUVEEN CALIFORNIA MUNICIPAL INCOME FUND",
       "NCA",
       "NYSE"
     ],
@@ -28912,12 +28930,6 @@
       1266585,
       "NUVEEN MUNICIPAL HIGH INCOME OPPORTUNITY FUND",
       "NMZ-RI",
-      "NYSE"
-    ],
-    [
-      1266585,
-      "NUVEEN MUNICIPAL HIGH INCOME OPPORTUNITY FUND",
-      "NMZ-RW",
       "NYSE"
     ],
     [
@@ -31567,12 +31579,6 @@
       "Nasdaq"
     ],
     [
-      1938109,
-      "Pineapple Financial Inc.",
-      "PAPL",
-      "NYSE"
-    ],
-    [
       708821,
       "PAR TECHNOLOGY CORP",
       "PAR",
@@ -33434,7 +33440,7 @@
     ],
     [
       1880319,
-      "Perimeter Solutions, Inc.",
+      "Perimeter Group Inc.",
       "PRM",
       "NYSE"
     ],
@@ -36293,6 +36299,12 @@
       "Sachem Capital Corp.",
       "SACH-PA",
       "NYSE"
+    ],
+    [
+      1838716,
+      "Genenta Science S.p.A.",
+      "SAEN",
+      "Nasdaq"
     ],
     [
       1095651,
@@ -43628,7 +43640,7 @@
     ],
     [
       1590750,
-      "Viridian Therapeutics, Inc.\\DE",
+      "Viridian Therapeutics, Inc.DE",
       "VRDN",
       "Nasdaq"
     ],
@@ -43733,12 +43745,6 @@
       "VISHAY INTERTECHNOLOGY INC",
       "VSH",
       "NYSE"
-    ],
-    [
-      1951294,
-      "Forcendra Holding Ltd",
-      "VSME",
-      "Nasdaq"
     ],
     [
       2067876,
@@ -44122,12 +44128,6 @@
       1471824,
       "Teucrium Commodity Trust",
       "WEAT",
-      "NYSE"
-    ],
-    [
-      1609151,
-      "Weave Communications, Inc.",
-      "WEAV",
       "NYSE"
     ],
     [
@@ -44663,12 +44663,6 @@
       "WPP plc",
       "WPP",
       "NYSE"
-    ],
-    [
-      1370416,
-      "AETHERION TECHNOLOGIES INC.",
-      "WPRT",
-      "Nasdaq"
     ],
     [
       2107968,
