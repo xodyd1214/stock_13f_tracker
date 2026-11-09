@@ -376,20 +376,14 @@ function portfolioFreshness(guru) {
 
 function hasPrice(value) { return Number.isFinite(value) && value > 0; }
 function priceLabel(value) { return hasPrice(value) ? `$${value.toFixed(2)}` : '시세 없음'; }
-function priceComparisonReason(item) {
-  if (item.isOption || item.action === 'PUT' || item.action === 'CALL') return '옵션 파생상품 · 비교 제외';
-  if (!hasPrice(item.curPrice) || item.quoteStatus !== 'fresh' || quoteStatus({ price: item.curPrice, marketTime: item.quoteMarketTime }) !== 'fresh') return '유효한 최근 시세 없음 · 비교 불가';
-  if (item.quoteCurrency !== 'USD') return '통화 확인 불가 · 비교 보류';
-  if (!hasPrice(item.estPrice)) return '공시 평가단가 없음 · 비교 불가';
-  if (item.periodRange && item.periodRange[0] !== item.periodRange[1]) return '서로 다른 분기 합산 · 비교 보류';
-  // Raw SEC value/shares is not a split-adjusted quote. The current pipeline has
-  // no verified corporate-action history, so do not turn a split into a discount.
-  return '주식분할 등 자본변동 조정 미확인 · 비교 보류';
+function filingUnitValue(holding, periods) {
+  const { value, shares, shareType, putCall, isOption } = holding;
+  return periods.length === 1 && shareType === 'SH' && !putCall && !isOption &&
+    Number.isSafeInteger(value) && value > 0 && Number.isSafeInteger(shares) && shares > 0 ? value / shares : null;
 }
-function priceDifference(item) {
-  // Intentionally withheld until a sourced corporate-action adjustment pipeline
-  // can prove that the filing value and quote use the same per-share basis.
-  return NaN;
+function filingUnitValueLabel(value) {
+  if (!hasPrice(value)) return '—';
+  return value < 0.01 ? '< $0.01' : priceLabel(value);
 }
 
 function normalizeMacroData(data) {
@@ -469,9 +463,8 @@ const state = {
     shares: true,
     value: true,
     weight: true,
-    estPrice: true,
-    curPrice: true,
-    discount: true
+    filingUnitValue: true,
+    curPrice: true
   }
 };
 
@@ -839,12 +832,10 @@ function processAndRenderHoldingsData(preserveView = false) {
       
       g.holdings = holdingList.map(h => {
         const weight = totalVal > 0 ? Number(((h.value / totalVal) * 100).toFixed(2)) : 0;
-        const estP = null;
         const periods = Array.from(h.periods).sort();
         
         const realInfo = LIVE_PRICES[h.baseTicker] || LIVE_PRICES[h.ticker];
         const currentQuote = quoteFields(h.baseTicker || h.ticker, realInfo);
-        const curP = currentQuote.curPrice;
         
         const change = comparison?.positions.has(h.cusip) ?
           reportedHoldingChange(h.shares, comparison.positions.get(h.cusip), comparison.previousPeriod) : null;
@@ -873,9 +864,9 @@ function processAndRenderHoldingsData(preserveView = false) {
           rawShares: h.shares,
           value: h.value,
           weight: weight,
-          estPrice: estP,
+          filingUnitValue: filingUnitValue(h, periods),
           ...currentQuote,
-          insight: `${h.name} 보통주 - ${g.name} 포트폴리오의 ${weight}% 차지 (최근 조회 시세: ${priceLabel(curP)})`
+          insight: `${h.name} - ${g.name} 포트폴리오의 ${weight}% 차지`
         };
       });
 
@@ -885,7 +876,6 @@ function processAndRenderHoldingsData(preserveView = false) {
     const grandList = Object.values(grandConsensusMap);
     const grandHoldings = grandList.map(h => {
       const weight = grandTotalAumVal > 0 ? Number(((h.value / grandTotalAumVal) * 100).toFixed(2)) : 0;
-      const estP = null;
       const periods = Array.from(h.periods).sort();
       
       const realInfo = LIVE_PRICES[h.baseTicker] || LIVE_PRICES[h.ticker];
@@ -915,7 +905,7 @@ function processAndRenderHoldingsData(preserveView = false) {
         rawShares: h.shares,
         value: h.value,
         weight: weight,
-        estPrice: estP,
+        filingUnitValue: filingUnitValue(h, periods),
         ...currentQuote,
         insight: `확인된 공시 부분집합 내 ${holderCount}개 SEC 신고 법인의 공통 보고 종목`
       };
@@ -989,10 +979,6 @@ function buildCustomGroupPortfolio(preserveView = false) {
           periods: new Set(periods),
           shares: Number(h.rawShares) || 0,
           value: Number(h.value) || 0,
-          estPrice: h.estPrice,
-          curPrice: h.curPrice,
-          priceChangePct: h.priceChangePct,
-          quoteAsOf: h.quoteAsOf,
           holders: new Set([guru.name])
         };
       } else {
@@ -1035,7 +1021,7 @@ function buildCustomGroupPortfolio(preserveView = false) {
       rawShares: h.shares,
       value: h.value,
       weight: weight,
-      estPrice: null,
+      filingUnitValue: filingUnitValue(h, periods),
       ...quoteFields(h.baseTicker || h.ticker, LIVE_PRICES[canonicalTicker(h.baseTicker || h.ticker)]),
       insight: `내가 선택한 ${favs.length}개 즐겨찾기 운용사 중 ${holderCount}개사가 공통 보유한 핵심 자산`
     };
@@ -1240,13 +1226,11 @@ function updateSummaryMetrics(guru) {
   const elHoldings = document.getElementById("metricTotalHoldings");
   const elTopBuy = document.getElementById("metricTopBuy");
   const elTopBuySub = document.getElementById("metricTopBuySub");
-  const elDisc = document.getElementById("metricDiscountPick");
-  const elDiscSub = document.getElementById("metricDiscountSub");
   const elTopHold = document.getElementById("metricTopHolding");
   const elTopHoldSub = document.getElementById("metricTopHoldingSub");
   
-  [elTopBuy, elDisc, elTopHold].forEach(el => { if (el) el.innerText = '-'; });
-  [elTopBuySub, elDiscSub, elTopHoldSub].forEach(el => { if (el) el.innerText = '확인 가능한 데이터 없음'; });
+  [elTopBuy, elTopHold].forEach(el => { if (el) el.innerText = '-'; });
+  [elTopBuySub, elTopHoldSub].forEach(el => { if (el) el.innerText = '확인 가능한 데이터 없음'; });
   if (isGrandTotal) {
     if (elHoldings) elHoldings.innerText = `총 분석 종목 ${guru.holdings.length}개`;
     
@@ -1255,16 +1239,6 @@ function updateSummaryMetrics(guru) {
     if (topHolderPick && elTopBuy) {
       elTopBuy.innerHTML = `${escapeHtml(topHolderPick.ticker)} <small class="text-green">${topHolderPick.holders}개사 보유</small>`;
       if (elTopBuySub) elTopBuySub.innerText = `${topHolderPick.name} (${formatMoney(topHolderPick.value)})`;
-    }
-
-    const discounts = guru.holdings
-      .filter(h => h.action !== 'PUT' && h.action !== 'CALL' && !h.isOption && Number.isFinite(priceDifference(h)))
-      .map(h => ({ ...h, discountPct: priceDifference(h) }))
-      .sort((a, b) => a.discountPct - b.discountPct);
-    const bestDiscount = discounts[0];
-    if (bestDiscount && bestDiscount.discountPct < 0 && elDisc) {
-      elDisc.innerHTML = `${escapeHtml(bestDiscount.ticker)} <small class="text-red">${bestDiscount.discountPct.toFixed(1)}%</small>`;
-      if (elDiscSub) elDiscSub.innerText = `공시 평가단가 대비 하락`;
     }
 
     const top1 = guru.holdings[0];
@@ -1280,16 +1254,6 @@ function updateSummaryMetrics(guru) {
       const topBuy = buyPicks[0];
       elTopBuy.innerHTML = `${escapeHtml(topBuy.ticker)} <small class="text-green">${escapeHtml(holdingChangeText(topBuy))}</small>`;
       if (elTopBuySub) elTopBuySub.innerText = `${topBuy.name} (${formatMoney(topBuy.value)})`;
-    }
-
-    const discounts = guru.holdings
-      .filter(h => h.action !== 'PUT' && h.action !== 'CALL' && !h.isOption && Number.isFinite(priceDifference(h)))
-      .map(h => ({ ...h, discountPct: priceDifference(h) }))
-      .sort((a, b) => a.discountPct - b.discountPct);
-    const bestDiscount = discounts[0];
-    if (bestDiscount && bestDiscount.discountPct < 0 && elDisc) {
-      elDisc.innerHTML = `${escapeHtml(bestDiscount.ticker)} <small class="text-purple">${bestDiscount.discountPct.toFixed(1)}%</small>`;
-      if (elDiscSub) elDiscSub.innerText = `공시 평가단가 대비 하락`;
     }
 
     const top1 = guru.holdings[0];
@@ -1507,50 +1471,30 @@ function renderTreemap(holdings) {
     tile.style.width = `${t.width}px`;
     tile.style.height = `${t.height}px`;
 
-    const isOption = item.action === 'PUT' || item.action === 'CALL' || item.isOption;
-    const diffVal = priceDifference(item);
-    const diffPct = diffVal.toFixed(1);
-    const isDown = diffVal < 0;
-
     const hasRoomForName = t.height >= 60 && t.width >= 85;
-    const hasRoomForDiscount = t.width >= 90;
     const cleanName = getCleanCompanyName(item.ticker, item.name);
 
     tile.innerHTML = `
       <div class="tile-top">
         <span class="tile-ticker">${escapeHtml(item.ticker)}</span>
         <div class="tile-badges">
-          ${(isDown && hasRoomForDiscount && !isOption) ? '<span class="tile-discount-badge" title="분기말 대비 하락">▼</span>' : ''}
           ${item.change ? `<span class="tile-action ${escapeHtml(item.action)}">${escapeHtml(holdingChangeText(item))}</span>` : ''}
         </div>
       </div>
       ${hasRoomForName ? `<div class="tile-name" title="${escapeHtml(item.name)}">${escapeHtml(cleanName)}</div>` : ''}
       <div class="tile-bottom">
         <span class="tile-weight">${item.weight}%</span>
-        <span class="tile-price">${escapeHtml(priceLabel(item.curPrice))}</span>
+        ${hasPrice(item.curPrice) ? `<span class="tile-price">${escapeHtml(priceLabel(item.curPrice))}</span>` : ''}
       </div>
     `;
 
     // 인터랙티브 플로팅 툴팁(Toast) 이벤트
     if (tooltip) {
       tile.addEventListener("mouseenter", (e) => {
-        const diffRow = !Number.isFinite(diffVal) ? `<div class="tooltip-row">${escapeHtml(priceComparisonReason(item))}</div>` : isOption ? `
-          <div class="tooltip-row">
-            <span class="tooltip-label">기초자산 변동</span>
-            <span class="tooltip-val" style="color:var(--text-subdued)">${isDown ? diffPct + '% 하락' : '+' + diffPct + '% 상승'} (옵션 비교 제외)</span>
-          </div>
-        ` : `
-          <div class="tooltip-row">
-            <span class="tooltip-label">분기말 대비</span>
-            <span class="tooltip-val">${isDown ? `<span style="color:var(--negative-red)">${diffPct}% 하락</span>` : `<span style="color:var(--spotify-green)">+${diffPct}% 상승</span>`}</span>
-          </div>
-        `;
-
         tooltip.innerHTML = `
           <div class="tooltip-header">
             <span class="tooltip-ticker">${escapeHtml(item.ticker)}</span>
             <div class="tooltip-badges">
-              ${(isDown && !isOption) ? '<span class="tile-discount-badge" title="분기말 대비 하락">▼</span>' : ''}
               <span class="tile-action ${escapeHtml(item.action)}">${escapeHtml(holdingChangeText(item))}</span>
             </div>
           </div>
@@ -1564,11 +1508,10 @@ function renderTreemap(holdings) {
               <span class="tooltip-label">총 평가 금액</span>
               <span class="tooltip-val">${formatMoney(item.value)}</span>
             </div>
-            <div class="tooltip-row">
-              <span class="tooltip-label">${isOption ? '기초자산 현재가' : '최근 조회 시세'}</span>
+            ${hasPrice(item.curPrice) ? `<div class="tooltip-row">
+              <span class="tooltip-label">최근 조회 시세</span>
               <span class="tooltip-val">${escapeHtml(priceLabel(item.curPrice))}</span>
-            </div>
-            ${diffRow}
+            </div>` : ''}
           </div>
         `;
         tooltip.style.left = `${e.clientX}px`;
@@ -1631,10 +1574,6 @@ function renderTable(preservePages = false) {
     }
 
     if (["NEW", "ADD", "REDUCE"].includes(state.activeFilter)) return hasHoldingChange(item, state.activeFilter);
-    if (state.activeFilter === "DISCOUNT") {
-      const isOption = item.action === "PUT" || item.action === "CALL" || item.isOption;
-      return !isOption && priceDifference(item) < 0;
-    }
     if (state.activeFilter === "CONVICTION") return item.weight >= 5.0;
     if (state.activeFilter === "CONSENSUS") return (item.holders || 1) >= 2;
     return true;
@@ -1648,8 +1587,6 @@ function renderTable(preservePages = false) {
   if (cAdd) cAdd.innerText = guru.holdings.filter(h => hasHoldingChange(h, "ADD")).length;
   const cReduce = document.getElementById("countReduce");
   if (cReduce) cReduce.innerText = guru.holdings.filter(h => hasHoldingChange(h, "REDUCE")).length;
-  const cDisc = document.getElementById("countDiscount");
-  if (cDisc) cDisc.innerText = guru.holdings.filter(h => !(h.action === "PUT" || h.action === "CALL" || h.isOption) && priceDifference(h) < 0).length;
   const cConv = document.getElementById("countConviction");
   if (cConv) cConv.innerText = guru.holdings.filter(h => h.weight >= 5.0).length;
 
@@ -1662,13 +1599,6 @@ function renderTable(preservePages = false) {
       valB = b.change?.action || (b.changeCounts ? holdingChangeText(b) : null);
     }
 
-    if (state.sortColumn === "discount") {
-      const isOptionA = a.action === "PUT" || a.action === "CALL" || a.isOption;
-      const isOptionB = b.action === "PUT" || b.action === "CALL" || b.isOption;
-      valA = isOptionA ? NaN : priceDifference(a);
-      valB = isOptionB ? NaN : priceDifference(b);
-    }
-
     if (valA == null || (typeof valA === "number" && !Number.isFinite(valA))) return valB == null || (typeof valB === "number" && !Number.isFinite(valB)) ? 0 : 1;
     if (valB == null || (typeof valB === "number" && !Number.isFinite(valB))) return -1;
     if (typeof valA === "string") {
@@ -1677,6 +1607,7 @@ function renderTable(preservePages = false) {
     return state.sortDirection === "asc" ? valA - valB : valB - valA;
   });
 
+  if (!CURRENT_FILTERED_ITEMS.length) applyColumnVisibility();
   for (let page = 0; page < pageCount; page++) appendNextPageRows();
 }
 
@@ -1695,10 +1626,6 @@ function appendNextPageRows() {
     const tr = document.createElement("tr");
     tr.onclick = () => openStockModal(item);
 
-    const diffVal = priceDifference(item);
-    const diffPct = diffVal.toFixed(1);
-    const isUp = diffVal > 0;
-    const isDown = diffVal < 0;
     const changeText = holdingChangeText(item);
     const changeBadge = item.changeCounts ? changeText.split(" · ")
       .map(part => `<span>${escapeHtml(part)}</span>`).join(" ") : escapeHtml(changeText);
@@ -1732,20 +1659,8 @@ function appendNextPageRows() {
           <div class="weight-progress-fill" style="width: ${Math.min(item.weight * 3, 100)}%"></div>
         </div>
       </td>
-      <td class="col-estPrice text-right">${priceLabel(item.estPrice)}</td>
-      <td class="col-curPrice text-right">
-        <strong>${priceLabel(item.curPrice)}</strong><small>${escapeHtml(item.quoteAsOf || "시세 관측시각 미확인")}</small>
-        ${Number.isFinite(item.priceChangePct) ? `<small class="${item.priceChangePct >= 0 ? 'text-green' : 'text-red'}">(${item.priceChangePct >= 0 ? '+' : ''}${item.priceChangePct}%)</small>` : ''}
-      </td>
-      <td class="col-discount text-right">
-        ${(!Number.isFinite(diffVal) || item.action === 'PUT' || item.action === 'CALL' || item.isOption) ? `
-          <span class="discount-val" style="color: var(--text-subdued);" title="${escapeHtml(priceComparisonReason(item))}">비교 보류</span>
-        ` : `
-          <span class="discount-val ${isUp ? 'positive' : (isDown ? 'discount' : '')}">
-            ${isUp ? '+' : ''}${diffPct}%
-          </span>
-        `}
-      </td>
+      <td class="col-filingUnitValue text-right" title="${hasPrice(item.filingUnitValue) ? escapeHtml(item.periodDate) : '동일한 기준일의 평가액과 수량이 필요합니다.'}">${escapeHtml(filingUnitValueLabel(item.filingUnitValue))}</td>
+      <td class="col-curPrice text-right" title="${hasPrice(item.curPrice) ? escapeHtml(item.quoteAsOf) : ''}">${hasPrice(item.curPrice) ? priceLabel(item.curPrice) : '—'}</td>
     `;
     fragment.appendChild(tr);
   });
@@ -1757,8 +1672,12 @@ function appendNextPageRows() {
 
 function applyColumnVisibility() {
   Object.keys(state.visibleColumns).forEach(col => {
-    const isVisible = state.visibleColumns[col];
-    const elements = document.querySelectorAll(`.col-${col}`);
+    const isPriceColumn = col === 'filingUnitValue' || col === 'curPrice';
+    const hasData = !isPriceColumn || CURRENT_FILTERED_ITEMS.some(item => hasPrice(item[col]));
+    const setting = document.querySelector(`#colMenu input[data-col="${col}"]`)?.parentElement;
+    if (setting) setting.style.display = hasData ? '' : 'none';
+    const isVisible = state.visibleColumns[col] && hasData;
+    const elements = document.querySelectorAll(`#holdingsTable .col-${col}`);
     elements.forEach(el => {
       el.style.display = isVisible ? "" : "none";
     });
@@ -1780,7 +1699,9 @@ function openStockModal(item) {
   document.getElementById("modalWeight").innerText = `${item.weight}%`;
   document.getElementById("modalVal").innerText = formatMoney(item.value);
   document.getElementById("modalShares").innerText = `${item.shares} 주`;
-  document.getElementById("modalEstPrice").innerText = `${priceLabel(item.estPrice)}`;
+  document.getElementById("modalFilingUnitValueCard").hidden = !hasPrice(item.filingUnitValue);
+  document.getElementById("modalFilingUnitValue").innerText = filingUnitValueLabel(item.filingUnitValue);
+  document.getElementById("modalFilingUnitDate").innerText = item.periodDate || '';
   
   const elInsight = document.getElementById("modalInsightText");
   if (elInsight) elInsight.innerText = item.insight || "이 종목은 주요 운용사들의 포트폴리오에 편입된 핵심 자산입니다.";
@@ -1820,13 +1741,10 @@ function openStockModal(item) {
 }
 
 function renderStockQuote(item) {
-  document.getElementById('modalCurPrice').innerText = priceLabel(item.curPrice);
-  document.getElementById('modalCurPrice').title = item.quoteAsOf || '시세 관측시각 미확인';
-  const tag = document.getElementById('modalDiscountTag');
-  if (tag) {
-    tag.innerText = `${priceComparisonReason(item)} · ${item.quoteAsOf || '시세 관측시각 미확인'}`;
-    tag.style.color = 'var(--text-subdued)';
-  }
+  const hasQuote = hasPrice(item.curPrice);
+  document.getElementById('modalQuote').hidden = !hasQuote;
+  document.getElementById('modalCurPrice').innerText = hasQuote ? priceLabel(item.curPrice) : '';
+  document.getElementById('modalQuoteTime').innerText = hasQuote ? item.quoteAsOf : '';
 }
 
 function renderStockHistoryTimeline(item) {
@@ -3730,7 +3648,7 @@ const HELP_TOPICS = {
   "13F": [
     "Form 13F 기관 보유 공시",
     "일정 규모 이상 기관 운용사가 분기 말에 보유한 신고 대상 증권을 미국 SEC에 제출하는 공시예요.",
-    "운용사와 보유 기준일을 먼저 보고, 종목별 수량과 평가액을 확인해요. 공시 평가단가는 평가액을 수량으로 나눈 값이에요.",
+    "운용사와 보유 기준일을 먼저 보고, 종목별 수량과 평가액을 확인해요. 분기말 평가단가는 같은 기준일의 평가액을 수량으로 나눈 값이에요.",
     "통상 분기 말부터 45일 안에 제출해요. 매매 시점과 실제 매입가는 별도 자료가 필요해요. 사이트의 종합 화면은 기준일이 다른 검증된 일부 공시를 합산해요."
   ],
   FORM4: [
@@ -4866,11 +4784,11 @@ function renderConsensusWidget(forceType) {
             <span class="consensus-metric-label">합산 평가액</span>
             <span class="consensus-metric-val">${formatMoney(s.totalValue)}</span>
           </div>
-          <div class="consensus-price-row">
+          ${hasPrice(currentQuote.curPrice) ? `<div class="consensus-price-row">
             <span class="consensus-price">${escapeHtml(priceText)}</span>
             <span class="consensus-chg ${chgClass}">${chgText}</span>
           </div>
-          <small class="consensus-quote-asof">${escapeHtml(currentQuote.quoteAsOf)}</small>
+          <small class="consensus-quote-asof">${escapeHtml(currentQuote.quoteAsOf)}</small>` : ''}
         </div>
       </div>
     `;
@@ -4996,7 +4914,7 @@ function showUnavailableHoldings() {
       if (el) el.textContent = text;
     }
   }
-  for (const id of ['metricTotalAum', 'metricTotalHoldings', 'metricTopBuy', 'metricTopHolding', 'metricDiscountPick']) {
+  for (const id of ['metricTotalAum', 'metricTotalHoldings', 'metricTopBuy', 'metricTopHolding']) {
     const el = document.getElementById(id); if (el) el.textContent = '확인 불가';
   }
   for (const id of ['consensusCardsGrid', 'tableBody', 'treemapContainer', 'sectorStackedBar', 'sectorLegend', 'partialSourceList']) {
@@ -5014,7 +4932,7 @@ function renderPartialCoverage(error) {
     if (status) status.textContent = '공시 부분집합 사용 불가. 검증되지 않은 기존 자료는 표시하지 않습니다.';
     return;
   }
-  if (status) status.textContent = `43/50 추적명 확인 · 42개 SEC 신고 법인 · 7개 검증 중. ${SEC_DISPLAY.freshness.label} · 불러온 UTC ${SEC_DISPLAY.freshness.loadedAt || "미확인"} · 최초 원천 확인 UTC ${SEC_DISPLAY.freshness.acquisitionStartedAt || SEC_DISPLAY.manifest?.acquisitionStartedAt || "미확인"} · 마지막 확인 UTC ${SEC_DISPLAY.freshness.lastCheckedAt}. 전체 커버리지 및 현재 실시간 포트폴리오가 아닙니다. 숫자 합계는 검증된 비파생 주식 부분집합입니다. 직전 분기 비교 자료가 확인된 법인 ${SEC_DISPLAY.comparisons?.size || 0}곳 · 추정 매입가 및 가격 비교 미제공.`;
+  if (status) status.textContent = `43/50 추적명 확인 · 42개 SEC 신고 법인 · 7개 검증 중. ${SEC_DISPLAY.freshness.label} · 불러온 UTC ${SEC_DISPLAY.freshness.loadedAt || "미확인"} · 최초 원천 확인 UTC ${SEC_DISPLAY.freshness.acquisitionStartedAt || SEC_DISPLAY.manifest?.acquisitionStartedAt || "미확인"} · 마지막 확인 UTC ${SEC_DISPLAY.freshness.lastCheckedAt}. 전체 커버리지 및 현재 실시간 포트폴리오가 아닙니다. 숫자 합계는 검증된 비파생 주식 부분집합입니다. 직전 분기 비교 자료가 확인된 법인 ${SEC_DISPLAY.comparisons?.size || 0}곳.`;
   for (const item of SEC_DISPLAY.coverage.labels) {
     const li = document.createElement('li');
     li.textContent = `${item.label} (원래 추적명) · ${item.status === 'available' ? `확인됨 · SEC 신고 법인 ${item.legalName} · CIK ${item.cik}` : `검증 중 · ${item.reason || '원천 무결성 확인 대기'} · 보유 수치 없음`}`;
@@ -5041,17 +4959,17 @@ function buildPartialCsv(guru) {
   if (!SEC_DISPLAY) throw new Error('Verified partial display unavailable');
   const rows = [
     ['범위', '확인된 공시 부분집합: 43/50 추적명, 42 SEC 신고 법인, 7 검증 중'],
-    ['주의', '전체 커버리지 또는 현재 실시간 포트폴리오 아님; 매입가/가격비교 미검증'],
+    ['안내', '분기말 평가단가 = 동일 기준일 공시 평가액 ÷ 보유 주식 수'],
     ['불러온 UTC', SEC_DISPLAY.freshness.loadedAt || '미확인'],
     ['최초 원천 확인 UTC', SEC_DISPLAY.freshness.acquisitionStartedAt || SEC_DISPLAY.manifest?.acquisitionStartedAt || '미확인'],
     ['마지막 확인 UTC', SEC_DISPLAY.freshness.lastCheckedAt, SEC_DISPLAY.freshness.label],
     ['법인/부분집합', guru.name],
-    ['종목', '티커', 'CUSIP', '주식 유형', '옵션', '보유 신고 법인 수', '공시 보유 변화', '주식수', '평가금액 USD', '부분집합 비중 %', '보유 기준일 시작', '보유 기준일 끝', '매입가', '가격 비교']
+    ['종목', '티커', 'CUSIP', '주식 유형', '옵션', '보유 신고 법인 수', '공시 보유 변화', '주식수', '평가금액 USD', '부분집합 비중 %', '보유 기준일 시작', '보유 기준일 끝', '분기말 평가단가 USD']
   ];
   for (const h of guru.holdings || []) {
     if (!Number.isSafeInteger(h.value) || !Number.isSafeInteger(h.rawShares) || !h.shareType || !h.cusip) continue;
     rows.push([h.name, h.ticker, h.cusip, h.shareType, h.putCall || '', h.holders || 1, holdingChangeText(h), h.rawShares, h.value, h.weight,
-      h.periodRange?.[0] || '', h.periodRange?.[1] || '', '미검증', '미검증']);
+      h.periodRange?.[0] || '', h.periodRange?.[1] || '', h.filingUnitValue ?? '']);
   }
   rows.push(['출처', '법인', '보유 기준일', '공시/수정 공시일', 'SEC accession', 'SEC 원문']);
   for (const source of guru.sources || SEC_DISPLAY.sources || []) rows.push(['SEC', source.legalName || guru.name, source.period, source.filingDate, source.accession, source.sourceUrl]);

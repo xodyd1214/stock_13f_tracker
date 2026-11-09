@@ -17,7 +17,7 @@ function context(rows, valid = true) {
    state: { currentGuruKey: '__GRAND_TOTAL__' }, isDerivativeOrOption: () => false, getMappedTicker: () => 'ABC', getMappedSector: () => 'Other', quoteFields: () => ({curPrice:null}), priceLabel: () => '미검증',
    renderCategoryTabs() {}, renderGuruSidebar() {}, selectGuru() {}, renderConsensusWidget() {},
    holdingIdentity: r => [r.cusip, r.shareType, r.putCall].join('|') });
- for (const name of ['safeSecUrl', 'escapeHtml', 'verifiedDisplayRow','showUnavailableHoldings','formatMoney','formatQuarterDisplay','reportedHoldingChange','holdingChangeText','holdingChangeDetail','processAndRenderHoldingsData','buildPartialCsv']) vm.runInContext(extract(name), ctx);
+ for (const name of ['safeSecUrl', 'escapeHtml', 'verifiedDisplayRow','showUnavailableHoldings','formatMoney','formatQuarterDisplay','reportedHoldingChange','holdingChangeText','holdingChangeDetail','processAndRenderHoldingsData','buildPartialCsv','filingUnitValue','filingUnitValueLabel','hasPrice']) vm.runInContext(extract(name), ctx);
  return {ctx, nodes, display};
 }
 test('real processing rejects legacy rows and produces null total rather than zero holdings claim', () => {
@@ -32,7 +32,7 @@ test('processing and CSV use legal entity, withhold unverified changes and prese
  const {ctx} = context(rows); ctx.processAndRenderHoldingsData();
  const g = ctx.GURU_DATABASE['MARKEL GROUP INC'];
  assert.ok(g); assert.equal(ctx.GURU_DATABASE['Tom Gayner'], undefined);
- assert.equal(g.rawAum, 900); assert.equal(g.holdings[0].estPrice, null); assert.equal(g.holdings[0].action, 'UNKNOWN');
+ assert.equal(g.rawAum, 900); assert.equal(g.holdings[0].filingUnitValue, 9); assert.equal(g.holdings[0].action, 'UNKNOWN');
  assert.equal(ctx.GURU_DATABASE.__GRAND_TOTAL__.holdings[0].holders, 1);
  const csv = ctx.buildPartialCsv(g);
  assert.match(csv, /43\/50/); assert.match(csv, /42 SEC/); assert.match(csv, /비교 자료 없음/); assert.match(csv, /2026-06-30/); assert.match(csv, /2026-08-01/); assert.match(csv, /www.sec.gov/);
@@ -274,7 +274,7 @@ test('source text is escaped at table, treemap, sidebar, holder and consensus HT
  const table=element(),treemap=element(),tooltip=element(),sidebar=element(),holders=element(),count=element(),consensus=element();
  for(const [id,el] of Object.entries({tableBody:table,treemapContainer:treemap,treemapTooltip:tooltip,guruList:sidebar,modalHoldersBody:holders,modalHoldersCount:count,consensusCardsGrid:consensus}))nodes.set(id,el);
  const h=ctx.GURU_DATABASE.__GRAND_TOTAL__.holdings[0];h.ticker=attack;h.sector=attack;h.quoteAsOf=attack;
- Object.assign(ctx,{CURRENT_FILTERED_ITEMS:[h],CURRENT_PAGE_INDEX:1,PAGE_SIZE:60,priceDifference:()=>NaN,priceComparisonReason:()=>attack,applyColumnVisibility(){},getCleanCompanyName:()=>attack,computeSquarifiedTreemap:()=>[{item:h,width:200,height:200,x:0,y:0}],CURRENT_USER:null,getFavorites:()=>[],getMappedTicker:()=>attack});
+ Object.assign(ctx,{CURRENT_FILTERED_ITEMS:[h],CURRENT_PAGE_INDEX:1,PAGE_SIZE:60,applyColumnVisibility(){},getCleanCompanyName:()=>attack,computeSquarifiedTreemap:()=>[{item:h,width:200,height:200,x:0,y:0}],CURRENT_USER:null,getFavorites:()=>[],getMappedTicker:()=>attack});
  for(const fn of ['appendNextPageRows','renderTreemap','renderGuruSidebar','renderStockHoldersTable','renderConsensusWidget'])vm.runInContext(extract(fn),ctx);
  ctx.appendNextPageRows();ctx.renderTreemap([h]);treemap.children[0].events.mouseenter({clientX:0,clientY:0});ctx.renderGuruSidebar();ctx.renderStockHoldersTable(h);ctx.renderConsensusWidget();
  const outputs=[table.children[0].children[0].innerHTML,treemap.children[0].innerHTML,tooltip.innerHTML,sidebar.children[0].children[0].innerHTML,holders.children[0].innerHTML,consensus.innerHTML];
@@ -330,7 +330,7 @@ if (process.env.SEC_REAL_BUNDLE) test('real exported generation reconciles exact
  for(const r of bonds)assert.ok(ctx.GURU_DATABASE[r.legalName].holdings.some(h=>h.cusip===r.cusip));
  if(configContext.SEC_DISPLAY_CONFIG.comparisonSha256){assert.equal(result.comparisons.size,39);assert.ok(grand.holdings.some(item=>item.changeCounts?.ADD>0));}
  const csv=ctx.buildPartialCsv(grand);assert.match(csv,/1548461288506|확인된 공시 부분집합/);assert.match(csv,/43\/50/);assert.match(csv,/공시 보유 변화/);
- let csvTotal=0,csvCount=0;for(const line of csv.split('\n')){const cells=[...line.matchAll(/"((?:[^"]|"")*)"(?:,|$)/g)].map(m=>m[1].replace(/""/g,'"'));if(cells.length===14&&/^[A-Z0-9*@#]{9}$/i.test(cells[2])){csvTotal+=Number(cells[8]);csvCount++;}}assert.equal(csvTotal,result.manifest.totalEquityValueUsd);assert.equal(csvCount,grand.holdings.length);
+ let csvTotal=0,csvCount=0;for(const line of csv.split('\n')){const cells=[...line.matchAll(/"((?:[^"]|"")*)"(?:,|$)/g)].map(m=>m[1].replace(/""/g,'"'));if(cells.length===13&&/^[A-Z0-9*@#]{9}$/i.test(cells[2])){csvTotal+=Number(cells[8]);csvCount++;}}assert.equal(csvTotal,result.manifest.totalEquityValueUsd);assert.equal(csvCount,grand.holdings.length);
  const grid={innerHTML:''};nodes.set('consensusCardsGrid',grid);vm.runInContext(extract('renderConsensusWidget'),ctx);ctx.renderConsensusWidget();assert.match(grid.innerHTML,/개 SEC 신고 법인/);
  assert.equal(crypto.createHash('sha256').update(JSON.stringify(result.rows)).digest('hex'),before);assert.equal(calls.filter(x=>x.endsWith('current.json')).length,1);
  console.log(`REAL VERIFIED: ${result.rows.length} rows; $${grand.rawAum}; 42 entities; six bond-share rows $44155721; ${calls.length} bounded artifact reads.`);

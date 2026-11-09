@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=109">
+  <link rel="stylesheet" href="style.css?v=110">
 </head>
 <body>
   <div class="app-container">
@@ -326,14 +326,6 @@
 
           <div class="metric-card">
             <div class="metric-header">
-              <span class="metric-title">분기말 대비 하락 종목</span>
-            </div>
-            <div class="metric-value" id="metricDiscountPick">-</div>
-            <div class="metric-sub" id="metricDiscountSub">-</div>
-          </div>
-
-          <div class="metric-card">
-            <div class="metric-header">
               <span class="metric-title">최다 합산 비중 종목</span>
             </div>
             <div class="metric-value" id="metricTopHolding">-</div>
@@ -342,7 +334,6 @@
         </section>
 
         <!-- 🏆 월가 큰손 집중 매수 (Smart Money Consensus) TOP 5 하이라이트 위젯 -->
-        <p class="card-sub data-quality-note">최근 시세는 관측시각·통화가 확인된 24시간 이내 자료만 표시합니다. 매입단가와 가격 비교는 검증되지 않아 표시하지 않습니다.</p>
         <section class="consensus-widget-section" id="consensusWidgetSection">
           <div class="consensus-widget-header">
             <div class="consensus-title-wrap">
@@ -392,7 +383,6 @@
               <span class="legend-item"><span class="color-box add"></span>수량 증가</span>
               <span class="legend-item"><span class="color-box hold"></span>수량 동일</span>
               <span class="legend-item"><span class="color-box reduce"></span>수량 감소</span>
-              <span class="legend-item"><span class="color-box discount-badge"></span>분기말 대비 하락</span>
             </div>
           </div>
 
@@ -411,7 +401,6 @@
                 <button class="filter-tab" data-filter="NEW">신규 공시 (<span id="countNew">0</span>)</button>
                 <button class="filter-tab" data-filter="ADD">수량 증가 (<span id="countAdd">0</span>)</button>
                 <button class="filter-tab" data-filter="REDUCE">수량 감소 (<span id="countReduce">0</span>)</button>
-                <button class="filter-tab" data-filter="DISCOUNT">분기말 대비 하락 종목 (<span id="countDiscount">0</span>)</button>
                 <button class="filter-tab" data-filter="CONVICTION">비중 5%+ 집중 (<span id="countConviction">0</span>)</button>
               </div>
             </div>
@@ -433,15 +422,15 @@
                   <label><input type="checkbox" data-col="shares" checked> 보유 주식수</label>
                   <label><input type="checkbox" data-col="value" checked> 총 평가 금액 ($)</label>
                   <label><input type="checkbox" data-col="weight" checked> 통합 비중 (%)</label>
-                  <label><input type="checkbox" data-col="estPrice" checked> 공시 평가단가</label>
-                  <label><input type="checkbox" data-col="curPrice" checked> 최근 조회 시세</label>
-                  <label><input type="checkbox" data-col="discount" checked> 분기말 대비 (%)</label>
+                  <label style="display: none;"><input type="checkbox" data-col="filingUnitValue" checked> 분기말 평가단가</label>
+                  <label style="display: none;"><input type="checkbox" data-col="curPrice" checked> 최근 조회 시세</label>
                 </div>
               </div>
             </div>
           </div>
 
           <p class="card-sub data-quality-note">같은 법인과 증권의 연속 두 분기 공시 수량을 비교합니다. 전체 보기와 즐겨찾기 묶어보기에서는 운용사별 결과를 건수로 표시합니다. 거래일·체결가는 공시되지 않으며, 수량에는 주식분할 등 자본변동이 반영될 수 있습니다.</p>
+          <p class="card-sub data-quality-note">분기말 평가단가는 같은 기준일의 SEC 평가금액을 보유 주식 수로 나눈 값입니다. 최근 시세는 관측시각이 확인된 24시간 이내 달러 시세가 있을 때 표시합니다.</p>
           <!-- 메인 데이터 테이블 -->
           <div class="table-wrapper">
             <table class="power-table fullwidth-table" id="holdingsTable">
@@ -454,9 +443,8 @@
                   <th class="col-shares sortable text-right" data-sort="shares">주식 수</th>
                   <th class="col-value sortable text-right" data-sort="value">총 평가 금액 ($)</th>
                   <th class="col-weight sortable text-right" data-sort="weight">통합 비중 (%)</th>
-                  <th class="col-estPrice sortable text-right" data-sort="estPrice" title="공시 평가액 ÷ 보유 주식 수 (실제 매입가 아님)">공시 평가단가</th>
-                  <th class="col-curPrice sortable text-right" data-sort="curPrice">최근 조회 시세</th>
-                  <th class="col-discount sortable text-right" data-sort="discount" title="주식분할 등 자본변동을 검증하기 전까지 비교를 보류합니다">분기말 대비</th>
+                  <th class="col-filingUnitValue sortable text-right" data-sort="filingUnitValue" title="같은 기준일의 SEC 평가액 ÷ 보유 주식 수" style="display: none;">분기말 평가단가</th>
+                  <th class="col-curPrice sortable text-right" data-sort="curPrice" style="display: none;">최근 조회 시세</th>
                 </tr>
               </thead>
               <tbody id="tableBody">
@@ -856,9 +844,9 @@
           <h3 class="modal-name" id="modalName">Apple Inc.</h3>
           <span class="badge" id="modalSector">Information Technology</span>
         </div>
-        <div class="modal-price-box">
-          <div class="modal-cur-price" id="modalCurPrice">$225.40</div>
-          <div class="modal-discount-tag" id="modalDiscountTag">비교 보류</div>
+        <div class="modal-price-box" id="modalQuote" hidden>
+          <div class="modal-cur-price" id="modalCurPrice"></div>
+          <div class="modal-quote-time" id="modalQuoteTime"></div>
         </div>
       </div>
 
@@ -876,9 +864,10 @@
             <span class="label">보유 주식 수</span>
             <span class="val" id="modalShares">300,000,000 주</span>
           </div>
-          <div class="modal-card">
-            <span class="label">공시 평가단가</span>
-            <span class="val" id="modalEstPrice">$185.20</span>
+          <div class="modal-card" id="modalFilingUnitValueCard" hidden>
+            <span class="label">분기말 평가단가</span>
+            <span class="val" id="modalFilingUnitValue"></span>
+            <small class="form4-secondary" id="modalFilingUnitDate"></small>
           </div>
         </div>
 
@@ -1072,7 +1061,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js?v=2"></script>
   <script src="sec_display_loader.js?v=3"></script>
-  <script src="app.js?v=121"></script>
+  <script src="app.js?v=122"></script>
 </body>
 </html>
 

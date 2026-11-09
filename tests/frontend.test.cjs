@@ -16,10 +16,10 @@ function context(names, extra = {}) {
   // Unit fixtures model rows already admitted by the separately tested loader.
   const rows = (extra.RAW_HOLDINGS || []).map((row, i) => ({ legalName: row.guru || 'Manager', cik: '0000000001', shareType: 'SH', putCall: '', shares: 1, period: '2026-06-30', filingDate: '2026-08-01', accession: '0000000001-26-000001', sourceRowId: `fixture:${i}`, tableSha256: 'a'.repeat(64), sourceUrl: 'https://www.sec.gov/Archives/edgar/data/1/000000000126000001/table.xml', ...row }));
   const ctx = vm.createContext({ URL, console, Date: TestDate, MARKET_SYMBOLS: metadata, LIVE_PRICES: {}, SEC_DISPLAY: {rows}, SEC_DISPLAY_ROWS: new WeakSet(rows), document: {getElementById:()=>null}, ...extra, ...(extra.RAW_HOLDINGS ? {RAW_HOLDINGS: rows} : {}) });
-  for (const name of new Set(['safeSecUrl', 'escapeHtml', 'verifiedDisplayRow', 'showUnavailableHoldings', 'canonicalTicker', 'hasPrice', 'priceLabel', 'quoteStatus', 'quoteFreshness', 'quoteFields', 'holdingIdentity', 'mergeObservedPrices', 'refreshVisibleQuotes', 'applyLivePricesToHoldings', 'priceComparisonReason', ...names])) vm.runInContext(extract(name), ctx);
+  for (const name of new Set(['safeSecUrl', 'escapeHtml', 'verifiedDisplayRow', 'showUnavailableHoldings', 'canonicalTicker', 'hasPrice', 'priceLabel', 'quoteStatus', 'quoteFreshness', 'quoteFields', 'holdingIdentity', 'mergeObservedPrices', 'refreshVisibleQuotes', 'applyLivePricesToHoldings', 'filingUnitValue', 'filingUnitValueLabel', ...names])) vm.runInContext(extract(name), ctx);
   return ctx;
 }
-const helpers = ['hasPrice', 'priceLabel', 'priceDifference', 'insiderCode', 'insiderLabel', 'quoteFreshness'];
+const helpers = ['hasPrice', 'priceLabel', 'insiderCode', 'insiderLabel', 'quoteFreshness'];
 test('congress ticker summaries count unique reporters per direction across 30 filing dates', () => {
   const c = context(['summarizeCongressTickers', 'congressFilingLag']);
   const stock = { ticker: 'NVDA', action: 'P', assetType: 'ST', status: 'New' };
@@ -128,14 +128,13 @@ test('Form 4 and the watchlist share issuer favorites while preserving signed-ou
   assert.deepEqual(Array.from(c.form4FavoriteIssuers()), ['0000000003']);
 });
 
-test('delisted JHG retains history but has no current quote, daily change or discount', () => {
+test('delisted JHG retains history but has no current quote or daily change', () => {
   const observed = { price: 51.95, changePct: -0.04, marketTime: 1782849603 };
   const c = context([...helpers, 'applyLivePricesToHoldings'], { LIVE_PRICES: { JHG: observed } });
-  const holdings = [{ ticker: 'JHG', estPrice: 60 }];
+  const holdings = [{ ticker: 'JHG', filingUnitValue: 60 }];
   c.applyLivePricesToHoldings(holdings);
   assert.equal(holdings[0].curPrice, null);
   assert.equal(holdings[0].priceChangePct, null);
-  assert.ok(Number.isNaN(c.priceDifference(holdings[0])));
   assert.match(holdings[0].quoteAsOf, /상장폐지.*2026-06-30.*마지막 관측.*51\.95.*2026-06-30 20:00/);
   assert.equal(c.LIVE_PRICES.JHG, observed);
 });
@@ -159,7 +158,7 @@ test('exact CUSIP identity takes precedence over obsolete SQ and bond aliases', 
 });
 test('legacy SQ holdings use XYZ quote without reviving old SQ cache', () => {
   const c = context([...helpers, 'applyLivePricesToHoldings'], { LIVE_PRICES: { SQ: { price: 999 }, XYZ: fresh(87.63) } });
-  const holdings = [{ ticker: 'SQ', estPrice: 100 }];
+  const holdings = [{ ticker: 'SQ', filingUnitValue: 100 }];
   c.applyLivePricesToHoldings(holdings);
   assert.equal(holdings[0].curPrice, 87.63);
   delete c.LIVE_PRICES.XYZ;
@@ -178,13 +177,12 @@ test('initial manager and aggregate JHG holdings stay historical-only', () => {
     assert.equal(h.ticker, 'JHG');
     assert.equal(h.rawShares, 10);
     assert.equal(h.value, 600);
-    assert.equal(h.estPrice, null);
+    assert.equal(h.filingUnitValue, 60);
     assert.equal(h.curPrice, null);
     assert.match(h.quoteAsOf, /상장폐지/);
-    assert.ok(Number.isNaN(c.priceDifference(h)));
   }
 });
-test('consensus card renders delisted quote as history, never as current or daily change', () => {
+test('consensus card omits a delisted quote', () => {
   const grid = { innerHTML: '' };
   const c = context([...helpers, 'getMappedTicker', 'formatMoney', 'renderConsensusWidget'], {
     RAW_HOLDINGS: [{ guru: 'Manager', name: 'Janus Henderson', cusip: 'G4474Y214', ticker: 'JHG', value: 100 }],
@@ -192,9 +190,8 @@ test('consensus card renders delisted quote as history, never as current or dail
     document: { getElementById: () => grid }, isDerivativeOrOption: () => false, getMappedSector: () => 'Financials'
   });
   c.renderConsensusWidget();
-  assert.match(grid.innerHTML, /class="consensus-price">시세 없음/);
-  assert.match(grid.innerHTML, /상장폐지.*마지막 관측.*51\.95/);
-  assert.doesNotMatch(grid.innerHTML, /-0\.04%/);
+  assert.match(grid.innerHTML, /JHG/);
+  assert.doesNotMatch(grid.innerHTML, /consensus-price-row|시세 없음|51\.95|-0\.04%/);
 });
 test('quarantine cannot fall back to raw XYZ, issuer name or an old quote cache', () => {
   const c = context([...helpers, 'getMappedTicker'], { TICKER_MAP: { 'BLOCK INC': 'XYZ' } });
@@ -210,7 +207,7 @@ test('minute polling retries missing metadata and restores quotes without resett
   let rebuilds = 0;
   const c = context([...helpers, 'refreshMarketSymbols', 'fetchLivePricesForCurrentView', 'applyLivePricesToHoldings'], {
     MARKET_SYMBOLS: null, priceRequestId: 0, state: { currentGuruKey: 'A', currentFilingType: '13F' },
-    GURU_DATABASE: { A: { holdings: [{ ticker: 'AAPL', estPrice: 100 }] } }, LIVE_PRICES: { AAPL: fresh(90) },
+    GURU_DATABASE: { A: { holdings: [{ ticker: 'AAPL', filingUnitValue: 100 }] } }, LIVE_PRICES: { AAPL: fresh(90) },
     fetch: async url => url.startsWith('market_symbols') ? (++attempts === 1 ? { ok: false } : { ok: true, json: async () => metadata }) : { ok: true, json: async () => ({}) },
     processAndRenderHoldingsData(preserveView) { assert.equal(preserveView, true); rebuilds++; },
     updateSummaryMetrics() {}, renderTable() {}, refreshMacroSnapshot: async () => {}
@@ -239,7 +236,7 @@ test('metadata recovery rebuilds real portfolios without replacing another mode 
       const c = context([...helpers, 'getMappedTicker', 'formatMoney', 'formatQuarterDisplay', 'processAndRenderHoldingsData', 'buildCustomGroupPortfolio'], {
         RAW_HOLDINGS: [{ guru: 'Manager', name: 'Janus Henderson', cusip: 'G4474Y214', shares: 10, value: 600, period: '2026-06-30', action: 'HOLD' }],
         GURU_DATABASE: {}, LIVE_PRICES: { JHG: { price: 51.95, marketTime: 1782849603 } }, TICKER_MAP: { G4474Y214: 'JHG' }, DOMINANT_13F_PERIOD: null,
-        state: { currentGuruKey: manager, currentFilingType: mode, activeFilter: 'DISCOUNT', searchQuery: 'Janus' },
+        state: { currentGuruKey: manager, currentFilingType: mode, activeFilter: 'ADD', searchQuery: 'Janus' },
         isDerivativeOrOption: () => false, getMappedSector: () => 'Financials', getFavorites: () => ['Manager'], renderCategoryTabs() {}, renderGuruSidebar() {},
         selectGuru() { throw new Error('Recovery must not reset selection or start a recursive refresh'); }, loadGuruData() { renders++; }, renderConsensusWidget() {}
       });
@@ -247,24 +244,23 @@ test('metadata recovery rebuilds real portfolios without replacing another mode 
       assert.equal(c.GURU_DATABASE[manager].holdings[0].curPrice, null);
       assert.equal(c.state.currentGuruKey, manager);
       assert.equal(c.state.currentFilingType, mode);
-      assert.equal(c.state.activeFilter, 'DISCOUNT');
+      assert.equal(c.state.activeFilter, 'ADD');
       assert.equal(c.state.searchQuery, 'Janus');
       assert.equal(renders, mode === '13F' ? 1 : 0);
     }
   }
 });
-test('missing price is not a zero-percent live quote or discount', () => {
+test('missing quote has no daily change and leaves filing unit value intact', () => {
   const c = context([...helpers, 'applyLivePricesToHoldings'], { LIVE_PRICES: {} });
-  const holdings = [{ ticker: 'AAPL', estPrice: 100, curPrice: 100 }];
+  const holdings = [{ ticker: 'AAPL', filingUnitValue: 100, curPrice: 100 }];
   c.applyLivePricesToHoldings(holdings);
   assert.equal(holdings[0].curPrice, null);
   assert.equal(holdings[0].priceChangePct, null);
-  assert.ok(Number.isNaN(c.priceDifference(holdings[0])));
   assert.equal(c.priceLabel(null), '시세 없음');
   c.LIVE_PRICES.AAPL = fresh(90);
   c.applyLivePricesToHoldings(holdings);
-  assert.ok(Number.isNaN(c.priceDifference(holdings[0])));
-  assert.match(c.priceComparisonReason(holdings[0]), /주식분할.*비교 보류/);
+  assert.equal(holdings[0].curPrice, 90);
+  assert.equal(holdings[0].filingUnitValue, 100);
   assert.equal(holdings[0].priceChangePct, 0);
 });
 test('unmapped securities do not collide via issuer prefix and class ticker survives', () => {
@@ -323,21 +319,23 @@ test('history displays an honest unavailable state, never synthesized quarters',
   assert.equal(children.length, 1);
   assert.match(children[0].textContent, /비교 가능한 직전 분기 공시 자료가 없습니다/);
 });
-test('custom common holdings are UNKNOWN and inferred cost is unavailable', () => {
-  const h = { ticker: 'ABC', baseTicker: 'ABC', cusip: '111111111', rawShares: 10, value: 100, estPrice: 10, curPrice: null };
-  const c = context(['formatMoney', 'formatQuarterDisplay', 'buildCustomGroupPortfolio'], { getFavorites: () => ['A', 'B'], selectGuru() {}, DOMINANT_13F_PERIOD: null, GURU_DATABASE: { A: { name: 'A', holdings: [h] }, B: { name: 'B', holdings: [{ ...h, rawShares: 20, value: 300, estPrice: 15 }] } } });
+test('custom holdings calculate unit value only for a shared quarter end', () => {
+  const h = { ticker: 'ABC', baseTicker: 'ABC', cusip: '111111111', rawShares: 10, value: 100, periodDate: '2026-03-31', curPrice: null };
+  const c = context(['formatMoney', 'formatQuarterDisplay', 'buildCustomGroupPortfolio'], { getFavorites: () => ['A', 'B'], selectGuru() {}, DOMINANT_13F_PERIOD: null, GURU_DATABASE: { A: { name: 'A', holdings: [h] }, B: { name: 'B', holdings: [{ ...h, rawShares: 20, value: 300, periodDate: '2026-06-30' }] } } });
   c.buildCustomGroupPortfolio();
   const result = c.GURU_DATABASE.__CUSTOM_GROUP__.holdings[0];
   assert.equal(result.holders, 2);
   assert.equal(result.action, 'UNKNOWN');
-  assert.equal(result.estPrice, null);
+  assert.equal(result.filingUnitValue, null);
+  c.GURU_DATABASE.B.holdings[0].periodDate = h.periodDate;
+  c.buildCustomGroupPortfolio();
+  assert.equal(c.GURU_DATABASE.__CUSTOM_GROUP__.holdings[0].filingUnitValue, 400 / 30);
 });
 test('summary clears stale picks before empty/new manager render', () => {
   const elements = {};
   const c = context([...helpers, 'updateSummaryMetrics'], { state: { currentGuruKey: 'A' }, document: { getElementById: id => elements[id] ||= { innerText: 'OLD' } } });
   c.updateSummaryMetrics({ holdings: [], aum: '$0' });
   assert.equal(elements.metricTopBuy.innerText, '-');
-  assert.equal(elements.metricDiscountPick.innerText, '-');
   assert.equal(elements.metricTopHolding.innerText, '-');
 });
 test('late insider response cannot overwrite newer modal', async () => {
@@ -382,7 +380,7 @@ test('holdings pipeline keeps UNKNOWN actions and does not create missing quotes
   assert.equal(c.GURU_DATABASE.Manager.holdings.length, 2);
   const first = c.GURU_DATABASE.Manager.holdings.find(h => h.cusip === '111111111');
   assert.equal(first.action, 'UNKNOWN');
-  assert.equal(first.estPrice, null);
+  assert.equal(first.filingUnitValue, 10);
   assert.equal(first.curPrice, null);
   assert.equal(first.priceChangePct, null);
 });
@@ -484,16 +482,45 @@ test('stale, undated, invalid-time, unsupported-currency and explicit stale quot
   assert.equal(c.quoteStatus({ ...fresh(110), marketTime: NOW / 1000 - 86400 }), 'fresh');
 });
 
-test('representative forward/reverse splits never become a discount or upside signal without verified adjustments', () => {
-  const c = context(helpers);
-  for (const [ticker, filingPrice, quotePrice] of [['NVDA', 1100, 110], ['AVGO', 1700, 170], ['TEST', 2, 20]]) {
-    const item = { ticker, estPrice: filingPrice, ...c.quoteFields(ticker, fresh(quotePrice)), periodDate: '2024-03-31' };
-    assert.equal(item.curPrice, quotePrice);
-    assert.ok(Number.isNaN(c.priceDifference(item)));
-    assert.match(c.priceComparisonReason(item), /주식분할.*조정 미확인.*비교 보류/);
+test('filing unit value requires a single date and a positive share-denominated position', () => {
+  const c = context([]);
+  const holding = { value: 650, shares: 10, shareType: 'SH' };
+  const date = ['2026-06-30'];
+  assert.equal(c.filingUnitValue(holding, date), 65);
+  assert.equal(c.filingUnitValueLabel(65), '$65.00');
+  assert.equal(c.filingUnitValueLabel(0.001), '< $0.01');
+  assert.equal(c.filingUnitValue(holding, []), null);
+  assert.equal(c.filingUnitValue(holding, ['2026-03-31', ...date]), null);
+  for (const invalid of [{ shares: 0 }, { value: 0 }, { shareType: 'PRN' }, { putCall: 'Put' }, { isOption: true }]) {
+    assert.equal(c.filingUnitValue({ ...holding, ...invalid }, date), null);
   }
-  const mixed = { estPrice: 100, ...c.quoteFields('AAPL', fresh(90)), periodRange: ['2026-03-31', '2026-06-30'] };
-  assert.match(c.priceComparisonReason(mixed), /서로 다른 분기/);
+});
+
+test('13F price columns require available data and respect column preferences', () => {
+  const header = Object.fromEntries(['filingUnitValue', 'curPrice'].map(col => [col, { style: {} }]));
+  const setting = Object.fromEntries(Object.keys(header).map(col => [col, { parentElement: { style: {} } }]));
+  const c = context(['applyColumnVisibility'], {
+    state: { visibleColumns: { filingUnitValue: true, curPrice: true } },
+    CURRENT_FILTERED_ITEMS: [{ filingUnitValue: 65, curPrice: null }],
+    document: {
+      querySelector: selector => setting[selector.split('"')[1]],
+      querySelectorAll: selector => [header[selector.split('.col-')[1]]]
+    }
+  });
+  c.applyColumnVisibility();
+  assert.equal(header.filingUnitValue.style.display, '');
+  assert.equal(header.curPrice.style.display, 'none');
+  assert.equal(setting.curPrice.parentElement.style.display, 'none');
+
+  c.CURRENT_FILTERED_ITEMS = [{ filingUnitValue: null, curPrice: 70 }];
+  c.state.visibleColumns.curPrice = false;
+  c.applyColumnVisibility();
+  assert.equal(header.filingUnitValue.style.display, 'none');
+  assert.equal(header.curPrice.style.display, 'none');
+  assert.equal(setting.curPrice.parentElement.style.display, '');
+  c.state.visibleColumns.curPrice = true;
+  c.applyColumnVisibility();
+  assert.equal(header.curPrice.style.display, '');
 });
 
 test('cache merge is monotonic by market observation time, never by fetch time', () => {
@@ -525,7 +552,7 @@ test('API and static fallback cannot roll back a more recent cached quote', asyn
   for (const apiOk of [true, false]) {
     const newest = fresh(100);
     const older = { ...fresh(20), marketTime: newest.marketTime - 3600 };
-    const holding = { ticker: 'AAPL', estPrice: 100 };
+    const holding = { ticker: 'AAPL', filingUnitValue: 100 };
     const c = context([...helpers, 'fetchLivePricesForCurrentView'], {
       priceRequestId: 0, state: { currentGuruKey: 'A', currentFilingType: '13F' },
       GURU_DATABASE: { A: { holdings: [holding] } }, LIVE_PRICES: { AAPL: newest },
@@ -540,7 +567,7 @@ test('API and static fallback cannot roll back a more recent cached quote', asyn
 
 test('failed refresh still ages selected, other-manager and open-modal prices out of live surfaces', async () => {
   const old = { ...fresh(100), marketTime: NOW / 1000 - 86401 };
-  const holding = { ticker: 'AAPL', estPrice: 110, curPrice: 100, priceChangePct: 1 };
+  const holding = { ticker: 'AAPL', filingUnitValue: 110, curPrice: 100, priceChangePct: 1 };
   const modalItem = { ...holding };
   let renders = 0;
   let modalRenders = 0;

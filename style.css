@@ -955,6 +955,10 @@ body {
   margin-bottom: 24px;
 }
 
+#view13F .overview-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .metric-card {
   background-color: var(--bg-surface);
   border: 1px solid var(--border-subtle);
@@ -1132,10 +1136,6 @@ body {
   background-color: var(--negative-red);
 }
 
-.color-box.discount-badge {
-  background-color: #c084fc;
-}
-
 .treemap-container {
   position: relative;
   width: 100%;
@@ -1200,21 +1200,6 @@ body {
   display: flex;
   align-items: center;
   gap: 3px;
-}
-
-.tile-discount-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  font-size: 7.5px;
-  font-weight: 900;
-  border-radius: 2px;
-  background-color: rgba(168, 85, 247, 0.25);
-  color: #c084fc;
-  border: 1px solid rgba(168, 85, 247, 0.4);
-  white-space: nowrap;
 }
 
 .tile-ticker {
@@ -1329,8 +1314,7 @@ body {
   font-weight: 800;
 }
 .treemap-tile.tile-small .tile-price,
-.treemap-tile.tile-small .tile-name,
-.treemap-tile.tile-small .tile-discount-badge {
+.treemap-tile.tile-small .tile-name {
   display: none;
 }
 
@@ -1578,19 +1562,6 @@ body {
 .tile-action-tag.ADD { background: var(--announcement-blue-bg); color: var(--announcement-blue); }
 .tile-action-tag.REDUCE { background: var(--negative-red-bg); color: var(--negative-red); }
 .tile-action-tag.HOLD { background: #333333; color: var(--text-subdued); }
-
-.discount-pill {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  color: var(--negative-red);
-  background: var(--negative-red-bg);
-  padding: 2px 5px;
-  border-radius: var(--radius-xs);
-  text-transform: uppercase;
-  white-space: nowrap;
-  display: inline-block;
-}
 
 /* ==============================================================================
    Power Table Section
@@ -2350,16 +2321,6 @@ button.congress-link {
   padding: 0 !important;
 }
 
-.discount-val.positive {
-  color: var(--text-subdued);
-  font-weight: 600;
-}
-
-.discount-val.discount {
-  color: var(--negative-red);
-  font-weight: 700;
-}
-
 .weight-progress-bar {
   width: 50px;
   height: 4px;
@@ -2511,12 +2472,15 @@ button.congress-link {
   text-align: right;
 }
 
-.modal-discount-tag {
+.modal-quote-time {
   font-size: 11px;
-  font-weight: 700;
-  color: var(--negative-red);
+  color: var(--text-subdued);
   text-align: right;
   margin-top: 2px;
+}
+
+#modalFilingUnitValueCard[hidden], #modalQuote[hidden] {
+  display: none;
 }
 
 .modal-grid {
