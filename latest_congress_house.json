@@ -1,9 +1,61 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-11-08",
-  "ptrFrom": "2026-08-11",
+  "asOf": "2026-11-09",
+  "ptrFrom": "2026-08-12",
   "annualYear": 2025,
   "filings": [
+    {
+      "id": "20035780",
+      "kind": "ptr",
+      "year": 2026,
+      "filed": "2026-11-06",
+      "name": "Nancy Pelosi",
+      "district": "CA11",
+      "parsed": true,
+      "rows": [
+        {
+          "asset": "Warner Bros. Discovery, Inc. - Series A Common Stock",
+          "ticker": "WBD",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$50,001 - $100,000",
+          "traded": "2026-10-07",
+          "action": "S",
+          "status": "New"
+        }
+      ]
+    },
+    {
+      "id": "20035775",
+      "kind": "ptr",
+      "year": 2026,
+      "filed": "2026-11-06",
+      "name": "John J Mr McGuire III",
+      "district": "VA05",
+      "parsed": true,
+      "rows": [
+        {
+          "asset": "Western Digital Corporation - Common Stock",
+          "ticker": "WDC",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-15",
+          "action": "S",
+          "status": "New"
+        }
+      ]
+    },
+    {
+      "id": "9116399",
+      "kind": "ptr",
+      "year": 2026,
+      "filed": "2026-11-05",
+      "name": "Rohit Khanna",
+      "district": "CA17",
+      "parsed": false,
+      "rows": []
+    },
     {
       "id": "20035778",
       "kind": "ptr",
@@ -46909,16 +46961,6 @@
           "value": "$1,001 - $15,000"
         }
       ]
-    },
-    {
-      "id": "20035175",
-      "kind": "ptr",
-      "year": 2026,
-      "filed": "2026-08-11",
-      "name": "Suzan K. DelBene",
-      "district": "WA01",
-      "parsed": true,
-      "rows": []
     },
     {
       "id": "10081567",
