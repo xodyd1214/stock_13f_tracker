@@ -781,12 +781,6 @@
       "NYSE"
     ],
     [
-      1513525,
-      "Azora Therapeutics, Inc. (DE)",
-      "ADIL",
-      "Nasdaq"
-    ],
-    [
       7084,
       "Archer-Daniels-Midland Co",
       "ADM",
@@ -1244,13 +1238,13 @@
     ],
     [
       2074973,
-      "Churchill Capital Corp XI",
+      "Agility Robotics, Inc.",
       "AGLT",
       "Nasdaq"
     ],
     [
       2074973,
-      "Churchill Capital Corp XI",
+      "Agility Robotics, Inc.",
       "AGLTW",
       "Nasdaq"
     ],
@@ -1869,12 +1863,6 @@
     [
       2031561,
       "Aldel Financial II Inc.",
-      "ALDFU",
-      "Nasdaq"
-    ],
-    [
-      2031561,
-      "Aldel Financial II Inc.",
       "ALDFW",
       "Nasdaq"
     ],
@@ -2212,6 +2200,12 @@
       2041493,
       "Alussa Energy Acquisition Corp. II",
       "ALUB-WT",
+      "NYSE"
+    ],
+    [
+      1964979,
+      "ALLURION TECHNOLOGIES, INC.",
+      "ALUR",
       "NYSE"
     ],
     [
@@ -7832,7 +7826,7 @@
     ],
     [
       835011,
-      "MGP INGREDIENTS INC",
+      "SEMPREON, INC",
       "CASK",
       "Nasdaq"
     ],
@@ -8246,19 +8240,19 @@
     ],
     [
       2074973,
-      "Churchill Capital Corp XI",
+      "Agility Robotics, Inc.",
       "CCXI",
       "Nasdaq"
     ],
     [
       2074973,
-      "Churchill Capital Corp XI",
+      "Agility Robotics, Inc.",
       "CCXIU",
       "Nasdaq"
     ],
     [
       2074973,
-      "Churchill Capital Corp XI",
+      "Agility Robotics, Inc.",
       "CCXIW",
       "Nasdaq"
     ],
@@ -12913,12 +12907,6 @@
       "Nasdaq"
     ],
     [
-      2028699,
-      "Dynamix Corp",
-      "DYNCW",
-      "Nasdaq"
-    ],
-    [
       2079292,
       "Insight Digital Partners II",
       "DYOR",
@@ -13426,12 +13414,6 @@
       1754836,
       "Eagle Point Income Co",
       "EIC",
-      "NYSE"
-    ],
-    [
-      1754836,
-      "Eagle Point Income Co",
-      "EICA",
       "NYSE"
     ],
     [
@@ -18301,12 +18283,6 @@
       "NYSE"
     ],
     [
-      41091,
-      "GEORGIA POWER CO",
-      "GPJA",
-      "NYSE"
-    ],
-    [
       1408075,
       "GRAPHIC PACKAGING HOLDING CO",
       "GPK",
@@ -19705,12 +19681,6 @@
       "CBOE"
     ],
     [
-      1903595,
-      "House of Doge Inc.",
-      "HODO",
-      "Nasdaq"
-    ],
-    [
       1077688,
       "HOOKER FURNISHINGS Corp",
       "HOFT",
@@ -20325,7 +20295,19 @@
     [
       2111838,
       "Haymaker Acquisition Corp V",
+      "HYAC",
+      "NYSE"
+    ],
+    [
+      2111838,
+      "Haymaker Acquisition Corp V",
       "HYAC-UN",
+      "NYSE"
+    ],
+    [
+      2111838,
+      "Haymaker Acquisition Corp V",
+      "HYAC-WT",
       "NYSE"
     ],
     [
@@ -24961,12 +24943,6 @@
       "Nasdaq"
     ],
     [
-      1673481,
-      "Sports Entertainment Gaming Global Corp",
-      "LTRYW",
-      "Nasdaq"
-    ],
-    [
       1816007,
       "Lufax Holding Ltd",
       "LU",
@@ -26144,7 +26120,7 @@
     ],
     [
       835011,
-      "MGP INGREDIENTS INC",
+      "SEMPREON, INC",
       "MGPI",
       "Nasdaq"
     ],
@@ -27271,18 +27247,6 @@
       "NYSE"
     ],
     [
-      1636519,
-      "MSG Knickerbockers Corp.",
-      "MSGS",
-      "NYSE"
-    ],
-    [
-      2020228,
-      "Masonglory Ltd",
-      "MSGY",
-      "Nasdaq"
-    ],
-    [
       68505,
       "Motorola Solutions, Inc.",
       "MSI",
@@ -27515,6 +27479,12 @@
       "MESA ROYALTY TRUST/TX",
       "MTR",
       "NYSE"
+    ],
+    [
+      1728328,
+      "InMed Pharmaceuticals Inc.",
+      "MTRI",
+      "Nasdaq"
     ],
     [
       1104657,
@@ -28988,7 +28958,7 @@
     ],
     [
       818850,
-      "NUVEEN NEW YORK MUNICIPAL VALUE FUND",
+      "NUVEEN NEW YORK MUNICIPAL INCOME FUND",
       "NNY",
       "NYSE"
     ],
@@ -31858,12 +31828,6 @@
       1004980,
       "PG&E Corp",
       "PCG",
-      "NYSE"
-    ],
-    [
-      75488,
-      "PACIFIC GAS & ELECTRIC Co",
-      "PCG-PA",
       "NYSE"
     ],
     [
@@ -35960,13 +35924,13 @@
     ],
     [
       1012019,
-      "RUSH ENTERPRISES INC \\TX\\",
+      "RUSH ENTERPRISES INC TX",
       "RUSHA",
       "Nasdaq"
     ],
     [
       1012019,
-      "RUSH ENTERPRISES INC \\TX\\",
+      "RUSH ENTERPRISES INC TX",
       "RUSHB",
       "Nasdaq"
     ],
@@ -45622,12 +45586,6 @@
       2020987,
       "YHN Acquisition I Ltd",
       "YHNA",
-      "Nasdaq"
-    ],
-    [
-      2020987,
-      "YHN Acquisition I Ltd",
-      "YHNAU",
       "Nasdaq"
     ],
     [
