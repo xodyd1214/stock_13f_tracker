@@ -12901,12 +12901,6 @@
       "Nasdaq"
     ],
     [
-      2028699,
-      "Dynamix Corp",
-      "DYNC",
-      "Nasdaq"
-    ],
-    [
       2079292,
       "Insight Digital Partners II",
       "DYOR",
@@ -16868,25 +16862,25 @@
     ],
     [
       1321741,
-      "GLADSTONE INVESTMENT CORPORATION\\DE",
+      "GLADSTONE INVESTMENT CORPORATIONDE",
       "GAIN",
       "Nasdaq"
     ],
     [
       1321741,
-      "GLADSTONE INVESTMENT CORPORATION\\DE",
+      "GLADSTONE INVESTMENT CORPORATIONDE",
       "GAING",
       "Nasdaq"
     ],
     [
       1321741,
-      "GLADSTONE INVESTMENT CORPORATION\\DE",
+      "GLADSTONE INVESTMENT CORPORATIONDE",
       "GAINI",
       "Nasdaq"
     ],
     [
       1321741,
-      "GLADSTONE INVESTMENT CORPORATION\\DE",
+      "GLADSTONE INVESTMENT CORPORATIONDE",
       "GAINZ",
       "Nasdaq"
     ],
@@ -17018,7 +17012,7 @@
     ],
     [
       1070524,
-      "GREENE COUNTY BANCORP INC",
+      "GREENE BANCORP, INC.",
       "GCBC",
       "Nasdaq"
     ],
@@ -18280,6 +18274,12 @@
       1031203,
       "GROUP 1 AUTOMOTIVE INC",
       "GPI",
+      "NYSE"
+    ],
+    [
+      41091,
+      "GEORGIA POWER CO",
+      "GPJA",
       "NYSE"
     ],
     [
@@ -24505,12 +24505,6 @@
       "NYSE"
     ],
     [
-      1527728,
-      "Lunai Bioworks Inc.",
-      "LNAI",
-      "Nasdaq"
-    ],
-    [
       59558,
       "LINCOLN NATIONAL CORP",
       "LNC",
@@ -25673,12 +25667,6 @@
       "MARCUS CORP",
       "MCS",
       "NYSE"
-    ],
-    [
-      2035992,
-      "Charming Medical Ltd",
-      "MCTA",
-      "Nasdaq"
     ],
     [
       64996,
@@ -31831,44 +31819,50 @@
       "NYSE"
     ],
     [
-      1004980,
-      "PG&E Corp",
+      75488,
+      "PACIFIC GAS & ELECTRIC Co",
+      "PCG-PA",
+      "NYSE"
+    ],
+    [
+      75488,
+      "PACIFIC GAS & ELECTRIC Co",
       "PCG-PB",
       "NYSE"
     ],
     [
-      1004980,
-      "PG&E Corp",
+      75488,
+      "PACIFIC GAS & ELECTRIC Co",
       "PCG-PC",
       "NYSE"
     ],
     [
-      1004980,
-      "PG&E Corp",
+      75488,
+      "PACIFIC GAS & ELECTRIC Co",
       "PCG-PD",
       "NYSE"
     ],
     [
-      1004980,
-      "PG&E Corp",
+      75488,
+      "PACIFIC GAS & ELECTRIC Co",
       "PCG-PE",
       "NYSE"
     ],
     [
-      1004980,
-      "PG&E Corp",
+      75488,
+      "PACIFIC GAS & ELECTRIC Co",
       "PCG-PG",
       "NYSE"
     ],
     [
-      1004980,
-      "PG&E Corp",
+      75488,
+      "PACIFIC GAS & ELECTRIC Co",
       "PCG-PH",
       "NYSE"
     ],
     [
-      1004980,
-      "PG&E Corp",
+      75488,
+      "PACIFIC GAS & ELECTRIC Co",
       "PCG-PI",
       "NYSE"
     ],
@@ -36861,7 +36855,25 @@
     [
       2131303,
       "SPACCircle Acquisition Corp.",
+      "SCQC",
+      "Nasdaq"
+    ],
+    [
+      2131303,
+      "SPACCircle Acquisition Corp.",
+      "SCQCR",
+      "Nasdaq"
+    ],
+    [
+      2131303,
+      "SPACCircle Acquisition Corp.",
       "SCQCU",
+      "Nasdaq"
+    ],
+    [
+      2131303,
+      "SPACCircle Acquisition Corp.",
+      "SCQCW",
       "Nasdaq"
     ],
     [
@@ -40039,12 +40051,6 @@
       "TXSE"
     ],
     [
-      1077428,
-      "TEXAS CAPITAL BANCSHARES INC/TX",
-      "TCBI-PB",
-      "TXSE"
-    ],
-    [
       356171,
       "TRICO BANCSHARES /",
       "TCBK",
@@ -41891,6 +41897,18 @@
       "Ternium S.A.",
       "TX",
       "NYSE"
+    ],
+    [
+      1077428,
+      "TEXAS CAPITAL BANCSHARES INC/TX",
+      "TXCP",
+      "TXSE"
+    ],
+    [
+      1077428,
+      "TEXAS CAPITAL BANCSHARES INC/TX",
+      "TXCP-PB",
+      "TXSE"
     ],
     [
       1770787,
@@ -45580,12 +45598,6 @@
       1042187,
       "YUNHONG GREEN CTI LTD.",
       "YHGJ",
-      "Nasdaq"
-    ],
-    [
-      2020987,
-      "YHN Acquisition I Ltd",
-      "YHNA",
       "Nasdaq"
     ],
     [
