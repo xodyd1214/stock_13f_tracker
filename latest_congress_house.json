@@ -1,9 +1,40 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-11-09",
-  "ptrFrom": "2026-08-12",
+  "asOf": "2026-11-10",
+  "ptrFrom": "2026-08-13",
   "annualYear": 2025,
   "filings": [
+    {
+      "id": "20035014",
+      "kind": "ptr",
+      "year": 2026,
+      "filed": "2026-11-09",
+      "name": "Thomas Suozzi",
+      "district": "NY03",
+      "parsed": true,
+      "rows": []
+    },
+    {
+      "id": "20024921",
+      "kind": "ptr",
+      "year": 2026,
+      "filed": "2026-11-09",
+      "name": "David Kustoff",
+      "district": "TN08",
+      "parsed": true,
+      "rows": [
+        {
+          "asset": "Warner Bros. Discovery, Inc. - Series A Common Stock",
+          "ticker": "WBD",
+          "assetType": "ST",
+          "owner": "JT",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-07",
+          "action": "S",
+          "status": "New"
+        }
+      ]
+    },
     {
       "id": "20035780",
       "kind": "ptr",
@@ -41448,16 +41479,6 @@
       "rows": []
     },
     {
-      "id": "9116290",
-      "kind": "ptr",
-      "year": 2026,
-      "filed": "2026-08-12",
-      "name": "Charles J. \"Chuck\" Fleischmann",
-      "district": "TN03",
-      "parsed": false,
-      "rows": []
-    },
-    {
       "id": "9116275",
       "kind": "annual",
       "year": 2025,
@@ -41466,98 +41487,6 @@
       "district": "TX20",
       "parsed": false,
       "rows": []
-    },
-    {
-      "id": "20035216",
-      "kind": "ptr",
-      "year": 2026,
-      "filed": "2026-08-12",
-      "name": "Rob Bresnahan",
-      "district": "PA08",
-      "parsed": true,
-      "rows": []
-    },
-    {
-      "id": "20035209",
-      "kind": "ptr",
-      "year": 2026,
-      "filed": "2026-08-12",
-      "name": "Mike Kelly",
-      "district": "PA16",
-      "parsed": true,
-      "rows": []
-    },
-    {
-      "id": "20035203",
-      "kind": "ptr",
-      "year": 2026,
-      "filed": "2026-08-12",
-      "name": "Mike Kelly",
-      "district": "PA16",
-      "parsed": true,
-      "rows": [
-        {
-          "asset": "Abbott Laboratories Common Stock",
-          "ticker": "ABT",
-          "assetType": "ST",
-          "owner": "SP",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-17",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Pepsico, Inc.",
-          "ticker": "PEP",
-          "assetType": "ST",
-          "owner": "SP",
-          "value": "$15,001 - $50,000",
-          "traded": "2026-07-17",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Walt Disney Company",
-          "ticker": "DIS",
-          "assetType": "ST",
-          "owner": "SP",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-17",
-          "action": "S",
-          "status": "New"
-        }
-      ]
-    },
-    {
-      "id": "20035196",
-      "kind": "ptr",
-      "year": 2026,
-      "filed": "2026-08-12",
-      "name": "Kevin Hern",
-      "district": "OK01",
-      "parsed": true,
-      "rows": [
-        {
-          "asset": "Organon & Co. Common Stock",
-          "ticker": "OGN",
-          "assetType": "ST",
-          "owner": "JT",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-08-05",
-          "action": "S",
-          "status": "Amended"
-        },
-        {
-          "asset": "Versant Media Group, Inc. - Class A Common Stock",
-          "ticker": "VSNT",
-          "assetType": "ST",
-          "owner": "JT",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-08-05",
-          "action": "S",
-          "status": "Deleted"
-        }
-      ]
     },
     {
       "id": "10081600",
