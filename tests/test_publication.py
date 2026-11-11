@@ -32,12 +32,14 @@ class PublicationTests(unittest.TestCase):
 
     def test_workflow_runs_safe_sources_independently_and_surfaces_errors(self):
         text = (Path(__file__).resolve().parents[1] / '.github/workflows/auto_sync.yml').read_text()
-        for script in ('price_fetcher.py', 'macro_collector.py', 'sec_form4_recent.py', 'congress_house.py'):
+        for script in ('refresh_13f.py', 'price_fetcher.py', 'macro_collector.py', 'sec_form4_recent.py', 'congress_house.py'):
             self.assertIn('run: python ' + script, text)
-        self.assertEqual(text.count('continue-on-error: true'), 4)
+        self.assertEqual(text.count('continue-on-error: true'), 5)
         self.assertNotIn('steps.filings.outcome', text)
         self.assertIn('python validate_data.py "$file"', text)
         self.assertIn('node --test tests/*.test.cjs', text)
+        self.assertIn('SEC_REAL_BUNDLE=. node --test tests/partial_pages_ui.test.cjs', text)
+        self.assertIn('changed+=(sec-data)', text)
         self.assertIn('outputs=(realtime_prices.json latest_macro_indicators.json latest_form4_recent.json '
                       'latest_congress_house.json listed_companies.json)', text)
         self.assertIn('exit 1', text)

@@ -194,7 +194,7 @@ class Evidence:
             observations.append(item)
         return observations
 
-    def manager(self, manager, spec, *, comparison_periods=None):
+    def filing_records(self, manager, spec, *, comparison_periods=None, require_latest=False):
         cik = canonical_cik(spec['cik']); root_url = f'https://data.sec.gov/submissions/CIK{cik}.json'
         check('acquisitionError' not in manager, manager.get('acquisitionError', 'Acquisition failure'))
         check(manager['cik'] == cik and manager['label'] == spec['label'], 'Manager/request identity mismatch')
@@ -231,6 +231,8 @@ class Evidence:
             check(spec.get('latestPeriods') == 1 and 'reportPeriods' not in spec and manager['reportPeriods'] == periods, 'Latest period required including notices')
         else:
             check(spec.get('reportPeriods') == manager['reportPeriods'] == periods, 'Explicit comparison periods required')
+            if require_latest:
+                check(periods[0] == max(r['reportDate'] for r in merged.values()), 'Latest filing changed during refresh')
         selected = [r for r in merged.values() if r['reportDate'] in periods]
         check(not any(r['form'].startswith('13F-NT') for r in selected), 'Period notice: reporting manager review required')
         required = {r['accessionNumber'] for r in selected}
@@ -267,14 +269,35 @@ class Evidence:
             check(self.order[final] > max(self.order[p] for p in used), 'Final metadata copy precedes financial acquisition')
             final_orders.append(self.order[final])
         check(final_orders[0] == max(final_orders), 'Final root must be last')
-        results = [reconcile_filing(*args) for args in raw_filings]
+        return [reconcile_filing(*args) for args in raw_filings], sorted(required)
+
+    def manager(self, manager, spec, *, comparison_periods=None):
+        results, required = self.filing_records(manager, spec, comparison_periods=comparison_periods)
         if comparison_periods is not None:
             snapshots = {}
-            for period in periods:
+            for period in comparison_periods:
                 rows = [filing for filing in results if filing['reportDate'] == period]
                 snapshots[period] = resolve_period_snapshot(rows, [filing['accession'] for filing in rows], self.share_class_policy)
             return snapshots
-        return resolve_period_snapshot(results, sorted(required), self.share_class_policy), results
+        return resolve_period_snapshot(results, required, self.share_class_policy), results
+
+
+def snapshot_holdings(snapshot, legal_name, labels, policy):
+    compact = [{k: c[k] for k in ('accession', 'filingDate', 'form', 'amendmentNumber',
+                                 'amendmentType', 'primarySha256', 'tableSha256')}
+               for c in snapshot['components']]
+    disclosures = [d for c in snapshot['components'] for d in c.get('confidentialDisclosures', [])]
+    confidential = any((d.get('text') or '').strip().lower() not in ('', 'false', '0', 'no') for d in disclosures)
+    return [
+        {**row, 'schemaVersion': 3, 'provenance': 'source_reconciled', 'verificationStatus': 'source_reconciled',
+         'identityStatus': 'verified', 'managerIdentityStatus': 'verified', 'snapshotFilingDate': snapshot['filingDate'],
+         'amendmentResolution': snapshot['resolution'], 'sourceAccessions': snapshot['allKnownAccessions'],
+         'snapshotComponents': deepcopy(compact), 'reportScope': 'reported_equity_only',
+         'confidentialWarning': 'Confidential or omitted holdings disclosures may limit completeness.' if confidential else None,
+         'guru': legal_name, 'fund': legal_name, 'legalName': legal_name, 'originalLabels': labels,
+         'action': 'UNKNOWN', 'snapshotId': snapshot['snapshotId']}
+        for row in equity_rows(snapshot, policy)
+    ]
 
 def build_candidate(evidence_manifest, ledger_path, request_path, *, as_of=None, now=None):
     now = clock(now); as_of = iso_date(as_of) if isinstance(as_of,str) else (as_of or now.date())
@@ -321,11 +344,8 @@ def build_candidate(evidence_manifest, ledger_path, request_path, *, as_of=None,
             quarantine.append({'label':label,'cik':cik,'reason':reason or 'Fresh replay unavailable','replayError':errors.get(cik),'priorIntegrityEvidence':entry.get('integrityEvidence'),'currentReplay':deepcopy(snapshot),'currentRawObservations':next((x['rawObservations'] for x in history if x['cik']==cik),None),'automaticUnblock':False})
         elif cik not in emitted:
             emitted.add(cik)
-            compact = [{k:c[k] for k in ('accession','filingDate','form','amendmentNumber','amendmentType','primarySha256','tableSha256')} for c in snapshot['components']]
-            disclosures = [d for c in snapshot['components'] for d in c.get('confidentialDisclosures',[])]
-            confidential = any((d.get('text') or '').strip().lower() not in ('','false','0','no') for d in disclosures)
-            for row in equity_rows(snapshot,share_class_policy):
-                holdings.append({**row,'schemaVersion':3,'provenance':'source_reconciled','verificationStatus':'source_reconciled','identityStatus':'verified','managerIdentityStatus':'verified','snapshotFilingDate':snapshot['filingDate'],'amendmentResolution':snapshot['resolution'],'sourceAccessions':snapshot['allKnownAccessions'],'snapshotComponents':deepcopy(compact),'reportScope':'reported_equity_only','confidentialWarning':'Confidential or omitted holdings disclosures may limit completeness.' if confidential else None,'guru':entry['legalName'],'fund':entry['legalName'],'legalName':entry['legalName'],'originalLabels':[x['label'] for x in scope['eligible'] if x['cik']==cik],'action':'UNKNOWN','snapshotId':snapshot['snapshotId']})
+            labels = [x['label'] for x in scope['eligible'] if x['cik'] == cik]
+            holdings.extend(snapshot_holdings(snapshot, entry['legalName'], labels, share_class_policy))
     available = [x for x in coverage if x['status']=='available']
     partial = len(available)==43 and len(emitted)==42 and {x['label'] for x in available}==set(eligible)
     manifest = {'schemaVersion':3,'contract':scope['contract'],'partialDisplayEligible':partial,'releaseEligible':False,'migrationReady':False,'originalLabelCount':50,'availableLabelCount':len(available),'availableEntityCount':len(emitted),'pendingLabelCount':50-len(available),'scopeSha256':scope_hash,'asOf':as_of.isoformat(),'preparedAt':now.isoformat(),'lastChecked':max(evidence.times).isoformat(),'acquisitionStartedAt':min(evidence.times).isoformat(),'freshnessLabel':'Checked at '+max(evidence.times).isoformat()+'; historical filing periods, partial coverage','sourceReportDates':sorted({x['reportDate'] for x in available}),'totalEquityValueUsd':sum(snapshots[c]['equityValueUsd'] for c in emitted),'inputs':{'evidenceManifest':str(Path(evidence_manifest).resolve()),'evidenceManifestSha256':sha(evidence.manifest_raw),'acquisitionReportSha256':sha(evidence.report_raw),'ledgerPath':str(Path(ledger_path).resolve()),'ledgerSha256':scope['ledgerSha256'],'requestPath':str(Path(request_path).resolve()),'requestSha256':scope['requestSha256']}}

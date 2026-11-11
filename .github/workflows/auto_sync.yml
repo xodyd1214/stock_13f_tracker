@@ -29,9 +29,18 @@ jobs:
       - name: Run frontend regression tests
         run: node --test tests/*.test.cjs
 
-      # Legacy 13F collectors do not implement the source-replayed partial
-      # contract. Never publish their output. Preparing a new partial generation
-      # is a separate reviewed process; this workflow cannot move its pointer.
+      - name: Refresh verified Form 13F filings
+        id: form13f
+        continue-on-error: true
+        run: python refresh_13f.py --evidence-dir "${{ runner.temp }}/sec-13f-evidence"
+      - name: Retain Form 13F source evidence
+        if: ${{ !cancelled() && steps.form13f.outcome != 'skipped' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: sec-13f-evidence
+          path: ${{ runner.temp }}/sec-13f-evidence
+          if-no-files-found: ignore
+          retention-days: 30
       - name: Refresh prices
         id: prices
         if: github.event.schedule != '30 6 * * *'
@@ -57,7 +66,7 @@ jobs:
       # Preserve the historical Form 4 and 13D/13G files. The recent Form 4
       # snapshot is reconciled independently from the legacy collectors.
       - name: Validate and publish only changed safe datasets
-        if: ${{ !cancelled() && (steps.prices.outcome == 'success' || steps.prices.outcome == 'failure' || steps.macro.outcome == 'success' || steps.macro.outcome == 'failure' || steps.form4_recent.outcome == 'success' || steps.form4_recent.outcome == 'failure' || steps.congress_house.outcome == 'success' || steps.congress_house.outcome == 'failure') }}
+        if: ${{ !cancelled() && (steps.form13f.outcome == 'success' || steps.form13f.outcome == 'failure') }}
         shell: bash
         run: |
           set -euo pipefail
@@ -69,6 +78,10 @@ jobs:
               changed+=("$file")
             fi
           done
+          if [[ -n "$(git status --porcelain -- sec-data)" ]]; then
+            SEC_REAL_BUNDLE=. node --test tests/partial_pages_ui.test.cjs
+            changed+=(sec-data)
+          fi
           if (( ${#changed[@]} == 0 )); then
             echo "No validated data changed. Existing snapshots retained."
             exit 0
@@ -80,7 +93,7 @@ jobs:
           git push
 
       - name: Report partial collection failure
-        if: ${{ always() && (steps.prices.outcome == 'failure' || steps.macro.outcome == 'failure' || steps.form4_recent.outcome == 'failure' || steps.congress_house.outcome == 'failure') }}
+        if: ${{ always() && (steps.form13f.outcome == 'failure' || steps.prices.outcome == 'failure' || steps.macro.outcome == 'failure' || steps.form4_recent.outcome == 'failure' || steps.congress_house.outcome == 'failure') }}
         run: |
           echo '::error::One or more collectors failed or returned partial/stale data. Successful validated updates were retained; review collector logs.'
           exit 1

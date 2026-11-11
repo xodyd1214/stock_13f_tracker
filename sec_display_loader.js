@@ -244,13 +244,16 @@
     const finalNow = readNow(); check(Number.isFinite(finalNow), 'clock unavailable');
     const freshness = validate(rows,coverage,manifest,policy,config.expectedScopeSha256,finalNow);
     let comparisons = null;
-    if (HEX.test(config.comparisonSha256 || '')) {
+    const comparisonHash = pointer.comparisonSha256 ?? config.comparisonSha256;
+    if (HEX.test(comparisonHash || '')) {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 5000);
       try {
-        const url = safeURL(base, 'sec-data/holding-comparisons.json');
+        const url = pointer.comparisonSha256
+          ? safeURL(generationBase, 'holding-comparisons.json')
+          : safeURL(base, 'sec-data/holding-comparisons.json');
         const data = await bytes((url, options) => fetcher(url, {...options, signal: controller.signal}), url, LIMITS.comparisons);
-        check(await digest(crypto, data) === config.comparisonSha256, 'comparison hash mismatch');
+        check(await digest(crypto, data) === comparisonHash, 'comparison hash mismatch');
         comparisons = validateComparisons(parse(data), pointer.generationId, rows, finalNow);
       } catch (_) {
         // Preserve the verified current snapshot when the optional comparison is unavailable.

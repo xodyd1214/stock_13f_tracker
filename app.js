@@ -4924,14 +4924,26 @@ function showUnavailableHoldings() {
   const modal = document.getElementById('stockModal'); if (modal?.classList) modal.classList.remove('show');
   renderGuruSidebar();
 }
+function form13FQuarterProgress(coverage, now = new Date()) {
+  const period = new Date(Date.UTC(now.getUTCFullYear(), Math.floor(now.getUTCMonth() / 3) * 3, 0));
+  const periodDate = period.toISOString().slice(0, 10);
+  const verified = new Map(coverage.labels.filter(item => item.status === 'available')
+    .map(item => [item.cik, item.reportDate]));
+  const count = [...verified.values()].filter(date => date === periodDate).length;
+  return `${period.getUTCFullYear()}년 ${Math.ceil((period.getUTCMonth() + 1) / 3)}분기 공시 ${count}/${verified.size}곳 반영`;
+}
+
 function renderPartialCoverage(error) {
   const status = document.getElementById('partialDisplayStatus');
+  const progress = document.getElementById('form13FQuarterProgress');
   const list = document.getElementById('partialCoverageList');
   if (list) list.replaceChildren();
   if (!SEC_DISPLAY) {
+    if (progress) progress.textContent = '';
     if (status) status.textContent = '공시 부분집합 사용 불가. 검증되지 않은 기존 자료는 표시하지 않습니다.';
     return;
   }
+  if (progress) progress.textContent = form13FQuarterProgress(SEC_DISPLAY.coverage);
   if (status) status.textContent = `43/50 추적명 확인 · 42개 SEC 신고 법인 · 7개 검증 중. ${SEC_DISPLAY.freshness.label} · 불러온 UTC ${SEC_DISPLAY.freshness.loadedAt || "미확인"} · 최초 원천 확인 UTC ${SEC_DISPLAY.freshness.acquisitionStartedAt || SEC_DISPLAY.manifest?.acquisitionStartedAt || "미확인"} · 마지막 확인 UTC ${SEC_DISPLAY.freshness.lastCheckedAt}. 전체 커버리지 및 현재 실시간 포트폴리오가 아닙니다. 숫자 합계는 검증된 비파생 주식 부분집합입니다. 직전 분기 비교 자료가 확인된 법인 ${SEC_DISPLAY.comparisons?.size || 0}곳.`;
   for (const item of SEC_DISPLAY.coverage.labels) {
     const li = document.createElement('li');
