@@ -2754,7 +2754,7 @@ button.congress-link {
 
 .modal-holders-table-wrap {
   max-height: 180px;
-  overflow-y: auto;
+  overflow: auto;
 }
 
 .modal-holders-table {
@@ -2764,19 +2764,26 @@ button.congress-link {
 }
 
 .modal-holders-table th {
+  position: sticky;
+  top: 0;
   font-size: 10px;
   font-weight: 700;
-  color: var(--text-muted);
+  color: var(--text-subdued);
   text-transform: uppercase;
   padding: 6px 8px;
   border-bottom: 1px solid var(--border-subtle);
-  background-color: transparent;
+  background-color: var(--bg-elevated);
 }
 
 .modal-holders-table td {
   padding: 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
   color: var(--text-subdued);
+}
+
+.modal-holders-table :is(th, td):not(:first-child) {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .modal-holders-table tr:hover td {

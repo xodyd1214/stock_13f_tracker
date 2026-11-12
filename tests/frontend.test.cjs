@@ -682,9 +682,41 @@ test('ticker collision cannot merge manager, grand, custom, consensus or modal i
   c.renderStockHoldersTable(second);
   assert.equal(elements.modalHoldersCount.innerText,2);
   const holderRows=elements.modalHoldersBody.children.map(row=>row.innerHTML).join('');
-  assert.match(holderRows,/<td>A<\/td>/);
-  assert.match(holderRows,/<td>C<\/td>/);
-  assert.doesNotMatch(holderRows,/<td>B<\/td>/);
+  assert.match(holderRows,/<td><strong>A<\/strong><\/td>/);
+  assert.match(holderRows,/<td><strong>C<\/strong><\/td>/);
+  assert.doesNotMatch(holderRows,/<strong>B<\/strong>/);
+});
+
+test('stock modal shows each holder’s dated share quantities and verified change rate', () => {
+  const cells = {
+    modalHoldersBody: {children: [], appendChild(row) { this.children.push(row); }},
+    modalHoldersCount: {}
+  };
+  const c = context(['formatMoney', 'reportedHoldingChange', 'renderStockHoldersTable'], {
+    GURU_DATABASE: {},
+    document: {getElementById: id => cells[id], createElement: () => ({style: {}})}
+  });
+  const security = {cusip: '037833100', shareType: 'SH'};
+  for (const [name, shares, priorShares] of [
+    ['Decrease', 1626854, 1760591], ['Increase', 120, 100], ['Same', 100, 100],
+    ['First reported', 25, null], ['Zero prior shares', 25, 0], ['Unavailable', 30, undefined]
+  ]) {
+    const change = priorShares === undefined ? null : c.reportedHoldingChange(shares, priorShares, '2026-06-30');
+    const periodDate = change ? '2026-09-30' : '2026-06-30';
+    c.GURU_DATABASE[name] = {name, fund: name, holdings: [{...security, periodDate, rawShares: shares, change, value: 100, weight: 1}]};
+  }
+  c.renderStockHoldersTable(security);
+  assert.equal(cells.modalHoldersCount.innerText, 6);
+  const rows = Object.fromEntries(cells.modalHoldersBody.children.map(row => {
+    const [name, ...columns] = [...row.innerHTML.matchAll(/<td[^>]*>(.*?)<\/td>/g)].map(cell => cell[1].replace(/<\/?strong>/g, ''));
+    return [name, columns.slice(0, 4)];
+  }));
+  assert.deepEqual(rows.Decrease, ['2026-09-30', '1,760,591주', '1,626,854주', '-7.6%']);
+  assert.deepEqual(rows.Increase, ['2026-09-30', '100주', '120주', '+20%']);
+  assert.deepEqual(rows.Same, ['2026-09-30', '100주', '100주', '0%']);
+  assert.deepEqual(rows['First reported'], ['2026-09-30', '미보고', '25주', '신규 공시']);
+  assert.deepEqual(rows['Zero prior shares'], ['2026-09-30', '0주', '25주', '산출 불가']);
+  assert.deepEqual(rows.Unavailable, ['2026-06-30', '—', '30주', '비교 자료 없음']);
 });
 
 test('missing identity rows remain separate while CUSIP duplicates aggregate without losing value', () => {

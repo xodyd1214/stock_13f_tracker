@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=110">
+  <link rel="stylesheet" href="style.css?v=111">
 </head>
 <body>
   <div class="app-container">
@@ -892,11 +892,13 @@
             <table class="modal-holders-table">
               <thead>
                 <tr>
-                  <th>운용사 / 기관명</th>
-                  <th>대표 매니저</th>
-                  <th class="text-right">보유 주식수</th>
-                  <th class="text-right">평가액</th>
-                  <th class="text-right">비중(%)</th>
+                  <th scope="col">기관명</th>
+                  <th scope="col">보유 기준일</th>
+                  <th scope="col" class="text-right">직전 수량</th>
+                  <th scope="col" class="text-right">이번 수량</th>
+                  <th scope="col" class="text-right">증감률</th>
+                  <th scope="col" class="text-right">평가액</th>
+                  <th scope="col" class="text-right">비중(%)</th>
                 </tr>
               </thead>
               <tbody id="modalHoldersBody">
@@ -1062,7 +1064,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js?v=2"></script>
   <script src="sec_display_loader.js?v=4"></script>
-  <script src="app.js?v=123"></script>
+  <script src="app.js?v=124"></script>
 </body>
 </html>
 

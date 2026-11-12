@@ -1765,6 +1765,7 @@ function renderStockHoldersTable(item) {
   if (!tbody || !countEl) return;
   tbody.innerHTML = "";
 
+  const security = holdingIdentity(item);
   const holders = [];
 
   Object.keys(GURU_DATABASE).forEach(guruKey => {
@@ -1772,41 +1773,46 @@ function renderStockHoldersTable(item) {
     const guru = GURU_DATABASE[guruKey];
     if (!guru || !guru.holdings) return;
 
-    const match = guru.holdings.find(h => holdingIdentity(h) === holdingIdentity(item));
-    if (match) {
-      holders.push({
-        guruKey: guruKey,
-        fund: guru.fund || guru.name,
-        manager: guru.name,
-        shares: match.shares,
-        val: match.value,
-        weight: match.weight
-      });
-    }
+    const holding = guru.holdings.find(h => holdingIdentity(h) === security);
+    if (holding) holders.push({ guruKey, name: guru.name, holding });
   });
 
-  holders.sort((a, b) => b.weight - a.weight);
+  holders.sort((a, b) => b.holding.weight - a.holding.weight);
   countEl.innerText = holders.length;
 
   if (holders.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 14px; color: var(--text-muted);">보유 정보가 없습니다.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 14px; color: var(--text-muted);">보유 정보가 없습니다.</td></tr>`;
     return;
   }
 
-  holders.forEach(h => {
+  const formatRate = new Intl.NumberFormat('ko-KR', { style: 'percent', signDisplay: 'exceptZero', maximumFractionDigits: 1 });
+  holders.forEach(({ guruKey, name, holding }) => {
+    const { change, periodDate, rawShares, value, weight } = holding;
+    let previousQuantity = '—';
+    let changeRate = '비교 자료 없음';
+    if (change?.priorShares === null) {
+      previousQuantity = '미보고';
+      changeRate = '신규 공시';
+    } else if (change) {
+      const { priorShares, delta } = change;
+      previousQuantity = `${priorShares.toLocaleString('ko-KR')}주`;
+      changeRate = priorShares > 0 ? formatRate.format(delta / priorShares) : '산출 불가';
+    }
     const tr = document.createElement("tr");
     tr.style.cursor = "pointer";
     tr.onclick = () => {
       ++insiderRequestId;
       document.getElementById("stockModal").classList.remove("show");
-      selectGuru(h.guruKey);
+      selectGuru(guruKey);
     };
     tr.innerHTML = `
-      <td><strong>${escapeHtml(h.fund)}</strong></td>
-      <td>${escapeHtml(h.manager)}</td>
-      <td class="text-right">${escapeHtml(h.shares)}</td>
-      <td class="text-right">${formatMoney(h.val)}</td>
-      <td class="text-right text-green"><strong>${h.weight}%</strong></td>
+      <td><strong>${escapeHtml(name)}</strong></td>
+      <td>${escapeHtml(periodDate || '—')}</td>
+      <td class="text-right">${previousQuantity}</td>
+      <td class="text-right">${rawShares.toLocaleString('ko-KR')}주</td>
+      <td class="text-right">${changeRate}</td>
+      <td class="text-right">${formatMoney(value)}</td>
+      <td class="text-right text-green"><strong>${weight}%</strong></td>
     `;
     tbody.appendChild(tr);
   });
