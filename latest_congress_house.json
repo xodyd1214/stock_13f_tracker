@@ -1,9 +1,51 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-11-11",
-  "ptrFrom": "2026-08-14",
+  "asOf": "2026-11-12",
+  "ptrFrom": "2026-08-15",
   "annualYear": 2025,
   "filings": [
+    {
+      "id": "20035826",
+      "kind": "ptr",
+      "year": 2026,
+      "filed": "2026-11-11",
+      "name": "Lloyd Doggett",
+      "district": "TX37",
+      "parsed": true,
+      "rows": [
+        {
+          "asset": "Coca-Cola Company",
+          "ticker": "KO",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-01",
+          "action": "P",
+          "status": "New"
+        }
+      ]
+    },
+    {
+      "id": "20035821",
+      "kind": "ptr",
+      "year": 2026,
+      "filed": "2026-11-11",
+      "name": "Richard W. Allen",
+      "district": "GA12",
+      "parsed": true,
+      "rows": [
+        {
+          "asset": "Sherwin-Williams Company",
+          "ticker": "SHW",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-09",
+          "action": "S (partial)",
+          "status": "New"
+        }
+      ]
+    },
     {
       "id": "9116403",
       "kind": "ptr",
@@ -12623,338 +12665,6 @@
       "district": "CA50",
       "parsed": true,
       "rows": []
-    },
-    {
-      "id": "20035204",
-      "kind": "ptr",
-      "year": 2026,
-      "filed": "2026-08-14",
-      "name": "Richard Dean Dr McCormick",
-      "district": "GA06",
-      "parsed": true,
-      "rows": [
-        {
-          "asset": "Abbott Laboratories Common Stock",
-          "ticker": "ABT",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Air Products and Chemicals, Inc. Common Stock",
-          "ticker": "APD",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "American Water Works Company, Inc. Common Stock",
-          "ticker": "AWK",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Analog Devices, Inc. - Common Stock",
-          "ticker": "ADI",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Apple Inc. - Common Stock",
-          "ticker": "AAPL",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Automatic Data Processing, Inc. - Common Stock",
-          "ticker": "ADP",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Berkshire Hathaway Inc. New Common Stock",
-          "ticker": "BRK.B",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "P",
-          "status": "New"
-        },
-        {
-          "asset": "BlackRock, Inc. Common Stock",
-          "ticker": "BLK",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Cisco Systems, Inc. - Common Stock",
-          "ticker": "CSCO",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Costco Wholesale Corporation - Common Stock",
-          "ticker": "COST",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Emerson Electric Company Common Stock",
-          "ticker": "EMR",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Home Depot, Inc.",
-          "ticker": "HD",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Illinois Tool Works Inc. Common Stock",
-          "ticker": "ITW",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Intercontinental Exchange Inc. Common Stock",
-          "ticker": "ICE",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Johnson & Johnson Common Stock",
-          "ticker": "JNJ",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "L3Harris Technologies, Inc. Common Stock",
-          "ticker": "LHX",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "McDonald's Corporation Common Stock",
-          "ticker": "MCD",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Medtronic plc. Ordinary Shares",
-          "ticker": "MDT",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Microsoft Corporation - Common Stock",
-          "ticker": "MSFT",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "NextEra Energy, Inc. Common Stock",
-          "ticker": "NEE",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Pepsico, Inc.",
-          "ticker": "PEP",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Procter & Gamble Company",
-          "ticker": "PG",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Realty Income Corporation Common Stock",
-          "ticker": "O",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "UnitedHealth Group Incorporated Common Stock",
-          "ticker": "UNH",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Visa Inc.",
-          "ticker": "V",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Walmart Inc. - Common Stock",
-          "ticker": "WMT",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-30",
-          "action": "S",
-          "status": "New"
-        }
-      ]
-    },
-    {
-      "id": "20035130",
-      "kind": "ptr",
-      "year": 2026,
-      "filed": "2026-08-14",
-      "name": "Michael Patrick Guest",
-      "district": "MS03",
-      "parsed": true,
-      "rows": [
-        {
-          "asset": "Airbnb, Inc. - Class A Common Stock",
-          "ticker": "ABNB",
-          "assetType": "ST",
-          "owner": "SP",
-          "value": "$1,001 - $15,000",
-          "traded": "2025-12-16",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Chevron Corporation Common Stock",
-          "ticker": "CVX",
-          "assetType": "ST",
-          "owner": "SP",
-          "value": "$1,001 - $15,000",
-          "traded": "2025-12-16",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "e.l.f. Beauty, Inc. Common Stock",
-          "ticker": "ELF",
-          "assetType": "ST",
-          "owner": "SP",
-          "value": "$1,001 - $15,000",
-          "traded": "2025-12-16",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "ExxonMobil Holdings Corporation Common Stock",
-          "ticker": "XOM",
-          "assetType": "ST",
-          "owner": "SP",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-02",
-          "action": "E",
-          "status": "New"
-        },
-        {
-          "asset": "ExxonMobil Holdings Corporation Common Stock",
-          "ticker": "XOM",
-          "assetType": "ST",
-          "owner": "SP",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-02",
-          "action": "E",
-          "status": "New"
-        }
-      ]
     },
     {
       "id": "10081687",
