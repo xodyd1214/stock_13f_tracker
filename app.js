@@ -1878,7 +1878,17 @@ function setupEventListeners() {
   }
 
   document.querySelectorAll("th.sortable").forEach(th => {
-    th.onclick = () => {
+    if (th.dataset.columnHelp) {
+      const heading = document.createElement("span");
+      heading.className = "holdings-column-heading";
+      const label = document.createElement("span");
+      label.textContent = th.textContent.trim();
+      heading.append(label);
+      heading.insertAdjacentHTML("beforeend", macroHelpButton(th.dataset.columnHelp, label.textContent));
+      th.replaceChildren(heading);
+    }
+    th.onclick = (event) => {
+      if (event.target.closest(".macro-help-button")) return;
       const col = th.dataset.sort;
       if (state.sortColumn === col) {
         state.sortDirection = state.sortDirection === "asc" ? "desc" : "asc";
@@ -3657,6 +3667,53 @@ const HELP_TOPICS = {
     "운용사와 보유 기준일을 먼저 보고, 종목별 수량과 평가액을 확인해요. 분기말 평가단가는 같은 기준일의 평가액을 수량으로 나눈 값이에요.",
     "통상 분기 말부터 45일 안에 제출해요. 매매 시점과 실제 매입가는 별도 자료가 필요해요. 사이트의 종합 화면은 기준일이 다른 검증된 일부 공시를 합산해요."
   ],
+  holdingTicker: [
+    "종목 / 티커",
+    "기관이 공시한 증권의 이름과 확인된 거래소 종목 코드예요.",
+    "AAPL은 애플의 티커예요. 티커가 확인되지 않은 증권은 공시의 증권 식별번호인 CUSIP으로 표시해요."
+  ],
+  holdingSector: [
+    "섹터",
+    "종목을 기술, 금융처럼 산업별로 분류한 값이에요.",
+    "Other는 기타 분류예요. 산업을 확인하지 못한 종목도 여기에 들어갈 수 있어요."
+  ],
+  holdingManagers: [
+    "보유 운용사",
+    "선택한 범위에서 이 종목의 보유를 신고한 SEC 법인 수예요.",
+    "14개사 보유는 이 사이트에서 확인한 공시 중 14개 법인이 이 종목을 보고했다는 뜻이에요. 기관별 보유 기준일은 종목 상세에서 볼 수 있어요."
+  ],
+  holdingChange: [
+    "공시 보유 변화",
+    "같은 기관의 같은 증권을 직전 분기와 이번 분기 공시에서 비교한 결과예요.",
+    "증가 5 · 감소 3은 공시 주식 수가 늘어난 기관 5곳과 줄어든 기관 3곳을 뜻해요. 기관별 수량은 종목 상세에서 볼 수 있어요.",
+    "신규는 직전 공시에서 해당 종목이 보고되지 않았다는 뜻이에요. 비교 자료 없음은 직전 수량을 확인할 수 없는 경우예요. 수량에는 주식분할도 반영될 수 있어요."
+  ],
+  holdingShares: [
+    "주식 수",
+    "기관이 보유 기준일에 보유했다고 공시한 주식 수예요. 여러 기관을 보는 화면에서는 각 공시 수량을 합산해요.",
+    "K는 천 주, M은 백만 주예요. 기관별 정확한 수량과 기준일은 종목 상세에서 볼 수 있어요."
+  ],
+  holdingValue: [
+    "총 평가 금액 ($)",
+    "기관이 분기 말에 보유한 이 종목의 공시 평가액이에요. 여러 기관을 보는 화면에서는 각 공시 평가액을 달러로 합산해요.",
+    "B는 10억 달러, M은 100만 달러예요. 기관마다 보유 기준일이 다를 수 있어요."
+  ],
+  holdingWeight: [
+    "통합 비중 (%)",
+    "선택한 기관 또는 기관 묶음의 공시 주식 평가액 합계에서 이 종목이 차지하는 비율이에요.",
+    "4%는 화면이 집계하는 전체 공시 주식 평가액의 4%가 이 종목이라는 뜻이에요."
+  ],
+  holdingUnitValue: [
+    "분기말 평가단가",
+    "같은 기준일의 공시 평가액을 보유 주식 수로 나눈 주당 금액이에요.",
+    "분기 말에 주당 얼마로 평가됐는지 보여줘요. 기관이 실제로 지불한 매입 단가는 Form 13F에 공개되지 않아요.",
+    "여러 기관의 보유 기준일이 서로 다른 행은 ‘—’로 표시해요."
+  ],
+  holdingQuote: [
+    "최근 조회 시세",
+    "관측 시각이 확인된 24시간 이내의 달러 시장 가격이에요.",
+    "분기말 평가단가는 공시 기준일의 값이고, 이 열은 최근 조회한 시세예요. 유효한 시세가 있는 종목에만 값을 표시해요."
+  ],
   FORM4: [
     "Form 4 내부자 거래 공시",
     "상장사 임원·이사나 해당 주식 종류의 10%를 초과해 보유한 주요 주주 등이 증권 보유 변동을 SEC에 신고하는 공시예요.",
@@ -3865,6 +3922,8 @@ function setupMacroHelp() {
   observer.observe(document.getElementById("viewMacro"), { attributes: true, attributeFilter: ["style"] });
   observer.observe(document.getElementById("filingHelpButton"), { attributes: true, attributeFilter: ["hidden", "data-macro-help"] });
   observer.observe(document.getElementById("viewForm4"), { attributes: true, attributeFilter: ["style"] });
+  observer.observe(document.getElementById("view13F"), { attributes: true, attributeFilter: ["style", "data-loading"] });
+  observer.observe(document.querySelector("#holdingsTable thead"), { subtree: true, attributes: true, attributeFilter: ["style"] });
   observer.observe(document.getElementById("stockModal"), { attributes: true, attributeFilter: ["class"] });
 }
 

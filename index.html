@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=111">
+  <link rel="stylesheet" href="style.css?v=112">
 </head>
 <body>
   <div class="app-container">
@@ -437,15 +437,15 @@
             <table class="power-table fullwidth-table" id="holdingsTable">
               <thead>
                 <tr>
-                  <th class="sortable text-left" data-sort="ticker">종목 / 티커</th>
-                  <th class="col-sector sortable text-left" data-sort="sector">섹터</th>
-                  <th class="col-holders sortable text-center" data-sort="holders">보유 운용사</th>
-                  <th class="col-holding-change sortable text-center" data-sort="action">공시 보유 변화</th>
-                  <th class="col-shares sortable text-right" data-sort="shares">주식 수</th>
-                  <th class="col-value sortable text-right" data-sort="value">총 평가 금액 ($)</th>
-                  <th class="col-weight sortable text-right" data-sort="weight">통합 비중 (%)</th>
-                  <th class="col-filingUnitValue sortable text-right" data-sort="filingUnitValue" title="같은 기준일의 SEC 평가액 ÷ 보유 주식 수" style="display: none;">분기말 평가단가</th>
-                  <th class="col-curPrice sortable text-right" data-sort="curPrice" style="display: none;">최근 조회 시세</th>
+                  <th class="sortable text-left" scope="col" data-sort="ticker" data-column-help="holdingTicker">종목 / 티커</th>
+                  <th class="col-sector sortable text-left" scope="col" data-sort="sector" data-column-help="holdingSector">섹터</th>
+                  <th class="col-holders sortable text-center" scope="col" data-sort="holders" data-column-help="holdingManagers">보유 운용사</th>
+                  <th class="col-holding-change sortable text-center" scope="col" data-sort="action" data-column-help="holdingChange">공시 보유 변화</th>
+                  <th class="col-shares sortable text-right" scope="col" data-sort="shares" data-column-help="holdingShares">주식 수</th>
+                  <th class="col-value sortable text-right" scope="col" data-sort="value" data-column-help="holdingValue">총 평가 금액 ($)</th>
+                  <th class="col-weight sortable text-right" scope="col" data-sort="weight" data-column-help="holdingWeight">통합 비중 (%)</th>
+                  <th class="col-filingUnitValue sortable text-right" scope="col" data-sort="filingUnitValue" data-column-help="holdingUnitValue" style="display: none;">분기말 평가단가</th>
+                  <th class="col-curPrice sortable text-right" scope="col" data-sort="curPrice" data-column-help="holdingQuote" style="display: none;">최근 조회 시세</th>
                 </tr>
               </thead>
               <tbody id="tableBody">
@@ -1064,7 +1064,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js?v=2"></script>
   <script src="sec_display_loader.js?v=4"></script>
-  <script src="app.js?v=124"></script>
+  <script src="app.js?v=125"></script>
 </body>
 </html>
 

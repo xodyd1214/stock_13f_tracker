@@ -2187,6 +2187,19 @@ button.congress-link {
   width: 180px;
 }
 
+.holdings-column-heading {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.holdings-column-heading > span {
+  min-width: 0;
+  white-space: normal;
+  word-break: keep-all;
+}
+
 #holdingsTable .col-holding-change,
 #holdingsTable .col-holding-change .action-badge {
   white-space: normal;
