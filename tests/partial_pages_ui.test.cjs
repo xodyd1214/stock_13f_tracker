@@ -24,13 +24,20 @@ test('quarter progress counts unique reporting entities and rolls over after yea
  const {ctx} = context([]);
  vm.runInContext(extract('form13FQuarterProgress'), ctx);
  const coverage = { labels: [
-  { cik: '1', status: 'available', reportDate: '2026-09-30' },
-  { cik: '1', status: 'available', reportDate: '2026-09-30' },
-  { cik: '2', status: 'available', reportDate: '2026-06-30' },
-  { cik: '3', status: 'verification-pending' }
+  { cik: '1', legalName: 'Zeta', status: 'available', reportDate: '2026-09-30' },
+  { cik: '1', legalName: 'Zeta', status: 'available', reportDate: '2026-09-30' },
+  { cik: '2', legalName: 'Older', status: 'available', reportDate: '2026-06-30' },
+  { cik: '3', status: 'verification-pending' },
+  { cik: '4', legalName: 'Alpha', status: 'available', reportDate: '2026-09-30' }
  ] };
- assert.equal(ctx.form13FQuarterProgress(coverage, new Date('2026-11-11T12:00Z')), '2026년 3분기 공시 1/2곳 반영');
- assert.equal(ctx.form13FQuarterProgress(coverage, new Date('2027-01-01T12:00Z')), '2026년 4분기 공시 0/2곳 반영');
+ const q3 = ctx.form13FQuarterProgress(coverage, new Date('2026-11-11T12:00Z'));
+ assert.equal(q3.label, '2026년 3분기 공시 2/3곳 반영');
+ assert.deepEqual(Array.from(q3.institutions, item => [item.legalName, item.reportDate]), [
+  ['Alpha', '2026-09-30'], ['Zeta', '2026-09-30']
+ ]);
+ const q4 = ctx.form13FQuarterProgress(coverage, new Date('2027-01-01T12:00Z'));
+ assert.equal(q4.label, '2026년 4분기 공시 0/3곳 반영');
+ assert.equal(q4.institutions.length, 0);
 });
 test('real processing rejects legacy rows and produces null total rather than zero holdings claim', () => {
  const {ctx} = context([row()], false); ctx.processAndRenderHoldingsData();

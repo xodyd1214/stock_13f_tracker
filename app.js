@@ -1877,16 +1877,35 @@ function setupEventListeners() {
     });
   }
 
-  document.querySelectorAll("th.sortable").forEach(th => {
-    if (th.dataset.columnHelp) {
-      const heading = document.createElement("span");
-      heading.className = "holdings-column-heading";
-      const label = document.createElement("span");
-      label.textContent = th.textContent.trim();
-      heading.append(label);
-      heading.insertAdjacentHTML("beforeend", macroHelpButton(th.dataset.columnHelp, label.textContent));
-      th.replaceChildren(heading);
-    }
+  const sortHeaders = [...document.querySelectorAll("#holdingsTable th.sortable")];
+  function showSortDirection() {
+    const ascending = state.sortDirection === "asc";
+    sortHeaders.forEach(th => {
+      const direction = th.querySelector(".holdings-sort-direction");
+      if (th.dataset.sort === state.sortColumn) {
+        th.setAttribute("aria-sort", ascending ? "ascending" : "descending");
+        direction.textContent = ascending ? "오름차순" : "내림차순";
+      } else {
+        th.removeAttribute("aria-sort");
+        direction.textContent = "";
+      }
+    });
+  }
+  sortHeaders.forEach(th => {
+    const heading = document.createElement("span");
+    heading.className = "holdings-column-heading";
+    const label = th.textContent.trim();
+    const sortButton = document.createElement("button");
+    sortButton.type = "button";
+    sortButton.className = "holdings-sort-button";
+    sortButton.textContent = label;
+    const direction = document.createElement("small");
+    direction.className = "holdings-sort-direction";
+    direction.setAttribute("aria-hidden", "true");
+    sortButton.append(direction);
+    heading.append(sortButton);
+    heading.insertAdjacentHTML("beforeend", macroHelpButton(th.dataset.columnHelp, label));
+    th.replaceChildren(heading);
     th.onclick = (event) => {
       if (event.target.closest(".macro-help-button")) return;
       const col = th.dataset.sort;
@@ -1896,9 +1915,11 @@ function setupEventListeners() {
         state.sortColumn = col;
         state.sortDirection = "desc";
       }
+      showSortDirection();
       renderTable();
     };
   });
+  showSortDirection();
 
   const btnExport = document.getElementById("btnExportCsv");
   if (btnExport) {
@@ -4993,22 +5014,40 @@ function form13FQuarterProgress(coverage, now = new Date()) {
   const period = new Date(Date.UTC(now.getUTCFullYear(), Math.floor(now.getUTCMonth() / 3) * 3, 0));
   const periodDate = period.toISOString().slice(0, 10);
   const verified = new Map(coverage.labels.filter(item => item.status === 'available')
-    .map(item => [item.cik, item.reportDate]));
-  const count = [...verified.values()].filter(date => date === periodDate).length;
-  return `${period.getUTCFullYear()}년 ${Math.ceil((period.getUTCMonth() + 1) / 3)}분기 공시 ${count}/${verified.size}곳 반영`;
+    .map(item => [item.cik, item]));
+  const institutions = [...verified.values()].filter(item => item.reportDate === periodDate)
+    .sort((a, b) => a.legalName.localeCompare(b.legalName));
+  const label = `${period.getUTCFullYear()}년 ${Math.ceil((period.getUTCMonth() + 1) / 3)}분기 공시 ${institutions.length}/${verified.size}곳 반영`;
+  return { label, institutions };
 }
 
 function renderPartialCoverage(error) {
   const status = document.getElementById('partialDisplayStatus');
-  const progress = document.getElementById('form13FQuarterProgress');
+  const quarterPanel = document.getElementById('form13FQuarterPanel');
+  const quarterList = document.getElementById('form13FQuarterInstitutions');
+  if (quarterPanel) quarterPanel.hidden = !SEC_DISPLAY;
+  if (quarterList) quarterList.replaceChildren();
   const list = document.getElementById('partialCoverageList');
   if (list) list.replaceChildren();
   if (!SEC_DISPLAY) {
-    if (progress) progress.textContent = '';
     if (status) status.textContent = '공시 부분집합 사용 불가. 검증되지 않은 기존 자료는 표시하지 않습니다.';
     return;
   }
-  if (progress) progress.textContent = form13FQuarterProgress(SEC_DISPLAY.coverage);
+  if (quarterPanel) {
+    const { label, institutions } = form13FQuarterProgress(SEC_DISPLAY.coverage);
+    document.getElementById('form13FQuarterProgress').textContent = label;
+    document.getElementById('form13FQuarterEmpty').hidden = institutions.length > 0;
+    for (const institution of institutions) {
+      const row = document.createElement('li');
+      const name = document.createElement('span');
+      const date = document.createElement('time');
+      name.textContent = institution.legalName;
+      date.dateTime = institution.reportDate;
+      date.textContent = institution.reportDate;
+      row.append(name, date);
+      quarterList.appendChild(row);
+    }
+  }
   if (status) status.textContent = `43/50 추적명 확인 · 42개 SEC 신고 법인 · 7개 검증 중. ${SEC_DISPLAY.freshness.label} · 불러온 UTC ${SEC_DISPLAY.freshness.loadedAt || "미확인"} · 최초 원천 확인 UTC ${SEC_DISPLAY.freshness.acquisitionStartedAt || SEC_DISPLAY.manifest?.acquisitionStartedAt || "미확인"} · 마지막 확인 UTC ${SEC_DISPLAY.freshness.lastCheckedAt}. 전체 커버리지 및 현재 실시간 포트폴리오가 아닙니다. 숫자 합계는 검증된 비파생 주식 부분집합입니다. 직전 분기 비교 자료가 확인된 법인 ${SEC_DISPLAY.comparisons?.size || 0}곳.`;
   for (const item of SEC_DISPLAY.coverage.labels) {
     const li = document.createElement('li');

@@ -621,6 +621,24 @@ body {
   text-underline-offset: 3px;
 }
 
+#form13FQuarterInstitutions {
+  list-style: none;
+  padding: 0;
+}
+
+#form13FQuarterInstitutions li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+#form13FQuarterInstitutions time {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Top Profile Header */
 .top-header {
   display: flex;
@@ -2194,10 +2212,29 @@ button.congress-link {
   vertical-align: middle;
 }
 
-.holdings-column-heading > span {
+.holdings-sort-button {
   min-width: 0;
   white-space: normal;
   word-break: keep-all;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+.holdings-sort-button:focus-visible {
+  outline: 2px solid var(--spotify-green);
+  outline-offset: 2px;
+}
+
+.holdings-sort-direction:not(:empty) {
+  display: block;
+  color: var(--spotify-green);
+  font-size: 10px;
+  font-weight: 500;
 }
 
 #holdingsTable .col-holding-change,

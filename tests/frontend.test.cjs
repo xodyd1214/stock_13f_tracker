@@ -848,6 +848,29 @@ test('quote-only table redraw retains already expanded pages', () => {
   assert.equal(pageCount, 1, 'new search/manager renders still begin at first page');
 });
 
+test('Form 13F sorts exact share counts across the displayed K and M units', () => {
+  const index = fs.readFileSync(require('node:path').join(__dirname, '../index.html'), 'utf8');
+  const sortColumn = index.match(/<th class="col-shares sortable[^"]*"[^>]*data-sort="([^"]+)"/)[1];
+  const c = context(['hasHoldingChange', 'renderTable'], {
+    state: {currentGuruKey: 'A', activeFilter: 'ALL', searchQuery: '', sortColumn, sortDirection: 'desc'},
+    GURU_DATABASE: {A: {holdings: [
+      {rawShares: 999919, shares: '999.9K'},
+      {rawShares: 2000010, shares: '2.00M'},
+      {rawShares: 10000000, shares: '10.00M'},
+      {rawShares: 2000020, shares: '2.00M'}
+    ]}},
+    CURRENT_PAGE_INDEX: 1,
+    CURRENT_FILTERED_ITEMS: [],
+    document: {getElementById: () => ({})},
+    appendNextPageRows() {}
+  });
+  c.renderTable();
+  const descending = [10000000, 2000020, 2000010, 999919];
+  assert.deepEqual(Array.from(c.CURRENT_FILTERED_ITEMS, holding => holding.rawShares), descending);
+  c.state.sortDirection = 'asc';
+  c.renderTable();
+  assert.deepEqual(Array.from(c.CURRENT_FILTERED_ITEMS, holding => holding.rawShares), descending.reverse());
+});
 
 test('SH units cannot bypass explicit option and warrant class or ticker markers', () => {
   const rows = [

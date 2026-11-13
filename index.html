@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=112">
+  <link rel="stylesheet" href="style.css?v=113">
 </head>
 <body>
   <div class="app-container">
@@ -290,7 +290,17 @@
       <!-- [VIEW 1] Form 13F 운용사 포트폴리오 대시보드 -->
       <div id="view13F" class="filing-view-container" style="display: none;">
         <p id="sec13FLoading" class="card-sub data-quality-note" role="status" hidden>13F 공시 자료를 불러와 검증하고 있습니다.</p>
-        <p class="card-sub data-quality-note"><strong id="form13FQuarterProgress" aria-live="polite"></strong></p>
+        <details class="disclosure-panel" id="form13FQuarterPanel" hidden>
+          <summary>
+            <span id="form13FQuarterProgress" aria-live="polite"></span>
+            <span class="disclosure-toggle disclosure-toggle-open">기관 보기</span>
+            <span class="disclosure-toggle disclosure-toggle-close">접기</span>
+          </summary>
+          <div class="disclosure-content">
+            <p id="form13FQuarterEmpty" hidden>이 분기에 반영된 기관이 없습니다.</p>
+            <ul id="form13FQuarterInstitutions" class="disclosure-source-list" aria-label="이 분기에 반영된 기관"></ul>
+          </div>
+        </details>
         <details class="disclosure-panel" id="partialDisplayPanel">
           <summary>
             <span>공시 검증 정보 및 원문</span>
@@ -311,7 +321,7 @@
         <section class="overview-grid">
           <div class="metric-card">
             <div class="metric-header">
-              <span class="metric-title">총 운용 자산 (AUM)</span>
+              <span class="metric-title">공시 주식 평가액 합계</span>
             </div>
             <div class="metric-value text-green" id="metricTotalAum">-</div>
             <div class="metric-sub" id="metricTotalHoldings">-</div>
@@ -441,7 +451,7 @@
                   <th class="col-sector sortable text-left" scope="col" data-sort="sector" data-column-help="holdingSector">섹터</th>
                   <th class="col-holders sortable text-center" scope="col" data-sort="holders" data-column-help="holdingManagers">보유 운용사</th>
                   <th class="col-holding-change sortable text-center" scope="col" data-sort="action" data-column-help="holdingChange">공시 보유 변화</th>
-                  <th class="col-shares sortable text-right" scope="col" data-sort="shares" data-column-help="holdingShares">주식 수</th>
+                  <th class="col-shares sortable text-right" scope="col" data-sort="rawShares" data-column-help="holdingShares">주식 수</th>
                   <th class="col-value sortable text-right" scope="col" data-sort="value" data-column-help="holdingValue">총 평가 금액 ($)</th>
                   <th class="col-weight sortable text-right" scope="col" data-sort="weight" data-column-help="holdingWeight">통합 비중 (%)</th>
                   <th class="col-filingUnitValue sortable text-right" scope="col" data-sort="filingUnitValue" data-column-help="holdingUnitValue" style="display: none;">분기말 평가단가</th>
@@ -1064,7 +1074,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js?v=2"></script>
   <script src="sec_display_loader.js?v=4"></script>
-  <script src="app.js?v=125"></script>
+  <script src="app.js?v=126"></script>
 </body>
 </html>
 
