@@ -1196,6 +1196,7 @@ function loadGuruData(key) {
   if (!guru) return;
   applyLivePricesToHoldings(guru.holdings);
 
+  document.getElementById("form13FHoldingsSection")?.setAttribute("aria-label", `${guru.name} 보유 종목`);
   const isSpecial = key === "__GRAND_TOTAL__" || key === "__CUSTOM_GROUP__";
   const elName = document.getElementById("currentGuruName");
   if (elName) elName.innerText = isSpecial ? guru.name : (guru.fund || guru.name);
@@ -5039,9 +5040,20 @@ function renderPartialCoverage(error) {
     document.getElementById('form13FQuarterEmpty').hidden = institutions.length > 0;
     for (const institution of institutions) {
       const row = document.createElement('li');
-      const name = document.createElement('span');
+      const name = document.createElement(institution.holdingsCount > 0 ? 'button' : 'span');
       const date = document.createElement('time');
       name.textContent = institution.legalName;
+      if (name.tagName === 'BUTTON') {
+        name.type = 'button';
+        name.onclick = () => {
+          const key = institution.legalName;
+          if (GURU_DATABASE[key]?.cik !== institution.cik) return;
+          selectGuru(key);
+          const section = document.getElementById('form13FHoldingsSection');
+          section.focus({ preventScroll: true });
+          section.scrollIntoView({ block: 'start' });
+        };
+      }
       date.dateTime = institution.reportDate;
       date.textContent = institution.reportDate;
       row.append(name, date);

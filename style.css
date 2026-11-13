@@ -634,6 +634,28 @@ body {
   border-bottom: 1px solid var(--border-subtle);
 }
 
+#form13FQuarterInstitutions button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-near-white);
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+#form13FQuarterInstitutions button:hover {
+  color: var(--spotify-green);
+}
+
+#form13FQuarterInstitutions button:focus-visible {
+  outline: 2px solid var(--spotify-green);
+  outline-offset: 2px;
+}
+
 #form13FQuarterInstitutions time {
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
