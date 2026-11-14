@@ -3224,7 +3224,7 @@
     ],
     [
       1467760,
-      "Apollo Commercial Real Estate Finance, Inc.",
+      "Apollo Commercial Real Estate Finance Liquidating Trust",
       "ARI",
       "NYSE"
     ],
@@ -3794,25 +3794,25 @@
     ],
     [
       2128739,
-      "JAB Acquisition Corp I",
+      "Atlantic Acquisition Corp I",
       "ATLQ",
       "Nasdaq"
     ],
     [
       2128739,
-      "JAB Acquisition Corp I",
+      "Atlantic Acquisition Corp I",
       "ATLQR",
       "Nasdaq"
     ],
     [
       2128739,
-      "JAB Acquisition Corp I",
+      "Atlantic Acquisition Corp I",
       "ATLQU",
       "Nasdaq"
     ],
     [
       2128739,
-      "JAB Acquisition Corp I",
+      "Atlantic Acquisition Corp I",
       "ATLQW",
       "Nasdaq"
     ],
@@ -4000,12 +4000,6 @@
       1765850,
       "Aurelion Inc.",
       "AURE",
-      "Nasdaq"
-    ],
-    [
-      1828108,
-      "Aurora Innovation, Inc.",
-      "AUROW",
       "Nasdaq"
     ],
     [
@@ -5350,12 +5344,6 @@
       1858685,
       "Biofrontera Inc.",
       "BFRI",
-      "Nasdaq"
-    ],
-    [
-      1858685,
-      "Biofrontera Inc.",
-      "BFRIW",
       "Nasdaq"
     ],
     [
@@ -8011,12 +7999,6 @@
       "Nasdaq"
     ],
     [
-      944148,
-      "CBIZ, Inc.",
-      "CBZ",
-      "NYSE"
-    ],
-    [
       1627223,
       "Chemours Co",
       "CC",
@@ -8620,13 +8602,13 @@
       39263,
       "CULLEN/FROST BANKERS, INC.",
       "CFR",
-      "NYSE"
+      "TXSE"
     ],
     [
       39263,
       "CULLEN/FROST BANKERS, INC.",
       "CFR-PB",
-      "NYSE"
+      "TXSE"
     ],
     [
       1666244,
@@ -10570,6 +10552,12 @@
       1951089,
       "Critical Metals Corp.",
       "CRMLW",
+      "Nasdaq"
+    ],
+    [
+      2031009,
+      "Skyline Builders Group Holding Ltd",
+      "CRMN",
       "Nasdaq"
     ],
     [
@@ -13838,7 +13826,7 @@
     ],
     [
       1595353,
-      "Galmed Pharmaceuticals Ltd.",
+      "EoCene Ltd.",
       "EOCN",
       "Nasdaq"
     ],
@@ -17788,6 +17776,12 @@
       1415311,
       "ProShares Trust II",
       "GLL",
+      "NYSE"
+    ],
+    [
+      927971,
+      "BANK OF MONTREAL /CAN/",
+      "GLLD",
       "NYSE"
     ],
     [
@@ -23300,19 +23294,19 @@
     ],
     [
       2068454,
-      "CSLM Digital Asset Acquisition Corp III, Ltd",
+      "First Digital Acquisition Corp Ltd.",
       "KOYN",
       "Nasdaq"
     ],
     [
       2068454,
-      "CSLM Digital Asset Acquisition Corp III, Ltd",
+      "First Digital Acquisition Corp Ltd.",
       "KOYNU",
       "Nasdaq"
     ],
     [
       2068454,
-      "CSLM Digital Asset Acquisition Corp III, Ltd",
+      "First Digital Acquisition Corp Ltd.",
       "KOYNW",
       "Nasdaq"
     ],
@@ -23603,12 +23597,6 @@
       "KVH INDUSTRIES INC DE",
       "KVHI",
       "Nasdaq"
-    ],
-    [
-      1944048,
-      "Kenvue Inc.",
-      "KVUE",
-      "NYSE"
     ],
     [
       1835830,
@@ -24595,6 +24583,12 @@
       "NYSE"
     ],
     [
+      1462120,
+      "Live Oak Bancshares, Inc.",
+      "LOB-PB",
+      "NYSE"
+    ],
+    [
       1932072,
       "LOBO TECHNOLOGIES LTD.",
       "LOBO",
@@ -24669,7 +24663,19 @@
     [
       2115191,
       "Live Oak Acquisition Corp. VI",
+      "LOVI",
+      "Nasdaq"
+    ],
+    [
+      2115191,
+      "Live Oak Acquisition Corp. VI",
       "LOVIU",
+      "Nasdaq"
+    ],
+    [
+      2115191,
+      "Live Oak Acquisition Corp. VI",
+      "LOVIW",
       "Nasdaq"
     ],
     [
@@ -25096,18 +25102,6 @@
       1096056,
       "LUXFER HOLDINGS PLC",
       "LXFR",
-      "NYSE"
-    ],
-    [
-      910108,
-      "LXP Industrial Trust",
-      "LXP",
-      "NYSE"
-    ],
-    [
-      910108,
-      "LXP Industrial Trust",
-      "LXP-PC",
       "NYSE"
     ],
     [
@@ -26107,12 +26101,6 @@
       "Nasdaq"
     ],
     [
-      835011,
-      "SEMPREON, INC",
-      "MGPI",
-      "Nasdaq"
-    ],
-    [
       1004434,
       "AFFILIATED MANAGERS GROUP, INC.",
       "MGR",
@@ -26482,12 +26470,6 @@
       1937737,
       "Moolec Science SA",
       "MLEC",
-      "Nasdaq"
-    ],
-    [
-      1937737,
-      "Moolec Science SA",
-      "MLECW",
       "Nasdaq"
     ],
     [
@@ -30482,7 +30464,7 @@
     ],
     [
       1750284,
-      "Olema Pharmaceuticals, Inc.",
+      "Olema Oncology, Inc.",
       "OLMA",
       "Nasdaq"
     ],
@@ -30773,6 +30755,12 @@
       "OptimumBank Holdings, Inc.",
       "OPHC",
       "NYSE"
+    ],
+    [
+      1631487,
+      "CollPlant Biotechnologies Ltd",
+      "OPHI",
+      "Nasdaq"
     ],
     [
       1456772,
@@ -33721,12 +33709,6 @@
       "NYSE"
     ],
     [
-      1847064,
-      "PSQ Holdings, Inc.",
-      "PSQH-WT",
-      "NYSE"
-    ],
-    [
       2119292,
       "Pasqal Holding SA",
       "PSQL",
@@ -34291,6 +34273,12 @@
       "Nasdaq"
     ],
     [
+      949858,
+      "ACHIEVE LIFE SCIENCES, INC.",
+      "QUIT",
+      "Nasdaq"
+    ],
+    [
       2070900,
       "Quantumsphere Acquisition Corp",
       "QUMS",
@@ -34414,12 +34402,6 @@
       2041385,
       "Ralliant Corp",
       "RAL",
-      "NYSE"
-    ],
-    [
-      733269,
-      "LiveRamp Holdings, Inc.",
-      "RAMP",
       "NYSE"
     ],
     [
@@ -37393,12 +37375,6 @@
       "Nasdaq"
     ],
     [
-      927971,
-      "BANK OF MONTREAL /CAN/",
-      "SHNY",
-      "NYSE"
-    ],
-    [
       1295810,
       "Sunstone Hotel Investors, Inc.",
       "SHO",
@@ -39043,6 +39019,12 @@
       "NYSE"
     ],
     [
+      1994624,
+      "ScanTech AI Systems Inc.",
+      "STAI",
+      "Nasdaq"
+    ],
+    [
       2002453,
       "STAK Inc.",
       "STAK",
@@ -39617,12 +39599,6 @@
       "STANLEY BLACK & DECKER, INC.",
       "SWK",
       "NYSE"
-    ],
-    [
-      1089907,
-      "SWK Holdings Corp",
-      "SWKHL",
-      "Nasdaq"
     ],
     [
       4127,
@@ -42536,43 +42512,43 @@
     ],
     [
       36104,
-      "US BANCORP DE",
+      "US BANCORP \\DE\\",
       "USB",
       "NYSE"
     ],
     [
       36104,
-      "US BANCORP DE",
+      "US BANCORP \\DE\\",
       "USB-PA",
       "NYSE"
     ],
     [
       36104,
-      "US BANCORP DE",
+      "US BANCORP \\DE\\",
       "USB-PH",
       "NYSE"
     ],
     [
       36104,
-      "US BANCORP DE",
+      "US BANCORP \\DE\\",
       "USB-PP",
       "NYSE"
     ],
     [
       36104,
-      "US BANCORP DE",
+      "US BANCORP \\DE\\",
       "USB-PQ",
       "NYSE"
     ],
     [
       36104,
-      "US BANCORP DE",
+      "US BANCORP \\DE\\",
       "USB-PR",
       "NYSE"
     ],
     [
       36104,
-      "US BANCORP DE",
+      "US BANCORP \\DE\\",
       "USB-PS",
       "NYSE"
     ],
@@ -43622,7 +43598,7 @@
     ],
     [
       1590750,
-      "Viridian Therapeutics, Inc.DE",
+      "Viridian Therapeutics, Inc.\\DE",
       "VRDN",
       "Nasdaq"
     ],
@@ -43852,6 +43828,12 @@
       1674910,
       "VALVOLINE INC",
       "VVV",
+      "NYSE"
+    ],
+    [
+      1907709,
+      "vVARDIS Holding AG",
+      "VVVV",
       "NYSE"
     ],
     [
@@ -44941,6 +44923,12 @@
       "Nasdaq"
     ],
     [
+      2145089,
+      "WINDWARD BIO GROUP AG",
+      "WWB",
+      "Nasdaq"
+    ],
+    [
       108312,
       "Woodward, Inc.",
       "WWD",
@@ -45124,6 +45112,12 @@
       1274737,
       "EXAGEN INC.",
       "XGN",
+      "Nasdaq"
+    ],
+    [
+      1812727,
+      "Reliance Global Group, Inc.",
+      "XGPU",
       "Nasdaq"
     ],
     [
@@ -46060,6 +46054,12 @@
       1937653,
       "Zymeworks Inc.",
       "ZYME",
+      "Nasdaq"
+    ],
+    [
+      2016337,
+      "PTL Ltd",
+      "ZYN",
       "Nasdaq"
     ]
   ]
