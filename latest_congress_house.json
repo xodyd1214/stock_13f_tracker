@@ -1,9 +1,210 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-11-12",
-  "ptrFrom": "2026-08-15",
+  "asOf": "2026-11-13",
+  "ptrFrom": "2026-08-16",
   "annualYear": 2025,
   "filings": [
+    {
+      "id": "20035831",
+      "kind": "ptr",
+      "year": 2026,
+      "filed": "2026-11-12",
+      "name": "David J. Taylor",
+      "district": "OH02",
+      "parsed": true,
+      "rows": [
+        {
+          "asset": "Alphabet Inc. - Class A Common Stock",
+          "ticker": "GOOGL",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-03",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Alphabet Inc. - Class A Common Stock",
+          "ticker": "GOOGL",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-03",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Amgen Inc. - Common Stock",
+          "ticker": "AMGN",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-03",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Amgen Inc. - Common Stock",
+          "ticker": "AMGN",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-03",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "AT&T Inc.",
+          "ticker": "T",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-03",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "AT&T Inc.",
+          "ticker": "T",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-03",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Broadcom Inc. - Common Stock",
+          "ticker": "AVGO",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-05",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Eaton Corporation, PLC Ordinary Shares",
+          "ticker": "ETN",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-03",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Eaton Corporation, PLC Ordinary Shares",
+          "ticker": "ETN",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-03",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Eli Lilly and Company Common Stock",
+          "ticker": "LLY",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-03",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Eli Lilly and Company Common Stock",
+          "ticker": "LLY",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-03",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Home Depot, Inc.",
+          "ticker": "HD",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-05",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Installed Building Products, Inc. Common Stock",
+          "ticker": "IBP",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-03",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Kroger Company",
+          "ticker": "KR",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-03",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Kroger Company",
+          "ticker": "KR",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-03",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Lam Research Corporation - Common Stock",
+          "ticker": "LRCX",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-05",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Procter & Gamble Company",
+          "ticker": "PG",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-05",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Visa Inc.",
+          "ticker": "V",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-03",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Visa Inc.",
+          "ticker": "V",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-03",
+          "action": "S",
+          "status": "New"
+        }
+      ]
+    },
     {
       "id": "20035826",
       "kind": "ptr",
