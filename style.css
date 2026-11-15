@@ -621,6 +621,31 @@ body {
   text-underline-offset: 3px;
 }
 
+.form13f-quarter-controls {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#form13FQuarterPanel {
+  flex: 1 1 240px;
+}
+
+#form13FQuarterFilter {
+  min-height: 46px;
+}
+
+#form13FQuarterFilter[aria-pressed="true"] {
+  border-color: var(--spotify-green);
+  color: var(--spotify-green);
+}
+
+#form13FQuarterFilter:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 #form13FQuarterInstitutions {
   list-style: none;
   padding: 0;
@@ -4283,18 +4308,22 @@ button.congress-link {
 
 .consensus-card-header {
   display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
   justify-content: space-between;
   align-items: baseline;
   margin-bottom: 4px;
 }
 
 .consensus-ticker {
+  overflow-wrap: anywhere;
   font-size: 16px;
   font-weight: 800;
   color: #ffffff;
 }
 
 .consensus-action-tag {
+  white-space: nowrap;
   font-size: 10px;
   font-weight: 800;
   padding: 2px 5px;

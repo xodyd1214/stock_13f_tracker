@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=114">
+  <link rel="stylesheet" href="style.css?v=115">
 </head>
 <body>
   <div class="app-container">
@@ -126,7 +126,7 @@
           <button class="grand-total-btn active" id="btnGrandTotal">
             <div class="grand-text">
               <h4>확인된 공시 부분집합</h4>
-              <p>43/50 추적명 · 42개 SEC 신고 법인</p>
+              <p id="grandTotalScope">43/50 추적명 · 42개 SEC 신고 법인</p>
             </div>
           </button>
           <button class="grand-total-btn custom-group-btn-unified" id="btnCustomGroup" style="display: none;">
@@ -290,17 +290,20 @@
       <!-- [VIEW 1] Form 13F 운용사 포트폴리오 대시보드 -->
       <div id="view13F" class="filing-view-container" style="display: none;">
         <p id="sec13FLoading" class="card-sub data-quality-note" role="status" hidden>13F 공시 자료를 불러와 검증하고 있습니다.</p>
-        <details class="disclosure-panel" id="form13FQuarterPanel" hidden>
-          <summary>
-            <span id="form13FQuarterProgress" aria-live="polite"></span>
-            <span class="disclosure-toggle disclosure-toggle-open">기관 보기</span>
-            <span class="disclosure-toggle disclosure-toggle-close">접기</span>
-          </summary>
-          <div class="disclosure-content">
-            <p id="form13FQuarterEmpty" hidden>이 분기에 반영된 기관이 없습니다.</p>
-            <ul id="form13FQuarterInstitutions" class="disclosure-source-list" aria-label="이 분기에 반영된 기관"></ul>
-          </div>
-        </details>
+        <div class="form13f-quarter-controls">
+          <details class="disclosure-panel" id="form13FQuarterPanel" hidden>
+            <summary>
+              <span id="form13FQuarterProgress" aria-live="polite"></span>
+              <span class="disclosure-toggle disclosure-toggle-open">기관 보기</span>
+              <span class="disclosure-toggle disclosure-toggle-close">접기</span>
+            </summary>
+            <div class="disclosure-content">
+              <p id="form13FQuarterEmpty" hidden>이 분기에 반영된 기관이 없습니다.</p>
+              <ul id="form13FQuarterInstitutions" class="disclosure-source-list" aria-label="이 분기에 반영된 기관"></ul>
+            </div>
+          </details>
+          <button type="button" class="filter-tab" id="form13FQuarterFilter" aria-pressed="false" hidden></button>
+        </div>
         <details class="disclosure-panel" id="partialDisplayPanel">
           <summary>
             <span>공시 검증 정보 및 원문</span>
@@ -352,7 +355,7 @@
                 <span class="badge consensus-badge">INSTITUTIONAL HOLDINGS</span>
                 <h3 id="consensusWidgetTitle">확인된 부분집합 공통 보고 종목 TOP 5</h3>
               </div>
-              <p class="consensus-subtext">확인된 43/50 추적명(42개 SEC 신고 법인) 부분집합의 보고 법인 수 또는 주식 평가액 순위입니다. 공동 매수나 이번 분기 매수 확대를 의미하지 않으며, 운용사별 보유 기준일이 다를 수 있습니다.</p>
+              <p class="consensus-subtext" id="consensusScope"></p>
             </div>
             <div class="consensus-toggle-tabs" id="consensusToggleTabs">
               <button type="button" class="consensus-tab-btn active" data-type="HOLDERS">최다 기관 보유 (Holders TOP 5)</button>
@@ -1074,7 +1077,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js?v=2"></script>
   <script src="sec_display_loader.js?v=4"></script>
-  <script src="app.js?v=127"></script>
+  <script src="app.js?v=128"></script>
 </body>
 </html>
 

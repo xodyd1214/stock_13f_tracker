@@ -15,8 +15,8 @@ function context(names, extra = {}) {
   const metadata = JSON.parse(fs.readFileSync(require('node:path').join(__dirname, '../market_symbols.json'), 'utf8'));
   // Unit fixtures model rows already admitted by the separately tested loader.
   const rows = (extra.RAW_HOLDINGS || []).map((row, i) => ({ legalName: row.guru || 'Manager', cik: '0000000001', shareType: 'SH', putCall: '', shares: 1, period: '2026-06-30', filingDate: '2026-08-01', accession: '0000000001-26-000001', sourceRowId: `fixture:${i}`, tableSha256: 'a'.repeat(64), sourceUrl: 'https://www.sec.gov/Archives/edgar/data/1/000000000126000001/table.xml', ...row }));
-  const ctx = vm.createContext({ URL, console, Date: TestDate, MARKET_SYMBOLS: metadata, LIVE_PRICES: {}, SEC_DISPLAY: {rows}, SEC_DISPLAY_ROWS: new WeakSet(rows), document: {getElementById:()=>null}, ...extra, ...(extra.RAW_HOLDINGS ? {RAW_HOLDINGS: rows} : {}) });
-  for (const name of new Set(['safeSecUrl', 'escapeHtml', 'verifiedDisplayRow', 'showUnavailableHoldings', 'canonicalTicker', 'hasPrice', 'priceLabel', 'quoteStatus', 'quoteFreshness', 'quoteFields', 'holdingIdentity', 'mergeObservedPrices', 'refreshVisibleQuotes', 'applyLivePricesToHoldings', 'filingUnitValue', 'filingUnitValueLabel', ...names])) vm.runInContext(extract(name), ctx);
+  const ctx = vm.createContext({ URL, console, Date: TestDate, state: {}, MARKET_SYMBOLS: metadata, LIVE_PRICES: {}, SEC_DISPLAY: {rows}, SEC_DISPLAY_ROWS: new WeakSet(rows), document: {getElementById:()=>null}, ...extra, ...(extra.RAW_HOLDINGS ? {RAW_HOLDINGS: rows} : {}) });
+  for (const name of new Set(['safeSecUrl', 'escapeHtml', 'verifiedDisplayRow', 'showUnavailableHoldings', 'canonicalTicker', 'hasPrice', 'priceLabel', 'quoteStatus', 'quoteFreshness', 'quoteFields', 'holdingIdentity', 'mergeObservedPrices', 'refreshVisibleQuotes', 'applyLivePricesToHoldings', 'filingUnitValue', 'filingUnitValueLabel', 'form13FHoldingRows', ...names])) vm.runInContext(extract(name), ctx);
   return ctx;
 }
 const helpers = ['hasPrice', 'priceLabel', 'insiderCode', 'insiderLabel', 'quoteFreshness'];

@@ -366,7 +366,8 @@ function holdingIdentity(item, fallback = '') {
 
 function portfolioFreshness(guru) {
   if (guru.periodRange) {
-    return `보유 기준일 ${guru.periodRange[0]} ~ ${guru.periodRange[1]}${guru.periodRange[0] !== guru.periodRange[1] ? ' · 서로 다른 분기 공시 합산' : ''}`;
+    const [start, end] = guru.periodRange;
+    return start === end ? `보유 기준일 ${start}` : `보유 기준일 ${start} ~ ${end} · 서로 다른 분기 공시 합산`;
   }
   const period = guru.periodDate || '미확인';
   const filing = guru.filingDate || '미확인';
@@ -455,6 +456,7 @@ const state = {
   activeCategory: "ALL",
   activeFilter: "ALL",
   searchQuery: "",
+  reportPeriod13F: "",
   sortColumn: "weight",
   sortDirection: "desc",
   visibleColumns: {
@@ -702,17 +704,24 @@ function hasHoldingChange(item, action) {
   return item.change?.action === action || (item.changeCounts?.[action] || 0) > 0;
 }
 
+function form13FHoldingRows() {
+  const period = state.reportPeriod13F;
+  return period ? RAW_HOLDINGS.filter(row => row.period === period) : RAW_HOLDINGS;
+}
+
 function processAndRenderHoldingsData(preserveView = false) {
   if (!SEC_DISPLAY || !RAW_HOLDINGS || RAW_HOLDINGS.length === 0) { showUnavailableHoldings(); return; }
   
   try {
     const groups = Object.create(null);
     const grandConsensusMap = Object.create(null);
+    const rows = form13FHoldingRows();
+    const scopedPeriod = state.reportPeriod13F;
     let grandTotalAumVal = 0;
 
     // 데이터셋 전체에서 가장 대표적인(최빈) 분기 말일 추출
     const periodCounts = {};
-    RAW_HOLDINGS.forEach(item => {
+    rows.forEach(item => {
       if (item.period) {
         periodCounts[item.period] = (periodCounts[item.period] || 0) + 1;
       }
@@ -729,7 +738,7 @@ function processAndRenderHoldingsData(preserveView = false) {
     const knownPeriods = Object.keys(periodCounts).filter(p => /^\d{4}-\d{2}-\d{2}$/.test(p)).sort();
     const latestDatasetPeriod = knownPeriods.at(-1) || null;
     
-    RAW_HOLDINGS.forEach((item, rowIndex) => {
+    rows.forEach((item, rowIndex) => {
       if (!verifiedDisplayRow(item) || (item.schemaVersion !== 3 && isDerivativeOrOption(item.name, item.ticker, item.titleOfClass, item))) return;
 
       const guruName = item.legalName;
@@ -915,32 +924,35 @@ function processAndRenderHoldingsData(preserveView = false) {
 
     GURU_DATABASE = {
       "__GRAND_TOTAL__": {
-        name: "확인된 공시 부분집합",
-        fund: "43/50 추적명 · 42개 SEC 신고 법인 · 7개 검증 중",
+        name: scopedPeriod ? "선택 분기 공시 합계" : "확인된 공시 부분집합",
+        fund: scopedPeriod ? `${Object.keys(groups).length}개 SEC 신고 법인` : "43/50 추적명 · 42개 SEC 신고 법인 · 7개 검증 중",
         avatar: "ALL",
         aum: grandHoldings.length ? formatMoney(grandTotalAumVal) : "확인된 수치 없음",
         rawAum: grandHoldings.length ? grandTotalAumVal : null,
         quarter: `${formatQuarterDisplay(dominantPeriod)} 종합`,
         periodDate: dominantPeriod,
         periodRange: knownPeriods.length ? [knownPeriods[0], latestDatasetPeriod] : null,
-        desc: "서로 다른 기준일의 확인된 SEC 공시 부분집합만 합산합니다. 전체 커버리지나 현재 실시간 포트폴리오가 아닙니다.",
+        desc: scopedPeriod ? "같은 기준일의 확인된 SEC 공시 주식 보유분을 합산합니다." :
+          "서로 다른 기준일의 확인된 SEC 공시 부분집합만 합산합니다. 전체 커버리지나 현재 실시간 포트폴리오가 아닙니다.",
         sources: Object.values(groups).flatMap(group => group.sources),
         holdings: grandHoldings
       },
       ...groups
     };
 
+    if (preserveView && state.currentGuruKey !== '__CUSTOM_GROUP__' && !GURU_DATABASE[state.currentGuruKey]) {
+      state.currentGuruKey = '__GRAND_TOTAL__';
+    }
     renderCategoryTabs();
     renderGuruSidebar();
     if (preserveView && state.currentGuruKey === '__CUSTOM_GROUP__') {
       buildCustomGroupPortfolio(true);
     } else if (preserveView) {
-      if (!GURU_DATABASE[state.currentGuruKey]) state.currentGuruKey = '__GRAND_TOTAL__';
       if (state.currentFilingType === '13F') loadGuruData(state.currentGuruKey);
     } else {
       selectGuru("__GRAND_TOTAL__");
     }
-    renderConsensusWidget("HOLDERS");
+    renderConsensusWidget(preserveView ? undefined : "HOLDERS");
 
   } catch (err) {
     console.error("데이터 로드 실패:", err);
@@ -949,15 +961,16 @@ function processAndRenderHoldingsData(preserveView = false) {
 
 function buildCustomGroupPortfolio(preserveView = false) {
   const favs = getFavorites();
-  if (favs.length === 0) {
+  if (favs.length === 0 && !preserveView) {
     alert("먼저 사이드바에서 관심 있는 운용사 옆의 별표를 1개 이상 눌러 즐겨찾기에 등록해 주세요.");
     return;
   }
+  const included = favs.filter(key => GURU_DATABASE[key]);
 
   const customConsensusMap = Object.create(null);
   let customTotalAumVal = 0;
 
-  favs.forEach(guruKey => {
+  included.forEach(guruKey => {
     const guru = GURU_DATABASE[guruKey];
     if (!guru || !guru.holdings) return;
 
@@ -1023,24 +1036,25 @@ function buildCustomGroupPortfolio(preserveView = false) {
       weight: weight,
       filingUnitValue: filingUnitValue(h, periods),
       ...quoteFields(h.baseTicker || h.ticker, LIVE_PRICES[canonicalTicker(h.baseTicker || h.ticker)]),
-      insight: `내가 선택한 ${favs.length}개 즐겨찾기 운용사 중 ${holderCount}개사가 공통 보유한 핵심 자산`
+      insight: `집계에 포함된 즐겨찾기 운용사 ${included.length}곳 중 ${holderCount}곳이 보고한 종목`
     };
   });
 
   customHoldings.sort((a, b) => b.value - a.value);
 
-  const selectedPeriods = favs.map(key => GURU_DATABASE[key]?.periodDate).filter(Boolean).sort();
+  const selectedPeriods = included.map(key => GURU_DATABASE[key].periodDate).filter(Boolean).sort();
   GURU_DATABASE["__CUSTOM_GROUP__"] = {
     name: "즐겨찾기 묶어보기",
-    fund: `선택한 ${favs.length}개 운용사 맞춤 합산`,
+    fund: `집계에 포함된 운용사 ${included.length}곳`,
     avatar: "FAV",
     aum: customHoldings.length ? formatMoney(customTotalAumVal) : "확인된 수치 없음",
     rawAum: customHoldings.length ? customTotalAumVal : null,
     quarter: `${formatQuarterDisplay(DOMINANT_13F_PERIOD)} 맞춤 종합`,
     periodDate: DOMINANT_13F_PERIOD,
     periodRange: selectedPeriods.length ? [selectedPeriods[0], selectedPeriods.at(-1)] : null,
-    desc: `선택한 SEC 신고 법인들의 확인된 공시 부분집합 합산입니다. 현재 실시간 포트폴리오가 아닙니다.`,
-    sources: (GURU_DATABASE.__GRAND_TOTAL__?.sources || SEC_DISPLAY?.sources || []).filter(source => favs.some(key => GURU_DATABASE[key]?.cik === source.cik)),
+    desc: customHoldings.length ? "선택한 SEC 신고 법인들의 확인된 공시 부분집합 합산입니다." :
+      "현재 범위에 집계할 즐겨찾기 운용사의 공시가 없습니다.",
+    sources: (GURU_DATABASE.__GRAND_TOTAL__?.sources || SEC_DISPLAY?.sources || []).filter(source => included.some(key => GURU_DATABASE[key].cik === source.cik)),
     holdings: customHoldings
   };
 
@@ -1107,9 +1121,13 @@ function renderGuruSidebar() {
   const favs = getFavorites();
   const subtextEl = document.getElementById("customGroupSubtext");
   if (subtextEl) {
-    subtextEl.innerText = `내가 찜한 ${favs.length}개 운용사 합산`;
+    const count = state.reportPeriod13F ? favs.filter(key => GURU_DATABASE[key]).length : favs.length;
+    subtextEl.innerText = `내가 찜한 ${count}개 운용사 합산`;
   }
 
+  const scope = document.getElementById("grandTotalScope");
+  if (scope) scope.textContent = state.reportPeriod13F ?
+    GURU_DATABASE.__GRAND_TOTAL__.fund : "43/50 추적명 · 42개 SEC 신고 법인";
   const btnGrand = document.getElementById("btnGrandTotal");
   if (btnGrand) {
     btnGrand.classList.toggle("active", state.currentGuruKey === "__GRAND_TOTAL__");
@@ -1180,7 +1198,7 @@ function selectGuru(key) {
   const sInput = document.getElementById("searchInput");
   if (sInput) sInput.value = "";
   
-  document.querySelectorAll("#view13F .filter-tab").forEach(tab => {
+  document.querySelectorAll("#filterTabs .filter-tab").forEach(tab => {
     tab.classList.toggle("active", tab.dataset.filter === "ALL");
   });
 
@@ -1630,6 +1648,7 @@ function appendNextPageRows() {
     const changeText = holdingChangeText(item);
     const changeBadge = item.changeCounts ? changeText.split(" · ")
       .map(part => `<span>${escapeHtml(part)}</span>`).join(" ") : escapeHtml(changeText);
+    const comparable = item.change ? 1 : Object.values(item.changeCounts || {}).reduce((sum, count) => sum + count, 0);
 
     tr.innerHTML = `
       <td class="text-left">
@@ -1650,6 +1669,7 @@ function appendNextPageRows() {
         <span class="action-badge ${escapeHtml(item.action)}">
           ${changeBadge}
         </span>
+        <small class="form4-secondary">${comparable}/${item.holders ?? 1}곳 비교 가능</small>
         ${item.change ? `<small class="form4-secondary">${escapeHtml(holdingChangeDetail(item))}</small>` : ""}
       </td>
       <td class="col-shares text-right">${escapeHtml(item.shares)}</td>
@@ -1840,9 +1860,9 @@ function setupEventListeners() {
 
 
 
-  document.querySelectorAll(".filter-tab").forEach(tab => {
+  document.querySelectorAll("#filterTabs .filter-tab").forEach(tab => {
     tab.onclick = () => {
-      document.querySelectorAll(".filter-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll("#filterTabs .filter-tab").forEach(t => t.classList.remove("active"));
       tab.classList.add("active");
       state.activeFilter = tab.dataset.filter;
       renderTable();
@@ -3707,7 +3727,7 @@ const HELP_TOPICS = {
   holdingChange: [
     "공시 보유 변화",
     "같은 기관의 같은 증권을 직전 분기와 이번 분기 공시에서 비교한 결과예요.",
-    "증가 5 · 감소 3은 공시 주식 수가 늘어난 기관 5곳과 줄어든 기관 3곳을 뜻해요. 기관별 수량은 종목 상세에서 볼 수 있어요.",
+    "20/23곳 비교 가능은 보유를 보고한 23곳 중 20곳에서 직전 분기 비교가 가능하다는 뜻이에요. 증가·감소 건수는 비교 가능한 기관에서 집계해요.",
     "신규는 직전 공시에서 해당 종목이 보고되지 않았다는 뜻이에요. 비교 자료 없음은 직전 수량을 확인할 수 없는 경우예요. 수량에는 주식분할도 반영될 수 있어요."
   ],
   holdingShares: [
@@ -4782,7 +4802,15 @@ function renderConsensusWidget(forceType) {
 
   const stats = Object.create(null);
 
-  RAW_HOLDINGS.forEach((item, rowIndex) => {
+  const scope = document.getElementById("consensusScope");
+  if (scope) {
+    const period = state.reportPeriod13F;
+    scope.textContent = period
+      ? `보유 기준일 ${period} · ${GURU_DATABASE.__GRAND_TOTAL__.fund}의 보고 법인 수 또는 주식 평가액 순위입니다.`
+      : "확인된 43/50 추적명(42개 SEC 신고 법인) 부분집합의 보고 법인 수 또는 주식 평가액 순위입니다. 공동 매수나 이번 분기 매수 확대를 의미하지 않으며, 운용사별 보유 기준일이 다를 수 있습니다.";
+  }
+
+  form13FHoldingRows().forEach((item, rowIndex) => {
     if (!SEC_DISPLAY || !verifiedDisplayRow(item) || (item.schemaVersion !== 3 && isDerivativeOrOption(item.name, item.ticker, item.titleOfClass, item))) return;
     const baseTicker = getMappedTicker(item.name, item.ticker, item.cusip, item.shareType, item.putCall || item.optionType);
     if (!baseTicker || baseTicker === "UNKNOWN") return;
@@ -5018,15 +5046,18 @@ function form13FQuarterProgress(coverage, now = new Date()) {
     .map(item => [item.cik, item]));
   const institutions = [...verified.values()].filter(item => item.reportDate === periodDate)
     .sort((a, b) => a.legalName.localeCompare(b.legalName));
-  const label = `${period.getUTCFullYear()}년 ${Math.ceil((period.getUTCMonth() + 1) / 3)}분기 공시 ${institutions.length}/${verified.size}곳 반영`;
-  return { label, institutions };
+  const quarter = Math.ceil((period.getUTCMonth() + 1) / 3);
+  const label = `${period.getUTCFullYear()}년 ${quarter}분기 공시 ${institutions.length}/${verified.size}곳 반영`;
+  return { label, institutions, quarter, periodDate };
 }
 
 function renderPartialCoverage(error) {
   const status = document.getElementById('partialDisplayStatus');
   const quarterPanel = document.getElementById('form13FQuarterPanel');
   const quarterList = document.getElementById('form13FQuarterInstitutions');
+  const quarterFilter = document.getElementById('form13FQuarterFilter');
   if (quarterPanel) quarterPanel.hidden = !SEC_DISPLAY;
+  if (quarterFilter) quarterFilter.hidden = !SEC_DISPLAY;
   if (quarterList) quarterList.replaceChildren();
   const list = document.getElementById('partialCoverageList');
   if (list) list.replaceChildren();
@@ -5035,9 +5066,19 @@ function renderPartialCoverage(error) {
     return;
   }
   if (quarterPanel) {
-    const { label, institutions } = form13FQuarterProgress(SEC_DISPLAY.coverage);
+    const { label, institutions, quarter, periodDate } = form13FQuarterProgress(SEC_DISPLAY.coverage);
     document.getElementById('form13FQuarterProgress').textContent = label;
     document.getElementById('form13FQuarterEmpty').hidden = institutions.length > 0;
+    if (quarterFilter) {
+      quarterFilter.textContent = `${quarter}분기만 보기`;
+      quarterFilter.disabled = !institutions.some(item => item.holdingsCount > 0);
+      quarterFilter.setAttribute('aria-pressed', String(state.reportPeriod13F === periodDate));
+      quarterFilter.onclick = () => {
+        state.reportPeriod13F = state.reportPeriod13F ? "" : periodDate;
+        quarterFilter.setAttribute('aria-pressed', String(Boolean(state.reportPeriod13F)));
+        processAndRenderHoldingsData(true);
+      };
+    }
     for (const institution of institutions) {
       const row = document.createElement('li');
       const name = document.createElement(institution.holdingsCount > 0 ? 'button' : 'span');
@@ -5086,7 +5127,8 @@ function renderSelectedSources(guru) {
 function buildPartialCsv(guru) {
   if (!SEC_DISPLAY) throw new Error('Verified partial display unavailable');
   const rows = [
-    ['범위', '확인된 공시 부분집합: 43/50 추적명, 42 SEC 신고 법인, 7 검증 중'],
+    ['범위', state.reportPeriod13F ? `확인된 공시 부분집합 · 보유 기준일 ${state.reportPeriod13F}` :
+      '확인된 공시 부분집합: 43/50 추적명, 42 SEC 신고 법인, 7 검증 중'],
     ['안내', '분기말 평가단가 = 동일 기준일 공시 평가액 ÷ 보유 주식 수'],
     ['불러온 UTC', SEC_DISPLAY.freshness.loadedAt || '미확인'],
     ['최초 원천 확인 UTC', SEC_DISPLAY.freshness.acquisitionStartedAt || SEC_DISPLAY.manifest?.acquisitionStartedAt || '미확인'],

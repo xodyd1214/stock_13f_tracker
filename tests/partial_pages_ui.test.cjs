@@ -17,7 +17,7 @@ function context(rows, valid = true) {
    state: { currentGuruKey: '__GRAND_TOTAL__' }, isDerivativeOrOption: () => false, getMappedTicker: () => 'ABC', getMappedSector: () => 'Other', quoteFields: () => ({curPrice:null}), priceLabel: () => '미검증',
    renderCategoryTabs() {}, renderGuruSidebar() {}, selectGuru() {}, renderConsensusWidget() {},
    holdingIdentity: r => [r.cusip, r.shareType, r.putCall].join('|') });
- for (const name of ['safeSecUrl', 'escapeHtml', 'verifiedDisplayRow','showUnavailableHoldings','formatMoney','formatQuarterDisplay','reportedHoldingChange','holdingChangeText','holdingChangeDetail','processAndRenderHoldingsData','buildPartialCsv','filingUnitValue','filingUnitValueLabel','hasPrice']) vm.runInContext(extract(name), ctx);
+ for (const name of ['safeSecUrl', 'escapeHtml', 'verifiedDisplayRow','showUnavailableHoldings','formatMoney','formatQuarterDisplay','reportedHoldingChange','holdingChangeText','holdingChangeDetail','processAndRenderHoldingsData','buildPartialCsv','filingUnitValue','filingUnitValueLabel','hasPrice','form13FHoldingRows']) vm.runInContext(extract(name), ctx);
  return {ctx, nodes, display};
 }
 test('quarter progress counts unique reporting entities and rolls over after year end', () => {
@@ -45,6 +45,47 @@ test('real processing rejects legacy rows and produces null total rather than ze
  assert.equal(ctx.GURU_DATABASE.__GRAND_TOTAL__.holdings.length, 0);
  assert.throws(() => ctx.buildPartialCsv(ctx.GURU_DATABASE.__GRAND_TOTAL__), /unavailable/);
  assert.doesNotMatch(extract('loadRealSecData'), /latest_13f_holdings/);
+});
+test('quarter scope rebuilds holdings, comparison coverage and rankings from the same rows', () => {
+ const june = row({legalName: 'June filer', cik: '0001096341', cusip: '123456780', value: 10000});
+ const september = row({legalName: 'September filer', cik: '0001096342', period: '2026-09-30', shares: 20, value: 200, sourceRowId: 'sep:1'});
+ const sameSecurity = row({period: '2026-09-30', shares: 30, value: 300, sourceRowId: 'sep:2'});
+ const otherSecurity = row({period: '2026-09-30', cusip: '123456781', value: 500, sourceRowId: 'sep:3'});
+ const {ctx, nodes, display} = context([june, september, sameSecurity, otherSecurity]);
+ display.comparisons = new Map([[september.cik, {previousPeriod: '2026-06-30', sources: [],
+   positions: new Map([[september.cusip, 10]])}]]);
+ Object.assign(ctx.state, {currentFilingType: '13F', currentGuruKey: june.legalName, reportPeriod13F: '2026-09-30'});
+ ctx.loadGuruData = () => {};
+ const grid = {innerHTML: ''};
+ const cell = () => ({style: {}, children: [], appendChild(child) { this.children.push(child); }});
+ const table = cell();
+ nodes.set('consensusCardsGrid', grid);
+ nodes.set('tableBody', table);
+ ctx.document.createElement = ctx.document.createDocumentFragment = cell;
+ ctx.applyColumnVisibility = () => {};
+ ctx.PAGE_SIZE = 60;
+ for (const name of ['renderConsensusWidget', 'appendNextPageRows']) vm.runInContext(extract(name), ctx);
+ ctx.processAndRenderHoldingsData(true);
+ const grand = ctx.GURU_DATABASE.__GRAND_TOTAL__;
+ assert.equal(ctx.state.currentGuruKey, '__GRAND_TOTAL__');
+ assert.equal(ctx.GURU_DATABASE[june.legalName], undefined);
+ assert.equal(grand.rawAum, 1000);
+ assert.ok(grand.holdings.every(item => item.periodDate === '2026-09-30' && item.weight === 50));
+ assert.doesNotMatch(grid.innerHTML, /123456780|\$10,000/);
+ const holding = grand.holdings.find(item => item.cusip === september.cusip);
+ assert.equal(holding.rawShares, 50);
+ assert.equal(holding.filingUnitValue, 10);
+ ctx.CURRENT_FILTERED_ITEMS = [holding];
+ ctx.CURRENT_PAGE_INDEX = 1;
+ ctx.appendNextPageRows();
+ assert.match(table.children[0].children[0].innerHTML, /1\/2곳 비교 가능/);
+ assert.match(ctx.buildPartialCsv(grand), /보유 기준일 2026-09-30/);
+ ctx.state.reportPeriod13F = '';
+ ctx.processAndRenderHoldingsData(true);
+ assert.equal(ctx.GURU_DATABASE.__GRAND_TOTAL__.rawAum, 11000);
+ assert.ok(ctx.GURU_DATABASE[june.legalName]);
+ assert.match(grid.innerHTML, /123456780/);
+ assert.equal(ctx.RAW_HOLDINGS.length, 4);
 });
 test('processing and CSV use legal entity, withhold unverified changes and preserve immutable sources', () => {
  const rows = [Object.freeze(row({guru:'Tom Gayner', action:'ADD'}))]; const before = JSON.stringify(rows);
