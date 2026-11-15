@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=115">
+  <link rel="stylesheet" href="style.css?v=116">
 </head>
 <body>
   <div class="app-container">
@@ -302,7 +302,11 @@
               <ul id="form13FQuarterInstitutions" class="disclosure-source-list" aria-label="이 분기에 반영된 기관"></ul>
             </div>
           </details>
-          <button type="button" class="filter-tab" id="form13FQuarterFilter" aria-pressed="false" hidden></button>
+          <label class="form13f-quarter-select" hidden>
+            <span>보유 분기</span>
+            <select id="form13FQuarterFilter"></select>
+          </label>
+          <p class="card-sub" role="status" id="form13FQuarterStatus"></p>
         </div>
         <details class="disclosure-panel" id="partialDisplayPanel">
           <summary>
@@ -1076,8 +1080,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js?v=2"></script>
-  <script src="sec_display_loader.js?v=4"></script>
-  <script src="app.js?v=128"></script>
+  <script src="sec_display_loader.js?v=5"></script>
+  <script src="app.js?v=129"></script>
 </body>
 </html>
 

@@ -14,7 +14,7 @@ function context(rows, valid = true) {
  const display = {rows, sources: rows, coverage: { labels: [] }, freshness: { lastCheckedAt: '2026-11-05T00:00:00Z', label: '최근 확인' }};
  const nodes = new Map(); const document = { getElementById: id => nodes.get(id) || null };
  const ctx = vm.createContext({SECDisplayLoader:require('../sec_display_loader.js'),URL, console, Date, document, RAW_HOLDINGS: rows, SEC_DISPLAY: valid ? display : null, SEC_DISPLAY_ROWS: new WeakSet(rows), GURU_DATABASE: {}, DOMINANT_13F_PERIOD: null, LIVE_PRICES: {}, CURRENT_CONSENSUS_TYPE: 'HOLDERS', TICKER_MAP: {}, MARKET_SYMBOLS: null,
-   state: { currentGuruKey: '__GRAND_TOTAL__' }, isDerivativeOrOption: () => false, getMappedTicker: () => 'ABC', getMappedSector: () => 'Other', quoteFields: () => ({curPrice:null}), priceLabel: () => '미검증',
+   state: { currentGuruKey: '__GRAND_TOTAL__' }, archived13FDisplay: null, form13FQuarterCatalog: null, isDerivativeOrOption: () => false, getMappedTicker: () => 'ABC', getMappedSector: () => 'Other', quoteFields: () => ({curPrice:null}), priceLabel: () => '미검증',
    renderCategoryTabs() {}, renderGuruSidebar() {}, selectGuru() {}, renderConsensusWidget() {},
    holdingIdentity: r => [r.cusip, r.shareType, r.putCall].join('|') });
  for (const name of ['safeSecUrl', 'escapeHtml', 'verifiedDisplayRow','showUnavailableHoldings','formatMoney','formatQuarterDisplay','reportedHoldingChange','holdingChangeText','holdingChangeDetail','processAndRenderHoldingsData','buildPartialCsv','filingUnitValue','filingUnitValueLabel','hasPrice','form13FHoldingRows']) vm.runInContext(extract(name), ctx);
@@ -399,6 +399,31 @@ if (process.env.SEC_REAL_BUNDLE) test('active generation reconciles manifest tot
  assert.equal(crypto.createHash('sha256').update(JSON.stringify(result.rows)).digest('hex'),before);assert.equal(calls.filter(x=>x.endsWith('current.json')).length,1);
  console.log(`REAL VERIFIED: ${result.rows.length} rows; $${grand.rawAum}; 42 entities; ${calls.length} bounded artifact reads.`);
 });
+if (process.env.SEC_REAL_BUNDLE) test('quarter archives verify independently from the latest filing pointer', async () => {
+ const root = path.resolve(process.env.SEC_REAL_BUNDLE);
+ const configContext = {};
+ vm.runInNewContext(fs.readFileSync(path.join(root, 'sec-display-config.js'), 'utf8'), configContext);
+ const baseURL = 'https://example.com/repo/';
+ const requests = [];
+ const options = {baseURL, config:configContext.SEC_DISPLAY_CONFIG, crypto:crypto.webcrypto, fetch:async url => {
+   requests.push(url);
+   const relative = new URL(url).pathname.slice('/repo/'.length);
+   try { return new Response(fs.readFileSync(path.join(root, relative))); }
+   catch { return new Response('', {status:404}); }
+ }};
+ const catalog = await loader.loadQuarterCatalog(options);
+ assert.ok(catalog['2026-06-30'] && catalog['2026-09-30']);
+ for (const [reportPeriod, archive] of Object.entries(catalog)) {
+   const result = await loader.load({...options, reportPeriod, archive});
+   assert.ok(result.rows.length > 0);
+   assert.deepEqual([...new Set(result.rows.map(row => row.period))], [reportPeriod]);
+   assert.ok(result.comparisons instanceof Map);
+   assert.equal(new Set(result.coverage.labels.map(label => label.cik)).size, archive.entityCount);
+ }
+ assert.ok(!requests.some(url => url.endsWith('/current.json')));
+ await assert.rejects(loader.load({...options, reportPeriod:'2026-09-30', archive:catalog['2026-06-30']}), /archive descriptor period/);
+});
+
 test('blank source numeric strings cannot coerce into verified zero values',async()=>{
  const f=transportFixture(),group=f.projection.groups[0];const set=(key,value)=>{group.rows[0][group.columns.findIndex(p=>p[0]===key)]=value;};
  for(const key of ['value','valueUsd','sourceReportedValue','shares'])set(key,0);set('sourceValue','');set('sourceShares','');set('rawSource',{shares:'',rawValue:'',putCall:null});

@@ -8,6 +8,7 @@ import re
 import shutil
 import tempfile
 
+from archive_13f import update_archive
 from build_13f_comparisons import compare, positions, previous_quarter, public_holdings_report
 from build_pages_bundle import MAX_PROJECTION, encoded, validate_public
 from compact_projection import decode_rows, encode_rows
@@ -248,6 +249,8 @@ def refresh(sec_data, evidence_dir, client):
                         sourceReportDates=sorted({labels[0]['reportDate'] for labels in labels_by_cik.values()}),
                         sources=[row for items in sources_by_cik.values() for row in items],
                         totalEquityValueUsd=sum(row['value'] for row in rows), holdingsRowCount=len(rows))
+        validate_generation(rows, coverage, manifest, scope)
+        update_archive(sec_data, scope, (manifest, coverage, rows, comparisons))
         generation = publish(sec_data, generation, manifest, coverage, rows, comparisons, scope)
     print(f'Updated {changed} reporting entities; {failed} failed checks; generation {generation}', flush=True)
     return bool(failed)

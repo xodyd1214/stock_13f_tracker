@@ -632,18 +632,30 @@ body {
   flex: 1 1 240px;
 }
 
-#form13FQuarterFilter {
+.form13f-quarter-select:not([hidden]) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   min-height: 46px;
+  color: var(--text-subdued);
+  font-size: 12px;
 }
 
-#form13FQuarterFilter[aria-pressed="true"] {
-  border-color: var(--spotify-green);
-  color: var(--spotify-green);
+#form13FQuarterFilter {
+  padding: 8px 10px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  color: var(--text-base);
+  font: inherit;
 }
 
-#form13FQuarterFilter:disabled {
-  opacity: 0.6;
-  cursor: default;
+#form13FQuarterStatus {
+  width: 100%;
+}
+
+#form13FQuarterStatus:empty {
+  display: none;
 }
 
 #form13FQuarterInstitutions {

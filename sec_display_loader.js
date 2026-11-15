@@ -99,13 +99,18 @@
     const exception = matchesReviewedFundShare(row, overrides);
     return exception || !/\b(?:WARRANTS?|WTS?|OPTIONS?|CALLS?|PUTS?)\b/.test(title);
   }
-  function validate(rows, coverage, manifest, policy, scope, now) {
+  function validate(rows, coverage, manifest, policy, scope, now, reportPeriod) {
     validateClassificationPolicy(policy.equityShareClassOverrides || [], now);
     check(policy.contract === CONTRACT && policy.schemaVersion === 1 && Array.isArray(policy.originalLabels) && new Set(policy.originalLabels).size === 50 && policy.originalLabels.length === 50 && policy.eligible?.length === 43 && policy.pending?.length === 7, 'scope policy');
-    check(manifest.schemaVersion === 3 && manifest.contract === CONTRACT && manifest.scopeSha256 === scope && manifest.partialDisplayEligible === true && manifest.releaseEligible === false && manifest.migrationReady === false, 'manifest eligibility');
-    for (const [key,expected] of Object.entries({originalLabelCount:50,availableLabelCount:43,availableEntityCount:42,pendingLabelCount:7})) check(manifest[key] === expected, 'manifest counts');
-    check(coverage.schemaVersion === 1 && coverage.contract === CONTRACT && Array.isArray(coverage.labels) && coverage.labels.length === 50, 'coverage schema');
-    for (const [key,expected] of Object.entries({originalLabels:50,availableLabels:43,availableEntities:42,pendingLabels:7})) check(coverage.counts?.[key] === expected, 'coverage counts');
+    check(manifest.schemaVersion === 3 && manifest.contract === CONTRACT && manifest.scopeSha256 === scope, 'manifest schema');
+    check(coverage.schemaVersion === 1 && coverage.contract === CONTRACT && Array.isArray(coverage.labels), 'coverage schema');
+    if (reportPeriod) {
+      check(manifest.reportPeriod === reportPeriod && coverage.labels.length > 0 && coverage.labels.length <= 43, 'archive scope');
+    } else {
+      check(manifest.partialDisplayEligible === true && manifest.releaseEligible === false && manifest.migrationReady === false, 'manifest eligibility');
+      for (const [key,expected] of Object.entries({originalLabelCount:50,availableLabelCount:43,availableEntityCount:42,pendingLabelCount:7})) check(manifest[key] === expected, 'manifest counts');
+      for (const [key,expected] of Object.entries({originalLabels:50,availableLabels:43,availableEntities:42,pendingLabels:7})) check(coverage.counts?.[key] === expected, 'coverage counts');
+    }
     const eligible = new Map(policy.eligible.map(item => [item.label,item]));
     const pending = new Map(policy.pending.map(item => [item.label,item]));
     const entities = new Map(); const labels = new Set();
@@ -115,18 +120,20 @@
       check(rule && item.cik === rule.cik, 'scope identity');
       if (eligible.has(item.label)) {
         check(item.status === 'available' && item.legalName === rule.legalName && item.entityId === item.cik && date(item.reportDate) && integer(item.valueUsd) && integer(item.holdingsCount), 'available coverage');
+        if (reportPeriod) check(item.reportDate === reportPeriod, 'archive coverage period');
         check(!entities.has(item.cik) || entities.get(item.cik).legalName === item.legalName, 'alias identity mismatch');
         entities.set(item.cik,item);
       } else {
-        check(item.status === 'verification-pending' && item.valueUsd === null && item.holdingsCount === null && item.reportDate === null && item.entityId === null && item.reason === rule.reason, 'pending numeric data');
+        check(!reportPeriod && item.status === 'verification-pending' && item.valueUsd === null && item.holdingsCount === null && item.reportDate === null && item.entityId === null && item.reason === rule.reason, 'pending numeric data');
       }
     }
-    check(entities.size === 42 && labels.size === 50, 'exact scope count');
+    if (!reportPeriod) check(entities.size === 42 && labels.size === 50, 'exact scope count');
     check(Array.isArray(manifest.sources) && manifest.sources.length > 0, 'source list');
     const sources = new Map();
     const official = (url,cik,accession) => typeof url === 'string' && url.startsWith(`https://www.sec.gov/Archives/edgar/data/${Number(cik)}/${accession.replace(/-/g,'')}/`) && !/[?#]/.test(url) && !url.includes('..');
     for (const source of manifest.sources) {
       check(HEX.test(source.tableSha256) && HEX.test(source.primarySha256) && entities.get(source.cik)?.legalName === source.legalName && date(source.period) && date(source.filingDate) && Date.parse(source.filingDate) <= now && Date.parse(source.period) <= Date.parse(source.filingDate) && /^\d{10}-\d{2}-\d{6}$/.test(source.accession) && official(source.sourceUrl,source.cik,source.accession) && official(source.primarySourceUrl,source.cik,source.accession), 'source descriptor');
+      if (reportPeriod) check(source.period === reportPeriod, 'archive source period');
       check(!sources.has(source.cik+':'+source.accession), 'duplicate source'); sources.set(source.cik+':'+source.accession,source);
     }
     const seen = new Set(), totals = new Map(); let total = 0;
@@ -142,9 +149,11 @@
     }
     check(Array.isArray(manifest.sourceReportDates) && JSON.stringify([...new Set(coverage.labels.filter(item => item.status === 'available').map(item => item.reportDate))].sort()) === JSON.stringify(manifest.sourceReportDates), 'source period summary');
     check(rows.length === manifest.holdingsRowCount && total === manifest.totalEquityValueUsd, 'manifest reconciliation');
-    const kinds = ['equity','equity_verified_fund_share','option','principal','warrant','unresolved_share_class'];
+    const kinds = reportPeriod ? ['equity','equity_verified_fund_share'] :
+      ['equity','equity_verified_fund_share','option','principal','warrant','unresolved_share_class'];
     const partition = manifest.positionClassification;
-    check(manifest.positionClassificationScope === 'available_reporting_entities' && partition && Object.keys(partition).sort().join(',') === kinds.slice().sort().join(','), 'position classification scope');
+    const classificationScope = reportPeriod ? 'archived_reported_equity' : 'available_reporting_entities';
+    check(manifest.positionClassificationScope === classificationScope && partition && Object.keys(partition).sort().join(',') === kinds.slice().sort().join(','), 'position classification scope');
     let partitionCount = 0, partitionValue = 0;
     for (const kind of kinds) {
       const item = partition[kind];
@@ -152,7 +161,7 @@
       partitionCount += item.rowCount; partitionValue += item.reportedValueUsd;
       check(integer(partitionCount) && integer(partitionValue), 'unsafe position partition');
     }
-    check(partition.unresolved_share_class.rowCount === 0 && partition.unresolved_share_class.reportedValueUsd === 0, 'unresolved source positions');
+    if (!reportPeriod) check(partition.unresolved_share_class.rowCount === 0 && partition.unresolved_share_class.reportedValueUsd === 0, 'unresolved source positions');
     const reviewedRows = rows.filter(row => matchesReviewedFundShare(row, policy.equityShareClassOverrides || []));
     const reviewedValue = reviewedRows.reduce((sum,row) => sum+row.value,0);
     check(partition.equity_verified_fund_share.rowCount === reviewedRows.length && partition.equity_verified_fund_share.reportedValueUsd === reviewedValue && partition.equity.rowCount === rows.length-reviewedRows.length && partition.equity.reportedValueUsd === total-reviewedValue, 'position classification reconciliation');
@@ -202,6 +211,27 @@
     }
     return comparisons;
   }
+  function validQuarter(period) {
+    return date(period) && /-(03-31|06-30|09-30|12-31)$/.test(period);
+  }
+  function validQuarterReference(reference) {
+    return reference && HEX.test(reference.generationId || '') && HEX.test(reference.comparisonSha256 || '') &&
+      integer(reference.entityCount) && reference.entityCount > 0 && reference.entityCount <= 42;
+  }
+  async function loadQuarterCatalog(options = {}) {
+    const config = options.config || root.SEC_DISPLAY_CONFIG;
+    const base = new URL(options.baseURL || './', root.document?.baseURI);
+    const fetcher = options.fetch || root.fetch.bind(root);
+    const pointerURL = safeURL(base, config.pointerPath);
+    const url = safeURL(new URL('./', pointerURL), 'quarters.json');
+    const catalog = parse(await bytes(fetcher, url, 65536));
+    check(catalog.schemaVersion === 1 && catalog.contract === CONTRACT && catalog.scopeSha256 === config.expectedScopeSha256 &&
+      catalog.quarters && typeof catalog.quarters === 'object' && !Array.isArray(catalog.quarters), 'quarter catalog');
+    for (const [period, reference] of Object.entries(catalog.quarters)) {
+      check(validQuarter(period) && validQuarterReference(reference), 'quarter reference');
+    }
+    return catalog.quarters;
+  }
   async function load(options = {}) {
     const config = options.config || root.SEC_DISPLAY_CONFIG;
     const base = new URL(options.baseURL || './', root.document?.baseURI);
@@ -213,19 +243,25 @@
     const now = readNow();
     check(Number.isFinite(now), 'clock unavailable');
     const policyURL = safeURL(base,config.policyPath), pointerURL = safeURL(base,config.pointerPath);
+    const reportPeriod = options.reportPeriod;
+    if (reportPeriod) check(validQuarter(reportPeriod), 'report quarter');
+    const archive = reportPeriod ? (options.archive ?? (await loadQuarterCatalog(options))[reportPeriod]) : null;
+    if (reportPeriod) check(validQuarterReference(archive), 'quarter reference');
     const [policyBefore, pointerBytes] = await Promise.all([
       bytes(fetcher, policyURL, LIMITS.policy),
-      bytes(fetcher, pointerURL, LIMITS.pointer)
+      archive ? null : bytes(fetcher, pointerURL, LIMITS.pointer)
     ]);
     check(await digest(crypto,policyBefore) === config.expectedScopeSha256, 'policy revoked or changed');
     const policy = parse(policyBefore);
-    const pointer = parse(pointerBytes);
-    check(pointer.schemaVersion === 1 && pointer.contract === CONTRACT && HEX.test(pointer.generationId), 'pointer schema');
-    const generationBase = new URL(`generations/${pointer.generationId}/`, new URL('./',pointerURL));
+    const pointer = archive || parse(pointerBytes);
+    if (!archive) check(pointer.schemaVersion === 1 && pointer.contract === CONTRACT && HEX.test(pointer.generationId), 'pointer schema');
+    const generationBase = new URL(`${archive ? 'quarters' : 'generations'}/${pointer.generationId}/`, new URL('./',pointerURL));
     const descriptorBytes = await bytes(fetcher,safeURL(generationBase,'generation.json'),LIMITS.descriptor);
     check(await digest(crypto,descriptorBytes) === pointer.generationId, 'generation hash mismatch');
     const descriptor = parse(descriptorBytes);
-    check(descriptor.schemaVersion === 1 && descriptor.artifactType === 'sec_13f_partial_pages_generation' && descriptor.scopeSha256 === config.expectedScopeSha256, 'generation schema');
+    const artifactType = archive ? 'sec_13f_quarter_generation' : 'sec_13f_partial_pages_generation';
+    check(descriptor.schemaVersion === 1 && descriptor.artifactType === artifactType && descriptor.scopeSha256 === config.expectedScopeSha256, 'generation schema');
+    if (archive) check(descriptor.reportPeriod === reportPeriod, 'archive descriptor period');
     check(descriptor.files && Object.keys(descriptor.files).sort().join(',') === 'coverage.json,manifest.json,projection.json', 'unexpected generation files');
     const artifacts = ['projection', 'manifest', 'coverage'].map(kind => {
       const name = kind + '.json';
@@ -242,7 +278,8 @@
     const policyAfter = await bytes(fetcher,policyURL,LIMITS.policy);
     check(await digest(crypto,policyAfter) === config.expectedScopeSha256, 'policy revoked during load');
     const finalNow = readNow(); check(Number.isFinite(finalNow), 'clock unavailable');
-    const freshness = validate(rows,coverage,manifest,policy,config.expectedScopeSha256,finalNow);
+    const freshness = validate(rows,coverage,manifest,policy,config.expectedScopeSha256,finalNow,reportPeriod);
+    if (archive) check(new Set(coverage.labels.map(item => item.cik)).size === archive.entityCount, 'archive entity count');
     let comparisons = null;
     const comparisonHash = pointer.comparisonSha256 ?? config.comparisonSha256;
     if (HEX.test(comparisonHash || '')) {
@@ -261,7 +298,7 @@
     }
     return {rows,coverage,manifest,classificationPolicy:policy.equityShareClassOverrides || [],sources:manifest.sources,freshness,generation:pointer.generationId,comparisons};
   }
-  const api = {load,decode,validate,validateComparisons,isReportedEquity,validateClassificationPolicy,LIMITS};
+  const api = {load,loadQuarterCatalog,decode,validate,validateComparisons,isReportedEquity,validateClassificationPolicy,LIMITS};
   root.SECDisplayLoader = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

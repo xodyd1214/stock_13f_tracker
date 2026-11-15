@@ -18,6 +18,8 @@ function escapeHtml(value) {
 let GURU_DATABASE = {};
 let RAW_HOLDINGS = [];
 let SEC_DISPLAY = null;
+let archived13FDisplay = null;
+let form13FQuarterCatalog = null;
 let secDisplayLoad = null;
 let SEC_DISPLAY_ROWS = new WeakSet();
 let LIVE_PRICES = {};
@@ -584,11 +586,11 @@ function applyLivePricesToHoldings(holdings) {
   });
 }
 
-async function loadSecDisplayInWorker() {
+async function loadSecDisplayInWorker(options = {}) {
   const baseURL = new URL("./", document.baseURI);
-  if (typeof Worker === "undefined") return SECDisplayLoader.load({ baseURL });
+  if (typeof Worker === "undefined") return SECDisplayLoader.load({ baseURL, ...options });
 
-  const worker = new Worker(new URL("sec_display_worker.js?v=2", baseURL));
+  const worker = new Worker(new URL("sec_display_worker.js?v=3", baseURL));
   return new Promise((resolve, reject) => {
     function finish(callback, value) {
       clearTimeout(timeout);
@@ -604,7 +606,7 @@ async function loadSecDisplayInWorker() {
     worker.onerror = (event) => finish(reject, new Error(event.message || "13F worker failed to start"));
     worker.onmessageerror = () => finish(reject, new Error("13F worker result could not be read"));
     try {
-      worker.postMessage(globalThis.SEC_DISPLAY_CONFIG);
+      worker.postMessage({ config: globalThis.SEC_DISPLAY_CONFIG, ...options });
     } catch (error) {
       finish(reject, error);
     }
@@ -621,13 +623,18 @@ async function loadRealSecData() {
     secDisplayLoad = (async () => {
       const isRecord = value => value && typeof value === "object" && !Array.isArray(value);
       try {
-        const [display, tickerMap, prices, symbols] = await Promise.all([
+        const [display, tickerMap, prices, symbols, quarters] = await Promise.all([
           loadSecDisplayInWorker(),
           loadDashboardSnapshot("ticker_map.json", 5000, isRecord),
           loadDashboardSnapshot("realtime_prices.json", 5000, isRecord),
           loadDashboardSnapshot("market_symbols.json", 5000, value =>
-            value?.aliases && value.inactive && value.nonEquityCusips && value.reviewedCusips && value.quarantinedCusips)
+            value?.aliases && value.inactive && value.nonEquityCusips && value.reviewedCusips && value.quarantinedCusips),
+          SECDisplayLoader.loadQuarterCatalog({
+            baseURL: new URL("./", document.baseURI),
+            fetch: (url, options) => fetch(url, { ...options, signal: AbortSignal.timeout(5000) })
+          }).catch(() => null)
         ]);
+        form13FQuarterCatalog = quarters;
         if (symbols) MARKET_SYMBOLS = symbols;
         if (tickerMap) Object.assign(TICKER_MAP, tickerMap);
         mergeObservedPrices(prices);
@@ -706,6 +713,7 @@ function hasHoldingChange(item, action) {
 
 function form13FHoldingRows() {
   const period = state.reportPeriod13F;
+  if (archived13FDisplay) return archived13FDisplay.rows;
   return period ? RAW_HOLDINGS.filter(row => row.period === period) : RAW_HOLDINGS;
 }
 
@@ -716,6 +724,7 @@ function processAndRenderHoldingsData(preserveView = false) {
     const groups = Object.create(null);
     const grandConsensusMap = Object.create(null);
     const rows = form13FHoldingRows();
+    const display = archived13FDisplay || SEC_DISPLAY;
     const scopedPeriod = state.reportPeriod13F;
     let grandTotalAumVal = 0;
 
@@ -754,7 +763,7 @@ function processAndRenderHoldingsData(preserveView = false) {
           periodDate: guruPeriod,
           filingDate: item.filingDate || null,
           cik: item.cik,
-          sources: (SEC_DISPLAY.sources || []).filter(source => source.cik === item.cik),
+          sources: (display.sources || []).filter(source => source.cik === item.cik),
           latestDatasetPeriod,
           desc: `${fundName} SEC 신고 법인의 확인된 공시 부분집합. 원래 추적명은 운용 관계의 증명이 아닙니다.`,
           holdingsMap: Object.create(null)
@@ -832,7 +841,7 @@ function processAndRenderHoldingsData(preserveView = false) {
     Object.keys(groups).forEach(key => {
       const g = groups[key];
       const holdingList = Object.values(g.holdingsMap);
-      const comparison = SEC_DISPLAY.comparisons?.get(g.cik);
+      const comparison = display.comparisons?.get(g.cik);
       if (comparison) g.sources.push(...comparison.sources.map(source => ({...source,
         cik: g.cik, legalName: g.name, period: comparison.previousPeriod})));
       const totalVal = holdingList.reduce((sum, h) => sum + h.value, 0);
@@ -5051,13 +5060,41 @@ function form13FQuarterProgress(coverage, now = new Date()) {
   return { label, institutions, quarter, periodDate };
 }
 
+async function selectForm13FReportPeriod(period) {
+  const selector = document.getElementById('form13FQuarterFilter');
+  const status = document.getElementById('form13FQuarterStatus');
+  if (selector.disabled) return false;
+  if (state.reportPeriod13F === period) return true;
+  const archive = form13FQuarterCatalog?.[period];
+  selector.disabled = true;
+  selector.value = state.reportPeriod13F;
+  status.textContent = archive ? '분기 공시를 불러오는 중입니다.' : '';
+  try {
+    const display = archive ? await loadSecDisplayInWorker({ reportPeriod: period }) : null;
+    if (display) display.rows.forEach(row => SEC_DISPLAY_ROWS.add(row));
+    archived13FDisplay = display;
+    state.reportPeriod13F = period;
+    selector.value = period;
+    processAndRenderHoldingsData(true);
+    status.textContent = form13FQuarterCatalog ? '' : '보관 목록을 불러오지 못해 최근 자료만 표시합니다.';
+    return true;
+  } catch (error) {
+    console.warn('분기 공시 검증 실패:', error);
+    selector.value = state.reportPeriod13F;
+    status.textContent = '선택한 분기 공시를 불러오지 못했습니다. 다시 시도해 주세요.';
+    return false;
+  } finally {
+    selector.disabled = false;
+  }
+}
+
 function renderPartialCoverage(error) {
   const status = document.getElementById('partialDisplayStatus');
   const quarterPanel = document.getElementById('form13FQuarterPanel');
   const quarterList = document.getElementById('form13FQuarterInstitutions');
   const quarterFilter = document.getElementById('form13FQuarterFilter');
   if (quarterPanel) quarterPanel.hidden = !SEC_DISPLAY;
-  if (quarterFilter) quarterFilter.hidden = !SEC_DISPLAY;
+  if (quarterFilter) quarterFilter.parentElement.hidden = !SEC_DISPLAY;
   if (quarterList) quarterList.replaceChildren();
   const list = document.getElementById('partialCoverageList');
   if (list) list.replaceChildren();
@@ -5066,18 +5103,24 @@ function renderPartialCoverage(error) {
     return;
   }
   if (quarterPanel) {
-    const { label, institutions, quarter, periodDate } = form13FQuarterProgress(SEC_DISPLAY.coverage);
+    const { label, institutions } = form13FQuarterProgress(SEC_DISPLAY.coverage);
     document.getElementById('form13FQuarterProgress').textContent = label;
     document.getElementById('form13FQuarterEmpty').hidden = institutions.length > 0;
     if (quarterFilter) {
-      quarterFilter.textContent = `${quarter}분기만 보기`;
-      quarterFilter.disabled = !institutions.some(item => item.holdingsCount > 0);
-      quarterFilter.setAttribute('aria-pressed', String(state.reportPeriod13F === periodDate));
-      quarterFilter.onclick = () => {
-        state.reportPeriod13F = state.reportPeriod13F ? "" : periodDate;
-        quarterFilter.setAttribute('aria-pressed', String(Boolean(state.reportPeriod13F)));
-        processAndRenderHoldingsData(true);
-      };
+      const periods = new Set(Object.keys(form13FQuarterCatalog || {}));
+      SEC_DISPLAY.coverage.labels.forEach(item => {
+        if (item.status === 'available' && item.holdingsCount > 0) periods.add(item.reportDate);
+      });
+      quarterFilter.replaceChildren(new Option('최근 공시 전체', ''),
+        ...[...periods].sort().reverse().map(period => {
+          const quarter = Math.ceil(Number(period.slice(5, 7)) / 3);
+          return new Option(`${period.slice(0, 4)}년 ${quarter}분기`, period);
+        }));
+      quarterFilter.value = state.reportPeriod13F;
+      quarterFilter.onchange = () => selectForm13FReportPeriod(quarterFilter.value);
+      if (!form13FQuarterCatalog) {
+        document.getElementById('form13FQuarterStatus').textContent = '보관 목록을 불러오지 못해 최근 자료만 표시합니다.';
+      }
     }
     for (const institution of institutions) {
       const row = document.createElement('li');
@@ -5086,7 +5129,10 @@ function renderPartialCoverage(error) {
       name.textContent = institution.legalName;
       if (name.tagName === 'BUTTON') {
         name.type = 'button';
-        name.onclick = () => {
+        name.onclick = async () => {
+          if (state.reportPeriod13F && state.reportPeriod13F !== institution.reportDate &&
+              !(await selectForm13FReportPeriod(institution.reportDate))) return;
+          if (state.currentFilingType !== '13F') return;
           const key = institution.legalName;
           if (GURU_DATABASE[key]?.cik !== institution.cik) return;
           selectGuru(key);
@@ -5126,13 +5172,14 @@ function renderSelectedSources(guru) {
 }
 function buildPartialCsv(guru) {
   if (!SEC_DISPLAY) throw new Error('Verified partial display unavailable');
+  const display = archived13FDisplay || SEC_DISPLAY;
   const rows = [
     ['범위', state.reportPeriod13F ? `확인된 공시 부분집합 · 보유 기준일 ${state.reportPeriod13F}` :
       '확인된 공시 부분집합: 43/50 추적명, 42 SEC 신고 법인, 7 검증 중'],
     ['안내', '분기말 평가단가 = 동일 기준일 공시 평가액 ÷ 보유 주식 수'],
-    ['불러온 UTC', SEC_DISPLAY.freshness.loadedAt || '미확인'],
-    ['최초 원천 확인 UTC', SEC_DISPLAY.freshness.acquisitionStartedAt || SEC_DISPLAY.manifest?.acquisitionStartedAt || '미확인'],
-    ['마지막 확인 UTC', SEC_DISPLAY.freshness.lastCheckedAt, SEC_DISPLAY.freshness.label],
+    ['불러온 UTC', display.freshness.loadedAt || '미확인'],
+    ['최초 원천 확인 UTC', display.freshness.acquisitionStartedAt || display.manifest?.acquisitionStartedAt || '미확인'],
+    ['마지막 확인 UTC', display.freshness.lastCheckedAt, display.freshness.label],
     ['법인/부분집합', guru.name],
     ['종목', '티커', 'CUSIP', '주식 유형', '옵션', '보유 신고 법인 수', '공시 보유 변화', '주식수', '평가금액 USD', '부분집합 비중 %', '보유 기준일 시작', '보유 기준일 끝', '분기말 평가단가 USD']
   ];
@@ -5142,7 +5189,7 @@ function buildPartialCsv(guru) {
       h.periodRange?.[0] || '', h.periodRange?.[1] || '', h.filingUnitValue ?? '']);
   }
   rows.push(['출처', '법인', '보유 기준일', '공시/수정 공시일', 'SEC accession', 'SEC 원문']);
-  for (const source of guru.sources || SEC_DISPLAY.sources || []) rows.push(['SEC', source.legalName || guru.name, source.period, source.filingDate, source.accession, source.sourceUrl]);
+  for (const source of guru.sources || display.sources || []) rows.push(['SEC', source.legalName || guru.name, source.period, source.filingDate, source.accession, source.sourceUrl]);
   return '\uFEFF' + rows.map(row => row.map(cell => {
     const text = String(cell ?? '');
     return '"' + (/^[=+@\-]/.test(text) ? "'" : '') + text.replace(/"/g, '""') + '"';
