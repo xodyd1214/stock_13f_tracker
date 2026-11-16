@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-11-14",
-  "ptrFrom": "2026-08-17",
+  "asOf": "2026-11-15",
+  "ptrFrom": "2026-08-18",
   "annualYear": 2025,
   "filings": [
     {
@@ -12846,26 +12846,6 @@
           "status": "New"
         }
       ]
-    },
-    {
-      "id": "20035235",
-      "kind": "ptr",
-      "year": 2026,
-      "filed": "2026-08-17",
-      "name": "Steve Cohen",
-      "district": "TN09",
-      "parsed": true,
-      "rows": []
-    },
-    {
-      "id": "20035191",
-      "kind": "ptr",
-      "year": 2026,
-      "filed": "2026-08-17",
-      "name": "Scott H. Peters",
-      "district": "CA50",
-      "parsed": true,
-      "rows": []
     },
     {
       "id": "10081687",
