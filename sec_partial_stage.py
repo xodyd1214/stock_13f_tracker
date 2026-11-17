@@ -12,7 +12,10 @@ from pathlib import Path
 import re
 import xml.etree.ElementTree as ET
 
-from sec_source_acquisition import parse_json, canonical_cik, records, iso_date, official_url, xml_root
+from sec_source_acquisition import (
+    parse_json, canonical_cik, records, iso_date, official_url, xml_root,
+    select_filing_records, submission_archives,
+)
 from sec_filing_integrity import reconcile_filing, resolve_period_snapshot, equity_rows, validate_share_class_policy
 
 SCOPE_PATH = Path(__file__).with_name('partial_display_scope.json')
@@ -194,7 +197,7 @@ class Evidence:
             observations.append(item)
         return observations
 
-    def filing_records(self, manager, spec, *, comparison_periods=None, require_latest=False):
+    def filing_records(self, manager, spec, *, comparison_periods=None, require_latest=False, excluded_accessions=None):
         cik = canonical_cik(spec['cik']); root_url = f'https://data.sec.gov/submissions/CIK{cik}.json'
         check('acquisitionError' not in manager, manager.get('acquisitionError', 'Acquisition failure'))
         check(manager['cik'] == cik and manager['label'] == spec['label'], 'Manager/request identity mismatch')
@@ -202,7 +205,9 @@ class Evidence:
         check(canonical_cik(sub.get('cik')) == cik and sub.get('name') == spec['label'], 'Exact submissions CIK/name mismatch')
         check(manager['submissionsSourceUrl'] == root_url, 'Submissions URL mismatch')
         sections = sub['filings']; all_rows = records(sections['recent']); originals = [(root_path, root_url)]
-        listed = sections['files']; check(isinstance(listed, list), 'Archive list missing')
+        check(comparison_periods is not None or not (spec.get('scopedArchives') or spec.get('publishedAccessions')),
+              'Scoped acquisition requires explicit periods')
+        listed = submission_archives(sections['files'], cik, spec)
         names = [x['name'] for x in listed]
         check(len(names) == len(set(names)) and set(names) == set(manager['archives']), 'All listed archives required')
         for item in listed:
@@ -233,7 +238,9 @@ class Evidence:
             check(spec.get('reportPeriods') == manager['reportPeriods'] == periods, 'Explicit comparison periods required')
             if require_latest:
                 check(periods[0] == max(r['reportDate'] for r in merged.values()), 'Latest filing changed during refresh')
-        selected = [r for r in merged.values() if r['reportDate'] in periods]
+        selected, excluded = select_filing_records(list(merged.values()), periods, spec)
+        if excluded_accessions is not None:
+            excluded_accessions.update(excluded)
         check(not any(r['form'].startswith('13F-NT') for r in selected), 'Period notice: reporting manager review required')
         required = {r['accessionNumber'] for r in selected}
         check(set(manager['filings']) == required, 'Every known accession for latest period required')

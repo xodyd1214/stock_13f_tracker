@@ -230,6 +230,53 @@ def records(columns):
     return result
 
 
+def submission_archives(files, cik, spec):
+    if not isinstance(files, list) or len(files) > 1000:
+        raise AcquisitionError('Malformed/excessive archive listing')
+    earliest = None
+    if spec.get('scopedArchives'):
+        periods = spec.get('reportPeriods')
+        if not isinstance(periods, list) or not periods:
+            raise AcquisitionError('Explicit periods required for scoped archives')
+        earliest = min(map(iso_date, periods))
+    seen, selected = set(), []
+    for item in files:
+        name = item.get('name') if isinstance(item, dict) else None
+        if not isinstance(name, str) or not re.fullmatch(rf'CIK{cik}-submissions-\d+\.json', name):
+            raise AcquisitionError('Unsafe archive name')
+        if name in seen:
+            raise AcquisitionError('Duplicate archive name')
+        seen.add(name)
+        start, end = iso_date(item.get('filingFrom')), iso_date(item.get('filingTo'))
+        if start > end:
+            raise AcquisitionError('Invalid archive descriptor dates')
+        # A filing in a requested quarter cannot be submitted before its report date.
+        if earliest is None or end >= earliest:
+            selected.append(item)
+    return selected
+
+
+def select_filing_records(rows, periods, spec):
+    published = spec.get('publishedAccessions', {})
+    if not isinstance(published, dict) or set(published) - set(periods):
+        raise AcquisitionError('Published accessions require an explicit report period')
+    for period, accessions in published.items():
+        if not isinstance(accessions, list) or not accessions or any(not isinstance(a, str) for a in accessions):
+            raise AcquisitionError('Invalid published accession list')
+        known = {row['accessionNumber'] for row in rows if row['reportDate'] == period}
+        if len(set(accessions)) != len(accessions) or set(accessions) - known:
+            raise AcquisitionError('Published accession missing from SEC submissions')
+    selected, excluded = [], set()
+    for row in rows:
+        period, accession = row['reportDate'], row['accessionNumber']
+        if period in periods:
+            if period in published and accession not in published[period]:
+                excluded.add(accession)
+            else:
+                selected.append(row)
+    return selected, excluded
+
+
 def xml_root(raw):
     try:decoded=raw.decode('utf-8-sig')
     except UnicodeError as error:raise AcquisitionError('Unsupported XML encoding') from error
@@ -260,11 +307,8 @@ def acquire_manager(spec,root,client,retrievals):
         raise AcquisitionError('Malformed/excessive archive listing')
     all_rows=records(sections.get('recent'))
     result={'cik':cik,'label':name,'submissionsPath':path,'submissionsSourceUrl':url,'archives':{},'filings':{}}
-    for item in sections['files']:
-        archive=item.get('name') if isinstance(item,dict) else None
-        if not isinstance(archive,str) or not re.fullmatch(rf'CIK{cik}-submissions-\d+\.json',archive):
-            raise AcquisitionError('Unsafe archive name')
-        if archive in result['archives']:raise AcquisitionError('Duplicate archive name')
+    for item in submission_archives(sections['files'], cik, spec):
+        archive=item['name']
         archive_url=f'https://data.sec.gov/submissions/{archive}';archive_path=f'{cik}/{archive}'
         columns=parse_json(fetch(archive_url,archive_path,True));rows=records(columns)
         if type(item.get('filingCount')) is not int or item['filingCount']<=0 or len(columns['form'])!=item['filingCount']:
@@ -298,10 +342,10 @@ def acquire_manager(spec,root,client,retrievals):
             raise AcquisitionError('Requested quarter-end period missing or invalid')
     result['reportPeriods']=sorted(periods,reverse=True)
     result['notices']=[r for r in rows if r['form'] in ('13F-NT','13F-NT/A')]
-    if any(r['reportDate'] in periods for r in result['notices']):
+    wanted, _ = select_filing_records(rows, periods, spec)
+    if any(r['form'].startswith('13F-NT') for r in wanted):
         error=AcquisitionError('13F notice requires reporting-manager review; never zero holdings')
         error.notices=result['notices'];error.periods=result['reportPeriods'];raise error
-    wanted=[r for r in rows if r['reportDate'] in periods]
     if len(wanted)>1000:raise AcquisitionError('Excessive requested filing count')
     for row in wanted:
         accession=row['accessionNumber'];base=f'https://www.sec.gov/Archives/edgar/data/{int(cik)}/{accession.replace("-","")}/';prefix=f'{cik}/{accession}'
@@ -326,8 +370,9 @@ def acquire_manager(spec,root,client,retrievals):
     for i,source in enumerate(sorted(snapshots,key=lambda x:x==url)):
         if fetch(source,f'{cik}/consistency/{i}.json')!=snapshots[source]:
             raise AcquisitionError('Submissions changed during acquisition; new acquisition required')
+    archive_scope = 'Relevant listed archives' if spec.get('scopedArchives') else 'All listed archives'
     result['acquisition']={'validationVersion':1,'snapshotCheck':'unchanged',
-        'scope':'All listed archives and root byte-rechecked with root last; not an atomic SEC snapshot'}
+        'scope':f'{archive_scope} and root byte-rechecked with root last; not an atomic SEC snapshot'}
     return result
 
 

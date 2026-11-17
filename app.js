@@ -5076,6 +5076,7 @@ async function selectForm13FReportPeriod(period) {
     state.reportPeriod13F = period;
     selector.value = period;
     processAndRenderHoldingsData(true);
+    renderForm13FVerification();
     status.textContent = form13FQuarterCatalog ? '' : '보관 목록을 불러오지 못해 최근 자료만 표시합니다.';
     return true;
   } catch (error) {
@@ -5088,20 +5089,15 @@ async function selectForm13FReportPeriod(period) {
   }
 }
 
-function renderPartialCoverage(error) {
-  const status = document.getElementById('partialDisplayStatus');
+function renderPartialCoverage() {
   const quarterPanel = document.getElementById('form13FQuarterPanel');
   const quarterList = document.getElementById('form13FQuarterInstitutions');
   const quarterFilter = document.getElementById('form13FQuarterFilter');
   if (quarterPanel) quarterPanel.hidden = !SEC_DISPLAY;
   if (quarterFilter) quarterFilter.parentElement.hidden = !SEC_DISPLAY;
   if (quarterList) quarterList.replaceChildren();
-  const list = document.getElementById('partialCoverageList');
-  if (list) list.replaceChildren();
-  if (!SEC_DISPLAY) {
-    if (status) status.textContent = '공시 부분집합 사용 불가. 검증되지 않은 기존 자료는 표시하지 않습니다.';
-    return;
-  }
+  renderForm13FVerification();
+  if (!SEC_DISPLAY) return;
   if (quarterPanel) {
     const { label, institutions } = form13FQuarterProgress(SEC_DISPLAY.coverage);
     document.getElementById('form13FQuarterProgress').textContent = label;
@@ -5147,8 +5143,29 @@ function renderPartialCoverage(error) {
       quarterList.appendChild(row);
     }
   }
-  if (status) status.textContent = `43/50 추적명 확인 · 42개 SEC 신고 법인 · 7개 검증 중. ${SEC_DISPLAY.freshness.label} · 불러온 UTC ${SEC_DISPLAY.freshness.loadedAt || "미확인"} · 최초 원천 확인 UTC ${SEC_DISPLAY.freshness.acquisitionStartedAt || SEC_DISPLAY.manifest?.acquisitionStartedAt || "미확인"} · 마지막 확인 UTC ${SEC_DISPLAY.freshness.lastCheckedAt}. 전체 커버리지 및 현재 실시간 포트폴리오가 아닙니다. 숫자 합계는 검증된 비파생 주식 부분집합입니다. 직전 분기 비교 자료가 확인된 법인 ${SEC_DISPLAY.comparisons?.size || 0}곳.`;
-  for (const item of SEC_DISPLAY.coverage.labels) {
+}
+
+function renderForm13FVerification() {
+  const status = document.getElementById('partialDisplayStatus');
+  const list = document.getElementById('partialCoverageList');
+  if (list) list.replaceChildren();
+  const display = archived13FDisplay || SEC_DISPLAY;
+  if (!display) {
+    if (status) status.textContent = '공시 부분집합 사용 불가. 검증되지 않은 기존 자료는 표시하지 않습니다.';
+    return;
+  }
+  const period = state.reportPeriod13F;
+  const labels = period ? display.coverage.labels.filter(item => item.reportDate === period) : display.coverage.labels;
+  const verified = labels.filter(item => item.status === 'available');
+  const entities = new Set(verified.map(item => item.cik));
+  const compared = [...entities].filter(cik => display.comparisons?.has(cik)).length;
+  const scope = period
+    ? `보유 기준일 ${period} · ${verified.length}개 추적명 확인 · ${entities.size}개 SEC 신고 법인`
+    : `${verified.length}/${labels.length} 추적명 확인 · ${entities.size}개 SEC 신고 법인 · ${labels.length - verified.length}개 검증 중`;
+  const { freshness } = display;
+  const verificationScope = period && !archived13FDisplay ? '최근 공시 전체 기준 · ' : '';
+  if (status) status.textContent = `${scope}. ${verificationScope}${freshness.label} · 불러온 UTC ${freshness.loadedAt || "미확인"} · 최초 원천 확인 UTC ${freshness.acquisitionStartedAt || display.manifest?.acquisitionStartedAt || "미확인"} · 마지막 확인 UTC ${freshness.lastCheckedAt}. 전체 커버리지 및 현재 실시간 포트폴리오가 아닙니다. 숫자 합계는 검증된 비파생 주식 부분집합입니다. 직전 분기 비교 자료가 확인된 법인 ${compared}곳.`;
+  for (const item of labels) {
     const li = document.createElement('li');
     li.textContent = `${item.label} (원래 추적명) · ${item.status === 'available' ? `확인됨 · SEC 신고 법인 ${item.legalName} · CIK ${item.cik}` : `검증 중 · ${item.reason || '원천 무결성 확인 대기'} · 보유 수치 없음`}`;
     if (list) list.appendChild(li);

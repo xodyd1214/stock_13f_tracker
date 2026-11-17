@@ -36,7 +36,7 @@ def quarter_snapshots(manifest, coverage, rows, comparisons):
     return result
 
 
-def read_quarter(directory, reference, scope_hash, period):
+def quarter_artifact_reader(directory, reference, scope_hash, period):
     generation = reference['generationId']
     check(HEX.fullmatch(generation), 'Invalid archive generation')
     directory = directory / generation
@@ -45,15 +45,22 @@ def read_quarter(directory, reference, scope_hash, period):
     check(sha(raw) == generation and descriptor['scopeSha256'] == scope_hash and
           descriptor['reportPeriod'] == period, 'Archive descriptor differs')
 
-    def artifact(name, expected):
+    def artifact(name):
         raw = (directory / name).read_bytes()
+        expected = (reference['comparisonSha256'] if name == 'holding-comparisons.json'
+                    else descriptor['files'][name]['sha256'])
         check(expected == sha(raw), 'Archive artifact hash differs: ' + name)
         return parse_json(raw)
 
-    archive = {name: artifact(name, descriptor['files'][name]['sha256'])
+    return artifact
+
+
+def read_quarter(directory, reference, scope_hash, period):
+    artifact = quarter_artifact_reader(directory, reference, scope_hash, period)
+    archive = {name: artifact(name)
                for name in ('manifest.json', 'coverage.json', 'projection.json')}
-    comparisons = artifact('holding-comparisons.json', reference['comparisonSha256'])
-    check(comparisons['generationId'] == generation, 'Archive comparison generation differs')
+    comparisons = artifact('holding-comparisons.json')
+    check(comparisons['generationId'] == reference['generationId'], 'Archive comparison generation differs')
     return (archive['manifest.json'], archive['coverage.json'], decode_rows(archive['projection.json']),
             {item['cik']: item for item in comparisons['managers']})
 
@@ -101,19 +108,41 @@ def write_quarter(directory, scope, scope_hash, period, entities, manifest):
     return {'generationId': generation, 'comparisonSha256': sha(comparison_data), 'entityCount': len(entities)}
 
 
-def update_archive(sec_data, scope, *snapshots):
-    """Merge source-verified snapshots in acquisition order without dropping institutions."""
-    directory = sec_data / 'quarters'
+def archive_catalog(sec_data, scope):
     index = sec_data / 'quarters.json'
     scope_hash = sha((sec_data / 'display-policy.json').read_bytes())
     catalog = parse_json(index.read_bytes()) if index.exists() else {
         'schemaVersion': 1, 'contract': scope['contract'], 'scopeSha256': scope_hash, 'quarters': {}}
     check(catalog['scopeSha256'] == scope_hash and catalog['contract'] == scope['contract'], 'Quarter archive scope differs')
+    return catalog
+
+
+def superseded_comparison(cik, comparison, amended_sources):
+    if not comparison:
+        return False
+    updated = amended_sources.get((comparison['previousPeriod'], cik))
+    return updated is not None and {source['accession'] for source in comparison['sources']} != updated
+
+
+def update_archive(sec_data, scope, *snapshots, amended_sources=None):
+    """Merge source-verified snapshots in acquisition order without dropping institutions."""
+    directory = sec_data / 'quarters'
+    index = sec_data / 'quarters.json'
+    catalog = archive_catalog(sec_data, scope)
+    scope_hash = catalog['scopeSha256']
     quarters = catalog['quarters']
     incoming = defaultdict(list)
     for manifest, coverage, rows, comparisons in snapshots:
         for period, entities in quarter_snapshots(manifest, coverage, rows, comparisons).items():
             incoming[period].append((manifest, entities))
+
+    amended_sources = amended_sources or {}
+    if amended_sources:
+        from build_13f_comparisons import previous_quarter
+        amended_periods = {period for period, _ in amended_sources}
+        for period in quarters:
+            if previous_quarter(period) in amended_periods:
+                incoming.setdefault(period, [])
 
     updated = False
     directory.mkdir(exist_ok=True)
@@ -138,6 +167,10 @@ def update_archive(sec_data, scope, *snapshots):
                     elif not prior_accessions < accessions:
                         continue
                 entities[cik] = filing
+                changed = True
+        for cik, filing in entities.items():
+            if superseded_comparison(cik, filing[3], amended_sources):
+                entities[cik] = (*filing[:3], None)
                 changed = True
         if not changed:
             continue

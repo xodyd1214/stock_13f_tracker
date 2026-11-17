@@ -141,13 +141,42 @@ test('coverage renders all 50 tracked labels, alias count and seven pending with
  function element() { return {children:[],textContent:'',replaceChildren(){this.children=[]},appendChild(c){this.children.push(c)}}; }
  ctx.document.createElement = element;
  const list = element(), status=element(); nodes.set('partialCoverageList',list); nodes.set('partialDisplayStatus',status);
- vm.runInContext(extract('renderPartialCoverage'),ctx); ctx.renderPartialCoverage();
+ vm.runInContext(['renderPartialCoverage','renderForm13FVerification'].map(extract).join('\n'),ctx); ctx.renderPartialCoverage();
  assert.equal(list.children.length,50);
  assert.equal(display.coverage.labels.filter(x=>x.status==='available').length,43);
  assert.equal(new Set(display.coverage.labels.filter(x=>x.status==='available').map(x=>x.cik)).size,42);
  assert.equal(display.coverage.labels.filter(x=>x.status==='verification-pending').length,7);
  for (const item of list.children.filter(x=>x.textContent.includes('검증 중'))) assert.match(item.textContent,/보유 수치 없음/);
  assert.match(status.textContent,/42개 SEC/); assert.match(status.textContent,/현재 실시간 포트폴리오가 아닙니다/);
+});
+test('quarter selection updates the verification summary and coverage list', async () => {
+ const {ctx, nodes, display} = context([]);
+ const q2 = '2026-06-30', q3 = '2026-09-30';
+ const label = (cik, reportDate) => ({label: cik, legalName: cik, cik, reportDate, status:'available'});
+ display.coverage.labels = [label('001', q3), label('002', q2)];
+ display.comparisons = new Map([['001', {}], ['002', {}]]);
+ const status = {textContent:''};
+ const list = {children:[], replaceChildren(){this.children=[]}, appendChild(item){this.children.push(item)}};
+ nodes.set('partialDisplayStatus', status);
+ nodes.set('partialCoverageList', list);
+ nodes.set('form13FQuarterFilter', {value:''});
+ nodes.set('form13FQuarterStatus', {textContent:''});
+ ctx.document.createElement = () => ({textContent:''});
+ ctx.form13FQuarterCatalog = {[q2]: {}};
+ ctx.state.reportPeriod13F = '';
+ ctx.processAndRenderHoldingsData = () => {};
+ ctx.loadSecDisplayInWorker = async () => ({rows:[], coverage:{labels:[label('003', q2)]},
+   freshness:{label:'보관 자료', lastCheckedAt:'2026-08-15T00:00:00Z'}, comparisons:new Map()});
+ vm.runInContext(['selectForm13FReportPeriod','renderForm13FVerification'].map(extract).join('\n'), ctx);
+ assert.equal(await ctx.selectForm13FReportPeriod(q2), true);
+ assert.match(status.textContent, /2026-06-30.*1개 SEC.*2026-08-15.*법인 0곳/);
+ assert.equal(list.children.length, 1);
+ assert.match(list.children[0].textContent, /003/);
+ await ctx.selectForm13FReportPeriod(q3);
+ assert.match(status.textContent, /2026-09-30.*1개 SEC.*최근 공시 전체 기준.*법인 1곳/);
+ await ctx.selectForm13FReportPeriod('');
+ assert.match(status.textContent, /2\/2 추적명.*2개 SEC.*법인 2곳/);
+ assert.equal(list.children.length, 2);
 });
 const loader = require('../sec_display_loader.js');
 const crypto = require('node:crypto');

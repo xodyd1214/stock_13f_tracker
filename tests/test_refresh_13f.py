@@ -2,14 +2,43 @@
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from archive_13f import read_quarter, update_archive
-from refresh_13f import refresh_entity, refresh_period, source_rows
+from refresh_13f import refresh, refresh_entity, refresh_period, source_rows
 from sec_filing_integrity import reconcile_filing, resolve_period_snapshot
 from sec_partial_stage import sha, snapshot_holdings
 from sec_source_acquisition import Client
 from test_filing_integrity_rebuilt import synthetic
 from test_sec_source_acquisition import Fake, SUB
+
+
+CIK = '0000000001'
+NAME = 'SYNTHETIC TEST ENTITY'
+Q2 = '2026-06-30'
+Q3 = '2026-09-30'
+
+
+def make_client(*submissions, archives=()):
+    columns = {key: [filing[2][key] for filing in submissions] for key in submissions[0][2] if key != 'cik'}
+    columns['primaryDocument'] = ['primary.xml'] * len(submissions)
+    data = {SUB: {'cik': 1, 'name': NAME, 'filings': {'recent': columns, 'files': list(archives)}}}
+    for primary, table, _, primary_url, table_url in submissions:
+        data[primary_url] = primary
+        data[table_url] = table
+        data[primary_url.removesuffix('primary.xml') + 'index.json'] = {
+            'directory': {'item': [{'name': 'primary.xml'}, {'name': 'table.xml'}]}}
+    return Client('Synthetic refresh test', transport=Fake(data), sleep=lambda _: None)
+
+
+def published(snapshot):
+    return {'label': NAME, 'status': 'available', 'cik': CIK, 'legalName': NAME, 'reportDate': snapshot['reportDate'],
+            'sourceAccessions': snapshot['allKnownAccessions'], 'valueUsd': snapshot['equityValueUsd']}
+
+
+def resolve_original(filing):
+    original = reconcile_filing(*filing)
+    return resolve_period_snapshot([original], [original['accession']])
 
 
 class Refresh13FTests(unittest.TestCase):
@@ -61,25 +90,7 @@ class Refresh13FTests(unittest.TestCase):
                               value='150', shares='15', voting='15')
         amendment = synthetic(number=1, kind='RESTATEMENT', period='09-30-2026',
                               filing='2026-11-10', value='200', shares='20', voting='20')
-        name = 'SYNTHETIC TEST ENTITY'
-
-        def client(*submissions):
-            columns = {key: [filing[2][key] for filing in submissions] for key in june[2] if key != 'cik'}
-            columns['primaryDocument'] = ['primary.xml'] * len(submissions)
-            data = {SUB: {'cik': 1, 'name': name, 'filings': {'recent': columns, 'files': []}}}
-            for primary, table, _, primary_url, table_url in submissions:
-                data[primary_url] = primary
-                data[table_url] = table
-                data[primary_url.removesuffix('primary.xml') + 'index.json'] = {
-                    'directory': {'item': [{'name': 'primary.xml'}, {'name': 'table.xml'}]}}
-            return Client('Synthetic refresh test', transport=Fake(data), sleep=lambda _: None)
-
-        def published(snapshot):
-            return {'cik': '0000000001', 'legalName': name, 'reportDate': snapshot['reportDate'],
-                    'sourceAccessions': snapshot['allKnownAccessions'], 'valueUsd': snapshot['equityValueUsd']}
-
-        old = reconcile_filing(*june)
-        previous = resolve_period_snapshot([old], [old['accession']])
+        previous = resolve_original(june)
         state = published(previous)
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()
@@ -87,20 +98,73 @@ class Refresh13FTests(unittest.TestCase):
             second = root / 'second'
             first.mkdir()
             second.mkdir()
-            initial = client(june, september)
+            initial = make_client(june, september)
             self.assertEqual(refresh_period(initial, state), '2026-09-30')
             q3, removed, comparison, _ = refresh_entity(
-                initial, first, state, '2026-09-30', source_rows(state['cik'], name, previous), None, [])
+                initial, first, state, Q3, source_rows(CIK, NAME, previous), None, [])
             self.assertEqual(removed['equity']['reportedValueUsd'], 100)
             self.assertEqual(q3['equityValueUsd'], 150)
             self.assertEqual(comparison['positions'], [['000000001', 10]])
             self.assertIsNone(refresh_period(initial, published(q3)))
 
-            later = client(june, september, amendment)
+            later = make_client(june, september, amendment)
             self.assertEqual(refresh_period(later, published(q3)), '2026-09-30')
             updated, removed, comparison, _ = refresh_entity(
-                later, second, published(q3), '2026-09-30', source_rows(state['cik'], name, q3), comparison, [])
+                later, second, published(q3), Q3, source_rows(CIK, NAME, q3), comparison, [])
             self.assertEqual(removed['equity']['reportedValueUsd'], 150)
             self.assertEqual(updated['equityValueUsd'], 200)
             self.assertEqual(comparison['positions'], [['000000001', 10]])
             self.assertIsNone(refresh_period(later, published(updated)))
+
+    def test_rollover_skips_irrelevant_archive_and_isolates_unverified_prior_amendment(self):
+        june = synthetic(period='06-30-2026', filing='2026-08-10')
+        september = synthetic(number=3, period='09-30-2026', filing='2026-10-28')
+        broken = synthetic(number=1, kind='RESTATEMENT', period='06-30-2026', filing='2026-11-10')
+        broken[1] = broken[1].replace(b'<value>100</value>', b'<value>101</value>')
+        descriptor = {'name': f'CIK{CIK}-submissions-001.json', 'filingFrom': '2014-04-08',
+                      'filingTo': '2015-01-07', 'filingCount': 1}
+        client = make_client(june, september, broken, archives=[descriptor])
+        previous = resolve_original(june)
+        with tempfile.TemporaryDirectory() as work:
+            snapshot, _, comparison, _ = refresh_entity(
+                client, Path(work).resolve(), published(previous), Q3, source_rows(CIK, NAME, previous), None, [])
+        self.assertEqual(snapshot['reportDate'], Q3)
+        self.assertIsNone(comparison)
+        self.assertNotIn(broken[4], client.transport.calls)
+        self.assertFalse(any(call.endswith(descriptor['name']) for call in client.transport.calls))
+
+    def test_late_amendment_updates_archive_and_drops_superseded_comparison(self):
+        june = synthetic(period='06-30-2026', filing='2026-08-10')
+        september = synthetic(number=3, period='09-30-2026', filing='2026-10-28',
+                              value='150', shares='15', voting='15')
+        amendment = synthetic(number=1, kind='RESTATEMENT', period='06-30-2026',
+                              filing='2026-11-10', value='200', shares='20', voting='20')
+        q2, q3 = resolve_original(june), resolve_original(september)
+        comparison = {'cik': CIK, 'period': Q3, 'previousPeriod': Q2, 'positions': [['000000001', 10]],
+                      'sources': [{'accession': june[2]['accessionNumber']}]}
+        scope = {'contract': 'test'}
+
+        def bundle(snapshot, comparisons):
+            manifest = dict.fromkeys(('lastChecked', 'preparedAt', 'acquisitionStartedAt'), '2026-10-30T00:00:00+00:00')
+            manifest['sources'] = source_rows(CIK, NAME, snapshot)
+            return (manifest, {'labels': [published(snapshot)]}, snapshot_holdings(snapshot, NAME, [NAME], []),
+                    comparisons)
+
+        active = bundle(q3, {CIK: comparison})
+        with tempfile.TemporaryDirectory() as work:
+            root = Path(work).resolve()
+            (root / 'display-policy.json').write_bytes(b'{}')
+            (root / 'evidence').mkdir()
+            update_archive(root, scope, bundle(q2, {}), active)
+            with patch('refresh_13f.load_generation', return_value=(scope, 'active', *active)), \
+                 patch('refresh_13f.validate_generation'), patch('refresh_13f.publish') as publish:
+                self.assertFalse(refresh(root, root / 'evidence', make_client(june, september, amendment)))
+            catalog = update_archive(root, scope)
+            archived = read_quarter(root / 'quarters', catalog['quarters'][Q2], sha(b'{}'), Q2)
+            self.assertEqual(archived[1]['labels'][0]['sourceAccessions'],
+                             [june[2]['accessionNumber'], amendment[2]['accessionNumber']])
+            self.assertEqual(archived[2][0]['shares'], 20)
+            archived = read_quarter(root / 'quarters', catalog['quarters'][Q3], sha(b'{}'), Q3)
+            self.assertEqual(archived[2][0]['shares'], 15)
+            self.assertEqual(archived[3], {})
+            self.assertEqual(publish.call_args.args[5], {})
