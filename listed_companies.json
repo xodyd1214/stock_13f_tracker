@@ -1855,18 +1855,6 @@
       "Nasdaq"
     ],
     [
-      2031561,
-      "Aldel Financial II Inc.",
-      "ALDF",
-      "Nasdaq"
-    ],
-    [
-      2031561,
-      "Aldel Financial II Inc.",
-      "ALDFW",
-      "Nasdaq"
-    ],
-    [
       1341235,
       "Aldeyra Therapeutics, Inc.",
       "ALDX",
@@ -2200,12 +2188,6 @@
       2041493,
       "Alussa Energy Acquisition Corp. II",
       "ALUB-WT",
-      "NYSE"
-    ],
-    [
-      1964979,
-      "ALLURION TECHNOLOGIES, INC.",
-      "ALUR",
       "NYSE"
     ],
     [
@@ -2615,12 +2597,6 @@
       "Andersen Group Inc.",
       "ANDG",
       "NYSE"
-    ],
-    [
-      1815974,
-      "Anebulo Pharmaceuticals, Inc.",
-      "ANEB",
-      "Nasdaq"
     ],
     [
       1596532,
@@ -3665,12 +3641,6 @@
       "Atour Lifestyle Holdings Ltd",
       "ATAT",
       "Nasdaq"
-    ],
-    [
-      1963088,
-      "AtlasClear Holdings, Inc.",
-      "ATCH",
-      "NYSE"
     ],
     [
       1684688,
@@ -4808,7 +4778,7 @@
     ],
     [
       1795815,
-      "California BanCorp CA",
+      "California BanCorp \\ CA",
       "BCAL",
       "Nasdaq"
     ],
@@ -6795,7 +6765,19 @@
     [
       2098410,
       "Bluerock Acquisition Corp. II",
+      "BRRK",
+      "Nasdaq"
+    ],
+    [
+      2098410,
+      "Bluerock Acquisition Corp. II",
       "BRRKU",
+      "Nasdaq"
+    ],
+    [
+      2098410,
+      "Bluerock Acquisition Corp. II",
+      "BRRKW",
       "Nasdaq"
     ],
     [
@@ -8219,24 +8201,6 @@
       "UNITED BREWERIES CO INC",
       "CCU",
       "NYSE"
-    ],
-    [
-      2074973,
-      "Agility Robotics, Inc.",
-      "CCXI",
-      "Nasdaq"
-    ],
-    [
-      2074973,
-      "Agility Robotics, Inc.",
-      "CCXIU",
-      "Nasdaq"
-    ],
-    [
-      2074973,
-      "Agility Robotics, Inc.",
-      "CCXIW",
-      "Nasdaq"
     ],
     [
       1166691,
@@ -17005,12 +16969,6 @@
       "Nasdaq"
     ],
     [
-      1926293,
-      "Green Circle Decarbonize Technology Ltd",
-      "GCDT",
-      "NYSE"
-    ],
-    [
       2108962,
       "General Catalyst Global Resilience Merger Corp.",
       "GCGR",
@@ -18073,12 +18031,6 @@
       "NYSE"
     ],
     [
-      1838716,
-      "Genenta Science S.p.A.",
-      "GNTA",
-      "Nasdaq"
-    ],
-    [
       355811,
       "GENTEX CORP",
       "GNTX",
@@ -19111,6 +19063,12 @@
       "Nasdaq"
     ],
     [
+      2039458,
+      "Canary HBAR ETF",
+      "HBR",
+      "Nasdaq"
+    ],
+    [
       775215,
       "HBT Financial, Inc.",
       "HBT",
@@ -19583,12 +19541,6 @@
       "Hongli Group Inc.",
       "HLP",
       "Nasdaq"
-    ],
-    [
-      1739174,
-      "Tessera Defense & Homeland Security Inc.",
-      "HLSQ",
-      "NYSE"
     ],
     [
       1585689,
@@ -20374,6 +20326,12 @@
       1222401,
       "BLACKROCK CORPORATE HIGH YIELD FUND, INC.",
       "HYT",
+      "NYSE"
+    ],
+    [
+      1130464,
+      "BLACK HILLS CORP /SD/",
+      "HZN",
       "NYSE"
     ],
     [
@@ -21202,12 +21160,6 @@
       1857044,
       "Indaptus Therapeutics, Inc.",
       "INDP",
-      "Nasdaq"
-    ],
-    [
-      1625297,
-      "Supernus, Inc.",
-      "INDV",
       "Nasdaq"
     ],
     [
@@ -23594,7 +23546,7 @@
     ],
     [
       1007587,
-      "KVH INDUSTRIES INC DE",
+      "KVH INDUSTRIES INC \\DE\\",
       "KVHI",
       "Nasdaq"
     ],
@@ -25741,6 +25693,12 @@
       "Nasdaq"
     ],
     [
+      1898722,
+      "Modern Mining Technology Corp.",
+      "MDRN",
+      "NYSE"
+    ],
+    [
       1654595,
       "Medalist Diversified, Inc.",
       "MDRR",
@@ -26464,12 +26422,6 @@
       1381640,
       "Melco Resorts & Entertainment LTD",
       "MLCO",
-      "Nasdaq"
-    ],
-    [
-      1937737,
-      "Moolec Science SA",
-      "MLEC",
       "Nasdaq"
     ],
     [
@@ -29899,12 +29851,6 @@
       "Nasdaq"
     ],
     [
-      1817004,
-      "NEXTNRG, INC.",
-      "NXXT",
-      "Nasdaq"
-    ],
-    [
       1901279,
       "Nayax Ltd.",
       "NYAX",
@@ -33135,7 +33081,19 @@
     [
       2148436,
       "Southport Acquisition Corp. II",
+      "PORT",
+      "NYSE"
+    ],
+    [
+      2148436,
+      "Southport Acquisition Corp. II",
       "PORT-UN",
+      "NYSE"
+    ],
+    [
+      2148436,
+      "Southport Acquisition Corp. II",
+      "PORT-WT",
       "NYSE"
     ],
     [
@@ -33700,12 +33658,6 @@
       938323,
       "PEARSON PLC",
       "PSO",
-      "NYSE"
-    ],
-    [
-      1847064,
-      "PSQ Holdings, Inc.",
-      "PSQH",
       "NYSE"
     ],
     [
@@ -39019,12 +38971,6 @@
       "NYSE"
     ],
     [
-      1994624,
-      "ScanTech AI Systems Inc.",
-      "STAI",
-      "Nasdaq"
-    ],
-    [
       2002453,
       "STAK Inc.",
       "STAK",
@@ -42512,43 +42458,43 @@
     ],
     [
       36104,
-      "US BANCORP \\DE\\",
+      "US BANCORP DE",
       "USB",
       "NYSE"
     ],
     [
       36104,
-      "US BANCORP \\DE\\",
+      "US BANCORP DE",
       "USB-PA",
       "NYSE"
     ],
     [
       36104,
-      "US BANCORP \\DE\\",
+      "US BANCORP DE",
       "USB-PH",
       "NYSE"
     ],
     [
       36104,
-      "US BANCORP \\DE\\",
+      "US BANCORP DE",
       "USB-PP",
       "NYSE"
     ],
     [
       36104,
-      "US BANCORP \\DE\\",
+      "US BANCORP DE",
       "USB-PQ",
       "NYSE"
     ],
     [
       36104,
-      "US BANCORP \\DE\\",
+      "US BANCORP DE",
       "USB-PR",
       "NYSE"
     ],
     [
       36104,
-      "US BANCORP \\DE\\",
+      "US BANCORP DE",
       "USB-PS",
       "NYSE"
     ],
@@ -44258,7 +44204,7 @@
     ],
     [
       1603923,
-      "Weatherford International plc",
+      "Weatherford International Corp",
       "WFRD",
       "Nasdaq"
     ],
