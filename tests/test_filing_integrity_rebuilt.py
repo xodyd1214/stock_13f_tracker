@@ -2,7 +2,10 @@
 import copy
 import hashlib
 import unittest
-from sec_filing_integrity import IntegrityError, reconcile_filing, resolve_period_snapshot, equity_rows, is_reported_equity, validate_share_class_policy
+from sec_filing_integrity import (
+    IntegrityError, classify_reported_position, equity_rows, is_reported_equity,
+    reconcile_filing, resolve_period_snapshot, validate_share_class_policy,
+)
 
 
 def synthetic(number=0, kind=None, value='00100', shares='00010', security='COM', share_type='SH', option=None, filing='2026-02-02', period='12-31-2025', voting='00010', cusip='000000001'):
@@ -62,6 +65,17 @@ class RebuiltIntegrityTests(unittest.TestCase):
         for transform in (lambda p:p[0].update(evidence=[]),lambda p:p[0]['evidence'][0].update(sha256='bad'),lambda p:p.append(copy.deepcopy(p[0]))):
             policy=self.fund_policy();transform(policy)
             with self.assertRaises(IntegrityError):validate_share_class_policy(policy)
+
+    def test_reviewed_bamco_call_is_excluded_only_for_its_source_row(self):
+        row = filing(security='CALL', cusip='G93A5A101')['rows'][0]
+        self.assertEqual(classify_reported_position(row), 'unresolved_share_class')
+        row['sourceRowId'] = (
+            '0001017918-26-000082:4cabd10d8aa0b05a79ea11a8915b1a8812f52acca3a1cd85dc7d1616ce8f33c0:319'
+        )
+        self.assertEqual(classify_reported_position(row), 'option')
+        self.assertFalse(is_reported_equity(row))
+        self.assertEqual(classify_reported_position({**row, 'sourceRowId': row['sourceRowId'][:-1] + '8'}),
+                         'unresolved_share_class')
 
     def test_exact_raw_preserved(self):
         args = synthetic(value=' 00100 ', shares='00010')

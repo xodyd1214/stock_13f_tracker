@@ -295,6 +295,15 @@ def classify_reported_position(row, share_class_policy=None):
     if row.get('isOption') is True or row.get('optionType'):
         return 'unresolved_share_class'
     title=_canonical(row.get('titleOfClass',''))
+    # BAMCO reported Viking Holdings as CALL in the class column, with no
+    # Put/Call field. The SEC list confirms the underlying CUSIP and its
+    # listed call class (13flist2026q3.pdf, page 55). Bind the review to the
+    # exact row and XML hash so it cannot apply to a later filing.
+    if (title == 'CALL' and row.get('cusip') == 'G93A5A101'
+            and row.get('sourceRowId') == (
+                '0001017918-26-000082:4cabd10d8aa0b05a79ea11a8915b1a8812f52acca3a1cd85dc7d1616ce8f33c0:319'
+            )):
+        return 'option'
     if re.search(r'\b(?:WARRANTS?|WTS)\b',title):
         return 'warrant'
     for rule in share_class_policy or []:
