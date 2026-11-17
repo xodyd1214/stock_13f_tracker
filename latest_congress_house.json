@@ -1,9 +1,101 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-11-15",
-  "ptrFrom": "2026-08-18",
+  "asOf": "2026-11-16",
+  "ptrFrom": "2026-08-19",
   "annualYear": 2025,
   "filings": [
+    {
+      "id": "20035807",
+      "kind": "ptr",
+      "year": 2026,
+      "filed": "2026-11-13",
+      "name": "James French Hill",
+      "district": "AR02",
+      "parsed": true,
+      "rows": [
+        {
+          "asset": "JBG SMITH Properties Common Shares",
+          "ticker": "JBGS",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-09",
+          "action": "S",
+          "status": "New"
+        }
+      ]
+    },
+    {
+      "id": "20035786",
+      "kind": "ptr",
+      "year": 2026,
+      "filed": "2026-11-13",
+      "name": "Scott H. Peters",
+      "district": "CA50",
+      "parsed": true,
+      "rows": []
+    },
+    {
+      "id": "20035779",
+      "kind": "ptr",
+      "year": 2026,
+      "filed": "2026-11-13",
+      "name": "Suzan K. DelBene",
+      "district": "WA01",
+      "parsed": true,
+      "rows": []
+    },
+    {
+      "id": "20035757",
+      "kind": "ptr",
+      "year": 2026,
+      "filed": "2026-11-13",
+      "name": "Jonathan Jackson",
+      "district": "IL01",
+      "parsed": true,
+      "rows": [
+        {
+          "asset": "BP p.l.c. Common Stock",
+          "ticker": "BP",
+          "assetType": "ST",
+          "owner": "JT",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-01",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Datadog, Inc. - Class A Common Stock",
+          "ticker": "DDOG",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-22",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Estee Lauder Companies, Inc.",
+          "ticker": "EL",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-12",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Sphere Entertainment Co. Class A Common Stock",
+          "ticker": "SPHR",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-12",
+          "action": "S",
+          "status": "New"
+        }
+      ]
+    },
     {
       "id": "20035831",
       "kind": "ptr",
@@ -12709,139 +12801,6 @@
           "owner": "",
           "value": "$1,001 - $15,000",
           "traded": "2026-08-11",
-          "action": "P",
-          "status": "New"
-        }
-      ]
-    },
-    {
-      "id": "20035275",
-      "kind": "ptr",
-      "year": 2026,
-      "filed": "2026-08-18",
-      "name": "Ed Case",
-      "district": "HI01",
-      "parsed": true,
-      "rows": [
-        {
-          "asset": "Apple Inc. - Common Stock",
-          "ticker": "AAPL",
-          "assetType": "ST",
-          "owner": "SP",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-08-13",
-          "action": "P",
-          "status": "New"
-        }
-      ]
-    },
-    {
-      "id": "20035273",
-      "kind": "ptr",
-      "year": 2026,
-      "filed": "2026-08-18",
-      "name": "Thomas H. Kean Jr",
-      "district": "NJ07",
-      "parsed": true,
-      "rows": [
-        {
-          "asset": "Alphabet Inc. - Class A Common Stock",
-          "ticker": "GOOGL",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-22",
-          "action": "S (partial)",
-          "status": "New"
-        },
-        {
-          "asset": "Amazon.com, Inc. - Common Stock",
-          "ticker": "AMZN",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-08",
-          "action": "P",
-          "status": "New"
-        },
-        {
-          "asset": "EQT Corporation Common Stock",
-          "ticker": "EQT",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-07",
-          "action": "P",
-          "status": "New"
-        },
-        {
-          "asset": "ESAB Corporation Common Stock",
-          "ticker": "ESAB",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-07",
-          "action": "P",
-          "status": "New"
-        },
-        {
-          "asset": "Stryker Corporation Common Stock",
-          "ticker": "SYK",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-22",
-          "action": "S (partial)",
-          "status": "New"
-        },
-        {
-          "asset": "Toast, Inc. Class A Common Stock",
-          "ticker": "TOST",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-08",
-          "action": "P",
-          "status": "New"
-        }
-      ]
-    },
-    {
-      "id": "20035260",
-      "kind": "ptr",
-      "year": 2026,
-      "filed": "2026-08-18",
-      "name": "Richard W. Allen",
-      "district": "GA12",
-      "parsed": true,
-      "rows": [
-        {
-          "asset": "Abbott Laboratories Common Stock",
-          "ticker": "ABT",
-          "assetType": "ST",
-          "owner": "SP",
-          "value": "$15,001 - $50,000",
-          "traded": "2026-07-14",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Advanced Micro Devices, Inc.",
-          "ticker": "AMD",
-          "assetType": "ST",
-          "owner": "SP",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-14",
-          "action": "P",
-          "status": "New"
-        },
-        {
-          "asset": "Broadcom Inc. - Common Stock",
-          "ticker": "AVGO",
-          "assetType": "ST",
-          "owner": "SP",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-14",
           "action": "P",
           "status": "New"
         }

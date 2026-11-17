@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "lastUpdated": "2026-11-16T00:36:47Z",
-  "collectedAt": "2026-11-16T00:36:47Z",
+  "lastUpdated": "2026-11-17T03:23:31Z",
+  "collectedAt": "2026-11-17T03:23:31Z",
   "status": "success",
   "fedRate": {
     "targetRange": "3.75% ~ 4.00%",
@@ -9,8 +9,8 @@
     "targetUpper": 4.0,
     "effr": "3.88%",
     "sofr": "3.90%",
-    "effectiveDate": "2026-11-12",
-    "sofrEffectiveDate": "2026-11-12"
+    "effectiveDate": "2026-11-13",
+    "sofrEffectiveDate": "2026-11-13"
   },
   "labor": {
     "unemploymentRate": "4.1%",
@@ -26,48 +26,48 @@
   },
   "treasury": {
     "yield10Y": {
-      "val": 5.15,
-      "change": 1.0,
+      "val": 5.12,
+      "change": -0.64,
       "label": "10년물 국채 금리",
-      "asOf": "2026-11-13"
+      "asOf": "2026-11-16"
     },
     "yield13W": {
       "val": 4.12,
-      "change": -0.15,
+      "change": 0.07,
       "label": "3개월물 국채 수익률 지표",
-      "asOf": "2026-11-13"
+      "asOf": "2026-11-16"
     },
     "yield5Y": {
-      "val": 4.98,
-      "change": 0.73,
+      "val": 4.93,
+      "change": -0.92,
       "label": "5년물 국채 금리",
-      "asOf": "2026-11-13"
+      "asOf": "2026-11-16"
     },
     "spread10Y_13W": {
-      "spread": 1.03,
+      "spread": 1.0,
       "inverted": false,
       "desc": "10년물 수익률이 3개월물 이상",
-      "asOf": "2026-11-13"
+      "asOf": "2026-11-16"
     }
   },
   "commoditiesAndFx": {
     "dxy": {
-      "val": 103.4,
-      "change": -0.01,
+      "val": 103.53,
+      "change": -0.02,
       "label": "달러 인덱스 (DXY)",
-      "asOf": "2026-11-16"
+      "asOf": "2026-11-17"
     },
     "wtiOil": {
-      "val": 88.68,
-      "change": 0.14,
+      "val": 85.15,
+      "change": -0.66,
       "label": "WTI 원유 선물 ($)",
-      "asOf": "2026-11-16"
+      "asOf": "2026-11-17"
     },
     "gold": {
-      "val": 3893.1,
-      "change": 0.17,
+      "val": 3874.5,
+      "change": 0.56,
       "label": "금 선물 ($)",
-      "asOf": "2026-11-16"
+      "asOf": "2026-11-17"
     }
   },
   "calendar": [
@@ -426,20 +426,6 @@
   ],
   "timeSeries": {
     "treasuryDaily": [
-      {
-        "date": "2025-11-13",
-        "y3m": 3.79,
-        "y5y": 3.7,
-        "y10y": 4.11,
-        "spread": 0.32
-      },
-      {
-        "date": "2025-11-14",
-        "y3m": 3.79,
-        "y5y": 3.73,
-        "y10y": 4.15,
-        "spread": 0.36
-      },
       {
         "date": "2025-11-17",
         "y3m": 3.77,
@@ -2189,6 +2175,13 @@
         "y5y": 4.98,
         "y10y": 5.15,
         "spread": 1.03
+      },
+      {
+        "date": "2026-11-16",
+        "y3m": 4.12,
+        "y5y": 4.93,
+        "y10y": 5.12,
+        "spread": 1.0
       }
     ],
     "policyMonthly": [
@@ -2325,11 +2318,11 @@
       "url": "https://markets.newyorkfed.org/api/rates/all/latest.json",
       "status": "success",
       "fetchStatus": "success",
-      "asOf": "2026-11-12",
+      "asOf": "2026-11-13",
       "ageDays": 4,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-16T00:36:47Z",
-      "lastSuccessAt": "2026-11-16T00:36:47Z",
+      "checkedAt": "2026-11-17T03:23:31Z",
+      "lastSuccessAt": "2026-11-17T03:23:31Z",
       "error": null
     },
     "blsInflation": {
@@ -2337,10 +2330,10 @@
       "status": "success",
       "fetchStatus": "success",
       "asOf": "2026-10",
-      "ageDays": 46,
+      "ageDays": 47,
       "maxAgeDays": 75,
-      "checkedAt": "2026-11-16T00:36:47Z",
-      "lastSuccessAt": "2026-11-16T00:36:47Z",
+      "checkedAt": "2026-11-17T03:23:31Z",
+      "lastSuccessAt": "2026-11-17T03:23:31Z",
       "error": null
     },
     "blsLabor": {
@@ -2348,10 +2341,10 @@
       "status": "success",
       "fetchStatus": "success",
       "asOf": "2026-10",
-      "ageDays": 46,
+      "ageDays": 47,
       "maxAgeDays": 75,
-      "checkedAt": "2026-11-16T00:36:47Z",
-      "lastSuccessAt": "2026-11-16T00:36:47Z",
+      "checkedAt": "2026-11-17T03:23:31Z",
+      "lastSuccessAt": "2026-11-17T03:23:31Z",
       "error": null
     },
     "policyMonthly": {
@@ -2359,120 +2352,120 @@
       "status": "success",
       "fetchStatus": "success",
       "asOf": "2026-10",
-      "ageDays": 46,
+      "ageDays": 47,
       "maxAgeDays": 75,
-      "checkedAt": "2026-11-16T00:36:47Z",
-      "lastSuccessAt": "2026-11-16T00:36:47Z",
+      "checkedAt": "2026-11-17T03:23:31Z",
+      "lastSuccessAt": "2026-11-17T03:23:31Z",
       "error": null
     },
     "yield10Y": {
       "url": "https://query1.finance.yahoo.com/v8/finance/chart/%5ETNX?range=1d&interval=1d",
       "status": "success",
       "fetchStatus": "success",
-      "asOf": "2026-11-13",
-      "ageDays": 3,
+      "asOf": "2026-11-16",
+      "ageDays": 1,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-16T00:36:47Z",
-      "lastSuccessAt": "2026-11-16T00:36:47Z",
+      "checkedAt": "2026-11-17T03:23:31Z",
+      "lastSuccessAt": "2026-11-17T03:23:31Z",
       "error": null
     },
     "yield13W": {
       "url": "https://query1.finance.yahoo.com/v8/finance/chart/%5EIRX?range=1d&interval=1d",
       "status": "success",
       "fetchStatus": "success",
-      "asOf": "2026-11-13",
-      "ageDays": 3,
+      "asOf": "2026-11-16",
+      "ageDays": 1,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-16T00:36:47Z",
-      "lastSuccessAt": "2026-11-16T00:36:47Z",
+      "checkedAt": "2026-11-17T03:23:31Z",
+      "lastSuccessAt": "2026-11-17T03:23:31Z",
       "error": null
     },
     "yield5Y": {
       "url": "https://query1.finance.yahoo.com/v8/finance/chart/%5EFVX?range=1d&interval=1d",
       "status": "success",
       "fetchStatus": "success",
-      "asOf": "2026-11-13",
-      "ageDays": 3,
+      "asOf": "2026-11-16",
+      "ageDays": 1,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-16T00:36:47Z",
-      "lastSuccessAt": "2026-11-16T00:36:47Z",
+      "checkedAt": "2026-11-17T03:23:31Z",
+      "lastSuccessAt": "2026-11-17T03:23:31Z",
       "error": null
     },
     "dxy": {
       "url": "https://query1.finance.yahoo.com/v8/finance/chart/DX-Y.NYB?range=1d&interval=1d",
       "status": "success",
       "fetchStatus": "success",
-      "asOf": "2026-11-16",
+      "asOf": "2026-11-17",
       "ageDays": 0,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-16T00:36:47Z",
-      "lastSuccessAt": "2026-11-16T00:36:47Z",
+      "checkedAt": "2026-11-17T03:23:31Z",
+      "lastSuccessAt": "2026-11-17T03:23:31Z",
       "error": null
     },
     "wtiOil": {
       "url": "https://query1.finance.yahoo.com/v8/finance/chart/CL%3DF?range=1d&interval=1d",
       "status": "success",
       "fetchStatus": "success",
-      "asOf": "2026-11-16",
+      "asOf": "2026-11-17",
       "ageDays": 0,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-16T00:36:47Z",
-      "lastSuccessAt": "2026-11-16T00:36:47Z",
+      "checkedAt": "2026-11-17T03:23:31Z",
+      "lastSuccessAt": "2026-11-17T03:23:31Z",
       "error": null
     },
     "gold": {
       "url": "https://query1.finance.yahoo.com/v8/finance/chart/GC%3DF?range=1d&interval=1d",
       "status": "success",
       "fetchStatus": "success",
-      "asOf": "2026-11-16",
+      "asOf": "2026-11-17",
       "ageDays": 0,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-16T00:36:47Z",
-      "lastSuccessAt": "2026-11-16T00:36:47Z",
+      "checkedAt": "2026-11-17T03:23:31Z",
+      "lastSuccessAt": "2026-11-17T03:23:31Z",
       "error": null
     },
     "treasuryDaily": {
       "url": "https://query1.finance.yahoo.com/v8/finance/chart/",
       "status": "success",
       "fetchStatus": "success",
-      "asOf": "2026-11-13",
-      "ageDays": 3,
+      "asOf": "2026-11-16",
+      "ageDays": 1,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-16T00:36:47Z",
-      "lastSuccessAt": "2026-11-16T00:36:47Z",
+      "checkedAt": "2026-11-17T03:23:31Z",
+      "lastSuccessAt": "2026-11-17T03:23:31Z",
       "error": null
     },
     "calendarFomc": {
       "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
       "status": "success",
       "fetchStatus": "success",
-      "asOf": "2026-11-16",
+      "asOf": "2026-11-17",
       "ageDays": 0,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-16T00:36:47Z",
-      "lastSuccessAt": "2026-11-16T00:36:47Z",
+      "checkedAt": "2026-11-17T03:23:31Z",
+      "lastSuccessAt": "2026-11-17T03:23:31Z",
       "error": null
     },
     "calendarCpi": {
       "url": "https://fred.stlouisfed.org/releases/calendar?rid=10",
       "status": "success",
       "fetchStatus": "success",
-      "asOf": "2026-11-16",
+      "asOf": "2026-11-17",
       "ageDays": 0,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-16T00:36:47Z",
-      "lastSuccessAt": "2026-11-16T00:36:47Z",
+      "checkedAt": "2026-11-17T03:23:31Z",
+      "lastSuccessAt": "2026-11-17T03:23:31Z",
       "error": null
     },
     "calendarLabor": {
       "url": "https://fred.stlouisfed.org/releases/calendar?rid=50",
       "status": "success",
       "fetchStatus": "success",
-      "asOf": "2026-11-16",
+      "asOf": "2026-11-17",
       "ageDays": 0,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-16T00:36:47Z",
-      "lastSuccessAt": "2026-11-16T00:36:47Z",
+      "checkedAt": "2026-11-17T03:23:31Z",
+      "lastSuccessAt": "2026-11-17T03:23:31Z",
       "error": null
     }
   },
@@ -2518,8 +2511,8 @@
       "zone": null
     },
     "yieldCurve": {
-      "currentSpread": 1.03,
-      "yield10Y": 5.15,
+      "currentSpread": 1.0,
+      "yield10Y": 5.12,
       "yield13W": 4.12,
       "recessionThreshold": null,
       "status": "10년물 수익률이 3개월물 이상"
