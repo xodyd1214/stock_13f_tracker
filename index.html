@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=116">
+  <link rel="stylesheet" href="style.css?v=117">
 </head>
 <body>
   <div class="app-container">
@@ -298,6 +298,11 @@
               <span class="disclosure-toggle disclosure-toggle-close">접기</span>
             </summary>
             <div class="disclosure-content">
+              <section id="form13FQuarterMissing" aria-labelledby="form13FQuarterMissingTitle" hidden>
+                <h3 class="disclosure-source-title" id="form13FQuarterMissingTitle">미반영 기관</h3>
+                <ul id="form13FQuarterMissingList" class="disclosure-source-list form13f-quarter-missing-list"></ul>
+              </section>
+              <h3 class="disclosure-source-title">반영된 기관</h3>
               <p id="form13FQuarterEmpty" hidden>이 분기에 반영된 기관이 없습니다.</p>
               <ul id="form13FQuarterInstitutions" class="disclosure-source-list" aria-label="이 분기에 반영된 기관"></ul>
             </div>
@@ -1081,7 +1086,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js?v=2"></script>
   <script src="sec_display_loader.js?v=5"></script>
-  <script src="app.js?v=130"></script>
+  <script src="app.js?v=131"></script>
 </body>
 </html>
 

@@ -35,9 +35,46 @@ test('quarter progress counts unique reporting entities and rolls over after yea
  assert.deepEqual(Array.from(q3.institutions, item => [item.legalName, item.reportDate]), [
   ['Alpha', '2026-09-30'], ['Zeta', '2026-09-30']
  ]);
+ assert.deepEqual(Array.from(q3.missing, item => item.legalName), ['Older']);
  const q4 = ctx.form13FQuarterProgress(coverage, new Date('2027-01-01T12:00Z'));
  assert.equal(q4.label, '2026년 4분기 공시 0/3곳 반영');
  assert.equal(q4.institutions.length, 0);
+});
+test('quarter progress lists a SEC notice and links the actual fallback quarter', () => {
+ const {ctx, nodes, display} = context([]);
+ const element = tag => ({
+   tag, children: [], replaceChildren(){ this.children = []; },
+   appendChild(child){ this.children.push(child); }, append(...items){ this.children.push(...items); }
+ });
+ ctx.document.createElement = element;
+ const section = element('section'), list = element('ul');
+ nodes.set('form13FQuarterMissing', section);
+ nodes.set('form13FQuarterMissingList', list);
+ const cik = '0001096343', currentPeriod = '2026-09-30', priorPeriod = '2026-06-30';
+ const institution = {cik, legalName:'Example', reportDate:priorPeriod};
+ const prior = row({cik, period:priorPeriod});
+ display.sources = [prior, row({cik, period:currentPeriod}), row({cik:'0000000001', period:priorPeriod})];
+ display.manifest = {filingHoldbacks:{[cik]:{period:currentPeriod, accession:'0001096343-26-000020',
+   form:'13F-NT', reason:'reporting_notice'}}};
+ vm.runInContext(extract('renderForm13FQuarterMissing'), ctx);
+ ctx.renderForm13FQuarterMissing([institution], currentPeriod, display);
+ assert.equal(section.hidden, false);
+ assert.equal(list.children.length, 1);
+ const [name, reason, previous, links] = list.children[0].children;
+ assert.equal(name.textContent, 'Example');
+ assert.match(reason.textContent, /13F-NT.*검증 보류/);
+ assert.match(previous.textContent, /2026년 2분기.*보유 기준일/);
+ assert.equal(previous.children[0].dateTime, priorPeriod);
+ assert.deepEqual(links.children.map(({textContent,href}) => [textContent, href]), [
+   ['2026년 3분기 SEC 통지서', 'https://www.sec.gov/Archives/edgar/data/1096343/000109634326000020/0001096343-26-000020-index.html'],
+   ['2026년 2분기 SEC 원문', prior.sourceUrl]
+ ]);
+ ctx.renderForm13FQuarterMissing([institution], '2026-12-31', display);
+ assert.match(list.children[0].children[1].textContent, /아직 확인되지 않았습니다/);
+ assert.equal(list.children[0].children[3].children.length, 1);
+ ctx.renderForm13FQuarterMissing([], currentPeriod, display);
+ assert.equal(section.hidden, true);
+ assert.equal(list.children.length, 0);
 });
 test('real processing rejects legacy rows and produces null total rather than zero holdings claim', () => {
  const {ctx} = context([row()], false); ctx.processAndRenderHoldingsData();

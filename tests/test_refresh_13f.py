@@ -133,6 +133,32 @@ class Refresh13FTests(unittest.TestCase):
         self.assertNotIn(broken[4], client.transport.calls)
         self.assertFalse(any(call.endswith(descriptor['name']) for call in client.transport.calls))
 
+    def test_new_quarter_notice_publishes_a_reason_without_refreshing_holdings(self):
+        june = synthetic(period='06-30-2026', filing='2026-08-10')
+        notice = synthetic(number=3, period='09-30-2026', filing='2026-10-28')
+        notice[2]['form'] = '13F-NT'
+        previous = resolve_original(june)
+        manifest = {'sources': source_rows(CIK, NAME, previous), 'lastChecked': '2026-08-10T00:00:00+00:00'}
+        coverage = {'labels': [published(previous)]}
+        rows = snapshot_holdings(previous, NAME, [NAME], [])
+        with tempfile.TemporaryDirectory() as work:
+            root = Path(work).resolve()
+            first, second = root / 'first', root / 'second'
+            first.mkdir()
+            second.mkdir()
+            with patch('refresh_13f.load_generation', return_value=({}, 'active', manifest, coverage, rows, {})), \
+                 patch('refresh_13f.historical_quarters', return_value=[]), patch('refresh_13f.publish') as publish:
+                self.assertTrue(refresh(root, first, make_client(june, notice)))
+                self.assertEqual(manifest['filingHoldbacks'][CIK], {
+                    'period': Q3, 'accession': notice[2]['accessionNumber'], 'form': '13F-NT',
+                    'reason': 'reporting_notice',
+                })
+                self.assertEqual(manifest['lastChecked'], '2026-08-10T00:00:00+00:00')
+                self.assertEqual(coverage['labels'][0]['reportDate'], Q2)
+                self.assertIs(publish.call_args.args[4], rows)
+                self.assertTrue(refresh(root, second, make_client(june, notice)))
+                publish.assert_called_once()
+
     def test_late_amendment_updates_archive_and_drops_superseded_comparison(self):
         june = synthetic(period='06-30-2026', filing='2026-08-10')
         september = synthetic(number=3, period='09-30-2026', filing='2026-10-28',

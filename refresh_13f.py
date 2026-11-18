@@ -13,11 +13,15 @@ from build_13f_comparisons import compare, positions, previous_quarter, public_h
 from build_pages_bundle import MAX_PROJECTION, encoded, validate_public
 from compact_projection import decode_rows, encode_rows
 from sec_filing_integrity import resolve_period_snapshot, validate_share_class_policy
-from sec_partial_stage import Evidence, SCOPE_PATH, check, clock, safe_numbers, sha, snapshot_holdings
+from sec_partial_stage import Evidence, SCOPE_PATH, StageError, check, clock, safe_numbers, sha, snapshot_holdings
 from sec_source_acquisition import Client, acquire, canonical_cik, parse_json, records
 
 HEX = re.compile(r'[a-f0-9]{64}')
 SEC_USER_AGENT = 'AlphaInsiderTracker xodyd1214@gmail.com'
+
+
+class ShareClassReviewRequired(StageError):
+    pass
 
 
 def load_generation(sec_data):
@@ -90,6 +94,18 @@ def refresh_period(client, current):
     return new_period(current, recent_filings(client, current))
 
 
+def filing_holdback(filings, period, error):
+    candidates = [row for row in filings if row['reportDate'] == period]
+    notices = [row for row in candidates if row['form'].startswith('13F-NT')]
+    source = max(notices or candidates, key=lambda row: (row['filingDate'], row['accessionNumber']))
+    reason = 'verification_pending'
+    if notices:
+        reason = 'reporting_notice'
+    elif isinstance(error, ShareClassReviewRequired):
+        reason = 'share_class_review'
+    return {'period': period, 'accession': source['accessionNumber'], 'form': source['form'], 'reason': reason}
+
+
 def resolve(filings, period, policy, accessions=None):
     period_filings = [filing for filing in filings if filing['reportDate'] == period
                       and (accessions is None or filing['accession'] in accessions)]
@@ -150,8 +166,8 @@ def refresh_entity(client, evidence_dir, current, period, published_sources, exi
     check(source_hashes(baseline['components']) == source_hashes(published_sources)
           and baseline['equityValueUsd'] == current['valueUsd'], 'Published baseline differs from the SEC source')
     snapshot = resolve(filings, period, policy)
-    check(snapshot['classificationSummary']['unresolved_share_class']['rowCount'] == 0,
-          'Unresolved share class requires review')
+    if snapshot['classificationSummary']['unresolved_share_class']['rowCount']:
+        raise ShareClassReviewRequired('Unresolved share class requires review')
     check(period > current['reportDate'] or set(current['sourceAccessions']) < set(snapshot['allKnownAccessions']),
           'No newer reconciled filing')
     prior = baseline if not excluded and baseline['reportDate'] == previous_quarter(period) else None
@@ -244,6 +260,8 @@ def refresh(sec_data, evidence_dir, client):
     cached_artifacts = {}
     historical_snapshots = []
     amended_sources = {}
+    previous_holdbacks = manifest.get('filingHoldbacks', {})
+    holdbacks = dict(previous_holdbacks)
     changed = 0
     failed = 0
     for cik, labels in labels_by_cik.items():
@@ -274,6 +292,12 @@ def refresh(sec_data, evidence_dir, client):
             except (ValueError, OSError, KeyError, TypeError) as error:
                 print(f'{cik} {current["legalName"]}: {error}. Keeping published snapshot.', flush=True)
                 failed += 1
+                if period > current['reportDate']:
+                    holdback = filing_holdback(filings, period, error)
+                    previous = holdbacks.get(cik)
+                    if (holdback['reason'] != 'verification_pending' or not previous
+                            or previous['accession'] != holdback['accession']):
+                        holdbacks[cik] = holdback
             else:
                 rows_by_cik[cik] = holdings
                 sources_by_cik[cik] = sources
@@ -283,6 +307,7 @@ def refresh(sec_data, evidence_dir, client):
                 if comparison:
                     comparisons[cik] = comparison
                 update_labels(labels, snapshot, holdings, sources)
+                holdbacks.pop(cik, None)
                 changed += 1
                 print(f'{cik} {name}: {period} verified, {len(holdings)} rows', flush=True)
 
@@ -320,6 +345,9 @@ def refresh(sec_data, evidence_dir, client):
              if superseded_comparison(cik, comparison, amended_sources)]
     for cik in stale:
         del comparisons[cik]
+    status_changed = holdbacks != previous_holdbacks
+    if status_changed:
+        manifest['filingHoldbacks'] = holdbacks
     if changed or stale:
         rows = [row for items in rows_by_cik.values() for row in items]
         now = clock()
@@ -333,7 +361,7 @@ def refresh(sec_data, evidence_dir, client):
         historical_snapshots.insert(0, (manifest, coverage, rows, comparisons))
     if historical_snapshots:
         update_archive(sec_data, scope, *historical_snapshots, amended_sources=amended_sources)
-    if changed or stale:
+    if changed or stale or status_changed:
         generation = publish(sec_data, generation, manifest, coverage, rows, comparisons, scope)
     print(f'Updated {changed} reporting entities, {len(amended_sources)} archived amendments; '
           f'{failed} failed checks; generation {generation}', flush=True)

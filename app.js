@@ -5053,11 +5053,66 @@ function form13FQuarterProgress(coverage, now = new Date()) {
   const periodDate = period.toISOString().slice(0, 10);
   const verified = new Map(coverage.labels.filter(item => item.status === 'available')
     .map(item => [item.cik, item]));
-  const institutions = [...verified.values()].filter(item => item.reportDate === periodDate)
-    .sort((a, b) => a.legalName.localeCompare(b.legalName));
+  const sorted = [...verified.values()].sort((a, b) => a.legalName.localeCompare(b.legalName));
+  const institutions = sorted.filter(item => item.reportDate === periodDate);
+  const missing = sorted.filter(item => item.reportDate !== periodDate);
   const quarter = Math.ceil((period.getUTCMonth() + 1) / 3);
   const label = `${period.getUTCFullYear()}년 ${quarter}분기 공시 ${institutions.length}/${verified.size}곳 반영`;
-  return { label, institutions, quarter, periodDate };
+  return { label, institutions, missing, quarter, periodDate };
+}
+
+function renderForm13FQuarterMissing(institutions, period, display) {
+  const section = document.getElementById('form13FQuarterMissing');
+  const list = document.getElementById('form13FQuarterMissingList');
+  section.hidden = institutions.length === 0;
+  list.replaceChildren();
+  const reasons = {
+    reporting_notice: '다른 기관이 대신 보고한다는 통지서(13F-NT) 제출 · 보유 내역 검증 보류',
+    share_class_review: '공시의 증권 유형 확인 필요',
+    verification_pending: '접수된 공시의 보유 내역 검증 보류'
+  };
+  const quarterLabel = date => `${date.slice(0, 4)}년 ${Math.ceil(Number(date.slice(5, 7)) / 3)}분기`;
+  for (const institution of institutions) {
+    const { cik, legalName, reportDate } = institution;
+    const holdback = display.manifest?.filingHoldbacks?.[cik];
+    const hasFiling = holdback?.period === period && /^\d{10}-\d{2}-\d{6}$/.test(holdback.accession);
+    const row = document.createElement('li');
+    const name = document.createElement('strong');
+    name.textContent = legalName;
+    const reason = document.createElement('span');
+    reason.textContent = (hasFiling && reasons[holdback.reason]) || '이 분기 보유 내역이 아직 확인되지 않았습니다.';
+    const previous = document.createElement('span');
+    previous.textContent = `최근 공시 전체에 ${quarterLabel(reportDate)} 자료 표시 · 보유 기준일 `;
+    const date = document.createElement('time');
+    date.dateTime = reportDate;
+    date.textContent = reportDate;
+    previous.appendChild(date);
+    const links = document.createElement('div');
+    links.className = 'form13f-quarter-missing-links';
+    const addLink = (label, url) => {
+      const href = safeSecUrl(url);
+      if (href === '#') return;
+      const link = document.createElement('a');
+      link.textContent = label;
+      link.href = href;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      links.appendChild(link);
+    };
+    if (hasFiling) {
+      const { accession, reason } = holdback;
+      const type = reason === 'reporting_notice' ? '통지서' : '공시';
+      addLink(`${quarterLabel(period)} SEC ${type}`,
+        `https://www.sec.gov/Archives/edgar/data/${Number(cik)}/${accession.replaceAll('-', '')}/${accession}-index.html`);
+    }
+    const sources = display.sources.filter(source => source.cik === cik && source.period === reportDate);
+    for (const source of sources) {
+      const label = `${quarterLabel(reportDate)} SEC 원문`;
+      addLink(sources.length > 1 ? `${label} · ${source.filingDate}` : label, source.sourceUrl);
+    }
+    row.append(name, reason, previous, links);
+    list.appendChild(row);
+  }
 }
 
 async function selectForm13FReportPeriod(period) {
@@ -5099,9 +5154,10 @@ function renderPartialCoverage() {
   renderForm13FVerification();
   if (!SEC_DISPLAY) return;
   if (quarterPanel) {
-    const { label, institutions } = form13FQuarterProgress(SEC_DISPLAY.coverage);
+    const { label, institutions, missing, periodDate } = form13FQuarterProgress(SEC_DISPLAY.coverage);
     document.getElementById('form13FQuarterProgress').textContent = label;
     document.getElementById('form13FQuarterEmpty').hidden = institutions.length > 0;
+    renderForm13FQuarterMissing(missing, periodDate, SEC_DISPLAY);
     if (quarterFilter) {
       const periods = new Set(Object.keys(form13FQuarterCatalog || {}));
       SEC_DISPLAY.coverage.labels.forEach(item => {

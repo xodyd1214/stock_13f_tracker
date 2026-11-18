@@ -658,9 +658,31 @@ body {
   display: none;
 }
 
-#form13FQuarterInstitutions {
+#form13FQuarterInstitutions,
+.form13f-quarter-missing-list {
   list-style: none;
   padding: 0;
+}
+
+.form13f-quarter-missing-list li {
+  display: grid;
+  gap: 4px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.form13f-quarter-missing-list strong {
+  color: var(--text-near-white);
+}
+
+.form13f-quarter-missing-list time {
+  white-space: nowrap;
+}
+
+.form13f-quarter-missing-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
 }
 
 #form13FQuarterInstitutions li {
