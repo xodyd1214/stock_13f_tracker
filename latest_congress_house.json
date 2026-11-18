@@ -1,9 +1,100 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-11-16",
-  "ptrFrom": "2026-08-19",
+  "asOf": "2026-11-17",
+  "ptrFrom": "2026-08-20",
   "annualYear": 2025,
   "filings": [
+    {
+      "id": "20035811",
+      "kind": "ptr",
+      "year": 2026,
+      "filed": "2026-11-16",
+      "name": "Byron Donalds",
+      "district": "FL19",
+      "parsed": true,
+      "rows": [
+        {
+          "asset": "Autodesk, Inc. - Common Stock",
+          "ticker": "ADSK",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-02",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Autodesk, Inc. - Common Stock",
+          "ticker": "ADSK",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-02",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Interactive Brokers Group, Inc. - Class A Common Stock",
+          "ticker": "IBKR",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-02",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Interactive Brokers Group, Inc. - Class A Common Stock",
+          "ticker": "IBKR",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-02",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Netflix, Inc. - Common Stock",
+          "ticker": "NFLX",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-02",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Netflix, Inc. - Common Stock",
+          "ticker": "NFLX",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-02",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Zoetis Inc. Class A Common Stock",
+          "ticker": "ZTS",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-02",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Zoetis Inc. Class A Common Stock",
+          "ticker": "ZTS",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-02",
+          "action": "S",
+          "status": "New"
+        }
+      ]
+    },
     {
       "id": "20035807",
       "kind": "ptr",
