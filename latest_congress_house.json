@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-11-17",
-  "ptrFrom": "2026-08-20",
+  "asOf": "2026-11-18",
+  "ptrFrom": "2026-08-21",
   "annualYear": 2025,
   "filings": [
     {
@@ -12802,98 +12802,6 @@
           "action": "P",
           "status": "New",
           "shares": "10000"
-        }
-      ]
-    },
-    {
-      "id": "9116311",
-      "kind": "ptr",
-      "year": 2026,
-      "filed": "2026-08-20",
-      "name": "Harold Dallas Rogers",
-      "district": "KY05",
-      "parsed": false,
-      "rows": []
-    },
-    {
-      "id": "20035291",
-      "kind": "ptr",
-      "year": 2026,
-      "filed": "2026-08-20",
-      "name": "Tim Moore",
-      "district": "NC14",
-      "parsed": true,
-      "rows": [
-        {
-          "asset": "AT&T Inc.",
-          "ticker": "T",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$50,001 - $100,000",
-          "traded": "2026-08-14",
-          "action": "S",
-          "status": "New"
-        }
-      ]
-    },
-    {
-      "id": "20035289",
-      "kind": "ptr",
-      "year": 2026,
-      "filed": "2026-08-20",
-      "name": "David J. Taylor",
-      "district": "OH02",
-      "parsed": true,
-      "rows": [
-        {
-          "asset": "Alphabet Inc. - Class A Common Stock",
-          "ticker": "GOOGL",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-08-11",
-          "action": "P",
-          "status": "New"
-        },
-        {
-          "asset": "Alphabet Inc. - Class A Common Stock",
-          "ticker": "GOOGL",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-08-11",
-          "action": "P",
-          "status": "New"
-        },
-        {
-          "asset": "Installed Building Products, Inc. Common Stock",
-          "ticker": "IBP",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-08-14",
-          "action": "P",
-          "status": "New"
-        },
-        {
-          "asset": "Microsoft Corporation - Common Stock",
-          "ticker": "MSFT",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$15,001 - $50,000",
-          "traded": "2026-08-11",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Procter & Gamble Company",
-          "ticker": "PG",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-08-11",
-          "action": "P",
-          "status": "New"
         }
       ]
     },
