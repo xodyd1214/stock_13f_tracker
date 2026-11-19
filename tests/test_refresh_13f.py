@@ -159,7 +159,7 @@ class Refresh13FTests(unittest.TestCase):
                 self.assertTrue(refresh(root, second, make_client(june, notice)))
                 publish.assert_called_once()
 
-    def test_late_amendment_updates_archive_and_drops_superseded_comparison(self):
+    def test_late_amendment_updates_archive_and_recomputes_next_quarter(self):
         june = synthetic(period='06-30-2026', filing='2026-08-10')
         september = synthetic(number=3, period='09-30-2026', filing='2026-10-28',
                               value='150', shares='15', voting='15')
@@ -176,21 +176,26 @@ class Refresh13FTests(unittest.TestCase):
             return (manifest, {'labels': [published(snapshot)]}, snapshot_holdings(snapshot, NAME, [NAME], []),
                     comparisons)
 
-        active = bundle(q3, {CIK: comparison})
-        with tempfile.TemporaryDirectory() as work:
-            root = Path(work).resolve()
-            (root / 'display-policy.json').write_bytes(b'{}')
-            (root / 'evidence').mkdir()
-            update_archive(root, scope, bundle(q2, {}), active)
-            with patch('refresh_13f.load_generation', return_value=(scope, 'active', *active)), \
-                 patch('refresh_13f.validate_generation'), patch('refresh_13f.publish') as publish:
-                self.assertFalse(refresh(root, root / 'evidence', make_client(june, september, amendment)))
-            catalog = update_archive(root, scope)
-            archived = read_quarter(root / 'quarters', catalog['quarters'][Q2], sha(b'{}'), Q2)
-            self.assertEqual(archived[1]['labels'][0]['sourceAccessions'],
-                             [june[2]['accessionNumber'], amendment[2]['accessionNumber']])
-            self.assertEqual(archived[2][0]['shares'], 20)
-            archived = read_quarter(root / 'quarters', catalog['quarters'][Q3], sha(b'{}'), Q3)
-            self.assertEqual(archived[2][0]['shares'], 15)
-            self.assertEqual(archived[3], {})
-            self.assertEqual(publish.call_args.args[5], {})
+        amended_q2 = resolve_period_snapshot(
+            [reconcile_filing(*june), reconcile_filing(*amendment)],
+            [june[2]['accessionNumber'], amendment[2]['accessionNumber']])
+        for already_archived in (False, True):
+            with self.subTest(already_archived=already_archived), tempfile.TemporaryDirectory() as work:
+                active = bundle(q3, {} if already_archived else {CIK: comparison})
+                root = Path(work).resolve()
+                (root / 'display-policy.json').write_bytes(b'{}')
+                (root / 'evidence').mkdir()
+                update_archive(root, scope, bundle(amended_q2 if already_archived else q2, {}), active)
+                with patch('refresh_13f.load_generation', return_value=(scope, 'active', *active)), \
+                     patch('refresh_13f.publish') as publish:
+                    self.assertFalse(refresh(root, root / 'evidence', make_client(june, september, amendment)))
+                    publish.assert_called_once()
+                catalog = update_archive(root, scope)
+                archived = read_quarter(root / 'quarters', catalog['quarters'][Q2], sha(b'{}'), Q2)
+                self.assertEqual(archived[1]['labels'][0]['sourceAccessions'], amended_q2['allKnownAccessions'])
+                self.assertEqual(archived[2][0]['shares'], 20)
+                archived = read_quarter(root / 'quarters', catalog['quarters'][Q3], sha(b'{}'), Q3)
+                self.assertEqual(archived[2][0]['shares'], 15)
+                self.assertEqual(archived[3][CIK]['positions'], [['000000001', 20]])
+                self.assertEqual(archived[3][CIK]['sources'][0]['accession'], amendment[2]['accessionNumber'])
+                self.assertEqual(publish.call_args.args[5], archived[3])

@@ -124,7 +124,7 @@ def superseded_comparison(cik, comparison, amended_sources):
     return updated is not None and {source['accession'] for source in comparison['sources']} != updated
 
 
-def update_archive(sec_data, scope, *snapshots, amended_sources=None):
+def update_archive(sec_data, scope, *snapshots, amended_sources=None, comparison_updates=None):
     """Merge source-verified snapshots in acquisition order without dropping institutions."""
     directory = sec_data / 'quarters'
     index = sec_data / 'quarters.json'
@@ -143,6 +143,10 @@ def update_archive(sec_data, scope, *snapshots, amended_sources=None):
         for period in quarters:
             if previous_quarter(period) in amended_periods:
                 incoming.setdefault(period, [])
+    comparison_updates = comparison_updates or {}
+    for period, _ in comparison_updates:
+        if period in quarters:
+            incoming.setdefault(period, [])
 
     updated = False
     directory.mkdir(exist_ok=True)
@@ -169,8 +173,14 @@ def update_archive(sec_data, scope, *snapshots, amended_sources=None):
                 entities[cik] = filing
                 changed = True
         for cik, filing in entities.items():
-            if superseded_comparison(cik, filing[3], amended_sources):
-                entities[cik] = (*filing[:3], None)
+            comparison = filing[3]
+            replacement = comparison_updates.get((period, cik))
+            if replacement and replacement[0] == filing[0][0]['sourceAccessions']:
+                comparison = replacement[1]
+            if superseded_comparison(cik, comparison, amended_sources):
+                comparison = None
+            if comparison != filing[3]:
+                entities[cik] = (*filing[:3], comparison)
                 changed = True
         if not changed:
             continue

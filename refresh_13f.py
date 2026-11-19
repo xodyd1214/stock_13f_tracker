@@ -145,8 +145,19 @@ def refresh_comparison(cik, current, prior, baseline, existing, policy):
         return None
     if pairs:
         return {'cik': cik, 'period': period, 'previousPeriod': previous_quarter(period),
-                'positions': pairs, 'sources': sources}
+                'positions': pairs, 'sources': sources,
+                **({'currentAccessions': current['allKnownAccessions']} if prior is not None else {})}
     return None
+
+
+def acquire_filings(client, directory, spec, policy, *, require_latest=False, excluded=None):
+    report = acquire({'managers': [spec]}, directory, client=client)
+    check(report['complete'], '; '.join(item['reason'] for item in report['failures']))
+    evidence = Evidence(directory / 'evidence-manifest.json', clock(), policy)
+    filings, _ = evidence.filing_records(evidence.manifest['managers'][0], spec,
+                                         comparison_periods=spec['reportPeriods'], require_latest=require_latest,
+                                         excluded_accessions=excluded)
+    return filings, evidence
 
 
 def refresh_entity(client, evidence_dir, current, period, published_sources, existing_comparison, policy, *, historical=False):
@@ -156,12 +167,8 @@ def refresh_entity(client, evidence_dir, current, period, published_sources, exi
     if period > current['reportDate']:
         spec['publishedAccessions'] = {current['reportDate']: current['sourceAccessions']}
     directory = evidence_dir / (f'{cik}-{period}' if historical else cik)
-    report = acquire({'managers': [spec]}, directory, client=client)
-    check(report['complete'], '; '.join(item['reason'] for item in report['failures']))
-    evidence = Evidence(directory / 'evidence-manifest.json', clock(), policy)
     excluded = set()
-    filings, _ = evidence.filing_records(evidence.manifest['managers'][0], spec, comparison_periods=periods,
-                                         require_latest=not historical, excluded_accessions=excluded)
+    filings, evidence = acquire_filings(client, directory, spec, policy, require_latest=not historical, excluded=excluded)
     baseline = resolve(filings, current['reportDate'], policy, current['sourceAccessions'])
     check(source_hashes(baseline['components']) == source_hashes(published_sources)
           and baseline['equityValueUsd'] == current['valueUsd'], 'Published baseline differs from the SEC source')
@@ -210,10 +217,91 @@ def refresh_historical(client, evidence_dir, labels, period, archive_manifest, a
     return manifest, {'labels': labels}, holdings, {cik: comparison} if comparison else {}
 
 
+def published_quarters(archives, cached_artifacts, active_labels, active_sources, historical_snapshots):
+    quarters, saved = {}, {}
+    for period, (labels, artifact) in archives.items():
+        if period in cached_artifacts:
+            manifest, comparisons = cached_artifacts[period]
+        else:
+            manifest = artifact('manifest.json')
+            comparisons = {item['cik']: item for item in artifact('holding-comparisons.json')['managers']}
+        sources = defaultdict(list)
+        for source in manifest['sources']:
+            sources[source['cik']].append(source)
+        quarters.update({(period, cik): (aliases[0], sources[cik]) for cik, aliases in labels.items()})
+        saved.update({(period, cik): item for cik, item in comparisons.items()})
+    for cik, aliases in active_labels.items():
+        quarters[aliases[0]['reportDate'], cik] = (aliases[0], active_sources[cik])
+    for manifest, coverage, _, _ in historical_snapshots:
+        label = coverage['labels'][0]
+        quarters[label['reportDate'], label['cik']] = (label, manifest['sources'])
+    return quarters, saved
+
+
+def rebuild_comparison(client, evidence_dir, current, prior, policy):
+    label, _ = current
+    period, cik = label['reportDate'], label['cik']
+    periods = [period, prior[0]['reportDate']]
+    spec = {'cik': cik, 'label': label['legalName'], 'reportPeriods': periods, 'scopedArchives': True}
+    filings, _ = acquire_filings(client, evidence_dir / f'{cik}-{period}-comparison', spec, policy)
+    snapshots = []
+    for entity, sources in (current, prior):
+        snapshot = resolve(filings, entity['reportDate'], policy)
+        check(set(snapshot['allKnownAccessions']) == set(entity['sourceAccessions'])
+              and source_hashes(snapshot['components']) == source_hashes(sources)
+              and snapshot['equityValueUsd'] == entity['valueUsd']
+              and snapshot['classificationSummary']['unresolved_share_class']['rowCount'] == 0,
+              'Comparison source differs from published holdings')
+        snapshots.append(snapshot)
+    return refresh_comparison(cik, snapshots[0], snapshots[1], None, None, policy)
+
+
+def rebuild_amended_comparisons(client, evidence_dir, quarters, archived, active, comparisons, policy):
+    updates, failed = {}, 0
+    for (period, cik), current in quarters.items():
+        if client.stopped or client.retry_blocked or client.budget_exhausted:
+            break
+        prior = quarters.get((previous_quarter(period), cik))
+        if not prior or max(len(current[0]['sourceAccessions']), len(prior[0]['sourceAccessions'])) < 2:
+            continue
+        is_active = cik in active and active[cik][0]['reportDate'] == period
+        saved = archived.get((period, cik))
+        existing = comparisons.get(cik) if is_active else saved
+        accessions = current[0]['sourceAccessions']
+        previous_accessions = {source['accession'] for source in prior[1]}
+        stale = existing and {source['accession'] for source in existing['sources']} != previous_accessions
+        saved_stale = saved and {source['accession'] for source in saved['sources']} != previous_accessions
+        if existing and not stale and (
+            len(accessions) == 1 or existing.get('currentAccessions') == accessions
+        ):
+            # Republish an active comparison to a stale archive after a partial update.
+            if existing != saved:
+                updates[period, cik] = accessions, existing
+            continue
+        if is_active and saved and not saved_stale and saved.get('currentAccessions') == accessions:
+            updates[period, cik] = accessions, saved
+            continue
+        try:
+            comparison = rebuild_comparison(client, evidence_dir, current, prior, policy)
+        except (ValueError, OSError, KeyError, TypeError) as error:
+            print(f'{cik} {current[0]["legalName"]}: {period} comparison: {error}.', flush=True)
+            if stale or saved_stale:
+                updates[period, cik] = accessions, None
+            failed += 1
+            continue
+        if comparison != existing or comparison != saved:
+            updates[period, cik] = accessions, comparison
+            print(f'{cik} {current[0]["legalName"]}: {period} comparison reconciled, '
+                  f'{len(comparison["positions"]) if comparison else 0} positions', flush=True)
+    return updates, failed
+
+
 def publish(sec_data, previous_generation, manifest, coverage, rows, comparisons, scope):
     validate_generation(rows, coverage, manifest, scope)
     projection = encoded(encode_rows(rows))
     check(len(projection) <= MAX_PROJECTION, 'Projection exceeds the browser budget')
+    managers = [comparisons[cik] for cik in sorted(comparisons)]
+    manifest['comparisonManagersSha256'] = sha(encoded(managers))
     payload = {'projection.json': projection, 'manifest.json': encoded(manifest), 'coverage.json': encoded(coverage)}
     descriptor = encoded({'schemaVersion': 1, 'artifactType': 'sec_13f_partial_pages_generation',
                           'scopeSha256': manifest['scopeSha256'],
@@ -221,7 +309,7 @@ def publish(sec_data, previous_generation, manifest, coverage, rows, comparisons
     generation = sha(descriptor)
     pointer = {'schemaVersion': 1, 'contract': scope['contract'], 'generationId': generation}
     comparison_data = encoded({'schemaVersion': 1, 'generationId': generation,
-                               'managers': [comparisons[cik] for cik in sorted(comparisons)]})
+                               'managers': managers})
     check(len(comparison_data) <= 2 * 1024 * 1024, 'Quarter comparisons exceed the browser budget')
     pointer['comparisonSha256'] = sha(comparison_data)
     payload.update({'generation.json': descriptor, 'holding-comparisons.json': comparison_data})
@@ -345,10 +433,24 @@ def refresh(sec_data, evidence_dir, client):
              if superseded_comparison(cik, comparison, amended_sources)]
     for cik in stale:
         del comparisons[cik]
+    quarters, archived_comparisons = published_quarters(
+        archives, cached_artifacts, labels_by_cik, sources_by_cik, historical_snapshots)
+    comparison_updates, comparison_failures = rebuild_amended_comparisons(
+        client, evidence_dir, quarters, archived_comparisons, labels_by_cik, comparisons, policy)
+    failed += comparison_failures
+    comparison_changed = bool(stale)
+    for (period, cik), (_, comparison) in comparison_updates.items():
+        if cik not in labels_by_cik or labels_by_cik[cik][0]['reportDate'] != period or comparisons.get(cik) == comparison:
+            continue
+        if comparison:
+            comparisons[cik] = comparison
+        else:
+            comparisons.pop(cik, None)
+        comparison_changed = True
     status_changed = holdbacks != previous_holdbacks
     if status_changed:
         manifest['filingHoldbacks'] = holdbacks
-    if changed or stale:
+    if changed:
         rows = [row for items in rows_by_cik.values() for row in items]
         now = clock()
         latest = max([manifest['lastChecked'], *(item['checkedAt'] for item in manifest.get('refreshEvidence', {}).values())])
@@ -359,9 +461,10 @@ def refresh(sec_data, evidence_dir, client):
                         totalEquityValueUsd=sum(row['value'] for row in rows), holdingsRowCount=len(rows))
         validate_generation(rows, coverage, manifest, scope)
         historical_snapshots.insert(0, (manifest, coverage, rows, comparisons))
-    if historical_snapshots:
-        update_archive(sec_data, scope, *historical_snapshots, amended_sources=amended_sources)
-    if changed or stale or status_changed:
+    if historical_snapshots or comparison_updates:
+        update_archive(sec_data, scope, *historical_snapshots, amended_sources=amended_sources,
+                       comparison_updates=comparison_updates)
+    if changed or comparison_changed or status_changed:
         generation = publish(sec_data, generation, manifest, coverage, rows, comparisons, scope)
     print(f'Updated {changed} reporting entities, {len(amended_sources)} archived amendments; '
           f'{failed} failed checks; generation {generation}', flush=True)
