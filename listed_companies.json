@@ -5858,7 +5858,7 @@
     ],
     [
       1130464,
-      "BLACK HILLS CORP /SD/",
+      "Bright Horizon Energy Corp",
       "BKH",
       "NYSE"
     ],
@@ -8090,7 +8090,7 @@
     ],
     [
       2074123,
-      "CCH Holdings Ltd",
+      "Foodverse Holding Ltd",
       "CCHH",
       "Nasdaq"
     ],
@@ -17890,7 +17890,7 @@
       1467858,
       "General Motors Co",
       "GM",
-      "NYSE"
+      "Nasdaq"
     ],
     [
       1434265,
@@ -18772,6 +18772,12 @@
       2081515,
       "Berto Acquisition Corp. II",
       "GUACW",
+      "Nasdaq"
+    ],
+    [
+      1832487,
+      "Guerrilla RF, Inc.",
+      "GUER",
       "Nasdaq"
     ],
     [
@@ -20330,7 +20336,7 @@
     ],
     [
       1130464,
-      "BLACK HILLS CORP /SD/",
+      "Bright Horizon Energy Corp",
       "HZN",
       "NYSE"
     ],
@@ -24050,7 +24056,7 @@
     ],
     [
       1005286,
-      "LIFECORE BIOMEDICAL, INC. \\DE\\",
+      "LIFECORE BIOMEDICAL, INC. DE",
       "LFCR",
       "Nasdaq"
     ],
@@ -24988,12 +24994,6 @@
       1898795,
       "LiveWire Group, Inc.",
       "LVWR",
-      "NYSE"
-    ],
-    [
-      1898795,
-      "LiveWire Group, Inc.",
-      "LVWR-WT",
       "NYSE"
     ],
     [
@@ -26720,7 +26720,7 @@
     ],
     [
       67347,
-      "MODINE MANUFACTURING CO",
+      "MODEXUS SOLUTIONS, INC.",
       "MOD",
       "NYSE"
     ],
@@ -30482,7 +30482,7 @@
     ],
     [
       1944902,
-      "Ohmyhome Ltd",
+      "Ohmyswift Ltd",
       "OMH",
       "Nasdaq"
     ],
@@ -30647,12 +30647,6 @@
       "OPAL Fuels Inc.",
       "OPAL",
       "Nasdaq"
-    ],
-    [
-      2103076,
-      "OPAY Ltd",
-      "OPAY",
-      "NYSE"
     ],
     [
       1722010,
@@ -41863,6 +41857,12 @@
       "NYSE"
     ],
     [
+      1561540,
+      "Torex Resources Inc.",
+      "TXR",
+      "NYSE"
+    ],
+    [
       1289460,
       "Texas Roadhouse, Inc.",
       "TXRH",
@@ -42458,43 +42458,43 @@
     ],
     [
       36104,
-      "US BANCORP DE",
+      "US BANCORP \\DE\\",
       "USB",
       "NYSE"
     ],
     [
       36104,
-      "US BANCORP DE",
+      "US BANCORP \\DE\\",
       "USB-PA",
       "NYSE"
     ],
     [
       36104,
-      "US BANCORP DE",
+      "US BANCORP \\DE\\",
       "USB-PH",
       "NYSE"
     ],
     [
       36104,
-      "US BANCORP DE",
+      "US BANCORP \\DE\\",
       "USB-PP",
       "NYSE"
     ],
     [
       36104,
-      "US BANCORP DE",
+      "US BANCORP \\DE\\",
       "USB-PQ",
       "NYSE"
     ],
     [
       36104,
-      "US BANCORP DE",
+      "US BANCORP \\DE\\",
       "USB-PR",
       "NYSE"
     ],
     [
       36104,
-      "US BANCORP DE",
+      "US BANCORP \\DE\\",
       "USB-PS",
       "NYSE"
     ],
@@ -43544,7 +43544,7 @@
     ],
     [
       1590750,
-      "Viridian Therapeutics, Inc.\\DE",
+      "Viridian Therapeutics, Inc.DE",
       "VRDN",
       "Nasdaq"
     ],
@@ -43570,6 +43570,12 @@
       1682745,
       "VERRA MOBILITY Corp",
       "VRRM",
+      "Nasdaq"
+    ],
+    [
+      2100848,
+      "Versa Bancorp",
+      "VRSA",
       "Nasdaq"
     ],
     [
