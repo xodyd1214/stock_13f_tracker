@@ -1209,6 +1209,7 @@ function selectGuru(key) {
   
   document.querySelectorAll("#filterTabs .filter-tab").forEach(tab => {
     tab.classList.toggle("active", tab.dataset.filter === "ALL");
+    tab.setAttribute("aria-pressed", String(tab.dataset.filter === "ALL"));
   });
 
   renderGuruSidebar();
@@ -1582,6 +1583,102 @@ let CURRENT_FILTERED_ITEMS = [];
 let CURRENT_PAGE_INDEX = 1;
 const PAGE_SIZE = 60;
 
+let form13FUnreportedArchive = null;
+
+function form13FPreviousPeriod(period) {
+  const [year, month] = period.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 3, 0)).toISOString().slice(0, 10);
+}
+
+function unreported13FHoldings(current, previous, cik, period, priorPeriod) {
+  const verified = (display, date) => display.coverage.labels.some(label =>
+    label.status === 'available' && label.cik === cik && label.reportDate === date);
+  if (!verified(current, period) || !verified(previous, priorPeriod)) return null;
+
+  const currentCusips = new Set(current.rows.filter(row => row.cik === cik && row.period === period)
+    .map(row => row.cusip.toUpperCase()));
+  const missing = new Map();
+  for (const row of previous.rows) {
+    if (row.cik !== cik || row.period !== priorPeriod || row.shares <= 0) continue;
+    const cusip = row.cusip.toUpperCase();
+    if (currentCusips.has(cusip)) continue;
+    const holding = missing.get(cusip);
+    if (holding) holding.shares += row.shares;
+    else missing.set(cusip, {cusip, name: row.name, shares: row.shares});
+  }
+  return [...missing.values()].filter(item => Number.isSafeInteger(item.shares))
+    .sort((a, b) => b.shares - a.shares || a.name.localeCompare(b.name));
+}
+
+async function renderForm13FUnreported(guru) {
+  const status = document.getElementById('form13FUnreportedStatus');
+  const sources = document.getElementById('form13FUnreportedSources');
+  const tbody = document.getElementById('form13FUnreportedRows');
+  const table = document.getElementById('form13FUnreportedTable');
+  const period = guru.periodDate;
+  const previousPeriod = form13FPreviousPeriod(period);
+  const current = archived13FDisplay || SEC_DISPLAY;
+  const isCurrent = () => state.currentFilingType === '13F' &&
+    GURU_DATABASE[state.currentGuruKey] === guru && state.activeFilter === 'UNREPORTED';
+  const unavailable = '이 운용사의 연속 두 분기 보유표를 확인할 수 없습니다.';
+  table.hidden = true;
+  sources.replaceChildren();
+  tbody.replaceChildren();
+  if (!form13FQuarterCatalog?.[previousPeriod]) {
+    status.textContent = unavailable;
+    return;
+  }
+
+  status.textContent = '직전 분기 공시를 확인하고 있습니다.';
+  if (form13FUnreportedArchive?.period !== previousPeriod) {
+    form13FUnreportedArchive = {period: previousPeriod, display: loadSecDisplayInWorker({reportPeriod: previousPeriod})};
+  }
+  const request = form13FUnreportedArchive;
+  try {
+    const previous = await request.display;
+    if (!isCurrent()) return;
+    const missing = unreported13FHoldings(current, previous, guru.cik, period, previousPeriod);
+    if (!missing) {
+      status.textContent = unavailable;
+      return;
+    }
+    sources.replaceChildren();
+    for (const [display, date, label] of [[previous, previousPeriod, '직전 분기'], [current, period, '이번 분기']]) {
+      const filings = display.sources.filter(source => source.cik === guru.cik && source.period === date);
+      for (const filing of filings) {
+        const url = safeSecUrl(filing.sourceUrl);
+        if (url === '#') continue;
+        const link = document.createElement('a');
+        link.className = 'sec-doc-link';
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = `${label} SEC 원문${filings.length > 1 ? ` · ${filing.filingDate}` : ''}`;
+        sources.appendChild(link);
+      }
+    }
+
+    const query = state.searchQuery.trim().toLowerCase();
+    const rows = missing.map(item => ({
+      ...item, ticker: getMappedTicker(item.name, '', item.cusip)
+    })).filter(item => [item.name, item.ticker, item.cusip].some(value => value.toLowerCase().includes(query)));
+    tbody.innerHTML = rows.map(item => `<tr>
+      <td><strong>${escapeHtml(item.name)}</strong><small class="form4-secondary">${escapeHtml(item.ticker)}</small></td>
+      <td><time datetime="${previousPeriod}">${previousPeriod}</time></td>
+      <td class="text-right">${item.shares.toLocaleString('ko-KR')}주</td>
+      <td>미보고</td>
+    </tr>`).join('');
+    table.hidden = rows.length === 0;
+    status.textContent = !missing.length ? '이번 분기 미보고 종목이 없습니다.' :
+      !rows.length ? '검색 기준에 맞는 미보고 종목이 없습니다.' :
+      `보유 기준일 ${previousPeriod} → ${period} · ${rows.length.toLocaleString('ko-KR')}종목`;
+  } catch (error) {
+    if (form13FUnreportedArchive === request) form13FUnreportedArchive = null;
+    if (isCurrent()) status.textContent = '직전 분기 공시를 불러오지 못했습니다. 다시 시도해 주세요.';
+    console.warn('Form 13F 직전 분기 비교 실패:', error);
+  }
+}
+
 function renderTable(preservePages = false) {
   const pageCount = preservePages ? Math.max(1, CURRENT_PAGE_INDEX - 1) : 1;
   const guru = GURU_DATABASE[state.currentGuruKey];
@@ -1591,6 +1688,30 @@ function renderTable(preservePages = false) {
   if (!tbody) return;
   tbody.innerHTML = "";
   CURRENT_PAGE_INDEX = 1;
+  const unreported = document.querySelector?.('#filterTabs [data-filter="UNREPORTED"]');
+  if (unreported) {
+    const show = Boolean(guru.cik && guru.periodDate && state.activeFilter === 'UNREPORTED');
+    unreported.hidden = !guru.cik || !guru.periodDate;
+    if (unreported.hidden && state.activeFilter === 'UNREPORTED') {
+      state.activeFilter = 'ALL';
+      document.querySelectorAll('#filterTabs [data-filter]').forEach(tab => {
+        const active = tab.dataset.filter === 'ALL';
+        tab.classList.toggle('active', active);
+        tab.setAttribute('aria-pressed', String(active));
+      });
+    }
+    document.getElementById('form13FUnreported').hidden = !show;
+    document.getElementById('form13FReported').hidden = show;
+    document.getElementById('form13FReportedNotes').hidden = show;
+    document.querySelector('#form13FHoldingsSection .column-customizer').hidden = show;
+    const search = document.getElementById('searchInput');
+    search.placeholder = show ? '티커, 종목명, CUSIP 검색...' : '티커, 종목명, 섹터 검색...';
+    if (show) {
+      CURRENT_FILTERED_ITEMS = [];
+      void renderForm13FUnreported(guru);
+      return;
+    }
+  }
 
   CURRENT_FILTERED_ITEMS = guru.holdings.filter(item => {
     if (state.searchQuery) {
@@ -1871,8 +1992,10 @@ function setupEventListeners() {
 
   document.querySelectorAll("#filterTabs .filter-tab").forEach(tab => {
     tab.onclick = () => {
-      document.querySelectorAll("#filterTabs .filter-tab").forEach(t => t.classList.remove("active"));
-      tab.classList.add("active");
+      document.querySelectorAll("#filterTabs .filter-tab").forEach(button => {
+        button.classList.toggle("active", button === tab);
+        button.setAttribute("aria-pressed", String(button === tab));
+      });
       state.activeFilter = tab.dataset.filter;
       renderTable();
     };

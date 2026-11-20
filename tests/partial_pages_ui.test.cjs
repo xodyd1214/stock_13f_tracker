@@ -40,6 +40,26 @@ test('quarter progress counts unique reporting entities and rolls over after yea
  assert.equal(q4.label, '2026년 4분기 공시 0/3곳 반영');
  assert.equal(q4.institutions.length, 0);
 });
+test('unreported securities compare consecutive filings for the same CIK', () => {
+ const {ctx} = context([]);
+ for (const name of ['form13FPreviousPeriod', 'unreported13FHoldings']) vm.runInContext(extract(name), ctx);
+ const cik = '0001096343', period = '2026-09-30', prior = '2026-06-30';
+ const label = (reportDate, id = cik) => ({status:'available', reportDate, cik:id});
+ const kept = row({cusip:'000000001'});
+ const missing = row({cusip:'000000002', name:'Missing'});
+ const current = {coverage:{labels:[label(period)]}, rows:[
+   {...kept, period, name:'Renamed'}, {...missing, period, cik:'0000000002'}
+ ]};
+ const previous = {coverage:{labels:[label(prior)]}, rows:[
+   kept, missing, {...missing, shares:12}, row({cusip:'000000003', shares:0}),
+   {...missing, cik:'0000000002'}
+ ]};
+ assert.equal(ctx.form13FPreviousPeriod('2027-03-31'), '2026-12-31');
+ assert.deepEqual(Array.from(ctx.unreported13FHoldings(current, previous, cik, period, prior),
+   item => [item.name, item.cusip, item.shares]), [['Missing','000000002',112]]);
+ previous.coverage.labels = [label(prior, '0000000002')];
+ assert.equal(ctx.unreported13FHoldings(current, previous, cik, period, prior), null);
+});
 test('quarter progress lists a SEC notice and links the actual fallback quarter', () => {
  const {ctx, nodes, display} = context([]);
  const element = tag => ({

@@ -720,6 +720,24 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+.form13f-unreported-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin: 8px 0;
+}
+
+.form13f-unreported-sources:empty {
+  display: none;
+}
+
+#filterTabs [hidden],
+#form13FReported[hidden],
+#form13FHoldingsSection .column-customizer[hidden],
+#form13FUnreportedTable[hidden] {
+  display: none;
+}
+
 /* Top Profile Header */
 .top-header {
   display: flex;

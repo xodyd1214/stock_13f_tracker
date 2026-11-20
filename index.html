@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=117">
+  <link rel="stylesheet" href="style.css?v=118">
 </head>
 <body>
   <div class="app-container">
@@ -425,6 +425,7 @@
                 <button class="filter-tab" data-filter="ADD">수량 증가 (<span id="countAdd">0</span>)</button>
                 <button class="filter-tab" data-filter="REDUCE">수량 감소 (<span id="countReduce">0</span>)</button>
                 <button class="filter-tab" data-filter="CONVICTION">비중 5%+ 집중 (<span id="countConviction">0</span>)</button>
+                <button type="button" class="filter-tab" data-filter="UNREPORTED" aria-pressed="false" hidden>이번 분기 미보고</button>
               </div>
             </div>
 
@@ -452,10 +453,30 @@
             </div>
           </div>
 
-          <p class="card-sub data-quality-note">같은 법인과 증권의 연속 두 분기 공시 수량을 비교합니다. 전체 보기와 즐겨찾기 묶어보기에서는 운용사별 결과를 건수로 표시합니다. 거래일·체결가는 공시되지 않으며, 수량에는 주식분할 등 자본변동이 반영될 수 있습니다.</p>
-          <p class="card-sub data-quality-note">분기말 평가단가는 같은 기준일의 SEC 평가금액을 보유 주식 수로 나눈 값입니다. 최근 시세는 관측시각이 확인된 24시간 이내 달러 시세가 있을 때 표시합니다.</p>
+          <div id="form13FUnreported" hidden>
+            <p class="card-sub data-quality-note">같은 운용사의 연속 두 분기 공개 주식 보유표를 증권 식별번호(CUSIP)로 비교합니다.</p>
+            <p class="card-sub" id="form13FUnreportedStatus" role="status"></p>
+            <div id="form13FUnreportedSources" class="form13f-unreported-sources"></div>
+            <div class="table-wrapper" id="form13FUnreportedTable" hidden>
+              <table class="power-table" aria-label="이번 분기 미보고 종목">
+                <thead>
+                  <tr>
+                    <th scope="col" class="text-left">종목 / 티커</th>
+                    <th scope="col" class="text-left">직전 보유 기준일</th>
+                    <th scope="col" class="text-right">직전 보유 수량</th>
+                    <th scope="col" class="text-left">이번 분기</th>
+                  </tr>
+                </thead>
+                <tbody id="form13FUnreportedRows"></tbody>
+              </table>
+            </div>
+          </div>
+          <div id="form13FReportedNotes">
+            <p class="card-sub data-quality-note">같은 법인과 증권의 연속 두 분기 공시 수량을 비교합니다. 전체 보기와 즐겨찾기 묶어보기에서는 운용사별 결과를 건수로 표시합니다. 거래일·체결가는 공시되지 않으며, 수량에는 주식분할 등 자본변동이 반영될 수 있습니다.</p>
+            <p class="card-sub data-quality-note">분기말 평가단가는 같은 기준일의 SEC 평가금액을 보유 주식 수로 나눈 값입니다. 최근 시세는 관측시각이 확인된 24시간 이내 달러 시세가 있을 때 표시합니다.</p>
+          </div>
           <!-- 메인 데이터 테이블 -->
-          <div class="table-wrapper">
+          <div class="table-wrapper" id="form13FReported">
             <table class="power-table fullwidth-table" id="holdingsTable">
               <thead>
                 <tr>
@@ -1086,7 +1107,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js?v=2"></script>
   <script src="sec_display_loader.js?v=5"></script>
-  <script src="app.js?v=131"></script>
+  <script src="app.js?v=132"></script>
 </body>
 </html>
 
