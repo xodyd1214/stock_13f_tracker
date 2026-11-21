@@ -2701,6 +2701,12 @@
       "NYSE"
     ],
     [
+      2130357,
+      "Anthropic, PBC",
+      "ANT",
+      "Nasdaq"
+    ],
+    [
       2044255,
       "Antalpha Platform Holding Co",
       "ANTA",
@@ -3197,12 +3203,6 @@
       "Arhaus, Inc.",
       "ARHS",
       "Nasdaq"
-    ],
-    [
-      1467760,
-      "Apollo Commercial Real Estate Finance Liquidating Trust",
-      "ARI",
-      "NYSE"
     ],
     [
       1964504,
@@ -5713,8 +5713,8 @@
       "Nasdaq"
     ],
     [
-      1406234,
-      "Brookfield Infrastructure Partners L.P.",
+      2155396,
+      "Brookfield Infrastructure Partners Inc.",
       "BIP",
       "NYSE"
     ],
@@ -7343,12 +7343,6 @@
       "BW LPG Ltd",
       "BWLP",
       "NYSE"
-    ],
-    [
-      1847590,
-      "Bowman Consulting Group Ltd.",
-      "BWMN",
-      "Nasdaq"
     ],
     [
       1788257,
@@ -11335,6 +11329,12 @@
       "Nasdaq"
     ],
     [
+      2105038,
+      "Cizzle Brands Corp",
+      "CZZL",
+      "Nasdaq"
+    ],
+    [
       715957,
       "DOMINION ENERGY, INC",
       "D",
@@ -13789,6 +13789,12 @@
       "Nasdaq"
     ],
     [
+      1828318,
+      "Enovix Corp",
+      "ENVXW",
+      "Nasdaq"
+    ],
+    [
       1595353,
       "EoCene Ltd.",
       "EOCN",
@@ -14917,6 +14923,12 @@
       "Nasdaq"
     ],
     [
+      2133939,
+      "Football Manager SPAC Inc.",
+      "FBLLU",
+      "Nasdaq"
+    ],
+    [
       811589,
       "FIRST BANCORP /NC/",
       "FBNC",
@@ -15094,6 +15106,24 @@
       1098151,
       "FIDELITY D & D BANCORP INC",
       "FDBC",
+      "Nasdaq"
+    ],
+    [
+      2068454,
+      "First Digital Acquisition Corp Ltd.",
+      "FDGX",
+      "Nasdaq"
+    ],
+    [
+      2068454,
+      "First Digital Acquisition Corp Ltd.",
+      "FDGXU",
+      "Nasdaq"
+    ],
+    [
+      2068454,
+      "First Digital Acquisition Corp Ltd.",
+      "FDGXW",
       "Nasdaq"
     ],
     [
@@ -15839,6 +15869,12 @@
       "FIRST MID BANCSHARES, INC.",
       "FMBH",
       "Nasdaq"
+    ],
+    [
+      740806,
+      "F&M BANK CORP",
+      "FMBM",
+      "NYSE"
     ],
     [
       37785,
@@ -21257,12 +21293,6 @@
       "INTELLINETICS, INC.",
       "INLX",
       "NYSE"
-    ],
-    [
-      1728328,
-      "InMed Pharmaceuticals Inc.",
-      "INM",
-      "Nasdaq"
     ],
     [
       1711754,
@@ -35581,12 +35611,6 @@
       "NYSE"
     ],
     [
-      1428439,
-      "ROKU, INC",
-      "ROKU",
-      "Nasdaq"
-    ],
-    [
       84839,
       "ROLLINS INC",
       "ROL",
@@ -38329,6 +38353,12 @@
       "Nasdaq"
     ],
     [
+      92122,
+      "SOUTHERN CO",
+      "SONN",
+      "NYSE"
+    ],
+    [
       1314727,
       "Sonos Inc",
       "SONO",
@@ -39517,12 +39547,6 @@
       "Nasdaq"
     ],
     [
-      1872525,
-      "Stran & Company, Inc.",
-      "SWAGW",
-      "Nasdaq"
-    ],
-    [
       1092796,
       "SMITH & WESSON BRANDS, INC.",
       "SWBI",
@@ -39959,12 +39983,6 @@
       "Token Cat Ltd",
       "TC",
       "Nasdaq"
-    ],
-    [
-      1077428,
-      "TEXAS CAPITAL BANCSHARES INC/TX",
-      "TCBI",
-      "TXSE"
     ],
     [
       356171,
@@ -45899,6 +45917,12 @@
       "Zentalis Pharmaceuticals, Inc.",
       "ZNTL",
       "Nasdaq"
+    ],
+    [
+      2078148,
+      "Zoar Ltd",
+      "ZOAR",
+      "NYSE"
     ],
     [
       1956741,

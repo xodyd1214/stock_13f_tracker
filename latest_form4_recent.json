@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "sourceFilings": 10084,
-  "verifiedFilings": 10084,
+  "sourceFilings": 10052,
+  "verifiedFilings": 10052,
   "coverage": {
     "from": "2026-10-21",
     "through": "2026-11-19",
-    "listedIssuers": 6053,
+    "listedIssuers": 6056,
     "markets": [
       "NYSE",
       "Nasdaq",
@@ -457,8 +457,8 @@
     },
     {
       "date": "2026-10-23",
-      "indexSha256": "4ae06082089caf504e1654cc1cd00457f774cf74c22971a6d7e2e955aff14286",
-      "filings": 197,
+      "indexSha256": "975fd2e40ccc9655a9176ec09fdc0546d801c297d8378317e51f463521301618",
+      "filings": 196,
       "purchases": [
         {
           "filingDate": "2026-10-23",
@@ -2534,8 +2534,8 @@
     },
     {
       "date": "2026-11-03",
-      "indexSha256": "3f180e17c1ed3a682e8556c3128418788d0faeff7aa814442304ff2b14eae76c",
-      "filings": 792,
+      "indexSha256": "24f1826c03dbcbe27de9d3544a255882ae7a4de029a40327ef26d446f675b766",
+      "filings": 790,
       "purchases": [
         {
           "filingDate": "2026-11-03",
@@ -2989,8 +2989,8 @@
     },
     {
       "date": "2026-11-04",
-      "indexSha256": "a0b7d0bf63fd6da65489a5ff915b1359e8493df7a29ac63b97238718095806fe",
-      "filings": 563,
+      "indexSha256": "e640d743af6890f7bc02ecc4fcaf48417fec46f9461ca7c7971096f48741143d",
+      "filings": 561,
       "purchases": [
         {
           "filingDate": "2026-11-04",
@@ -4316,8 +4316,8 @@
     },
     {
       "date": "2026-11-06",
-      "indexSha256": "697869a68aabb42181d7642aac9bbd8c30a9c67a8420ffd64be9af9915b37a47",
-      "filings": 498,
+      "indexSha256": "955e87e66f16a79e28e1bbee430e4e5f119f5f7f08349c916de4b80c05f6596d",
+      "filings": 487,
       "purchases": [
         {
           "filingDate": "2026-11-06",
@@ -6024,8 +6024,8 @@
     },
     {
       "date": "2026-11-10",
-      "indexSha256": "8ac89c08a8c5a8b320fb4299259d2f9e924462bedc6d6c664e8c3695dfab1d85",
-      "filings": 546,
+      "indexSha256": "e4c9f98acbf2623a47a61b117c6a27d28a9a68c6eb994ec8812ecda1ae379549",
+      "filings": 530,
       "purchases": [
         {
           "filingDate": "2026-11-10",
@@ -7034,6 +7034,27 @@
           "postShares": 8770.0,
           "accessionNumber": "0002063388-26-000006",
           "secUrl": "https://www.sec.gov/Archives/edgar/data/1375365/000206338826000006/0002063388-26-000006-index.htm"
+        },
+        {
+          "filingDate": "2026-11-10",
+          "transDate": "2026-11-10",
+          "issuerCik": "0000740806",
+          "ticker": "FMBM",
+          "companyName": "F&M BANK CORP",
+          "securityTitle": "Common Stock",
+          "insiderName": "Truban Erica N.",
+          "officerTitle": "이사",
+          "isOfficer": false,
+          "txTypeCode": "P",
+          "ownership": "D",
+          "directInsiderPurchase": true,
+          "priceBasis": null,
+          "shares": 160.0,
+          "price": 45.5,
+          "totalValue": 7280.0,
+          "postShares": 160.0,
+          "accessionNumber": "0002150557-26-000003",
+          "secUrl": "https://www.sec.gov/Archives/edgar/data/740806/000215055726000003/0002150557-26-000003-index.htm"
         },
         {
           "filingDate": "2026-11-10",
@@ -29213,6 +29234,27 @@
       "postShares": 3139335.0,
       "accessionNumber": "0001493152-26-051124",
       "secUrl": "https://www.sec.gov/Archives/edgar/data/1011060/000149315226051124/0001493152-26-051124-index.htm"
+    },
+    {
+      "filingDate": "2026-11-10",
+      "transDate": "2026-11-10",
+      "issuerCik": "0000740806",
+      "ticker": "FMBM",
+      "companyName": "F&M BANK CORP",
+      "securityTitle": "Common Stock",
+      "insiderName": "Truban Erica N.",
+      "officerTitle": "이사",
+      "isOfficer": false,
+      "txTypeCode": "P",
+      "ownership": "D",
+      "directInsiderPurchase": true,
+      "priceBasis": null,
+      "shares": 160.0,
+      "price": 45.5,
+      "totalValue": 7280.0,
+      "postShares": 160.0,
+      "accessionNumber": "0002150557-26-000003",
+      "secUrl": "https://www.sec.gov/Archives/edgar/data/740806/000215055726000003/0002150557-26-000003-index.htm"
     },
     {
       "filingDate": "2026-11-10",
