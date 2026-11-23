@@ -403,6 +403,30 @@ function macroFreshness(data) {
     .map(([, source]) => source.asOf).filter(d => /^\d{4}-\d{2}-\d{2}/.test(d || '')).map(d => d.slice(0, 10)).sort();
   return `${statuses[data.status] || '수집 상태 미확인'}${stale ? ' · 오래된 관측값 포함' : ''}${dates.length ? ` · 관측일 ${dates[0]} ~ ${dates[dates.length - 1]}` : ' · 관측일 미확인'}`;
 }
+
+function macroSourceStatus(sources, hasValue) {
+  if (sources.some(source => source?.fetchStatus === 'error')) {
+    return hasValue ? '수집 실패 · 마지막 확인값 표시' : '수집 실패';
+  }
+  return hasValue && sources.some(source => source?.status === 'stale') ? '오래된 관측값' : '';
+}
+
+function macroCpiSummary(data) {
+  const cpi = data.inflation || {};
+  const source = data.sources?.blsInflation;
+  const month = /^\d{4}-(0[1-9]|1[0-2])$/.test(cpi.period || '') ? cpi.period : '';
+  const missingPrior = month && Number.isFinite(cpi.cpiIndex) && cpi.cpiIndex > 0 && cpi.cpiYoY == null;
+  const status = macroSourceStatus([source], Boolean(cpi.cpiYoY));
+  // The BLS October 2026 notice confirms the missing comparison was not published.
+  const missingLabel = month === '2026-10' ? '미발표' : '없음';
+  const missing = missingPrior && `${Number(month.slice(0, 4)) - 1}년 ${Number(month.slice(5))}월 비교 지수 ${missingLabel}`;
+  return {
+    value: cpi.cpiYoY || (missingPrior ? `전년 비교 자료 ${missingLabel}` : '확인 불가'),
+    detail: [month && `${Number(month.slice(0, 4))}년 ${Number(month.slice(5))}월`,
+      missing || '작년 같은 달 대비', status, '미 노동통계국(BLS)'].filter(Boolean).join(' · ')
+  };
+}
+
 function quoteFreshness(info) {
   if (!info || !Number.isFinite(info.marketTime) || info.marketTime <= 0) return '시세 관측시각 미확인';
   const time = new Date(info.marketTime * 1000);
@@ -2881,6 +2905,7 @@ function resetWatchlistAccount() {
   document.getElementById("watchCompanyList").replaceChildren();
   document.getElementById("watchCompanyTitle").textContent = "";
   for (const id of ["watch13F", "watchForm4", "watchHouse"]) document.getElementById(id).replaceChildren();
+  document.getElementById("watchRecent")?.replaceChildren();
   renderWatchlist();
   if (CURRENT_USER && state.currentFilingType === "WATCHLIST") loadWatchCompanies();
   if (state.currentFilingType === "FORM4") {
@@ -3110,6 +3135,7 @@ function renderWatchlist() {
   toggle.textContent = watchlist.pending ? "저장 중" : saved > 1 ? `기업 관심 해제 (${saved}종목)` : saved ? "관심 해제" : "관심 기업 추가";
   toggle.disabled = !watchlist.ready || !!watchlist.pending || (!saved && !watchlist.catalog?.has(watchlist.selected));
   renderWatchSearch();
+  renderWatchRecent(keys);
 }
 
 function toggleWatchCompany() {
@@ -3225,6 +3251,92 @@ function renderWatchTable(id, note, columns, rows) {
 
 function watchSource(url, label) {
   return `<a class="congress-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+}
+
+let watchRecentReady = false;
+let watchRecentLoad = null;
+
+function watchRecentFilings(companies, {form4, house, holdings}, from, through) {
+  const filings = new Map();
+  const issuers = new Map(companies.map(company => [company.issuer, company]));
+  const symbols = new Map(companies.filter(company => company.exchange)
+    .map(company => [watchSymbol(company.ticker), company]));
+  const inRange = date => date >= from && date <= through;
+  const add = (company, type, id, date, detail, url) => {
+    if (!company || !inRange(date) || url === '#') return;
+    const key = `${company.key}:${type}:${id}`;
+    const existing = filings.get(key);
+    if (existing) existing.count++;
+    else filings.set(key, {company, type, date, detail, url, count: 1});
+  };
+  for (const row of form4?.transactions || []) {
+    add(issuers.get(row.issuerCik), 'Form 4', row.accessionNumber, row.filingDate,
+      '임원·이사 직접 매수', safeSecUrl(row.secUrl));
+  }
+  if (house) {
+    for (const company of symbols.values()) {
+      for (const {filing} of watchHousePurchases(house, company.ticker).entries) {
+        add(company, '미국 하원', filing.id, filing.filed, `${filing.name} · 주식 매수`,
+          `https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/${filing.year}/${filing.id}.pdf`);
+      }
+    }
+  }
+  for (const row of holdings || []) {
+    if (!inRange(row.filingDate) || row.shares <= 0 || !verifiedDisplayRow(row)) continue;
+    const symbol = getMappedTicker(row.name, row.ticker, row.cusip, row.shareType, row.putCall);
+    add(symbols.get(watchSymbol(symbol)), 'Form 13F', row.accession, row.filingDate,
+      `${row.legalName} · 보유 기준일 ${row.period}`, safeSecUrl(row.sourceUrl));
+  }
+  return [...filings.values()].sort((a, b) => b.date.localeCompare(a.date) ||
+    a.company.ticker.localeCompare(b.company.ticker) || a.type.localeCompare(b.type));
+}
+
+function renderWatchRecent(keys) {
+  const card = document.getElementById("watchRecentCard");
+  if (!card) return;
+  card.hidden = !keys.length;
+  if (card.hidden) return;
+  const content = document.getElementById("watchRecent");
+  if (!watchRecentReady) {
+    content.textContent = "최근 공시를 불러오는 중입니다.";
+    if (!watchRecentLoad) {
+      watchRecentLoad = Promise.allSettled([
+        loadVerifiedForm4(),
+        loadCongressSnapshot(),
+        loadRealSecData()
+      ]).then(() => {
+        watchRecentReady = true;
+        if (CURRENT_USER && state.currentFilingType === 'WATCHLIST') renderWatchRecent(effectiveWatchKeys());
+      }).finally(() => { watchRecentLoad = null; });
+    }
+    return;
+  }
+
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).formatToParts(new Date());
+  const through = ['year', 'month', 'day'].map(part => parts.find(item => item.type === part).value).join('-');
+  const from = new Date(Date.parse(through) - 6 * 86400000).toISOString().slice(0, 10);
+  const form4 = recentForm4Snapshot;
+  const house = congressSnapshot;
+  const holdings = SEC_DISPLAY && MARKET_SYMBOLS ? RAW_HOLDINGS : null;
+  const unavailable = [!form4 && 'Form 4', !house && '미국 하원', !holdings && 'Form 13F'].filter(Boolean);
+  if (unavailable.length === 3) {
+    content.textContent = "최근 공시 자료를 불러오지 못했습니다.";
+    return;
+  }
+  const filings = watchRecentFilings(keys.map(watchCompany), {form4, house, holdings}, from, through);
+  const rows = filings.map(({company, type, date, detail, url, count}) => [
+    watchCompanyButton(company), escapeHtml(type), escapeHtml(date),
+    escapeHtml(`${detail}${type !== 'Form 13F' ? ` ${count}건` : ''}`), watchSource(url, '원문')
+  ]);
+  const notes = [`미 동부 공시일 ${from}~${through} · ${filings.length.toLocaleString()}건`];
+  if (holdings) notes.push('Form 13F는 현재 확인된 기관 보유표 기준');
+  if (form4 && form4.coverage.through < through) notes.push(`Form 4 ${form4.coverage.through}까지 확인`);
+  if (house && house.asOf < through) notes.push(`하원 ${house.asOf}까지 확인`);
+  if (unavailable.length) notes.push(`${unavailable.join('·')} 자료 불러오기 실패`);
+  renderWatchTable("watchRecent", notes.join(' · '),
+    [["기업 상세", "entity"], ["공시", "meta"], ["공시일", "meta"], ["내역", "meta"], ["출처", "reference"]], rows);
 }
 
 function selectWatchCompany(key) {
@@ -4123,7 +4235,7 @@ function renderMacroPulseBar() {
   if (!bar || !MACRO_DATA) return;
 
   const fed = MACRO_DATA.fedRate || {};
-  const cpi = MACRO_DATA.inflation || {};
+  const cpi = macroCpiSummary(MACRO_DATA);
   const spread = (MACRO_DATA.treasury && MACRO_DATA.treasury.spread10Y_13W) || {};
   const calendar = upcomingMacroEvents(MACRO_DATA);
   const fedGap = MACRO_DATA.benchmarks?.fedRate?.gapToNeutral;
@@ -4162,7 +4274,7 @@ function renderMacroPulseBar() {
         <div class="macro-pulse-pill">
           <span class="pill-label">CPI (YoY):</span>
           ${macroHelpButton("cpi", "소비자물가지수")}
-          <span class="pill-val" style="color: #c084fc;">${escapeHtml(cpi.cpiYoY || "확인 불가")}</span>
+          <span class="pill-val" style="color: #c084fc;" title="${escapeHtml(cpi.detail)}">${escapeHtml(cpi.value)}</span>
         </div>
         <div class="macro-pulse-sep"></div>
         <div class="macro-pulse-pill">
@@ -4194,11 +4306,12 @@ async function loadAndRenderMacro() {
 
   // 1. 4대 요약 카드 렌더링 (공식 기준선과의 팩트 갭 표시)
   const fed = MACRO_DATA.fedRate || {};
-  const cpi = MACRO_DATA.inflation || {};
+  const cpi = macroCpiSummary(MACRO_DATA);
   const labor = MACRO_DATA.labor || {};
   const treasury = MACRO_DATA.treasury || {};
   const spread = treasury.spread10Y_13W || {};
   const b = MACRO_DATA.benchmarks || {};
+  const sources = MACRO_DATA.sources || {};
 
   const fedEl = document.getElementById("macroFedTarget");
   const fedSubEl = document.getElementById("macroFedSub");
@@ -4206,18 +4319,20 @@ async function loadAndRenderMacro() {
   if (fedSubEl) {
     const fedGap = b.fedRate?.gapToNeutral;
     const neutral = fedGap == null ? "" : `중립금리 참고값 대비 ${fedGap} · `;
-    fedSubEl.innerText = `${neutral}실효금리(EFFR) ${fed.effr || "확인 불가"}`;
+    fedSubEl.innerText = [`${neutral}실효금리(EFFR) ${fed.effr || "확인 불가"}`, sources.nyFed?.asOf,
+      macroSourceStatus([sources.nyFed], Boolean(fed.targetRange))].filter(Boolean).join(' · ');
   }
 
   const cpiEl = document.getElementById("macroCpiVal");
   const cpiSubEl = document.getElementById("macroCpiSub");
-  if (cpiEl) cpiEl.innerText = cpi.cpiYoY || "확인 불가";
-  if (cpiSubEl) cpiSubEl.innerText = "작년 같은 달 대비 · 미 노동통계국(BLS)";
+  if (cpiEl) cpiEl.innerText = cpi.value;
+  if (cpiSubEl) cpiSubEl.innerText = cpi.detail;
 
   const unempEl = document.getElementById("macroUnemploymentVal");
   const unempSubEl = document.getElementById("macroUnemploymentSub");
   if (unempEl) unempEl.innerText = labor.unemploymentRate || "확인 불가";
-  if (unempSubEl) unempSubEl.innerText = `관측 시점과 출처를 확인하세요`;
+  if (unempSubEl) unempSubEl.innerText = [labor.period,
+    macroSourceStatus([sources.blsLabor], Boolean(labor.unemploymentRate)), '미 노동통계국(BLS)'].filter(Boolean).join(' · ');
 
   const spreadEl = document.getElementById("macroSpreadVal");
   const spreadSubEl = document.getElementById("macroSpreadSub");
@@ -4227,7 +4342,8 @@ async function loadAndRenderMacro() {
     spreadEl.className = `metric-value ${spreadVal >= 0 ? 'text-green' : 'text-red'}`;
   }
   if (spreadSubEl) {
-    spreadSubEl.innerText = spread.desc || "10년물과 3개월물 수익률 비교";
+    spreadSubEl.innerText = [spread.desc || "10년물과 3개월물 수익률 비교", spread.asOf,
+      macroSourceStatus([sources.yield10Y, sources.yield13W], Number.isFinite(spreadVal))].filter(Boolean).join(' · ');
   }
 
   // 2. 공식 기준선 팩트 대조 카드 렌더링

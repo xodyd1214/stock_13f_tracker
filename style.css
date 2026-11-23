@@ -1896,7 +1896,7 @@ body {
   min-width: 0;
 }
 
-.watch-content[hidden], #watchLogin[hidden] {
+.watch-content[hidden], #watchLogin[hidden], #watchRecentCard[hidden] {
   display: none;
 }
 

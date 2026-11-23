@@ -20,6 +20,34 @@ function context(names, extra = {}) {
   return ctx;
 }
 const helpers = ['hasPrice', 'priceLabel', 'insiderCode', 'insiderLabel', 'quoteFreshness'];
+test('watch feed groups verified filings by company and uses inclusive filing dates', () => {
+  const c = context(['watchRecentFilings', 'watchHousePurchases', 'watchSymbol'], {
+    getMappedTicker: (_, ticker) => ticker
+  });
+  const company = {key:'0000789019:MSFT', issuer:'0000789019', ticker:'MSFT', exchange:'Nasdaq'};
+  const secUrl = 'https://www.sec.gov/Archives/example.xml';
+  const purchase = {issuerCik:company.issuer, accessionNumber:'test', filingDate:'2026-11-23',
+    transDate:'2026-10-01', secUrl};
+  const form4 = {transactions:[purchase, purchase, {...purchase, filingDate:'2026-11-16'},
+    {...purchase, filingDate:'2026-11-24'}, {...purchase, issuerCik:'0000000002'}]};
+  const house = {asOf:'2026-11-23', ptrFrom:'2026-10-24', filings:[{
+    kind:'ptr', id:'123', year:2026, filed:'2026-11-17', name:'Reporter', rows:[
+      {action:'P', assetType:'ST', status:'New', ticker:'MSFT', traded:'2026-10-11'},
+      {action:'S', assetType:'ST', status:'New', ticker:'MSFT', traded:'2026-11-18'}
+    ]
+  }]};
+  c.verifiedDisplayRow = row => row.checked;
+  const holdings = [
+    {ticker:'MSFT', filingDate:'2026-11-20', period:'2026-09-30', shares:100, accession:'one', checked:true,
+      legalName:'Manager', sourceUrl:secUrl},
+    {ticker:'MSFT', filingDate:'2026-11-19', shares:100, accession:'two', checked:false, sourceUrl:secUrl}
+  ];
+  const results = c.watchRecentFilings([company], {form4, house, holdings}, '2026-11-17', '2026-11-23');
+  assert.deepEqual(Array.from(results, ({type, date, count}) => [type,date,count]), [
+    ['Form 4','2026-11-23',2], ['Form 13F','2026-11-20',1], ['미국 하원','2026-11-17',1]
+  ]);
+  assert.match(results[2].url, /\/2026\/123\.pdf$/);
+});
 test('congress ticker summaries count unique reporters per direction across 30 filing dates', () => {
   const c = context(['summarizeCongressTickers', 'congressFilingLag']);
   const stock = { ticker: 'NVDA', action: 'P', assetType: 'ST', status: 'New' };
@@ -361,7 +389,7 @@ test('late quote response does not redraw the previously selected manager', asyn
 });
 test('macro null observations display unknown instead of fabricated defaults', () => {
   const elements = {};
-  const c = context(['macroFreshness', 'upcomingMacroEvents', 'macroHelpButton', 'renderMacroPulseBar', 'renderMacroMarketProxies', 'renderMacroBenchmarks'], { MACRO_DATA: { schemaVersion: 2, benchmarks: { fedRate: { gapToNeutral: null }, inflation: { gapToTarget: null } }, treasury: { spread10Y_13W: { spread: null }, yield10Y: { val: null } }, commoditiesAndFx: { gold: { val: null } } }, document: { getElementById: id => elements[id] ||= {} } });
+  const c = context(['macroFreshness', 'macroSourceStatus', 'macroCpiSummary', 'upcomingMacroEvents', 'macroHelpButton', 'renderMacroPulseBar', 'renderMacroMarketProxies', 'renderMacroBenchmarks'], { MACRO_DATA: { schemaVersion: 2, benchmarks: { fedRate: { gapToNeutral: null }, inflation: { gapToTarget: null } }, treasury: { spread10Y_13W: { spread: null }, yield10Y: { val: null } }, commoditiesAndFx: { gold: { val: null } } }, document: { getElementById: id => elements[id] ||= {} } });
   c.renderMacroPulseBar();
   c.renderMacroMarketProxies();
   c.renderMacroBenchmarks();
@@ -369,6 +397,19 @@ test('macro null observations display unknown instead of fabricated defaults', (
   assert.match(html, /확인 불가/);
   assert.doesNotMatch(html, /4\.80|3\.77|3\.4|92\.36|4430|null|NaN/);
   assert.equal((html.match(/aria-controls="macroHelp"/g) || []).length, 9);
+});
+test('macro summary distinguishes a missing CPI comparison from a failed collection', () => {
+  const c = context(['macroSourceStatus', 'macroCpiSummary']);
+  const october = c.macroCpiSummary({inflation:{period:'2026-10', cpiIndex:337.511, cpiYoY:null},
+    sources:{blsInflation:{fetchStatus:'success'}}});
+  assert.equal(october.value,'전년 비교 자료 미발표');
+  assert.match(october.detail,/2026년 10월.*2025년 10월 비교 지수 미발표/);
+  assert.equal(c.macroCpiSummary({inflation:{period:'2026-11', cpiIndex:337.6, cpiYoY:null}}).value,
+    '전년 비교 자료 없음');
+  const stale = c.macroCpiSummary({inflation:{period:'2026-09', cpiYoY:'+3.7%'},
+    sources:{blsInflation:{fetchStatus:'error', status:'stale'}}});
+  assert.equal(stale.value,'+3.7%');
+  assert.match(stale.detail,/수집 실패 · 마지막 확인값 표시/);
 });
 test('invalid treasury observations cannot turn null into zero-yield chart points', () => {
   const c = context(['getFilteredTreasuryData'], { MACRO_DATA: { timeSeries: { treasuryDaily: [{ date: '2026-01-01', y3m: null, y5y: 2, y10y: 3, spread: 1 }, { date: '2026-01-02', y3m: 1, y5y: 2, y10y: 3, spread: 2 }] } } });
@@ -420,7 +461,7 @@ test('v2 source age and stale status are visible and genuine zero quote change s
 });
 test('v2 unavailable summary handles explicit null benchmark gaps', async () => {
   const elements = {};
-  const c = context(['loadAndRenderMacro'], { MACRO_DATA: { schemaVersion: 2, status: 'unavailable', benchmarks: { fedRate: { gapToNeutral: null }, inflation: { gapToTarget: null } } }, renderMacroPulseBar() {}, renderMacroBenchmarks() {}, renderMacroCharts() {}, renderMacroMarketProxies() {}, renderMacroCalendar() {}, document: { getElementById: id => elements[id] ||= {} } });
+  const c = context(['loadAndRenderMacro', 'macroSourceStatus', 'macroCpiSummary'], { MACRO_DATA: { schemaVersion: 2, status: 'unavailable', benchmarks: { fedRate: { gapToNeutral: null }, inflation: { gapToTarget: null } } }, renderMacroPulseBar() {}, renderMacroBenchmarks() {}, renderMacroCharts() {}, renderMacroMarketProxies() {}, renderMacroCalendar() {}, document: { getElementById: id => elements[id] ||= {} } });
   await c.loadAndRenderMacro();
   assert.doesNotMatch(elements.macroFedSub.innerText + elements.macroCpiSub.innerText, /null|undefined/);
   assert.equal(elements.macroSpreadVal.innerText, '확인 불가');

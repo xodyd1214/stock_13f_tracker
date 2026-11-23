@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=118">
+  <link rel="stylesheet" href="style.css?v=119">
 </head>
 <body>
   <div class="app-container">
@@ -572,6 +572,11 @@
             <div class="watch-company-list" id="watchSearchResults"></div>
           </section>
 
+          <section class="table-section watch-card" id="watchRecentCard" aria-labelledby="watchRecentTitle" hidden>
+            <h3 id="watchRecentTitle">최근 7일 새 공시</h3>
+            <div id="watchRecent" aria-live="polite"></div>
+          </section>
+
           <div class="watch-content" id="watchDetails" hidden>
             <div class="watch-heading">
               <h3 id="watchCompanyTitle" tabindex="-1"></h3>
@@ -1107,7 +1112,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js?v=2"></script>
   <script src="sec_display_loader.js?v=5"></script>
-  <script src="app.js?v=132"></script>
+  <script src="app.js?v=133"></script>
 </body>
 </html>
 
