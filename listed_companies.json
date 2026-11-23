@@ -469,12 +469,6 @@
       "NYSE"
     ],
     [
-      949858,
-      "ACHIEVE LIFE SCIENCES, INC.",
-      "ACHV",
-      "Nasdaq"
-    ],
-    [
       1646972,
       "Albertsons Companies, Inc.",
       "ACI",
@@ -4147,6 +4141,12 @@
       "NYSE"
     ],
     [
+      1739410,
+      "Rallybio Corp",
+      "AVZO",
+      "Nasdaq"
+    ],
+    [
       906013,
       "ALLIANCEBERNSTEIN GLOBAL HIGH INCOME FUND INC",
       "AWF",
@@ -5739,6 +5739,18 @@
     [
       1406234,
       "Brookfield Infrastructure Partners L.P.",
+      "BIPF-PA",
+      "NYSE"
+    ],
+    [
+      1406234,
+      "Brookfield Infrastructure Partners L.P.",
+      "BIPF-PB",
+      "NYSE"
+    ],
+    [
+      1406234,
+      "Brookfield Infrastructure Partners L.P.",
       "BIPH",
       "NYSE"
     ],
@@ -5864,19 +5876,19 @@
     ],
     [
       2000775,
-      "Black Hawk Acquisition Corp",
+      "Vesicor Therapeutics Holdings, Inc.",
       "BKHA",
       "Nasdaq"
     ],
     [
       2000775,
-      "Black Hawk Acquisition Corp",
+      "Vesicor Therapeutics Holdings, Inc.",
       "BKHAR",
       "Nasdaq"
     ],
     [
       2000775,
-      "Black Hawk Acquisition Corp",
+      "Vesicor Therapeutics Holdings, Inc.",
       "BKHAU",
       "Nasdaq"
     ],
@@ -9415,6 +9427,12 @@
       "NYSE"
     ],
     [
+      2094256,
+      "BEACON TOPCO, INC.",
+      "CLYD",
+      "Nasdaq"
+    ],
+    [
       1768446,
       "Climb Bio, Inc.",
       "CLYM",
@@ -12745,12 +12763,6 @@
       "NYSE"
     ],
     [
-      1682149,
-      "Datavault AI Inc.",
-      "DVLT",
-      "Nasdaq"
-    ],
-    [
       1090012,
       "DEVON ENERGY CORP/DE",
       "DVN",
@@ -14551,6 +14563,18 @@
       "Nasdaq"
     ],
     [
+      2016221,
+      "Melar Acquisition Corp. I/Cayman",
+      "EVRL",
+      "Nasdaq"
+    ],
+    [
+      2016221,
+      "Melar Acquisition Corp. I/Cayman",
+      "EVRLW",
+      "Nasdaq"
+    ],
+    [
       1253327,
       "Eaton Vance Tax-Advantaged Dividend Income Fund",
       "EVT",
@@ -14755,12 +14779,6 @@
       "CBOE"
     ],
     [
-      1812727,
-      "Reliance Global Group, Inc.",
-      "EZRA",
-      "Nasdaq"
-    ],
-    [
       37996,
       "FORD MOTOR CO",
       "F",
@@ -14920,12 +14938,6 @@
       1958777,
       "FibroBiologics, Inc.",
       "FBLG",
-      "Nasdaq"
-    ],
-    [
-      2133939,
-      "Football Manager SPAC Inc.",
-      "FBLLU",
       "Nasdaq"
     ],
     [
@@ -21296,7 +21308,7 @@
     ],
     [
       1711754,
-      "Inmune Bio, Inc.",
+      "Inmune Bio Inc.",
       "INMB",
       "Nasdaq"
     ],
@@ -22687,12 +22699,6 @@
       "Nasdaq"
     ],
     [
-      2031009,
-      "Skyline Builders Group Holding Ltd",
-      "KAZR",
-      "Nasdaq"
-    ],
-    [
       1445930,
       "KB Financial Group Inc.",
       "KB",
@@ -23197,12 +23203,6 @@
       "NYSE"
     ],
     [
-      1982960,
-      "KNOREX LTD.",
-      "KNRX",
-      "NYSE"
-    ],
-    [
       1730430,
       "Kiniksa Pharmaceuticals International, plc",
       "KNSA",
@@ -23326,12 +23326,6 @@
       1372514,
       "KIORA PHARMACEUTICALS INC",
       "KPRX",
-      "Nasdaq"
-    ],
-    [
-      1503802,
-      "Karyopharm Therapeutics Inc.",
-      "KPTI",
       "Nasdaq"
     ],
     [
@@ -27434,7 +27428,7 @@
     ],
     [
       1728328,
-      "InMed Pharmaceuticals Inc.",
+      "Mentari Therapeutics, Inc.",
       "MTRI",
       "Nasdaq"
     ],
@@ -36727,12 +36721,6 @@
       "Nasdaq"
     ],
     [
-      944075,
-      "SOCKET MOBILE, INC.",
-      "SCKT",
-      "Nasdaq"
-    ],
-    [
       94049,
       "STEPAN CO",
       "SCL",
@@ -37294,18 +37282,6 @@
       354963,
       "SHENANDOAH TELECOMMUNICATIONS CO/VA/",
       "SHEN",
-      "Nasdaq"
-    ],
-    [
-      1854963,
-      "SHF Holdings, Inc.",
-      "SHFS",
-      "Nasdaq"
-    ],
-    [
-      1854963,
-      "SHF Holdings, Inc.",
-      "SHFSW",
       "Nasdaq"
     ],
     [
@@ -42988,6 +42964,12 @@
       1806837,
       "Vertex, Inc.",
       "VERX",
+      "Nasdaq"
+    ],
+    [
+      2000775,
+      "Vesicor Therapeutics Holdings, Inc.",
+      "VESI",
       "Nasdaq"
     ],
     [

@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "sourceFilings": 10446,
-  "verifiedFilings": 10446,
+  "sourceFilings": 10441,
+  "verifiedFilings": 10441,
   "coverage": {
     "from": "2026-10-22",
     "through": "2026-11-20",
-    "listedIssuers": 6056,
+    "listedIssuers": 6051,
     "markets": [
       "NYSE",
       "Nasdaq",
@@ -1432,8 +1432,8 @@
     },
     {
       "date": "2026-10-29",
-      "indexSha256": "60a610711c7143d5882f1efc0f1ba16d97de02ffdec221fd005bc43086914b28",
-      "filings": 246,
+      "indexSha256": "e3bc31dda49582ec8eac4adad154c6c0aab8fc0856ef019c89e14a4ef93b7069",
+      "filings": 241,
       "purchases": [
         {
           "filingDate": "2026-10-29",
