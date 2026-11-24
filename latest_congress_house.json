@@ -1,9 +1,51 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-11-22",
-  "ptrFrom": "2026-08-25",
+  "asOf": "2026-11-24",
+  "ptrFrom": "2026-08-27",
   "annualYear": 2025,
   "filings": [
+    {
+      "id": "20036891",
+      "kind": "ptr",
+      "year": 2026,
+      "filed": "2026-11-21",
+      "name": "Ed Case",
+      "district": "HI01",
+      "parsed": true,
+      "rows": [
+        {
+          "asset": "Apple Inc. - Common Stock",
+          "ticker": "AAPL",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-16",
+          "action": "P",
+          "status": "New"
+        }
+      ]
+    },
+    {
+      "id": "20036883",
+      "kind": "ptr",
+      "year": 2026,
+      "filed": "2026-11-20",
+      "name": "Jennifer McClellan",
+      "district": "VA04",
+      "parsed": true,
+      "rows": [
+        {
+          "asset": "Verizon Communications Inc. Common Stock",
+          "ticker": "VZ",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$50,001 - $100,000",
+          "traded": "2026-11-19",
+          "action": "S (partial)",
+          "status": "New"
+        }
+      ]
+    },
     {
       "id": "20036844",
       "kind": "ptr",
@@ -12779,118 +12821,6 @@
           "value": "$1,001 - $15,000",
           "traded": "2026-07-13",
           "action": "S (partial)",
-          "status": "New"
-        }
-      ]
-    },
-    {
-      "id": "20035309",
-      "kind": "ptr",
-      "year": 2026,
-      "filed": "2026-08-25",
-      "name": "Michael Rulli",
-      "district": "OH06",
-      "parsed": true,
-      "rows": [
-        {
-          "asset": "Alphabet Inc. - Class A Common Stock",
-          "ticker": "GOOGL",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$50,001 - $100,000",
-          "traded": "2026-08-24",
-          "action": "S (partial)",
-          "status": "New"
-        }
-      ]
-    },
-    {
-      "id": "20035293",
-      "kind": "ptr",
-      "year": 2026,
-      "filed": "2026-08-25",
-      "name": "William R. Keating",
-      "district": "MA09",
-      "parsed": true,
-      "rows": []
-    },
-    {
-      "id": "20035244",
-      "kind": "ptr",
-      "year": 2026,
-      "filed": "2026-08-25",
-      "name": "Kelly Louise Morrison",
-      "district": "MN03",
-      "parsed": true,
-      "rows": [
-        {
-          "asset": "Accenture plc Class A Ordinary Shares",
-          "ticker": "ACN",
-          "assetType": "ST",
-          "owner": "SP",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-08-11",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Accenture plc Class A Ordinary Shares",
-          "ticker": "ACN",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-08-11",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Accenture plc Class A Ordinary Shares",
-          "ticker": "ACN",
-          "assetType": "ST",
-          "owner": "SP",
-          "value": "$15,001 - $50,000",
-          "traded": "2026-08-11",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Mobility Global Inc. Common Stock",
-          "ticker": "MBGL",
-          "assetType": "ST",
-          "owner": "SP",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-08-11",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Mobility Global Inc. Common Stock",
-          "ticker": "MBGL",
-          "assetType": "ST",
-          "owner": "SP",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-08-11",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Mobility Global Inc. Common Stock",
-          "ticker": "MBGL",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-08-11",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "Solstice Advanced Materials Inc. - Common Stock",
-          "ticker": "SOLS",
-          "assetType": "ST",
-          "owner": "SP",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-08-11",
-          "action": "S",
           "status": "New"
         }
       ]
