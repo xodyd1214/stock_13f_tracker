@@ -6,7 +6,7 @@ import sys
 
 ALLOWED_OUTPUTS = {'live_13f_analytics.json', 'realtime_prices.json', 'latest_macro_indicators.json',
                    'latest_13f_holdings.json', 'latest_form4_recent.json', 'latest_congress_house.json',
-                   'listed_companies.json'}
+                   'listed_companies.json', 'latest_company_metrics.json'}
 
 
 def validate_output(path):
@@ -57,6 +57,9 @@ def validate_output(path):
         validate_listed_companies(value)
     if path.name == 'latest_congress_house.json':
         from congress_house import validate_snapshot
+        validate_snapshot(value)
+    if path.name == 'latest_company_metrics.json':
+        from company_metrics import validate_snapshot
         validate_snapshot(value)
     return value
 

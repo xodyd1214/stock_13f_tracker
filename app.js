@@ -2904,7 +2904,7 @@ function resetWatchlistAccount() {
   document.getElementById("watchSearch").value = "";
   document.getElementById("watchCompanyList").replaceChildren();
   document.getElementById("watchCompanyTitle").textContent = "";
-  for (const id of ["watch13F", "watchForm4", "watchHouse"]) document.getElementById(id).replaceChildren();
+  for (const id of ["watchMetrics", "watch13F", "watchForm4", "watchHouse"]) document.getElementById(id).replaceChildren();
   document.getElementById("watchRecent")?.replaceChildren();
   renderWatchlist();
   if (CURRENT_USER && state.currentFilingType === "WATCHLIST") loadWatchCompanies();
@@ -3255,6 +3255,78 @@ function watchSource(url, label) {
 
 let watchRecentReady = false;
 let watchRecentLoad = null;
+let companyMetricsLoad = null;
+
+function validateCompanyMetrics(snapshot) {
+  const isDate = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+    Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
+  if (snapshot?.schemaVersion !== 1 || !snapshot.symbols || Array.isArray(snapshot.symbols)) return false;
+  const entries = Object.entries(snapshot.symbols);
+  return entries.length > 0 && entries.length <= 200 && entries.every(([symbol, row]) => (
+    /^[A-Z0-9]+(?:\.[A-Z0-9]+)?$/.test(symbol) && (row === null || (
+      /^\d{10}$/.test(row.cik) && isDate(row.closeDate) && Number.isFinite(row.close) && row.close > 0 &&
+      (row.rsi14 === null || Number.isFinite(row.rsi14) && row.rsi14 >= 0 && row.rsi14 <= 100) &&
+      ['success', 'preserved', 'error'].includes(row.epsStatus) &&
+      (row.earnings === null || (row.earnings && isDate(row.earnings.start) && isDate(row.earnings.end) &&
+        isDate(row.earnings.filed) && row.earnings.start <= row.earnings.end &&
+        row.earnings.end <= row.closeDate && row.earnings.end <= row.earnings.filed &&
+        Number.isFinite(row.earnings.eps) && ['annual', 'quarter_sum', 'annual_ytd'].includes(row.earnings.method))) &&
+      (row.perTtm === null ? ['eps_unavailable', 'non_positive_eps', 'split'].includes(row.perReason) :
+        row.perReason === null && Number.isFinite(row.perTtm) && row.perTtm > 0 && row.earnings?.eps > 0)
+    ))
+  ));
+}
+
+async function loadCompanyMetrics() {
+  if (!companyMetricsLoad) {
+    const file = 'latest_company_metrics.json';
+    companyMetricsLoad = Promise.all([
+      loadRefreshedSnapshot(file, validateCompanyMetrics),
+      loadDashboardSnapshot(file, 5000, validateCompanyMetrics)
+    ]).then(snapshots => {
+      const available = snapshots.filter(Boolean);
+      if (!available.length) companyMetricsLoad = null;
+      return available;
+    });
+  }
+  return companyMetricsLoad;
+}
+
+function renderCompanyMetrics(company, snapshots) {
+  const container = document.getElementById('watchMetrics');
+  if (!snapshots.length) {
+    container.textContent = '기업 지표 자료를 불러오지 못했습니다.';
+    return;
+  }
+  const symbol = watchSymbol(company.ticker);
+  const rows = snapshots.map(snapshot => snapshot.symbols[symbol]).filter(row => row?.cik === company.issuer);
+  rows.sort((a, b) => b.closeDate.localeCompare(a.closeDate) ||
+    (b.earnings?.filed || '').localeCompare(a.earnings?.filed || ''));
+  const row = rows[0];
+  if (!row) {
+    container.textContent = snapshots.some(snapshot => Object.hasOwn(snapshot.symbols, symbol))
+      ? '확인된 종가가 들어오면 지표를 표시합니다.' : '현재 지표는 시세를 수집하는 주요 미국 주식에 제공됩니다.';
+    return;
+  }
+  const number = new Intl.NumberFormat('ko-KR', {maximumFractionDigits: 2});
+  const { earnings, perTtm, rsi14 } = row;
+  const per = perTtm === null ? '산출 불가' : `${earnings.method === 'annual_ytd' ? '약 ' : ''}${number.format(perTtm)}배`;
+  const reason = {eps_unavailable: '최근 12개월 희석 EPS 자료 없음', non_positive_eps: '최근 12개월 희석 EPS가 0 이하',
+    split: '기간 중 주식분할로 EPS 기준 확인 필요'}[row.perReason];
+  const method = earnings && {annual: '10-K 희석 EPS', quarter_sum: '10-K·10-Q 분기 희석 EPS 합산',
+    annual_ytd: '10-K·10-Q 누적 희석 EPS로 추정'}[earnings.method];
+  const period = earnings && `실적 기준 ${earnings.start} ~ ${earnings.end}`;
+  const status = row.epsStatus === 'preserved' ? 'EPS 수집 실패 · 마지막 확인값 사용' :
+    row.epsStatus === 'error' ? 'EPS 수집 실패' : '';
+  const detail = [period, reason || method, status].filter(Boolean).join(' · ');
+  container.innerHTML = `<p class="card-sub">미국장 종가 기준일
+    <time datetime="${escapeHtml(row.closeDate)}">${escapeHtml(row.closeDate)}</time> · $${number.format(row.close)}</p>
+    <dl class="watch-metrics-grid">
+      <div><dt>PER (TTM)</dt><dd class="metric-value">${per}</dd><dd class="card-sub">${escapeHtml(detail)}</dd></div>
+      <div><dt>RSI (14)</dt><dd class="metric-value">${rsi14 === null ? '산출 불가' : number.format(rsi14)}</dd>
+        <dd class="card-sub">${rsi14 === null ? '수정 종가 이력 부족' : '수정 종가 기준'}</dd></div>
+    </dl>`;
+}
 
 function watchRecentFilings(companies, {form4, house, holdings}, from, through) {
   const filings = new Map();
@@ -3357,6 +3429,10 @@ function selectWatchCompany(key) {
   const current = () => CURRENT_USER?.uid === uid && watchlist.selected === key;
   const message = (id, text) => { document.getElementById(id).textContent = text; };
   for (const id of ["watch13F", "watchForm4", "watchHouse"]) message(id, "공시를 불러오는 중입니다.");
+  message("watchMetrics", "기업 지표를 불러오는 중입니다.");
+  loadCompanyMetrics().then(snapshots => {
+    if (current()) renderCompanyMetrics(company, snapshots);
+  });
 
   if (company.exchange) {
     loadRealSecData().then(() => {

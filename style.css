@@ -1988,6 +1988,33 @@ body {
   overflow-wrap: anywhere;
 }
 
+.watch-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 12px;
+  margin: 8px 0 12px;
+}
+
+.watch-metrics-grid > div {
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.watch-metrics-grid dt {
+  color: var(--text-subdued);
+  font-size: 12px;
+}
+
+.watch-metrics-grid dd {
+  margin: 4px 0 0;
+}
+
+.watch-metrics-grid .metric-value {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
 .watch-company-meta {
   display: inline-block;
   margin-inline-start: 5px;

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=119">
+  <link rel="stylesheet" href="style.css?v=120">
 </head>
 <body>
   <div class="app-container">
@@ -582,6 +582,10 @@
               <h3 id="watchCompanyTitle" tabindex="-1"></h3>
               <button type="button" class="btn btn-outline" id="btnWatchToggle"></button>
             </div>
+            <section class="table-section watch-card" aria-labelledby="watchMetricsTitle">
+              <h3 id="watchMetricsTitle">기업 지표</h3>
+              <div id="watchMetrics" aria-live="polite"></div>
+            </section>
             <section class="table-section watch-card watch-disclosure" data-disclosure="institution" aria-labelledby="watch13FTitle">
               <h3 id="watch13FTitle"><span class="watch-disclosure-source">Form 13F</span> 기관 보유</h3>
               <div id="watch13F" aria-live="polite"></div>
@@ -1112,7 +1116,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js?v=2"></script>
   <script src="sec_display_loader.js?v=5"></script>
-  <script src="app.js?v=133"></script>
+  <script src="app.js?v=134"></script>
 </body>
 </html>
 

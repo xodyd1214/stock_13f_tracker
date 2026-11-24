@@ -61,6 +61,12 @@ jobs:
         continue-on-error: true
         run: python congress_house.py
 
+      - name: Refresh company metrics from completed U.S. sessions
+        id: company_metrics
+        if: github.event.schedule != '30 6 * * *'
+        continue-on-error: true
+        run: python company_metrics.py
+
       # latest_13f_holdings.csv is a retained legacy snapshot, not regenerated or
       # published by this workflow. Use the dashboard CSV export for current data.
       # Preserve the historical Form 4 and 13D/13G files. The recent Form 4
@@ -70,7 +76,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          outputs=(realtime_prices.json latest_macro_indicators.json latest_form4_recent.json latest_congress_house.json listed_companies.json)
+          outputs=(realtime_prices.json latest_company_metrics.json latest_macro_indicators.json latest_form4_recent.json latest_congress_house.json listed_companies.json)
           changed=()
           for file in "${outputs[@]}"; do
             if [[ -n "$(git status --porcelain -- "$file")" ]]; then
@@ -93,7 +99,7 @@ jobs:
           git push
 
       - name: Report partial collection failure
-        if: ${{ always() && (steps.form13f.outcome == 'failure' || steps.prices.outcome == 'failure' || steps.macro.outcome == 'failure' || steps.form4_recent.outcome == 'failure' || steps.congress_house.outcome == 'failure') }}
+        if: ${{ always() && (steps.form13f.outcome == 'failure' || steps.prices.outcome == 'failure' || steps.company_metrics.outcome == 'failure' || steps.macro.outcome == 'failure' || steps.form4_recent.outcome == 'failure' || steps.congress_house.outcome == 'failure') }}
         run: |
           echo '::error::One or more collectors failed or returned partial/stale data. Successful validated updates were retained; review collector logs.'
           exit 1
