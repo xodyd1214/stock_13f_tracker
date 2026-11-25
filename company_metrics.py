@@ -11,9 +11,11 @@ from zoneinfo import ZoneInfo
 import requests
 
 from data_io import atomic_write_json, load_json
+from market_symbols import quote_eligible
 
 BASE = Path(__file__).resolve().parent
 OUTPUT = 'latest_company_metrics.json'
+REQUESTS_URL = 'https://firestore.googleapis.com/v1/projects/alpha13f-e9be4/databases/(default)/documents:runQuery'
 EASTERN = ZoneInfo('America/New_York')
 COMPANIES = {
     'AAPL': '0000320193', 'AMZN': '0001018724', 'AVGO': '0001730168', 'GOOGL': '0001652044',
@@ -26,6 +28,8 @@ SEC_AGENT = 'AlphaInsiderTracker xodyd1214@gmail.com'
 DAY = timedelta(days=1)
 EPS_METHODS = {'annual', 'quarter_sum', 'annual_ytd'}
 PER_REASONS = {'eps_unavailable', 'non_positive_eps', 'split'}
+ELIGIBLE_KEYS = load_json(BASE / 'company_metrics_eligible.json')['companies']
+ELIGIBLE_COMPANIES = {symbol: key.split(':', 1)[0] for key, symbol in ELIGIBLE_KEYS.items()}
 
 
 def finite(value):
@@ -180,12 +184,13 @@ def assemble(cik, market, earnings, eps_status):
 
 
 def validate_snapshot(snapshot):
-    if snapshot.get('schemaVersion') != 1 or set(snapshot.get('symbols', {})) != set(COMPANIES):
+    symbols = snapshot.get('symbols', {})
+    if snapshot.get('schemaVersion') != 1 or not set(COMPANIES) <= symbols.keys() <= ELIGIBLE_COMPANIES.keys():
         raise ValueError('Invalid company metrics scope')
     for symbol, row in snapshot['symbols'].items():
         if row is None:
             continue
-        if row['cik'] != COMPANIES[symbol] or not finite(row['close']) or row['close'] <= 0:
+        if row['cik'] != ELIGIBLE_COMPANIES[symbol] or not finite(row['close']) or row['close'] <= 0:
             raise ValueError('Invalid company metrics identity or close')
         close_date = iso_date(row['closeDate'])
         rsi = row['rsi14']
@@ -216,16 +221,51 @@ def fetch_json(session, url, headers, params=None):
     return response.json()
 
 
-def collect(previous, now, session):
+def requested_companies(session):
+    query = {'structuredQuery': {'from': [{'collectionId': 'companyMetricRequests'}], 'limit': 200}}
+    response = session.post(REQUESTS_URL, json=query, timeout=8)
+    response.raise_for_status()
+    rows = response.json()
+    if not isinstance(rows, list) or len(rows) > 200:
+        raise ValueError('Unexpected request queue response')
+    prefix = 'projects/alpha13f-e9be4/databases/(default)/documents/companyMetricRequests/'
+    requested = set()
+    for row in rows:
+        if not isinstance(row, dict) or 'error' in row:
+            raise ValueError('Invalid request queue entry')
+        doc = row.get('document')
+        if doc is None:
+            continue
+        if not isinstance(doc, dict):
+            raise ValueError('Invalid request document')
+        name = doc.get('name', '')
+        key = name.removeprefix(prefix)
+        if name.startswith(prefix) and key in ELIGIBLE_KEYS and doc.get('fields') == {'requested': {'booleanValue': True}}:
+            requested.add(ELIGIBLE_KEYS[key])
+    return requested
+
+
+def collect(previous, now, session, prices):
     symbols = dict(previous['symbols'])
     failed = []
-    for symbol, cik in COMPANIES.items():
+    try:
+        requested = requested_companies(session)
+    except (ValueError, OSError, KeyError, TypeError, requests.RequestException) as error:
+        requested = set()
+        failed.append('requests')
+        print(f'Company metric requests: {error}', file=sys.stderr)
+    for symbol in sorted(set(symbols) | requested):
+        if symbol not in prices or not quote_eligible(symbol):
+            continue
+        cik = ELIGIBLE_COMPANIES[symbol]
+        symbols.setdefault(symbol, None)
         old = symbols.get(symbol)
+        quote_symbol = symbol.replace('.', '-')
         try:
             market = quote_metrics(fetch_json(
-                session, CHART + symbol, {'User-Agent': 'Mozilla/5.0'},
+                session, CHART + quote_symbol, {'User-Agent': 'Mozilla/5.0'},
                 {'interval': '1d', 'range': '2y', 'events': 'splits'}
-            ), symbol, now)
+            ), quote_symbol, now)
             day = market[0]
             if old and day < iso_date(old['closeDate']):
                 raise ValueError('Daily close regressed')
@@ -236,7 +276,13 @@ def collect(previous, now, session):
         status = 'success'
         try:
             source = f'{CONCEPT}CIK{cik}/us-gaap/EarningsPerShareDiluted.json'
-            facts = eps_facts(fetch_json(session, source, {'User-Agent': SEC_AGENT}), cik, day)
+            try:
+                payload = fetch_json(session, source, {'User-Agent': SEC_AGENT})
+            except requests.HTTPError as error:
+                if error.response is None or error.response.status_code != 404:
+                    raise
+                payload = None
+            facts = eps_facts(payload, cik, day) if payload else {}
             earnings = trailing_eps(facts)
             if old and old['earnings'] and (not earnings or earnings['end'] < old['earnings']['end']):
                 raise ValueError('EPS period regressed')
@@ -257,11 +303,11 @@ def main():
         raise ValueError('Metrics scope must have existing price coverage')
     previous = validate_snapshot(load_json(path, {'schemaVersion': 1, 'symbols': dict.fromkeys(COMPANIES)}))
     with requests.Session() as session:
-        snapshot, failed = collect(previous, datetime.now(timezone.utc), session)
+        snapshot, failed = collect(previous, datetime.now(timezone.utc), session, cache)
     if snapshot != previous:
         atomic_write_json(path, snapshot)
     rows = [row for row in snapshot['symbols'].values() if row is not None]
-    print(f'{len(rows)}/{len(COMPANIES)} closing prices, '
+    print(f'{len(rows)}/{len(snapshot["symbols"])} closing prices, '
           f'{sum(row["perTtm"] is not None for row in rows)} PER, '
           f'{sum(row["rsi14"] is not None for row in rows)} RSI; {len(failed)} source checks failed.')
     return bool(failed)

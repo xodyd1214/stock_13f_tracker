@@ -2900,6 +2900,7 @@ function renderCompanyPreferences() {
 
 function resetWatchlistAccount() {
   Object.assign(watchlist, { keys: [], selected: "", ready: false, pending: null, status: "" });
+  companyMetricsView = null;
   state.isF4FavGroupActive = false;
   document.getElementById("watchSearch").value = "";
   document.getElementById("watchCompanyList").replaceChildren();
@@ -3136,6 +3137,7 @@ function renderWatchlist() {
   toggle.disabled = !watchlist.ready || !!watchlist.pending || (!saved && !watchlist.catalog?.has(watchlist.selected));
   renderWatchSearch();
   renderWatchRecent(keys);
+  if (watchlist.selected) refreshCompanyMetrics(watchCompany(watchlist.selected), watchlist.keys.includes(watchlist.selected));
 }
 
 function toggleWatchCompany() {
@@ -3256,6 +3258,8 @@ function watchSource(url, label) {
 let watchRecentReady = false;
 let watchRecentLoad = null;
 let companyMetricsLoad = null;
+let companyMetricEligibilityLoad = null;
+let companyMetricsView = null;
 
 function validateCompanyMetrics(snapshot) {
   const isDate = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) &&
@@ -3294,24 +3298,16 @@ async function loadCompanyMetrics() {
 
 function renderCompanyMetrics(company, snapshots) {
   const container = document.getElementById('watchMetrics');
-  if (!snapshots.length) {
-    container.textContent = '기업 지표 자료를 불러오지 못했습니다.';
-    return;
-  }
   const symbol = watchSymbol(company.ticker);
   const rows = snapshots.map(snapshot => snapshot.symbols[symbol]).filter(row => row?.cik === company.issuer);
   rows.sort((a, b) => b.closeDate.localeCompare(a.closeDate) ||
     (b.earnings?.filed || '').localeCompare(a.earnings?.filed || ''));
   const row = rows[0];
-  if (!row) {
-    container.textContent = snapshots.some(snapshot => Object.hasOwn(snapshot.symbols, symbol))
-      ? '확인된 종가가 들어오면 지표를 표시합니다.' : '현재 지표는 시세를 수집하는 주요 미국 주식에 제공됩니다.';
-    return;
-  }
+  if (!row) return false;
   const number = new Intl.NumberFormat('ko-KR', {maximumFractionDigits: 2});
   const { earnings, perTtm, rsi14 } = row;
   const per = perTtm === null ? '산출 불가' : `${earnings.method === 'annual_ytd' ? '약 ' : ''}${number.format(perTtm)}배`;
-  const reason = {eps_unavailable: '최근 12개월 희석 EPS 자료 없음', non_positive_eps: '최근 12개월 희석 EPS가 0 이하',
+  const reason = {eps_unavailable: '최근 12개월 희석 EPS 확인 대기', non_positive_eps: '최근 12개월 희석 EPS가 0 이하',
     split: '기간 중 주식분할로 EPS 기준 확인 필요'}[row.perReason];
   const method = earnings && {annual: '10-K 희석 EPS', quarter_sum: '10-K·10-Q 분기 희석 EPS 합산',
     annual_ytd: '10-K·10-Q 누적 희석 EPS로 추정'}[earnings.method];
@@ -3326,6 +3322,93 @@ function renderCompanyMetrics(company, snapshots) {
       <div><dt>RSI (14)</dt><dd class="metric-value">${rsi14 === null ? '산출 불가' : number.format(rsi14)}</dd>
         <dd class="card-sub">${rsi14 === null ? '수정 종가 이력 부족' : '수정 종가 기준'}</dd></div>
     </dl>`;
+  return true;
+}
+
+async function loadCompanyMetricEligibility() {
+  if (!companyMetricEligibilityLoad) {
+    companyMetricEligibilityLoad = loadDashboardSnapshot('company_metrics_eligible.json', 5000, data => {
+      if (data?.schemaVersion !== 1 || !data.companies || Array.isArray(data.companies)) return false;
+      const entries = Object.entries(data.companies);
+      return entries.length > 0 && entries.length <= 200 && entries.every(([key, symbol]) =>
+        WATCH_KEY.test(key) && watchSymbol(key.split(':')[1]) === symbol);
+    }).then(data => {
+      if (!data) companyMetricEligibilityLoad = null;
+      return data?.companies;
+    });
+  }
+  return companyMetricEligibilityLoad;
+}
+
+async function refreshCompanyMetrics(company, saved) {
+  const uid = CURRENT_USER?.uid;
+  if (companyMetricsView?.uid === uid && companyMetricsView?.key === company.key && companyMetricsView?.saved === saved) return;
+  const view = {uid, key: company.key, saved};
+  companyMetricsView = view;
+  const current = () => companyMetricsView === view && CURRENT_USER?.uid === uid && watchlist.selected === company.key;
+  const container = document.getElementById('watchMetrics');
+  container.textContent = '기업 지표를 불러오는 중입니다.';
+  const snapshots = await loadCompanyMetrics();
+  if (!current()) return;
+  if (renderCompanyMetrics(company, snapshots)) return;
+  const eligible = await loadCompanyMetricEligibility();
+  if (!current()) return;
+  if (!eligible) {
+    container.textContent = '지표 요청 대상 목록을 불러오지 못했습니다.';
+    return;
+  }
+  if (!Object.hasOwn(eligible, company.key)) {
+    container.textContent = '현재 시세 수집 대상인 미국 주식의 지표를 요청할 수 있습니다.';
+    return;
+  }
+  if (!saved) {
+    container.textContent = '관심 기업에 저장한 뒤 지표를 요청할 수 있습니다.';
+    return;
+  }
+  const pending = '다음 미국장 마감 후 갱신 대기';
+  const symbol = eligible[company.key];
+  if (snapshots.some(snapshot => Object.hasOwn(snapshot.symbols, symbol))) {
+    container.textContent = pending;
+    return;
+  }
+  try {
+    if (!db) throw new Error('Firestore unavailable');
+    const ref = db.collection('companyMetricRequests').doc(company.key);
+    const request = await ref.get({source:'server'});
+    if (!current()) return;
+    if (request.exists) {
+      container.textContent = pending;
+      return;
+    }
+    const status = document.createElement('p');
+    status.className = 'card-sub';
+    status.setAttribute('role', 'status');
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'btn btn-outline';
+    button.textContent = '지표 추가 요청';
+    button.onclick = async () => {
+      if (!current() || button.disabled || !watchlist.keys.includes(company.key)) return;
+      button.disabled = true;
+      status.textContent = '지표 요청을 저장하고 있습니다.';
+      try {
+        await db.runTransaction(async transaction => {
+          const existing = await transaction.get(ref);
+          if (!existing.exists && current()) transaction.set(ref, {requested: true});
+        });
+        if (current()) container.textContent = pending;
+      } catch (error) {
+        if (!current()) return;
+        button.disabled = false;
+        status.textContent = '지표 요청을 저장하지 못했습니다. 다시 시도해 주세요.';
+        console.warn('기업 지표 요청 저장 실패:', error);
+      }
+    };
+    container.replaceChildren(button, status);
+  } catch (error) {
+    if (current()) container.textContent = '지표 요청 상태를 확인하지 못했습니다.';
+    console.warn('기업 지표 요청 조회 실패:', error);
+  }
 }
 
 function watchRecentFilings(companies, {form4, house, holdings}, from, through) {
@@ -3415,6 +3498,7 @@ function selectWatchCompany(key) {
   if (!CURRENT_USER || (!watchlist.catalog?.has(key) && !effectiveWatchKeys().includes(key))) return;
   const company = watchCompany(key);
   watchlist.selected = key;
+  companyMetricsView = null;
   const title = document.getElementById("watchCompanyTitle");
   title.textContent = company.name || company.ticker || `CIK ${company.issuer}`;
   if (company.exchange) {
@@ -3429,10 +3513,6 @@ function selectWatchCompany(key) {
   const current = () => CURRENT_USER?.uid === uid && watchlist.selected === key;
   const message = (id, text) => { document.getElementById(id).textContent = text; };
   for (const id of ["watch13F", "watchForm4", "watchHouse"]) message(id, "공시를 불러오는 중입니다.");
-  message("watchMetrics", "기업 지표를 불러오는 중입니다.");
-  loadCompanyMetrics().then(snapshots => {
-    if (current()) renderCompanyMetrics(company, snapshots);
-  });
 
   if (company.exchange) {
     loadRealSecData().then(() => {

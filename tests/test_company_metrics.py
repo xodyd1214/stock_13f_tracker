@@ -1,11 +1,41 @@
 import unittest
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from pathlib import Path
+import re
+from unittest.mock import MagicMock, patch
 
-from company_metrics import EASTERN, assemble, quote_metrics, rsi14, trailing_eps
+from company_metrics import (
+    COMPANIES, EASTERN, ELIGIBLE_KEYS, assemble, collect, quote_metrics,
+    requested_companies, rsi14, trailing_eps,
+)
 
 
 class CompanyMetricsTests(unittest.TestCase):
+    def test_request_allowlist_matches_published_firestore_rules(self):
+        rules = Path(__file__).resolve().parents[1] / 'firestore.rules'
+        covered = re.findall(r"'(\d{10}:[A-Z]{1,5}(?:[.-][A-Z])?)'", rules.read_text())
+        self.assertEqual(set(covered), set(ELIGIBLE_KEYS))
+        self.assertLessEqual(len(covered), 200)
+
+    def test_requests_deduplicate_and_rsi_publishes_without_eps(self):
+        session = MagicMock()
+        origin = 'projects/alpha13f-e9be4/databases/(default)/documents/companyMetricRequests/'
+        cost = {'document': {'name': origin + '0000909832:COST',
+                             'fields': {'requested': {'booleanValue': True}}}}
+        session.post.return_value.json.return_value = [cost, cost, {'readTime': '2026-11-25T21:30:00Z'},
+            {'document': {'name': origin + '0000000001:COST', 'fields': cost['document']['fields']}}]
+        self.assertEqual(requested_companies(session), {'COST'})
+        previous = {'schemaVersion': 1, 'symbols': dict.fromkeys(COMPANIES)}
+        today = datetime(2026, 11, 25, 16, 30, tzinfo=EASTERN)
+        with patch('company_metrics.fetch_json', return_value={}), \
+             patch('company_metrics.quote_metrics', return_value=(today.date(), 100, 42, [])) as quotes:
+            updated, failed = collect(previous, today, session, {'COST': {}})
+        self.assertFalse(failed)
+        quotes.assert_called_once()
+        row = updated['symbols']['COST']
+        self.assertEqual((row['rsi14'], row['perTtm'], row['perReason']), (42, None, 'eps_unavailable'))
+
     def test_rsi_uses_wilder_smoothing_and_keeps_numeric_extremes(self):
         self.assertEqual(rsi14(list(range(15))), 100)
         self.assertEqual(rsi14(list(range(15, 0, -1))), 0)
