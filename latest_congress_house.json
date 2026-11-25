@@ -5,6 +5,1717 @@
   "annualYear": 2025,
   "filings": [
     {
+      "id": "20036848",
+      "kind": "ptr",
+      "year": 2026,
+      "filed": "2026-11-24",
+      "name": "Daniel Meuser",
+      "district": "PA09",
+      "parsed": false,
+      "rows": []
+    },
+    {
+      "id": "20035776",
+      "kind": "ptr",
+      "year": 2026,
+      "filed": "2026-11-23",
+      "name": "Harriet Hageman",
+      "district": "WY00",
+      "parsed": true,
+      "rows": [
+        {
+          "asset": "Abbott Laboratories Common Stock",
+          "ticker": "ABT",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-09-08",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Accenture plc Class A Ordinary Shares",
+          "ticker": "ACN",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-02-17",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Accenture plc Class A Ordinary Shares",
+          "ticker": "ACN",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-02-17",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Accenture plc Class A Ordinary Shares",
+          "ticker": "ACN",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-02-13",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Accenture plc Class A Ordinary Shares",
+          "ticker": "ACN",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-02-13",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Accenture plc Class A Ordinary Shares",
+          "ticker": "ACN",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-02-13",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Accenture plc Class A Ordinary Shares",
+          "ticker": "ACN",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-02-13",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Accenture plc Class A Ordinary Shares",
+          "ticker": "ACN",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-01-21",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Accenture plc Class A Ordinary Shares",
+          "ticker": "ACN",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-01-21",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Adobe Inc. - Common Stock",
+          "ticker": "ADBE",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-03-31",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Advanced Micro Devices, Inc.",
+          "ticker": "AMD",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-14",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Air Products and Chemicals, Inc. Common Stock",
+          "ticker": "APD",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-14",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Air Products and Chemicals, Inc. Common Stock",
+          "ticker": "APD",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Airbnb, Inc. - Class A Common Stock",
+          "ticker": "ABNB",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Airbnb, Inc. - Class A Common Stock",
+          "ticker": "ABNB",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-07-02",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Airbnb, Inc. - Class A Common Stock",
+          "ticker": "ABNB",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-02-24",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Alphabet Inc. - Class A Common Stock",
+          "ticker": "GOOGL",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Alphabet Inc. - Class C Capital Stock",
+          "ticker": "GOOG",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-07-02",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Amazon.com, Inc. - Common Stock",
+          "ticker": "AMZN",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-07-02",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Amazon.com, Inc. - Common Stock",
+          "ticker": "AMZN",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-03-31",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "American Electric Power Company, Inc.",
+          "ticker": "AEP",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "AMETEK, Inc.",
+          "ticker": "AME",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-06-01",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Amgen Inc. - Common Stock",
+          "ticker": "AMGN",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-14",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Analog Devices, Inc. - Common Stock",
+          "ticker": "ADI",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Apple Inc. - Common Stock",
+          "ticker": "AAPL",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-14",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "ASML Holding N.V. - New York Registry Shares",
+          "ticker": "ASML",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-03-31",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "AstraZeneca PLC - American Depositary Shares",
+          "ticker": "AZN",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-03-31",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "AstraZeneca PLC - American Depositary Shares",
+          "ticker": "AZN",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-09-16",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "AT&T Inc.",
+          "ticker": "T",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Bank of America Corporation Common Stock",
+          "ticker": "BAC",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Bank of America Corporation Common Stock",
+          "ticker": "BAC",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-08-27",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Bank of America Corporation Common Stock",
+          "ticker": "BAC",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-08-26",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Bank of America Corporation Common Stock",
+          "ticker": "BAC",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-08-26",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "BlackRock, Inc. Common Stock",
+          "ticker": "BLK",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Boeing Company",
+          "ticker": "BA",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-06-01",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Boston Scientific Corporation Common Stock",
+          "ticker": "BSX",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-21",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Broadcom Inc. - Common Stock",
+          "ticker": "AVGO",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-07-02",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Broadcom Inc. - Common Stock",
+          "ticker": "AVGO",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Broadcom Inc. - Common Stock",
+          "ticker": "AVGO",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-09-16",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Charles Schwab Corporation",
+          "ticker": "SCHW",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Chevron Corporation Common Stock",
+          "ticker": "CVX",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Cisco Systems, Inc. - Common Stock",
+          "ticker": "CSCO",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Cisco Systems, Inc. - Common Stock",
+          "ticker": "CSCO",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-14",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Citigroup, Inc. Common Stock",
+          "ticker": "C",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Citigroup, Inc. Common Stock",
+          "ticker": "C",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-21",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Clorox Company",
+          "ticker": "CLX",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-05-06",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Clorox Company",
+          "ticker": "CLX",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-05-06",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "CME Group Inc. - Class A Common Stock",
+          "ticker": "CME",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Coca-Cola Company",
+          "ticker": "KO",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-14",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Coca-Cola Company",
+          "ticker": "KO",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-03-31",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Costco Wholesale Corporation - Common Stock",
+          "ticker": "COST",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-01-14",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "CrowdStrike Holdings, Inc. - Class A Common Stock",
+          "ticker": "CRWD",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-14",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Crown Castle Inc. Common Stock",
+          "ticker": "CCI",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "CVS Health Corporation Common Stock",
+          "ticker": "CVS",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "CVS Health Corporation Common Stock",
+          "ticker": "CVS",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-14",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "CVS Health Corporation Common Stock",
+          "ticker": "CVS",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-02-13",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "CVS Health Corporation Common Stock",
+          "ticker": "CVS",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-02-13",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Diamondback Energy, Inc. - Common Stock",
+          "ticker": "FANG",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-07-02",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Dollar General Corporation Common Stock",
+          "ticker": "DG",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-06-01",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Dollar General Corporation Common Stock",
+          "ticker": "DG",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-06-01",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Dollar General Corporation Common Stock",
+          "ticker": "DG",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Eli Lilly and Company Common Stock",
+          "ticker": "LLY",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-14",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "EMCOR Group, Inc. Common Stock",
+          "ticker": "EME",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-06-01",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "ExxonMobil Holdings Corporation Common Stock",
+          "ticker": "XOM",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-14",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Flex Ltd. - Ordinary Shares",
+          "ticker": "FLEX",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-20",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Flex Ltd. - Ordinary Shares",
+          "ticker": "FLEX",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Flex Ltd. - Ordinary Shares",
+          "ticker": "FLEX",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-21",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Generac Holdlings Inc. Common Stock",
+          "ticker": "GNRC",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-06-01",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "General Dynamics Corporation Common Stock",
+          "ticker": "GD",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "General Mills, Inc. Common Stock",
+          "ticker": "GIS",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-08-27",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "General Mills, Inc. Common Stock",
+          "ticker": "GIS",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-05-06",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "General Mills, Inc. Common Stock",
+          "ticker": "GIS",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-05-06",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "General Mills, Inc. Common Stock",
+          "ticker": "GIS",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-08-26",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "GSK plc American Depositary Shares",
+          "ticker": "GSK",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Home Depot, Inc.",
+          "ticker": "HD",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Honeywell Aerospace Inc. - Common Stock",
+          "ticker": "HONA",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-09-08",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Honeywell International Inc.",
+          "ticker": "HON",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-02-24",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "International Business Machines Corporation Common Stock",
+          "ticker": "IBM",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Intuit Inc. - Common Stock",
+          "ticker": "INTU",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-21",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Intuitive Surgical, Inc. - Common Stock",
+          "ticker": "ISRG",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-09-16",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "JP Morgan Chase & Co. Common Stock",
+          "ticker": "JPM",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-08-27",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "JP Morgan Chase & Co. Common Stock",
+          "ticker": "JPM",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-08-26",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "JP Morgan Chase & Co. Common Stock",
+          "ticker": "JPM",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-08-26",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "KLA Corporation - Common Stock",
+          "ticker": "KLAC",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-21",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Lockheed Martin Corporation Common Stock",
+          "ticker": "LMT",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Lowe's Companies, Inc. Common Stock",
+          "ticker": "LOW",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "LyondellBasell Industries NV Ordinary Shares Class A",
+          "ticker": "LYB",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "LyondellBasell Industries NV Ordinary Shares Class A",
+          "ticker": "LYB",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-14",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Marsh Common Stock",
+          "ticker": "MRSH",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-08-27",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Marsh Common Stock",
+          "ticker": "MRSH",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-08-26",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Marvell Technology, Inc. - Common Stock",
+          "ticker": "MRVL",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-09-16",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "McDonald's Corporation Common Stock",
+          "ticker": "MCD",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-08-27",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "McDonald's Corporation Common Stock",
+          "ticker": "MCD",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-08-27",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "McDonald's Corporation Common Stock",
+          "ticker": "MCD",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-08-26",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Medtronic plc. Ordinary Shares",
+          "ticker": "MDT",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Merck & Company, Inc. Common Stock",
+          "ticker": "MRK",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Merck & Company, Inc. Common Stock",
+          "ticker": "MRK",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-14",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Micron Technology, Inc. - Common Stock",
+          "ticker": "MU",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-07-02",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Microsoft Corporation - Common Stock",
+          "ticker": "MSFT",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-07-02",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Microsoft Corporation - Common Stock",
+          "ticker": "MSFT",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-14",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Microsoft Corporation - Common Stock",
+          "ticker": "MSFT",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Morgan Stanley Common Stock",
+          "ticker": "MS",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-01-21",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Morgan Stanley Common Stock",
+          "ticker": "MS",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-01-21",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Morgan Stanley Common Stock",
+          "ticker": "MS",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-01-22",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Nike, Inc. Common Stock",
+          "ticker": "NKE",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-03-31",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Nike, Inc. Common Stock",
+          "ticker": "NKE",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "NVIDIA Corporation - Common Stock",
+          "ticker": "NVDA",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "NVIDIA Corporation - Common Stock",
+          "ticker": "NVDA",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-14",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Oracle Corporation Common Stock",
+          "ticker": "ORCL",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-09-16",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Oracle Corporation Common Stock",
+          "ticker": "ORCL",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Palantir Technologies Inc. - Class A Common Stock",
+          "ticker": "PLTR",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-03-31",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Palo Alto Networks, Inc.",
+          "ticker": "PANW",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-14",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Pepsico, Inc.",
+          "ticker": "PEP",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Pfizer, Inc. Common Stock",
+          "ticker": "PFE",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "PNC Financial Services Group, Inc.",
+          "ticker": "PNC",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Procter & Gamble Company",
+          "ticker": "PG",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Procter & Gamble Company",
+          "ticker": "PG",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-02-17",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Procter & Gamble Company",
+          "ticker": "PG",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-02-17",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Procter & Gamble Company",
+          "ticker": "PG",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-02-13",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Prologis, Inc. Common Stock",
+          "ticker": "PLD",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-08-26",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Prologis, Inc. Common Stock",
+          "ticker": "PLD",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-08-26",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Prologis, Inc. Common Stock",
+          "ticker": "PLD",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-05-18",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Prologis, Inc. Common Stock",
+          "ticker": "PLD",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-05-18",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Prologis, Inc. Common Stock",
+          "ticker": "PLD",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-08-27",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Prologis, Inc. Common Stock",
+          "ticker": "PLD",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-08-27",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Public Storage Common Stock",
+          "ticker": "PSA",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Restaurant Brands International Inc. Common Shares",
+          "ticker": "QSR",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Ryder System, Inc. Common Stock",
+          "ticker": "R",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-06-01",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Salesforce, Inc. Common Stock",
+          "ticker": "CRM",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-03-31",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "ServiceNow, Inc. Common Stock",
+          "ticker": "NOW",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-21",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "ServiceNow, Inc. Common Stock",
+          "ticker": "NOW",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-20",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "ServiceNow, Inc. Common Stock",
+          "ticker": "NOW",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-01-14",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Shopify Inc. - Class A Subordinate Voting Shares",
+          "ticker": "SHOP",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-09-16",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Snowflake Inc. Common Stock",
+          "ticker": "SNOW",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-14",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Snowflake Inc. Common Stock",
+          "ticker": "SNOW",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-26",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Southern Company",
+          "ticker": "SO",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Starbucks Corporation - Common Stock",
+          "ticker": "SBUX",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-03-31",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Taiwan Semiconductor Manufacturing Company Ltd.",
+          "ticker": "TSM",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-03-31",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Taiwan Semiconductor Manufacturing Company Ltd.",
+          "ticker": "TSM",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-07-02",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Target Corporation Common Stock",
+          "ticker": "TGT",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Target Corporation Common Stock",
+          "ticker": "TGT",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-14",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Tesla, Inc. - Common Stock",
+          "ticker": "TSLA",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-03-31",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Texas Instruments Incorporated - Common Stock",
+          "ticker": "TXN",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-14",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Texas Instruments Incorporated - Common Stock",
+          "ticker": "TXN",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-14",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "U.S. Bancorp Common Stock",
+          "ticker": "USB",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Uber Technologies, Inc. Common Stock",
+          "ticker": "UBER",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-07-02",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Union Pacific Corporation Common Stock",
+          "ticker": "UNP",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-14",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Union Pacific Corporation Common Stock",
+          "ticker": "UNP",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "United Parcel Service, Inc. Common Stock",
+          "ticker": "UPS",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "United Parcel Service, Inc. Common Stock",
+          "ticker": "UPS",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-02-13",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "United Parcel Service, Inc. Common Stock",
+          "ticker": "UPS",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-02-13",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Verizon Communications Inc. Common Stock",
+          "ticker": "VZ",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-08-26",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Verizon Communications Inc. Common Stock",
+          "ticker": "VZ",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-08-26",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Verizon Communications Inc. Common Stock",
+          "ticker": "VZ",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Verizon Communications Inc. Common Stock",
+          "ticker": "VZ",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-08-27",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Visa Inc.",
+          "ticker": "V",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-04-29",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Walmart Inc. - Common Stock",
+          "ticker": "WMT",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-08-26",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Walmart Inc. - Common Stock",
+          "ticker": "WMT",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-01-21",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Walmart Inc. - Common Stock",
+          "ticker": "WMT",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-01-21",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Walmart Inc. - Common Stock",
+          "ticker": "WMT",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-01-21",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Walmart Inc. - Common Stock",
+          "ticker": "WMT",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-08-27",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Walt Disney Company",
+          "ticker": "DIS",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-03-31",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Waste Management, Inc. Common Stock",
+          "ticker": "WM",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-02-17",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Waste Management, Inc. Common Stock",
+          "ticker": "WM",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-01-21",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Waste Management, Inc. Common Stock",
+          "ticker": "WM",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-01-21",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Waste Management, Inc. Common Stock",
+          "ticker": "WM",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-02-13",
+          "action": "P",
+          "status": "New"
+        },
+        {
+          "asset": "Williams Companies, Inc.",
+          "ticker": "WMB",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-04-29",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Workday, Inc. - Class A Common Stock",
+          "ticker": "WDAY",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-02-24",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Xylem Inc. Common Stock New",
+          "ticker": "XYL",
+          "assetType": "ST",
+          "owner": "SP",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-06-01",
+          "action": "S",
+          "status": "New"
+        }
+      ]
+    },
+    {
       "id": "20036891",
       "kind": "ptr",
       "year": 2026,

@@ -3,10 +3,10 @@
   "symbols": {
     "AAPL": {
       "cik": "0000320193",
-      "closeDate": "2026-11-23",
-      "close": 349.08,
-      "rsi14": 52.75,
-      "perTtm": 38.87,
+      "closeDate": "2026-11-24",
+      "close": 354.07,
+      "rsi14": 56.86,
+      "perTtm": 39.43,
       "perReason": null,
       "earnings": {
         "eps": 8.98,
@@ -19,10 +19,10 @@
     },
     "AMZN": {
       "cik": "0001018724",
-      "closeDate": "2026-11-23",
-      "close": 255.39,
-      "rsi14": 48.44,
-      "perTtm": 20.65,
+      "closeDate": "2026-11-24",
+      "close": 252.29,
+      "rsi14": 46.51,
+      "perTtm": 20.4,
       "perReason": null,
       "earnings": {
         "eps": 12.37,
@@ -35,10 +35,10 @@
     },
     "AVGO": {
       "cik": "0001730168",
-      "closeDate": "2026-11-23",
-      "close": 313.55,
-      "rsi14": 43.77,
-      "perTtm": 39.99,
+      "closeDate": "2026-11-24",
+      "close": 301.08,
+      "rsi14": 40.81,
+      "perTtm": 38.4,
       "perReason": null,
       "earnings": {
         "eps": 7.84,
@@ -51,10 +51,10 @@
     },
     "GOOGL": {
       "cik": "0001652044",
-      "closeDate": "2026-11-23",
-      "close": 282.1,
-      "rsi14": 41.04,
-      "perTtm": 14.73,
+      "closeDate": "2026-11-24",
+      "close": 279.05,
+      "rsi14": 39.62,
+      "perTtm": 14.57,
       "perReason": null,
       "earnings": {
         "eps": 19.15,
@@ -67,10 +67,10 @@
     },
     "JPM": {
       "cik": "0000019617",
-      "closeDate": "2026-11-23",
-      "close": 316.66,
-      "rsi14": 36.87,
-      "perTtm": 13.28,
+      "closeDate": "2026-11-24",
+      "close": 317.1,
+      "rsi14": 37.3,
+      "perTtm": 13.3,
       "perReason": null,
       "earnings": {
         "eps": 23.84,
@@ -83,10 +83,10 @@
     },
     "META": {
       "cik": "0001326801",
-      "closeDate": "2026-11-23",
-      "close": 597.6,
-      "rsi14": 41.75,
-      "perTtm": 20.39,
+      "closeDate": "2026-11-24",
+      "close": 589.82,
+      "rsi14": 40.24,
+      "perTtm": 20.12,
       "perReason": null,
       "earnings": {
         "eps": 29.31,
@@ -99,10 +99,10 @@
     },
     "MSFT": {
       "cik": "0000789019",
-      "closeDate": "2026-11-23",
-      "close": 492.5,
-      "rsi14": 39.34,
-      "perTtm": 25.72,
+      "closeDate": "2026-11-24",
+      "close": 496.13,
+      "rsi14": 41.26,
+      "perTtm": 25.91,
       "perReason": null,
       "earnings": {
         "eps": 19.15,
@@ -115,10 +115,10 @@
     },
     "NVDA": {
       "cik": "0001045810",
-      "closeDate": "2026-11-23",
-      "close": 165.05,
-      "rsi14": 42.87,
-      "perTtm": 20.87,
+      "closeDate": "2026-11-24",
+      "close": 155.38,
+      "rsi14": 39.47,
+      "perTtm": 19.64,
       "perReason": null,
       "earnings": {
         "eps": 7.91,
@@ -131,10 +131,10 @@
     },
     "TSLA": {
       "cik": "0001318605",
-      "closeDate": "2026-11-23",
-      "close": 385.46,
-      "rsi14": 52.09,
-      "perTtm": 423.58,
+      "closeDate": "2026-11-24",
+      "close": 384.68,
+      "rsi14": 51.84,
+      "perTtm": 422.73,
       "perReason": null,
       "earnings": {
         "eps": 0.91,
@@ -147,10 +147,10 @@
     },
     "WMT": {
       "cik": "0000104169",
-      "closeDate": "2026-11-23",
-      "close": 129.58,
-      "rsi14": 67.13,
-      "perTtm": 46.95,
+      "closeDate": "2026-11-24",
+      "close": 132.31,
+      "rsi14": 71.59,
+      "perTtm": 47.94,
       "perReason": null,
       "earnings": {
         "eps": 2.76,

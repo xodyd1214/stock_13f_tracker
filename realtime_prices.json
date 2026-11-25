@@ -1,101 +1,101 @@
 {
   "AAPL": {
-    "price": 349.08,
-    "changePct": 1.9,
+    "price": 354.07,
+    "changePct": 1.43,
     "currency": "USD",
-    "marketTime": 1795467601,
+    "marketTime": 1795554001,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:00.244269+00:00",
+    "fetchedAt": "2026-11-25T03:54:24.478957+00:00",
     "source": "Yahoo Finance"
   },
   "AMZN": {
-    "price": 255.39,
-    "changePct": 3.47,
+    "price": 252.29,
+    "changePct": -1.21,
     "currency": "USD",
-    "marketTime": 1795467601,
+    "marketTime": 1795554001,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:00.619636+00:00",
+    "fetchedAt": "2026-11-25T03:54:24.926892+00:00",
     "source": "Yahoo Finance"
   },
   "AXP": {
-    "price": 306.9,
-    "changePct": 1.72,
+    "price": 308.63,
+    "changePct": 0.56,
     "currency": "USD",
-    "marketTime": 1795467717,
+    "marketTime": 1795554278,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:00.853918+00:00",
+    "fetchedAt": "2026-11-25T03:54:25.220567+00:00",
     "source": "Yahoo Finance"
   },
   "BAC": {
-    "price": 48.14,
-    "changePct": 2.34,
+    "price": 48.56,
+    "changePct": 0.87,
     "currency": "USD",
-    "marketTime": 1795467602,
+    "marketTime": 1795554003,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:01.094507+00:00",
+    "fetchedAt": "2026-11-25T03:54:25.467429+00:00",
     "source": "Yahoo Finance"
   },
   "CVX": {
-    "price": 206.17,
-    "changePct": -1.06,
+    "price": 208.73,
+    "changePct": 1.24,
     "currency": "USD",
-    "marketTime": 1795467814,
+    "marketTime": 1795554162,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:03.134912+00:00",
+    "fetchedAt": "2026-11-25T03:54:27.558774+00:00",
     "source": "Yahoo Finance"
   },
   "GOOG": {
-    "price": 279.53,
-    "changePct": 5.88,
+    "price": 276.58,
+    "changePct": -1.06,
     "currency": "USD",
-    "marketTime": 1795467601,
+    "marketTime": 1795554001,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:04.450581+00:00",
+    "fetchedAt": "2026-11-25T03:54:28.987526+00:00",
     "source": "Yahoo Finance"
   },
   "GOOGL": {
-    "price": 282.1,
-    "changePct": 6.34,
+    "price": 279.05,
+    "changePct": -1.08,
     "currency": "USD",
-    "marketTime": 1795467601,
+    "marketTime": 1795554001,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:04.663591+00:00",
+    "fetchedAt": "2026-11-25T03:54:29.213038+00:00",
     "source": "Yahoo Finance"
   },
   "KO": {
-    "price": 95.88,
-    "changePct": -1.14,
+    "price": 97.62,
+    "changePct": 1.81,
     "currency": "USD",
-    "marketTime": 1795467602,
+    "marketTime": 1795554002,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:06.297490+00:00",
+    "fetchedAt": "2026-11-25T03:54:31.980637+00:00",
     "source": "Yahoo Finance"
   },
   "MSFT": {
-    "price": 492.5,
-    "changePct": 1.65,
+    "price": 496.13,
+    "changePct": 0.74,
     "currency": "USD",
-    "marketTime": 1795467601,
+    "marketTime": 1795554001,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:06.965256+00:00",
+    "fetchedAt": "2026-11-25T03:54:33.669296+00:00",
     "source": "Yahoo Finance"
   },
   "NVDA": {
-    "price": 165.05,
-    "changePct": 31.48,
+    "price": 155.38,
+    "changePct": -5.86,
     "currency": "USD",
-    "marketTime": 1795467601,
+    "marketTime": 1795554001,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:07.643374+00:00",
+    "fetchedAt": "2026-11-25T03:54:34.385508+00:00",
     "source": "Yahoo Finance"
   },
   "OXY": {
-    "price": 52.7,
-    "changePct": -2.23,
+    "price": 53.38,
+    "changePct": 1.29,
     "currency": "USD",
-    "marketTime": 1795467602,
+    "marketTime": 1795554002,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:07.893453+00:00",
+    "fetchedAt": "2026-11-25T03:54:34.639776+00:00",
     "source": "Yahoo Finance"
   },
   "CRM": {
@@ -141,12 +141,12 @@
     "marketTime": 1787947202
   },
   "V": {
-    "price": 409.4,
-    "changePct": 1.87,
+    "price": 416.78,
+    "changePct": 1.8,
     "currency": "USD",
-    "marketTime": 1795467603,
+    "marketTime": 1795554002,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:10.149098+00:00",
+    "fetchedAt": "2026-11-25T03:54:40.047633+00:00",
     "source": "Yahoo Finance"
   },
   "JNJ": {
@@ -159,12 +159,12 @@
     "source": "Yahoo Finance"
   },
   "SPY": {
-    "price": 722.29,
-    "changePct": 4.71,
+    "price": 718.78,
+    "changePct": -0.49,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:08.779892+00:00",
+    "fetchedAt": "2026-11-25T03:54:35.497918+00:00",
     "source": "Yahoo Finance"
   },
   "AVGO": {
@@ -186,21 +186,21 @@
     "source": "Yahoo Finance"
   },
   "IVV": {
-    "price": 725.49,
-    "changePct": 4.58,
+    "price": 721.98,
+    "changePct": -0.48,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:05.337549+00:00",
+    "fetchedAt": "2026-11-25T03:54:29.934679+00:00",
     "source": "Yahoo Finance"
   },
   "TSLA": {
-    "price": 385.46,
-    "changePct": 11.46,
+    "price": 384.68,
+    "changePct": -0.2,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554001,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:09.220749+00:00",
+    "fetchedAt": "2026-11-25T03:54:38.058845+00:00",
     "source": "Yahoo Finance"
   },
   "WMT": {
@@ -228,21 +228,21 @@
     "source": "Yahoo Finance"
   },
   "VOO": {
-    "price": 663.91,
-    "changePct": 4.46,
+    "price": 660.71,
+    "changePct": -0.48,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:10.373298+00:00",
+    "fetchedAt": "2026-11-25T03:54:40.280927+00:00",
     "source": "Yahoo Finance"
   },
   "MA": {
-    "price": 635.48,
-    "changePct": 1.58,
+    "price": 647.44,
+    "changePct": 1.88,
     "currency": "USD",
-    "marketTime": 1795467602,
+    "marketTime": 1795554002,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:06.519749+00:00",
+    "fetchedAt": "2026-11-25T03:54:33.268743+00:00",
     "source": "Yahoo Finance"
   },
   "DIS": {
@@ -255,12 +255,12 @@
     "source": "Yahoo Finance"
   },
   "QQQ": {
-    "price": 651.03,
-    "changePct": 7.0,
+    "price": 638.1,
+    "changePct": -1.99,
     "currency": "USD",
-    "marketTime": 1795467601,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:08.547807+00:00",
+    "fetchedAt": "2026-11-25T03:54:35.311828+00:00",
     "source": "Yahoo Finance"
   },
   "TXN": {
@@ -282,12 +282,12 @@
     "source": "Yahoo Finance"
   },
   "AMD": {
-    "price": 453.46,
-    "changePct": 6.85,
+    "price": 413.27,
+    "changePct": -8.86,
     "currency": "USD",
-    "marketTime": 1795467601,
+    "marketTime": 1795554001,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:00.452336+00:00",
+    "fetchedAt": "2026-11-25T03:54:24.703007+00:00",
     "source": "Yahoo Finance"
   },
   "PEP": {
@@ -309,12 +309,12 @@
     "source": "Yahoo Finance"
   },
   "TSM": {
-    "price": 363.6,
-    "changePct": 14.08,
+    "price": 349.2,
+    "changePct": -3.96,
     "currency": "USD",
-    "marketTime": 1795467602,
+    "marketTime": 1795554002,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:09.442573+00:00",
+    "fetchedAt": "2026-11-25T03:54:38.296296+00:00",
     "source": "Yahoo Finance"
   },
   "MU": {
@@ -363,12 +363,12 @@
     "source": "Yahoo Finance"
   },
   "META": {
-    "price": 597.6,
-    "changePct": 6.55,
+    "price": 589.82,
+    "changePct": -1.3,
     "currency": "USD",
-    "marketTime": 1795467601,
+    "marketTime": 1795554001,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:06.737724+00:00",
+    "fetchedAt": "2026-11-25T03:54:33.489793+00:00",
     "source": "Yahoo Finance"
   },
   "ORCL": {
@@ -381,12 +381,12 @@
     "source": "Yahoo Finance"
   },
   "JPM": {
-    "price": 316.66,
-    "changePct": 1.97,
+    "price": 317.1,
+    "changePct": 0.14,
     "currency": "USD",
-    "marketTime": 1795467602,
+    "marketTime": 1795554002,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:06.051328+00:00",
+    "fetchedAt": "2026-11-25T03:54:31.715935+00:00",
     "source": "Yahoo Finance"
   },
   "COST": {
@@ -573,12 +573,12 @@
     "source": "Yahoo Finance"
   },
   "GLD": {
-    "price": 333.02,
-    "changePct": 3.14,
+    "price": 325.45,
+    "changePct": -2.27,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:04.243928+00:00",
+    "fetchedAt": "2026-11-25T03:54:28.766088+00:00",
     "source": "Yahoo Finance"
   },
   "CHTR": {
@@ -642,12 +642,12 @@
     "source": "Yahoo Finance"
   },
   "PLTR": {
-    "price": 159.36,
-    "changePct": 11.06,
+    "price": 161.18,
+    "changePct": 1.14,
     "currency": "USD",
-    "marketTime": 1795467601,
+    "marketTime": 1795554001,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:08.106093+00:00",
+    "fetchedAt": "2026-11-25T03:54:34.858859+00:00",
     "source": "Yahoo Finance"
   },
   "AMAT": {
@@ -786,12 +786,12 @@
     "marketTime": 1787947200
   },
   "EEM": {
-    "price": 57.83,
-    "changePct": 7.41,
+    "price": 56.69,
+    "changePct": -1.97,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:03.590531+00:00",
+    "fetchedAt": "2026-11-25T03:54:28.084217+00:00",
     "source": "Yahoo Finance"
   },
   "IJH": {
@@ -813,21 +813,21 @@
     "source": "Yahoo Finance"
   },
   "XLE": {
-    "price": 59.87,
-    "changePct": -1.06,
+    "price": 60.45,
+    "changePct": 0.97,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:11.045983+00:00",
+    "fetchedAt": "2026-11-25T03:54:41.024969+00:00",
     "source": "Yahoo Finance"
   },
   "XLY": {
-    "price": 116.93,
-    "changePct": 3.97,
+    "price": 117.72,
+    "changePct": 0.68,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:12.898942+00:00",
+    "fetchedAt": "2026-11-25T03:54:44.926919+00:00",
     "source": "Yahoo Finance"
   },
   "SLV": {
@@ -867,12 +867,12 @@
     "source": "Yahoo Finance"
   },
   "IWM": {
-    "price": 265.74,
-    "changePct": 3.56,
+    "price": 267.14,
+    "changePct": 0.53,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:05.558606+00:00",
+    "fetchedAt": "2026-11-25T03:54:31.219448+00:00",
     "source": "Yahoo Finance"
   },
   "AGG": {
@@ -903,30 +903,30 @@
     "source": "Yahoo Finance"
   },
   "XLV": {
-    "price": 179.42,
-    "changePct": 1.23,
+    "price": 184.72,
+    "changePct": 2.95,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:12.671158+00:00",
+    "fetchedAt": "2026-11-25T03:54:43.713246+00:00",
     "source": "Yahoo Finance"
   },
   "XLK": {
-    "price": 162.38,
-    "changePct": 8.97,
+    "price": 157.09,
+    "changePct": -3.26,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:11.748728+00:00",
+    "fetchedAt": "2026-11-25T03:54:42.789875+00:00",
     "source": "Yahoo Finance"
   },
   "XLF": {
-    "price": 55.65,
-    "changePct": 1.98,
+    "price": 56.11,
+    "changePct": 0.83,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:11.274573+00:00",
+    "fetchedAt": "2026-11-25T03:54:42.294925+00:00",
     "source": "Yahoo Finance"
   },
   "TCEHY": {
@@ -939,12 +939,12 @@
     "source": "Yahoo Finance"
   },
   "XYZ": {
-    "price": 73.24,
-    "changePct": 5.14,
+    "price": 74.15,
+    "changePct": 1.24,
     "currency": "USD",
-    "marketTime": 1795467625,
+    "marketTime": 1795554048,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:13.108577+00:00",
+    "fetchedAt": "2026-11-25T03:54:45.149205+00:00",
     "source": "Yahoo Finance"
   },
   "ORLA": {
@@ -1020,12 +1020,12 @@
     "source": "Yahoo Finance"
   },
   "BRK.B": {
-    "price": 572.36,
-    "changePct": 0.41,
+    "price": 577.21,
+    "changePct": 0.85,
     "currency": "USD",
-    "marketTime": 1795467602,
+    "marketTime": 1795554058,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:02.176872+00:00",
+    "fetchedAt": "2026-11-25T03:54:26.601150+00:00",
     "source": "Yahoo Finance"
   },
   "BN": {
@@ -1305,12 +1305,12 @@
     "source": "Yahoo Finance"
   },
   "BLK": {
-    "price": 1144.52,
-    "changePct": 3.88,
+    "price": 1146.03,
+    "changePct": 0.13,
     "currency": "USD",
-    "marketTime": 1795467603,
+    "marketTime": 1795554002,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:01.750159+00:00",
+    "fetchedAt": "2026-11-25T03:54:26.158523+00:00",
     "source": "Yahoo Finance"
   },
   "LIN": {
@@ -1377,30 +1377,30 @@
     "source": "Yahoo Finance"
   },
   "XLI": {
-    "price": 162.47,
-    "changePct": 3.9,
+    "price": 161.61,
+    "changePct": -0.53,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:11.518847+00:00",
+    "fetchedAt": "2026-11-25T03:54:42.545713+00:00",
     "source": "Yahoo Finance"
   },
   "XLU": {
-    "price": 43.32,
-    "changePct": 1.48,
+    "price": 43.4,
+    "changePct": 0.18,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:12.436807+00:00",
+    "fetchedAt": "2026-11-25T03:54:43.473739+00:00",
     "source": "Yahoo Finance"
   },
   "XLC": {
-    "price": 103.6,
-    "changePct": 3.57,
+    "price": 104.45,
+    "changePct": 0.82,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:10.813776+00:00",
+    "fetchedAt": "2026-11-25T03:54:40.787719+00:00",
     "source": "Yahoo Finance"
   },
   "IAU": {
@@ -1413,21 +1413,21 @@
     "source": "Yahoo Finance"
   },
   "XLB": {
-    "price": 49.9,
-    "changePct": 3.23,
+    "price": 50.17,
+    "changePct": 0.54,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:10.600051+00:00",
+    "fetchedAt": "2026-11-25T03:54:40.558843+00:00",
     "source": "Yahoo Finance"
   },
   "XLRE": {
-    "price": 42.9,
-    "changePct": 1.04,
+    "price": 43.46,
+    "changePct": 1.31,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:12.200898+00:00",
+    "fetchedAt": "2026-11-25T03:54:43.197030+00:00",
     "source": "Yahoo Finance"
   },
   "TLT": {
@@ -1440,174 +1440,174 @@
     "source": "Yahoo Finance"
   },
   "BAI": {
-    "price": 33.91,
-    "changePct": 10.96,
+    "price": 31.93,
+    "changePct": -5.84,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:01.316451+00:00",
+    "fetchedAt": "2026-11-25T03:54:25.689999+00:00",
     "source": "Yahoo Finance"
   },
   "BGIN": {
-    "price": 5.32,
-    "changePct": 10.6,
+    "price": 5.19,
+    "changePct": -2.44,
     "currency": "USD",
-    "marketTime": 1795467601,
+    "marketTime": 1795554001,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:01.528937+00:00",
+    "fetchedAt": "2026-11-25T03:54:25.913965+00:00",
     "source": "Yahoo Finance"
   },
   "BRK.A": {
-    "price": 859191.0,
-    "changePct": 0.49,
+    "price": 865490.0,
+    "changePct": 0.73,
     "currency": "USD",
-    "marketTime": 1795467614,
+    "marketTime": 1795554012,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:01.963648+00:00",
+    "fetchedAt": "2026-11-25T03:54:26.379146+00:00",
     "source": "Yahoo Finance"
   },
   "CAC": {
-    "price": 57.56,
-    "changePct": 1.18,
+    "price": 57.62,
+    "changePct": 0.1,
     "currency": "USD",
-    "marketTime": 1795467601,
+    "marketTime": 1795554001,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:02.442920+00:00",
+    "fetchedAt": "2026-11-25T03:54:26.840723+00:00",
     "source": "Yahoo Finance"
   },
   "CMG": {
-    "price": 36.25,
-    "changePct": 1.97,
+    "price": 37.05,
+    "changePct": 2.21,
     "currency": "USD",
-    "marketTime": 1795467672,
+    "marketTime": 1795554144,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:02.654360+00:00",
+    "fetchedAt": "2026-11-25T03:54:27.060607+00:00",
     "source": "Yahoo Finance"
   },
   "CPT": {
-    "price": 95.85,
-    "changePct": 0.05,
+    "price": 97.84,
+    "changePct": 2.08,
     "currency": "USD",
-    "marketTime": 1795467602,
+    "marketTime": 1795554002,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:02.882654+00:00",
+    "fetchedAt": "2026-11-25T03:54:27.300682+00:00",
     "source": "Yahoo Finance"
   },
   "DOX": {
-    "price": 41.5,
-    "changePct": 0.78,
+    "price": 41.88,
+    "changePct": 0.92,
     "currency": "USD",
-    "marketTime": 1795467601,
+    "marketTime": 1795554001,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:03.361491+00:00",
+    "fetchedAt": "2026-11-25T03:54:27.816072+00:00",
     "source": "Yahoo Finance"
   },
   "EWY": {
-    "price": 135.72,
-    "changePct": 10.11,
+    "price": 130.7,
+    "changePct": -3.7,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:03.815055+00:00",
+    "fetchedAt": "2026-11-25T03:54:28.319648+00:00",
     "source": "Yahoo Finance"
   },
   "GBIL": {
-    "price": 100.08,
-    "changePct": 0.0,
+    "price": 100.1,
+    "changePct": 0.02,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:04.036535+00:00",
+    "fetchedAt": "2026-11-25T03:54:28.547191+00:00",
     "source": "Yahoo Finance"
   },
   "HLT": {
-    "price": 364.94,
-    "changePct": 2.44,
+    "price": 364.32,
+    "changePct": -0.17,
     "currency": "USD",
-    "marketTime": 1795467601,
+    "marketTime": 1795554001,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:04.877377+00:00",
+    "fetchedAt": "2026-11-25T03:54:29.449840+00:00",
     "source": "Yahoo Finance"
   },
   "HRB": {
-    "price": 45.98,
-    "changePct": -0.07,
+    "price": 45.75,
+    "changePct": -0.5,
     "currency": "USD",
-    "marketTime": 1795467602,
+    "marketTime": 1795554002,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:05.114850+00:00",
+    "fetchedAt": "2026-11-25T03:54:29.691965+00:00",
     "source": "Yahoo Finance"
   },
   "JOUT": {
-    "price": 45.98,
-    "changePct": 0.35,
+    "price": 47.63,
+    "changePct": 3.59,
     "currency": "USD",
-    "marketTime": 1795467601,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:05.790585+00:00",
+    "fetchedAt": "2026-11-25T03:54:31.454682+00:00",
     "source": "Yahoo Finance"
   },
   "NBH": {
-    "price": 9.15,
-    "changePct": 1.55,
+    "price": 9.21,
+    "changePct": 0.66,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:07.197151+00:00",
+    "fetchedAt": "2026-11-25T03:54:33.916090+00:00",
     "source": "Yahoo Finance"
   },
   "NKE": {
-    "price": 33.76,
-    "changePct": 2.55,
+    "price": 35.75,
+    "changePct": 5.89,
     "currency": "USD",
-    "marketTime": 1795467602,
+    "marketTime": 1795554002,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:07.426685+00:00",
+    "fetchedAt": "2026-11-25T03:54:34.158314+00:00",
     "source": "Yahoo Finance"
   },
   "PSBD": {
     "price": 9.48,
-    "changePct": -0.21,
+    "changePct": 0.0,
     "currency": "USD",
-    "marketTime": 1795467602,
+    "marketTime": 1795554002,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:08.324573+00:00",
+    "fetchedAt": "2026-11-25T03:54:35.080183+00:00",
     "source": "Yahoo Finance"
   },
   "TCPC": {
-    "price": 4.15,
-    "changePct": 2.72,
+    "price": 4.16,
+    "changePct": 0.24,
     "currency": "USD",
-    "marketTime": 1795467601,
+    "marketTime": 1795554001,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:08.998699+00:00",
+    "fetchedAt": "2026-11-25T03:54:36.786134+00:00",
     "source": "Yahoo Finance"
   },
   "TSQ": {
-    "price": 1.17,
-    "changePct": 2.63,
+    "price": 1.2,
+    "changePct": 2.56,
     "currency": "USD",
-    "marketTime": 1795467602,
+    "marketTime": 1795554003,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:09.663717+00:00",
+    "fetchedAt": "2026-11-25T03:54:38.525793+00:00",
     "source": "Yahoo Finance"
   },
   "TV": {
-    "price": 2.04,
-    "changePct": -3.32,
+    "price": 2.07,
+    "changePct": 1.47,
     "currency": "USD",
-    "marketTime": 1795467602,
+    "marketTime": 1795554002,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:09.914120+00:00",
+    "fetchedAt": "2026-11-25T03:54:38.767010+00:00",
     "source": "Yahoo Finance"
   },
   "XLP": {
-    "price": 90.38,
-    "changePct": -0.09,
+    "price": 91.88,
+    "changePct": 1.66,
     "currency": "USD",
-    "marketTime": 1795467600,
+    "marketTime": 1795554000,
     "stale": false,
-    "fetchedAt": "2026-11-24T05:06:11.978337+00:00",
+    "fetchedAt": "2026-11-25T03:54:42.967807+00:00",
     "source": "Yahoo Finance"
   }
 }
