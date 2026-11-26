@@ -1,9 +1,251 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-11-24",
-  "ptrFrom": "2026-08-27",
+  "asOf": "2026-11-25",
+  "ptrFrom": "2026-08-28",
   "annualYear": 2025,
   "filings": [
+    {
+      "id": "20036908",
+      "kind": "ptr",
+      "year": 2026,
+      "filed": "2026-11-24",
+      "name": "Robert For Onder",
+      "district": "MO03",
+      "parsed": true,
+      "rows": [
+        {
+          "asset": "Ameriprise Financial, Inc. Common Stock",
+          "ticker": "AMP",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-29",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Comcast Corporation - Class A Common Stock",
+          "ticker": "CMCSA",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-29",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Duke Energy Corporation",
+          "ticker": "DUK",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-10-29",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "GE HealthCare Technologies Inc.",
+          "ticker": "GEHCV",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-29",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "HP Inc. Common Stock",
+          "ticker": "HPQ",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-29",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Medtronic plc. Ordinary Shares",
+          "ticker": "MDT",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-29",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Mondelez International, Inc. - Class A Common Stock",
+          "ticker": "MDLZ",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-10-29",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "PepsiCo, Inc. - Common Stock",
+          "ticker": "PEP",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-10-29",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Procter & Gamble Company",
+          "ticker": "PG",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-10-29",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "US Bancorp Del DEPOSITARY SH S G (USB$N)",
+          "ticker": "",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-29",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Verizon Communications Inc. Common Stock",
+          "ticker": "VZ",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-29",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "Walt Disney Company",
+          "ticker": "DIS",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-10-29",
+          "action": "S",
+          "status": "New"
+        }
+      ]
+    },
+    {
+      "id": "20036875",
+      "kind": "ptr",
+      "year": 2026,
+      "filed": "2026-11-24",
+      "name": "Kevin Hern",
+      "district": "OK01",
+      "parsed": true,
+      "rows": [
+        {
+          "asset": "ACCELLERON INDS U/ADR",
+          "ticker": "ACLLY",
+          "assetType": "ST",
+          "owner": "JT",
+          "value": "$1,001 - $15,000",
+          "traded": "2026-11-10",
+          "action": "S",
+          "status": "New"
+        },
+        {
+          "asset": "ASML Holding N.V. - New York Registry Shares",
+          "ticker": "ASML",
+          "assetType": "ST",
+          "owner": "JT",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-11-09",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Cummins Inc. Common Stock",
+          "ticker": "CMI",
+          "assetType": "ST",
+          "owner": "JT",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-11-16",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Eaton Corporation, PLC Ordinary Shares",
+          "ticker": "ETN",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-11-10",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Intel Corporation - Common Stock",
+          "ticker": "INTC",
+          "assetType": "ST",
+          "owner": "JT",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-11-09",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Phillips 66 Common Stock",
+          "ticker": "PSX",
+          "assetType": "ST",
+          "owner": "JT",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-11-10",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Rockwell Automation, Inc. Common Stock",
+          "ticker": "ROK",
+          "assetType": "ST",
+          "owner": "JT",
+          "value": "$50,001 - $100,000",
+          "traded": "2026-11-17",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Rockwell Automation, Inc. Common Stock",
+          "ticker": "ROK",
+          "assetType": "ST",
+          "owner": "JT",
+          "value": "$50,001 - $100,000",
+          "traded": "2026-11-17",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Rockwell Automation, Inc. Common Stock",
+          "ticker": "ROK",
+          "assetType": "ST",
+          "owner": "JT",
+          "value": "$100,001 - $250,000",
+          "traded": "2026-11-16",
+          "action": "S (partial)",
+          "status": "New"
+        },
+        {
+          "asset": "Seagate Technology Holdings PLC - Ordinary Shares",
+          "ticker": "STX",
+          "assetType": "ST",
+          "owner": "",
+          "value": "$15,001 - $50,000",
+          "traded": "2026-11-10",
+          "action": "S (partial)",
+          "status": "New"
+        }
+      ]
+    },
     {
       "id": "20036848",
       "kind": "ptr",
@@ -14494,47 +14736,6 @@
       "district": "TX34",
       "parsed": false,
       "rows": []
-    },
-    {
-      "id": "20035243",
-      "kind": "ptr",
-      "year": 2026,
-      "filed": "2026-08-27",
-      "name": "Jared Moskowitz",
-      "district": "FL23",
-      "parsed": true,
-      "rows": [
-        {
-          "asset": "Applied Materials, Inc. - Common Stock",
-          "ticker": "AMAT",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-13",
-          "action": "P",
-          "status": "New"
-        },
-        {
-          "asset": "STERIS plc",
-          "ticker": "STE",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-13",
-          "action": "S",
-          "status": "New"
-        },
-        {
-          "asset": "W.W. Grainger, Inc. Common Stock",
-          "ticker": "GWW",
-          "assetType": "ST",
-          "owner": "",
-          "value": "$1,001 - $15,000",
-          "traded": "2026-07-13",
-          "action": "S (partial)",
-          "status": "New"
-        }
-      ]
     },
     {
       "id": "10081687",
