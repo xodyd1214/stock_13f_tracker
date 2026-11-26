@@ -2122,6 +2122,14 @@ function setupEventListeners() {
   document.getElementById("btnWatchLogin").onclick = loginWithGoogle;
   document.getElementById("watchSearch").oninput = renderWatchSearch;
   document.getElementById("btnWatchToggle").onclick = toggleWatchCompany;
+  for (const header of document.querySelectorAll("#watchComparisonCard [data-watch-sort]")) {
+    header.querySelector("button").onclick = () => {
+      const key = header.dataset.watchSort;
+      watchComparison.direction = watchComparison.sort === key ? -watchComparison.direction : key === "ticker" ? 1 : -1;
+      watchComparison.sort = key;
+      renderWatchComparison();
+    };
+  }
   document.getElementById("watchContent").onclick = event => {
     const key = event.target.closest("[data-watch-company]")?.dataset.watchCompany;
     if (key) {
@@ -2907,6 +2915,8 @@ function resetWatchlistAccount() {
   document.getElementById("watchCompanyTitle").textContent = "";
   for (const id of ["watchMetrics", "watch13F", "watchForm4", "watchHouse"]) document.getElementById(id).replaceChildren();
   document.getElementById("watchRecent")?.replaceChildren();
+  document.getElementById("watchComparisonRows").replaceChildren();
+  watchComparison.recent = null;
   renderWatchlist();
   if (CURRENT_USER && state.currentFilingType === "WATCHLIST") loadWatchCompanies();
   if (state.currentFilingType === "FORM4") {
@@ -3137,6 +3147,8 @@ function renderWatchlist() {
   toggle.disabled = !watchlist.ready || !!watchlist.pending || (!saved && !watchlist.catalog?.has(watchlist.selected));
   renderWatchSearch();
   renderWatchRecent(keys);
+  renderWatchComparison();
+  if (keys.length) loadWatchComparisonMetrics();
   if (watchlist.selected) refreshCompanyMetrics(watchCompany(watchlist.selected), watchlist.keys.includes(watchlist.selected));
 }
 
@@ -3260,6 +3272,10 @@ let watchRecentLoad = null;
 let companyMetricsLoad = null;
 let companyMetricEligibilityLoad = null;
 let companyMetricsView = null;
+const watchComparison = {
+  sort: 'ticker', direction: 1, snapshots: null, metricsLoad: null,
+  requested: new Set(), queueStatus: '', recent: null
+};
 
 function validateCompanyMetrics(snapshot) {
   const isDate = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) &&
@@ -3296,17 +3312,25 @@ async function loadCompanyMetrics() {
   return companyMetricsLoad;
 }
 
-function renderCompanyMetrics(company, snapshots) {
-  const container = document.getElementById('watchMetrics');
+function companyMetricRow(company, snapshots) {
   const symbol = watchSymbol(company.ticker);
   const rows = snapshots.map(snapshot => snapshot.symbols[symbol]).filter(row => row?.cik === company.issuer);
   rows.sort((a, b) => b.closeDate.localeCompare(a.closeDate) ||
     (b.earnings?.filed || '').localeCompare(a.earnings?.filed || ''));
-  const row = rows[0];
+  return rows[0];
+}
+
+function companyMetricPerLabel(row, number) {
+  return `${row.earnings.method === 'annual_ytd' ? '약 ' : ''}${number.format(row.perTtm)}배`;
+}
+
+function renderCompanyMetrics(company, snapshots) {
+  const container = document.getElementById('watchMetrics');
+  const row = companyMetricRow(company, snapshots);
   if (!row) return false;
   const number = new Intl.NumberFormat('ko-KR', {maximumFractionDigits: 2});
   const { earnings, perTtm, rsi14 } = row;
-  const per = perTtm === null ? '산출 불가' : `${earnings.method === 'annual_ytd' ? '약 ' : ''}${number.format(perTtm)}배`;
+  const per = perTtm === null ? '산출 불가' : companyMetricPerLabel(row, number);
   const reason = {eps_unavailable: '최근 12개월 희석 EPS 확인 대기', non_positive_eps: '최근 12개월 희석 EPS가 0 이하',
     split: '기간 중 주식분할로 EPS 기준 확인 필요'}[row.perReason];
   const method = earnings && {annual: '10-K 희석 EPS', quarter_sum: '10-K·10-Q 분기 희석 EPS 합산',
@@ -3375,6 +3399,7 @@ async function refreshCompanyMetrics(company, saved) {
     if (!db) throw new Error('Firestore unavailable');
     const ref = db.collection('companyMetricRequests').doc(company.key);
     const request = await ref.get({source:'server'});
+    if (request.exists) recordWatchMetricRequest(company.key);
     if (!current()) return;
     if (request.exists) {
       container.textContent = pending;
@@ -3392,10 +3417,14 @@ async function refreshCompanyMetrics(company, saved) {
       button.disabled = true;
       status.textContent = '지표 요청을 저장하고 있습니다.';
       try {
-        await db.runTransaction(async transaction => {
+        const queued = await db.runTransaction(async transaction => {
           const existing = await transaction.get(ref);
-          if (!existing.exists && current()) transaction.set(ref, {requested: true});
+          if (existing.exists) return true;
+          if (!current()) return false;
+          transaction.set(ref, {requested: true});
+          return true;
         });
+        if (queued) recordWatchMetricRequest(company.key);
         if (current()) container.textContent = pending;
       } catch (error) {
         if (!current()) return;
@@ -3409,6 +3438,96 @@ async function refreshCompanyMetrics(company, saved) {
     if (current()) container.textContent = '지표 요청 상태를 확인하지 못했습니다.';
     console.warn('기업 지표 요청 조회 실패:', error);
   }
+}
+
+function recordWatchMetricRequest(key) {
+  if (watchComparison.requested.has(key)) return;
+  watchComparison.requested.add(key);
+  renderWatchComparison();
+}
+
+function loadWatchComparisonMetrics() {
+  if (!watchComparison.snapshots?.length && !watchComparison.metricsLoad) {
+    watchComparison.metricsLoad = loadCompanyMetrics().then(snapshots => {
+      watchComparison.snapshots = snapshots;
+      renderWatchComparison();
+    }).finally(() => { watchComparison.metricsLoad = null; });
+  }
+  if (db && !watchComparison.queueStatus) {
+    watchComparison.queueStatus = 'loading';
+    db.collection('companyMetricRequests').limit(200).get({source:'server'}).then(snapshot => {
+      for (const doc of snapshot.docs) {
+        if (doc.data()?.requested === true) watchComparison.requested.add(doc.id);
+      }
+      watchComparison.queueStatus = 'ready';
+    }).catch(error => {
+      watchComparison.queueStatus = 'unavailable';
+      console.warn('비교표 지표 요청 목록 조회 실패:', error);
+    }).finally(renderWatchComparison);
+  }
+}
+
+function watchComparisonRows(companies, snapshots, requests, recent) {
+  return companies.map(company => {
+    const symbol = watchSymbol(company.ticker);
+    const metric = companyMetricRow(company, snapshots);
+    const pending = !metric && (requests.has(company.key) || (company.exchange &&
+      snapshots.some(snapshot => snapshot.symbols[symbol] === null)));
+    const filings = recent && (company.exchange || recent.hasForm4)
+      ? (recent.byIssuer.get(company.issuer) ?? 0) + (recent.bySecurity.get(company.key) ?? 0) : null;
+    return {company, metric, pending, filings, ticker: company.ticker || company.name,
+      close: metric?.close, closeDate: metric?.closeDate, per: metric?.perTtm, rsi: metric?.rsi14};
+  });
+}
+
+function sortWatchComparison(rows, key, direction) {
+  return rows.sort((a, b) => {
+    const left = a[key];
+    const right = b[key];
+    if (left == null && right != null) return 1;
+    if (right == null && left != null) return -1;
+    const order = left == null ? 0 : typeof left === 'number' ? left - right : left.localeCompare(right);
+    return direction * order || a.ticker.localeCompare(b.ticker) || a.company.key.localeCompare(b.company.key);
+  });
+}
+
+function renderWatchComparison() {
+  if (!CURRENT_USER) return;
+  const keys = effectiveWatchKeys();
+  const card = document.getElementById('watchComparisonCard');
+  card.hidden = !keys.length;
+  if (!keys.length) return;
+  const {sort, direction, snapshots, requested, queueStatus, recent} = watchComparison;
+  const status = [recent?.note || (watchRecentReady ? '최근 공시를 불러오지 못했습니다.' : '최근 공시 집계 중')];
+  if (!snapshots) status.push('기업 지표 확인 중');
+  else if (!snapshots.length) status.push('기업 지표를 불러오지 못했습니다.');
+  if (queueStatus === 'unavailable') status.push('지표 요청 상태 확인 불가');
+  document.getElementById('watchComparisonStatus').textContent = status.join(' · ');
+
+  for (const header of card.querySelectorAll('[data-watch-sort]')) {
+    const active = header.dataset.watchSort === sort;
+    if (active) header.setAttribute('aria-sort', direction === 1 ? 'ascending' : 'descending');
+    else header.removeAttribute('aria-sort');
+    header.querySelector('small').textContent = active ? (direction === 1 ? '오름차순' : '내림차순') : '';
+  }
+
+  const rows = sortWatchComparison(watchComparisonRows(keys.map(watchCompany), snapshots || [], requested, recent), sort, direction);
+  const amount = new Intl.NumberFormat('ko-KR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const number = new Intl.NumberFormat('ko-KR', {maximumFractionDigits: 2});
+  const body = document.getElementById('watchComparisonRows');
+  const focused = body.contains(document.activeElement) ? document.activeElement.dataset.watchCompany : null;
+  body.innerHTML = rows.map(({company, metric, pending, filings, ticker, close, closeDate, per, rsi}) => `<tr>
+    <td><button type="button" class="holdings-sort-button watch-comparison-symbol"
+      data-watch-company="${escapeHtml(company.key)}">${escapeHtml(ticker || `CIK ${company.issuer}`)}</button>
+      ${company.ticker && company.name ? `<small class="watch-comparison-company">${escapeHtml(company.name)}</small>` : ''}
+      ${pending ? '<small class="watch-comparison-pending">갱신 대기</small>' : ''}</td>
+    <td>${close == null ? '—' : `$${amount.format(close)}`}</td>
+    <td>${closeDate ? `<time datetime="${escapeHtml(closeDate)}">${escapeHtml(closeDate)}</time>` : '—'}</td>
+    <td>${per == null ? '—' : companyMetricPerLabel(metric, number)}</td>
+    <td>${rsi == null ? '—' : number.format(rsi)}</td>
+    <td>${filings == null ? '—' : `${number.format(filings)}건`}</td>
+  </tr>`).join('');
+  if (focused) body.querySelector(`[data-watch-company="${CSS.escape(focused)}"]`)?.focus({preventScroll: true});
 }
 
 function watchRecentFilings(companies, {form4, house, holdings}, from, through) {
@@ -3447,6 +3566,7 @@ function watchRecentFilings(companies, {form4, house, holdings}, from, through) 
 }
 
 function renderWatchRecent(keys) {
+  watchComparison.recent = null;
   const card = document.getElementById("watchRecentCard");
   if (!card) return;
   card.hidden = !keys.length;
@@ -3461,7 +3581,10 @@ function renderWatchRecent(keys) {
         loadRealSecData()
       ]).then(() => {
         watchRecentReady = true;
-        if (CURRENT_USER && state.currentFilingType === 'WATCHLIST') renderWatchRecent(effectiveWatchKeys());
+        if (CURRENT_USER && state.currentFilingType === 'WATCHLIST') {
+          renderWatchRecent(effectiveWatchKeys());
+          renderWatchComparison();
+        }
       }).finally(() => { watchRecentLoad = null; });
     }
     return;
@@ -3490,6 +3613,14 @@ function renderWatchRecent(keys) {
   if (form4 && form4.coverage.through < through) notes.push(`Form 4 ${form4.coverage.through}까지 확인`);
   if (house && house.asOf < through) notes.push(`하원 ${house.asOf}까지 확인`);
   if (unavailable.length) notes.push(`${unavailable.join('·')} 자료 불러오기 실패`);
+  const byIssuer = new Map();
+  const bySecurity = new Map();
+  for (const {company, type} of filings) {
+    const [counts, key] = type === 'Form 4' ? [byIssuer, company.issuer] : [bySecurity, company.key];
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  watchComparison.recent = {byIssuer, bySecurity, hasForm4: !!form4,
+    note: [`미 동부 공시일 ${from}~${through}`, ...notes.slice(1)].join(' · ')};
   renderWatchTable("watchRecent", notes.join(' · '),
     [["기업 상세", "entity"], ["공시", "meta"], ["공시일", "meta"], ["내역", "meta"], ["출처", "reference"]], rows);
 }

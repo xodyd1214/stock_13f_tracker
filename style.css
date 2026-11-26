@@ -1896,7 +1896,7 @@ body {
   min-width: 0;
 }
 
-.watch-content[hidden], #watchLogin[hidden], #watchRecentCard[hidden] {
+.watch-content[hidden], #watchLogin[hidden], #watchRecentCard[hidden], #watchComparisonCard[hidden] {
   display: none;
 }
 
@@ -2047,6 +2047,37 @@ body {
 
 .watch-table .congress-link:hover {
   color: var(--text-base);
+}
+
+.power-table.watch-comparison-table {
+  min-width: 620px;
+}
+
+.watch-comparison-table :is(th, td):not(:first-child) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.watch-comparison-table .holdings-sort-button,
+.watch-comparison-symbol {
+  min-height: 28px;
+}
+
+.watch-comparison-symbol {
+  color: var(--text-base);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.watch-comparison-table :is(.watch-comparison-company, .watch-comparison-pending) {
+  display: block;
+  color: var(--watch-secondary);
+  font-size: 11px;
+}
+
+.watch-comparison-table .watch-comparison-pending {
+  color: #dfbc8b;
 }
 
 .watch-card summary {

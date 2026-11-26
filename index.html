@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=120">
+  <link rel="stylesheet" href="style.css?v=121">
 </head>
 <body>
   <div class="app-container">
@@ -572,6 +572,26 @@
             <div class="watch-company-list" id="watchSearchResults"></div>
           </section>
 
+          <section class="table-section watch-card" id="watchComparisonCard" aria-labelledby="watchComparisonTitle" hidden>
+            <h3 id="watchComparisonTitle">관심 기업 비교</h3>
+            <p class="card-sub" id="watchComparisonStatus" role="status"></p>
+            <div class="table-wrapper" role="region" aria-labelledby="watchComparisonTitle" tabindex="0">
+              <table class="power-table watch-comparison-table" aria-labelledby="watchComparisonTitle">
+                <thead>
+                  <tr>
+                    <th scope="col" data-watch-sort="ticker"><button type="button" class="holdings-sort-button">종목<small class="holdings-sort-direction" aria-hidden="true"></small></button></th>
+                    <th scope="col" data-watch-sort="close"><button type="button" class="holdings-sort-button">종가<small class="holdings-sort-direction" aria-hidden="true"></small></button></th>
+                    <th scope="col" data-watch-sort="closeDate"><button type="button" class="holdings-sort-button">종가 기준일<small class="holdings-sort-direction" aria-hidden="true"></small></button></th>
+                    <th scope="col" data-watch-sort="per"><button type="button" class="holdings-sort-button">PER (TTM)<small class="holdings-sort-direction" aria-hidden="true"></small></button></th>
+                    <th scope="col" data-watch-sort="rsi"><button type="button" class="holdings-sort-button">RSI (14)<small class="holdings-sort-direction" aria-hidden="true"></small></button></th>
+                    <th scope="col" data-watch-sort="filings"><button type="button" class="holdings-sort-button">최근 7일 공시<small class="holdings-sort-direction" aria-hidden="true"></small></button></th>
+                  </tr>
+                </thead>
+                <tbody id="watchComparisonRows"></tbody>
+              </table>
+            </div>
+          </section>
+
           <section class="table-section watch-card" id="watchRecentCard" aria-labelledby="watchRecentTitle" hidden>
             <h3 id="watchRecentTitle">최근 7일 새 공시</h3>
             <div id="watchRecent" aria-live="polite"></div>
@@ -1116,7 +1136,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js?v=2"></script>
   <script src="sec_display_loader.js?v=5"></script>
-  <script src="app.js?v=135"></script>
+  <script src="app.js?v=136"></script>
 </body>
 </html>
 

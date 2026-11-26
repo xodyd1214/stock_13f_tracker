@@ -48,6 +48,30 @@ test('watch feed groups verified filings by company and uses inclusive filing da
   ]);
   assert.match(results[2].url, /\/2026\/123\.pdf$/);
 });
+test('watch comparison matches metric issuer, counts filings and keeps missing values last', () => {
+  const c = context(['watchComparisonRows', 'sortWatchComparison', 'companyMetricRow', 'watchSymbol']);
+  const company = (issuer, ticker, exchange = 'NYSE') => ({key: `${issuer}:${ticker}`, issuer, ticker, exchange});
+  const a = company('0000000001', 'AAA');
+  const b = company('0000000001', 'AAB');
+  const queued = company('0000000002', 'BBB');
+  const wrongIssuer = company('0000000003', 'CCC');
+  const metric = (cik, close, closeDate) => ({cik, close, closeDate, perTtm: close, rsi14: 0});
+  const snapshots = [{symbols: {
+    AAA: metric(a.issuer, 9, '2026-11-23'),
+    AAB: metric(b.issuer, 100, '2026-11-23'),
+    CCC: metric(a.issuer, 12, '2026-11-23')
+  }}, {symbols: {AAA: metric(a.issuer, 10, '2026-11-24')}}];
+  const recent = {byIssuer: new Map([[a.issuer, 2]]), bySecurity: new Map([[b.key, 1]]), hasForm4: true};
+  const rows = c.watchComparisonRows([wrongIssuer, b, queued, a], snapshots, new Set([queued.key, a.key]), recent);
+  const result = direction => Array.from(c.sortWatchComparison(rows, 'close', direction),
+    ({ticker, close, pending, filings, rsi}) => [ticker, close, pending, filings, rsi]);
+  assert.deepEqual(result(1), [
+    ['AAA', 10, false, 2, 0], ['AAB', 100, false, 3, 0], ['BBB', undefined, true, 0, undefined], ['CCC', undefined, false, 0, undefined]
+  ]);
+  assert.deepEqual(result(-1).map(row => row[0]), ['AAB', 'AAA', 'BBB', 'CCC']);
+  const [unknown] = c.watchComparisonRows([a], snapshots, new Set(), null);
+  assert.equal(unknown.filings, null);
+});
 test('congress ticker summaries count unique reporters per direction across 30 filing dates', () => {
   const c = context(['summarizeCongressTickers', 'congressFilingLag']);
   const stock = { ticker: 'NVDA', action: 'P', assetType: 'ST', status: 'New' };
