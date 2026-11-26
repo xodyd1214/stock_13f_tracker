@@ -21,18 +21,19 @@ function context(names, extra = {}) {
 }
 const helpers = ['hasPrice', 'priceLabel', 'insiderCode', 'insiderLabel', 'quoteFreshness'];
 test('watch feed groups verified filings by company and uses inclusive filing dates', () => {
-  const c = context(['watchRecentFilings', 'watchHousePurchases', 'watchSymbol'], {
-    getMappedTicker: (_, ticker) => ticker
+  const c = context(['watchRecentFilings', 'watchRecentFilingScope', 'watchHousePurchases', 'watchSymbol', 'congressShareLabel'], {
+    getMappedTicker: (_, ticker) => ticker, congressOwners: {SP: '배우자'}
   });
   const company = {key:'0000789019:MSFT', issuer:'0000789019', ticker:'MSFT', exchange:'Nasdaq'};
   const secUrl = 'https://www.sec.gov/Archives/example.xml';
   const purchase = {issuerCik:company.issuer, accessionNumber:'test', filingDate:'2026-11-23',
-    transDate:'2026-10-01', secUrl};
-  const form4 = {transactions:[purchase, purchase, {...purchase, filingDate:'2026-11-16'},
+    insiderName:'Insider', securityTitle:'Common Stock', shares:120, transDate:'2026-10-01', secUrl};
+  const form4 = {transactions:[purchase, {...purchase, insiderName:'Second insider', shares:130}, {...purchase, filingDate:'2026-11-16'},
     {...purchase, filingDate:'2026-11-24'}, {...purchase, issuerCik:'0000000002'}]};
   const house = {asOf:'2026-11-23', ptrFrom:'2026-10-24', filings:[{
     kind:'ptr', id:'123', year:2026, filed:'2026-11-17', name:'Reporter', rows:[
-      {action:'P', assetType:'ST', status:'New', ticker:'MSFT', traded:'2026-10-11'},
+      {action:'P', assetType:'ST', status:'New', ticker:'MSFT', traded:'2026-10-11', asset:'Microsoft Common Stock',
+        owner:'SP', shares:'12.5', value:'$1,001 - $15,000'},
       {action:'S', assetType:'ST', status:'New', ticker:'MSFT', traded:'2026-11-18'}
     ]
   }]};
@@ -46,6 +47,11 @@ test('watch feed groups verified filings by company and uses inclusive filing da
   assert.deepEqual(Array.from(results, ({type, date, count}) => [type,date,count]), [
     ['Form 4','2026-11-23',2], ['Form 13F','2026-11-20',1], ['미국 하원','2026-11-17',1]
   ]);
+  assert.deepEqual(Array.from(results[0].reporters), ['Insider', 'Second insider']);
+  assert.match([...results[0].details][0], /직접 매수 · Common Stock · 120주 · 거래 2026-10-01/);
+  assert.match([...results[1].details][0], /분기말 보유 · 100주 · 보유 기준일 2026-09-30/);
+  assert.match([...results[2].details][0], /Microsoft Common Stock · 소유자 배우자 · 12.5주 · 신고 금액/);
+  assert.deepEqual(Array.from(results, c.watchRecentFilingScope), [company.issuer, company.key, company.key]);
   assert.match(results[2].url, /\/2026\/123\.pdf$/);
 });
 test('watch comparison matches metric issuer, counts filings and keeps missing values last', () => {
@@ -61,7 +67,7 @@ test('watch comparison matches metric issuer, counts filings and keeps missing v
     AAB: metric(b.issuer, 100, '2026-11-23'),
     CCC: metric(a.issuer, 12, '2026-11-23')
   }}, {symbols: {AAA: metric(a.issuer, 10, '2026-11-24')}}];
-  const recent = {byIssuer: new Map([[a.issuer, 2]]), bySecurity: new Map([[b.key, 1]]), hasForm4: true};
+  const recent = {counts: new Map([[a.issuer, 2], [b.key, 1]]), hasForm4: true};
   const rows = c.watchComparisonRows([wrongIssuer, b, queued, a], snapshots, new Set([queued.key, a.key]), recent);
   const result = direction => Array.from(c.sortWatchComparison(rows, 'close', direction),
     ({ticker, close, pending, filings, rsi}) => [ticker, close, pending, filings, rsi]);

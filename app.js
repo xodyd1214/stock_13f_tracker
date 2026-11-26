@@ -2130,7 +2130,13 @@ function setupEventListeners() {
       renderWatchComparison();
     };
   }
+  document.getElementById("btnWatchRecentAll").onclick = () => setWatchRecentFilter("");
   document.getElementById("watchContent").onclick = event => {
+    const filingFilter = event.target.closest("[data-watch-recent-filter]");
+    if (filingFilter) {
+      setWatchRecentFilter(filingFilter.dataset.watchRecentFilter);
+      return;
+    }
     const key = event.target.closest("[data-watch-company]")?.dataset.watchCompany;
     if (key) {
       selectWatchCompany(key);
@@ -2916,6 +2922,7 @@ function resetWatchlistAccount() {
   for (const id of ["watchMetrics", "watch13F", "watchForm4", "watchHouse"]) document.getElementById(id).replaceChildren();
   document.getElementById("watchRecent")?.replaceChildren();
   document.getElementById("watchComparisonRows").replaceChildren();
+  watchRecentFilter = "";
   watchComparison.recent = null;
   renderWatchlist();
   if (CURRENT_USER && state.currentFilingType === "WATCHLIST") loadWatchCompanies();
@@ -3269,6 +3276,7 @@ function watchSource(url, label) {
 
 let watchRecentReady = false;
 let watchRecentLoad = null;
+let watchRecentFilter = "";
 let companyMetricsLoad = null;
 let companyMetricEligibilityLoad = null;
 let companyMetricsView = null;
@@ -3474,7 +3482,7 @@ function watchComparisonRows(companies, snapshots, requests, recent) {
     const pending = !metric && (requests.has(company.key) || (company.exchange &&
       snapshots.some(snapshot => snapshot.symbols[symbol] === null)));
     const filings = recent && (company.exchange || recent.hasForm4)
-      ? (recent.byIssuer.get(company.issuer) ?? 0) + (recent.bySecurity.get(company.key) ?? 0) : null;
+      ? (recent.counts.get(company.issuer) ?? 0) + (recent.counts.get(company.key) ?? 0) : null;
     return {company, metric, pending, filings, ticker: company.ticker || company.name,
       close: metric?.close, closeDate: metric?.closeDate, per: metric?.perTtm, rsi: metric?.rsi14};
   });
@@ -3515,9 +3523,9 @@ function renderWatchComparison() {
   const amount = new Intl.NumberFormat('ko-KR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
   const number = new Intl.NumberFormat('ko-KR', {maximumFractionDigits: 2});
   const body = document.getElementById('watchComparisonRows');
-  const focused = body.contains(document.activeElement) ? document.activeElement.dataset.watchCompany : null;
+  const focused = body.contains(document.activeElement) ? document.activeElement : null;
   body.innerHTML = rows.map(({company, metric, pending, filings, ticker, close, closeDate, per, rsi}) => `<tr>
-    <td><button type="button" class="holdings-sort-button watch-comparison-symbol"
+    <td><button type="button" class="holdings-sort-button watch-comparison-link"
       data-watch-company="${escapeHtml(company.key)}">${escapeHtml(ticker || `CIK ${company.issuer}`)}</button>
       ${company.ticker && company.name ? `<small class="watch-comparison-company">${escapeHtml(company.name)}</small>` : ''}
       ${pending ? '<small class="watch-comparison-pending">갱신 대기</small>' : ''}</td>
@@ -3525,9 +3533,15 @@ function renderWatchComparison() {
     <td>${closeDate ? `<time datetime="${escapeHtml(closeDate)}">${escapeHtml(closeDate)}</time>` : '—'}</td>
     <td>${per == null ? '—' : companyMetricPerLabel(metric, number)}</td>
     <td>${rsi == null ? '—' : number.format(rsi)}</td>
-    <td>${filings == null ? '—' : `${number.format(filings)}건`}</td>
+    <td>${filings == null ? '—' : `<button type="button" class="holdings-sort-button watch-comparison-link"
+      data-watch-recent-filter="${escapeHtml(company.key)}" aria-controls="watchRecent"
+      aria-pressed="${watchRecentFilter === company.key}"
+      aria-label="${escapeHtml(ticker || company.issuer)} 최근 7일 공시 ${number.format(filings)}건">${number.format(filings)}건</button>`}</td>
   </tr>`).join('');
-  if (focused) body.querySelector(`[data-watch-company="${CSS.escape(focused)}"]`)?.focus({preventScroll: true});
+  if (focused) {
+    const attribute = focused.hasAttribute('data-watch-company') ? 'data-watch-company' : 'data-watch-recent-filter';
+    body.querySelector(`[${attribute}="${CSS.escape(focused.getAttribute(attribute))}"]`)?.focus({preventScroll: true});
+  }
 }
 
 function watchRecentFilings(companies, {form4, house, holdings}, from, through) {
@@ -3536,21 +3550,31 @@ function watchRecentFilings(companies, {form4, house, holdings}, from, through) 
   const symbols = new Map(companies.filter(company => company.exchange)
     .map(company => [watchSymbol(company.ticker), company]));
   const inRange = date => date >= from && date <= through;
-  const add = (company, type, id, date, detail, url) => {
+  const add = (company, type, id, date, reporter, detail, url) => {
     if (!company || !inRange(date) || url === '#') return;
     const key = `${company.key}:${type}:${id}`;
-    const existing = filings.get(key);
-    if (existing) existing.count++;
-    else filings.set(key, {company, type, date, detail, url, count: 1});
+    if (!filings.has(key)) filings.set(key, {company, type, date, url, count: 0, reporters: new Set(), details: new Set()});
+    const filing = filings.get(key);
+    filing.count++;
+    if (reporter) filing.reporters.add(reporter);
+    filing.details.add(detail);
   };
+  const quantity = shares => Number.isFinite(shares) && shares > 0 ? `${shares.toLocaleString("en-US", {maximumFractionDigits: 8})}주` : "";
   for (const row of form4?.transactions || []) {
-    add(issuers.get(row.issuerCik), 'Form 4', row.accessionNumber, row.filingDate,
-      '임원·이사 직접 매수', safeSecUrl(row.secUrl));
+    const company = issuers.get(row.issuerCik);
+    if (!company || !inRange(row.filingDate)) continue;
+    const detail = ['임원·이사 직접 매수', row.securityTitle, quantity(row.shares), row.transDate && `거래 ${row.transDate}`];
+    add(company, 'Form 4', row.accessionNumber, row.filingDate, row.insiderName,
+      detail.filter(Boolean).join(' · '), safeSecUrl(row.secUrl));
   }
   if (house) {
     for (const company of symbols.values()) {
-      for (const {filing} of watchHousePurchases(house, company.ticker).entries) {
-        add(company, '미국 하원', filing.id, filing.filed, `${filing.name} · 주식 매수`,
+      for (const {filing, row} of watchHousePurchases(house, company.ticker).entries) {
+        if (!inRange(filing.filed)) continue;
+        const owner = Object.hasOwn(congressOwners, row.owner) ? congressOwners[row.owner] : '';
+        const detail = ['주식 매수', row.asset, owner && `소유자 ${owner}`, row.shares && congressShareLabel(row.shares),
+          row.value?.startsWith('$') && `신고 금액 ${row.value}`, row.traded && `거래 ${row.traded}`];
+        add(company, '미국 하원', filing.id, filing.filed, filing.name, detail.filter(Boolean).join(' · '),
           `https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/${filing.year}/${filing.id}.pdf`);
       }
     }
@@ -3558,22 +3582,65 @@ function watchRecentFilings(companies, {form4, house, holdings}, from, through) 
   for (const row of holdings || []) {
     if (!inRange(row.filingDate) || row.shares <= 0 || !verifiedDisplayRow(row)) continue;
     const symbol = getMappedTicker(row.name, row.ticker, row.cusip, row.shareType, row.putCall);
-    add(symbols.get(watchSymbol(symbol)), 'Form 13F', row.accession, row.filingDate,
-      `${row.legalName} · 보유 기준일 ${row.period}`, safeSecUrl(row.sourceUrl));
+    const company = symbols.get(watchSymbol(symbol));
+    if (!company) continue;
+    add(company, 'Form 13F', row.accession, row.filingDate, row.legalName,
+      `분기말 보유 · ${quantity(row.shares)} · 보유 기준일 ${row.period}`, safeSecUrl(row.sourceUrl));
   }
   return [...filings.values()].sort((a, b) => b.date.localeCompare(a.date) ||
     a.company.ticker.localeCompare(b.company.ticker) || a.type.localeCompare(b.type));
 }
 
+function watchRecentFilingScope({company, type}) {
+  return type === 'Form 4' ? company.issuer : company.key;
+}
+
+function setWatchRecentFilter(key) {
+  if (!CURRENT_USER || !watchComparison.recent || (key && !effectiveWatchKeys().includes(key))) return;
+  watchRecentFilter = key;
+  renderWatchRecentList();
+  renderWatchComparison();
+  const title = document.getElementById("watchRecentTitle");
+  title.focus({preventScroll: true});
+  title.scrollIntoView({block: "start"});
+}
+
+function renderWatchRecentList() {
+  const selected = watchRecentFilter ? watchCompany(watchRecentFilter) : null;
+  document.getElementById("watchRecentTitle").textContent = selected
+    ? `${selected.ticker || selected.name || selected.issuer} · 최근 7일 공시` : "최근 7일 새 공시";
+  document.getElementById("btnWatchRecentAll").hidden = !selected;
+  const recent = watchComparison.recent;
+  if (!recent) {
+    document.getElementById("watchRecent").textContent = watchRecentReady
+      ? "최근 공시 자료를 불러오지 못했습니다." : "최근 공시를 불러오는 중입니다.";
+    return;
+  }
+  const filings = selected ? recent.filings.filter(filing => {
+    const scope = watchRecentFilingScope(filing);
+    return scope === selected.key || scope === selected.issuer;
+  }) : recent.filings;
+  const rows = filings.map(({company, type, date, reporters, details, url, count}) => [
+    watchCompanyButton(selected || company), escapeHtml(type), escapeHtml(date),
+    escapeHtml([...reporters].join(' · ') || '신고자 미기재'),
+    [...details].map(detail => `<span class="watch-report-detail">${escapeHtml(detail)}</span>`).join('') +
+      (count > details.size ? `<small class="form4-secondary">공시 내 ${count.toLocaleString()}개 내역</small>` : ''),
+    watchSource(url, type === '미국 하원' ? 'PDF 원문' : 'SEC 원문')
+  ]);
+  renderWatchTable("watchRecent", `${recent.note} · ${filings.length.toLocaleString()}건`,
+    [["기업 상세", "entity"], ["공시 유형", "meta"], ["공시일", "meta"], ["신고자", "entity"], ["신고 내용", "description"],
+      ["원문", "reference"]], rows);
+}
+
 function renderWatchRecent(keys) {
   watchComparison.recent = null;
+  if (!keys.includes(watchRecentFilter)) watchRecentFilter = "";
   const card = document.getElementById("watchRecentCard");
   if (!card) return;
   card.hidden = !keys.length;
   if (card.hidden) return;
-  const content = document.getElementById("watchRecent");
   if (!watchRecentReady) {
-    content.textContent = "최근 공시를 불러오는 중입니다.";
+    renderWatchRecentList();
     if (!watchRecentLoad) {
       watchRecentLoad = Promise.allSettled([
         loadVerifiedForm4(),
@@ -3600,29 +3667,23 @@ function renderWatchRecent(keys) {
   const holdings = SEC_DISPLAY && MARKET_SYMBOLS ? RAW_HOLDINGS : null;
   const unavailable = [!form4 && 'Form 4', !house && '미국 하원', !holdings && 'Form 13F'].filter(Boolean);
   if (unavailable.length === 3) {
-    content.textContent = "최근 공시 자료를 불러오지 못했습니다.";
+    renderWatchRecentList();
     return;
   }
   const filings = watchRecentFilings(keys.map(watchCompany), {form4, house, holdings}, from, through);
-  const rows = filings.map(({company, type, date, detail, url, count}) => [
-    watchCompanyButton(company), escapeHtml(type), escapeHtml(date),
-    escapeHtml(`${detail}${type !== 'Form 13F' ? ` ${count}건` : ''}`), watchSource(url, '원문')
-  ]);
-  const notes = [`미 동부 공시일 ${from}~${through} · ${filings.length.toLocaleString()}건`];
+  const notes = [`미 동부 공시일 ${from}~${through}`];
   if (holdings) notes.push('Form 13F는 현재 확인된 기관 보유표 기준');
+  if (form4) notes.push('Form 4는 발행사 기준');
   if (form4 && form4.coverage.through < through) notes.push(`Form 4 ${form4.coverage.through}까지 확인`);
   if (house && house.asOf < through) notes.push(`하원 ${house.asOf}까지 확인`);
   if (unavailable.length) notes.push(`${unavailable.join('·')} 자료 불러오기 실패`);
-  const byIssuer = new Map();
-  const bySecurity = new Map();
-  for (const {company, type} of filings) {
-    const [counts, key] = type === 'Form 4' ? [byIssuer, company.issuer] : [bySecurity, company.key];
+  const counts = new Map();
+  for (const filing of filings) {
+    const key = watchRecentFilingScope(filing);
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
-  watchComparison.recent = {byIssuer, bySecurity, hasForm4: !!form4,
-    note: [`미 동부 공시일 ${from}~${through}`, ...notes.slice(1)].join(' · ')};
-  renderWatchTable("watchRecent", notes.join(' · '),
-    [["기업 상세", "entity"], ["공시", "meta"], ["공시일", "meta"], ["내역", "meta"], ["출처", "reference"]], rows);
+  watchComparison.recent = {filings, counts, hasForm4: !!form4, note: notes.join(' · ')};
+  renderWatchRecentList();
 }
 
 function selectWatchCompany(key) {

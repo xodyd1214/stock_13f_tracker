@@ -2037,7 +2037,7 @@ body {
   color: var(--text-near-white);
 }
 
-.watch-table :is(td.watch-meta, .form4-secondary, .congress-link) {
+.watch-table :is(td.watch-meta, td.watch-description, .form4-secondary, .congress-link) {
   color: var(--watch-secondary);
 }
 
@@ -2059,15 +2059,39 @@ body {
   white-space: nowrap;
 }
 
-.watch-comparison-table .holdings-sort-button,
-.watch-comparison-symbol {
+.watch-comparison-table .holdings-sort-button {
   min-height: 28px;
 }
 
-.watch-comparison-symbol {
+.watch-comparison-link {
   color: var(--text-base);
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+.watch-comparison-link[aria-pressed="true"] {
+  color: var(--spotify-green);
+}
+
+#btnWatchRecentAll[hidden] {
+  display: none;
+}
+
+#watchRecentTitle {
+  margin: 0;
+  scroll-margin-top: 20px;
+}
+
+#watchRecentCard .watch-heading {
+  margin-bottom: 10px;
+}
+
+#watchRecent .watch-report-detail {
+  display: block;
+}
+
+#watchRecent .watch-report-detail + .watch-report-detail {
+  margin-top: 4px;
 }
 
 .watch-comparison-table :is(.watch-comparison-company, .watch-comparison-pending) {
@@ -2294,6 +2318,14 @@ button.congress-link {
   }
 
   :is(#f4Table, #congressTable, .watch-table) .form4-wide {
+    grid-column: 1 / -1;
+  }
+
+  #watchRecent .watch-table {
+    min-width: 0;
+  }
+
+  #watchRecent td.watch-description {
     grid-column: 1 / -1;
   }
 
