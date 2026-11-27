@@ -21,7 +21,7 @@ function context(names, extra = {}) {
 }
 const helpers = ['hasPrice', 'priceLabel', 'insiderCode', 'insiderLabel', 'quoteFreshness'];
 test('watch feed groups verified filings by company and uses inclusive filing dates', () => {
-  const c = context(['watchRecentFilings', 'watchRecentFilingScope', 'watchHousePurchases', 'watchSymbol', 'congressShareLabel'], {
+  const c = context(['watchRecentFilings', 'watchRecentFilingScope', 'watchRecentFilingCounts', 'watchHousePurchases', 'watchSymbol', 'congressShareLabel'], {
     getMappedTicker: (_, ticker) => ticker, congressOwners: {SP: '배우자'}
   });
   const company = {key:'0000789019:MSFT', issuer:'0000789019', ticker:'MSFT', exchange:'Nasdaq'};
@@ -52,6 +52,10 @@ test('watch feed groups verified filings by company and uses inclusive filing da
   assert.match([...results[1].details][0], /분기말 보유 · 100주 · 보유 기준일 2026-09-30/);
   assert.match([...results[2].details][0], /Microsoft Common Stock · 소유자 배우자 · 12.5주 · 신고 금액/);
   assert.deepEqual(Array.from(results, c.watchRecentFilingScope), [company.issuer, company.key, company.key]);
+  assert.deepEqual(Array.from(results, ({id}) => id), ['F4_test', 'F13_one', 'HOUSE_2026_123']);
+  const otherCompany = {...company, key:'0000320193:AAPL', ticker:'AAPL'};
+  const unread = c.watchRecentFilingCounts([...results, {...results[2], company:otherCompany}], new Set([results[2].id]));
+  assert.deepEqual(Array.from(unread, ([key, count]) => [key, count]), [[company.issuer, 1], [company.key, 1]]);
   assert.match(results[2].url, /\/2026\/123\.pdf$/);
 });
 test('watch comparison matches metric issuer, counts filings and keeps missing values last', () => {
@@ -77,6 +81,9 @@ test('watch comparison matches metric issuer, counts filings and keeps missing v
   assert.deepEqual(result(-1).map(row => row[0]), ['AAB', 'AAA', 'BBB', 'CCC']);
   const [unknown] = c.watchComparisonRows([a], snapshots, new Set(), null);
   assert.equal(unknown.filings, null);
+  const counts = c.watchComparisonRows([a, b, queued], snapshots, new Set(), recent, new Map([[b.key, 1]]));
+  assert.deepEqual(Array.from(counts, ({filings, unread}) => [filings, unread]), [[2, 0], [3, 1], [0, 0]]);
+  assert.equal(rows.find(row => row.ticker === 'AAA').unread, null);
 });
 test('congress ticker summaries count unique reporters per direction across 30 filing dates', () => {
   const c = context(['summarizeCongressTickers', 'congressFilingLag']);

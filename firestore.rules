@@ -21,6 +21,19 @@ service cloud.firestore {
       allow create, update: if ownsDocument() && validPreferences();
     }
 
+    match /users/{uid}/watchFilingReads/{filing} {
+      function ownsFilingRead() {
+        return request.auth != null && request.auth.uid == uid;
+      }
+
+      allow read: if ownsFilingRead();
+      allow create, update: if ownsFilingRead()
+        && filing.matches('^(F4|F13)_[0-9]{10}-[0-9]{2}-[0-9]{6}$|^HOUSE_[0-9]{4}_[0-9]{4,10}$')
+        && request.resource.data.keys().hasOnly(['filingDate'])
+        && request.resource.data.filingDate is string
+        && request.resource.data.filingDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
     match /companyMetricRequests/{key} {
       function eligibleCompany() {
         return key in [
