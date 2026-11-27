@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "lastUpdated": "2026-11-26T03:20:08Z",
-  "collectedAt": "2026-11-26T03:20:08Z",
+  "lastUpdated": "2026-11-27T03:25:35Z",
+  "collectedAt": "2026-11-27T03:25:35Z",
   "status": "success",
   "fedRate": {
     "targetRange": "3.75% ~ 4.00%",
@@ -52,22 +52,22 @@
   },
   "commoditiesAndFx": {
     "dxy": {
-      "val": 103.79,
-      "change": 0.12,
+      "val": 103.68,
+      "change": 0.01,
       "label": "달러 인덱스 (DXY)",
-      "asOf": "2026-11-26"
+      "asOf": "2026-11-27"
     },
     "wtiOil": {
-      "val": 84.11,
-      "change": 0.51,
+      "val": 85.82,
+      "change": 2.56,
       "label": "WTI 원유 선물 ($)",
-      "asOf": "2026-11-26"
+      "asOf": "2026-11-27"
     },
     "gold": {
-      "val": 3610.7,
-      "change": 1.29,
+      "val": 3652.4,
+      "change": 2.46,
       "label": "금 선물 ($)",
-      "asOf": "2026-11-26"
+      "asOf": "2026-11-27"
     }
   },
   "calendar": [
@@ -2185,10 +2185,10 @@
       },
       {
         "date": "2026-11-25",
-        "y3m": 4.15,
+        "y3m": 4.16,
         "y5y": 4.66,
         "y10y": 4.85,
-        "spread": 0.7
+        "spread": 0.69
       }
     ],
     "policyMonthly": [
@@ -2326,10 +2326,10 @@
       "status": "success",
       "fetchStatus": "success",
       "asOf": "2026-11-24",
-      "ageDays": 2,
+      "ageDays": 3,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-26T03:20:08Z",
-      "lastSuccessAt": "2026-11-26T03:20:08Z",
+      "checkedAt": "2026-11-27T03:25:35Z",
+      "lastSuccessAt": "2026-11-27T03:25:35Z",
       "error": null
     },
     "blsInflation": {
@@ -2337,10 +2337,10 @@
       "status": "success",
       "fetchStatus": "success",
       "asOf": "2026-10",
-      "ageDays": 56,
+      "ageDays": 57,
       "maxAgeDays": 75,
-      "checkedAt": "2026-11-26T03:20:08Z",
-      "lastSuccessAt": "2026-11-26T03:20:08Z",
+      "checkedAt": "2026-11-27T03:25:35Z",
+      "lastSuccessAt": "2026-11-27T03:25:35Z",
       "error": null
     },
     "blsLabor": {
@@ -2348,10 +2348,10 @@
       "status": "success",
       "fetchStatus": "success",
       "asOf": "2026-10",
-      "ageDays": 56,
+      "ageDays": 57,
       "maxAgeDays": 75,
-      "checkedAt": "2026-11-26T03:20:08Z",
-      "lastSuccessAt": "2026-11-26T03:20:08Z",
+      "checkedAt": "2026-11-27T03:25:35Z",
+      "lastSuccessAt": "2026-11-27T03:25:35Z",
       "error": null
     },
     "policyMonthly": {
@@ -2359,10 +2359,10 @@
       "status": "success",
       "fetchStatus": "success",
       "asOf": "2026-10",
-      "ageDays": 56,
+      "ageDays": 57,
       "maxAgeDays": 75,
-      "checkedAt": "2026-11-26T03:20:08Z",
-      "lastSuccessAt": "2026-11-26T03:20:08Z",
+      "checkedAt": "2026-11-27T03:25:35Z",
+      "lastSuccessAt": "2026-11-27T03:25:35Z",
       "error": null
     },
     "yield10Y": {
@@ -2370,10 +2370,10 @@
       "status": "success",
       "fetchStatus": "success",
       "asOf": "2026-11-25",
-      "ageDays": 1,
+      "ageDays": 2,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-26T03:20:08Z",
-      "lastSuccessAt": "2026-11-26T03:20:08Z",
+      "checkedAt": "2026-11-27T03:25:35Z",
+      "lastSuccessAt": "2026-11-27T03:25:35Z",
       "error": null
     },
     "yield13W": {
@@ -2381,10 +2381,10 @@
       "status": "success",
       "fetchStatus": "success",
       "asOf": "2026-11-25",
-      "ageDays": 1,
+      "ageDays": 2,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-26T03:20:08Z",
-      "lastSuccessAt": "2026-11-26T03:20:08Z",
+      "checkedAt": "2026-11-27T03:25:35Z",
+      "lastSuccessAt": "2026-11-27T03:25:35Z",
       "error": null
     },
     "yield5Y": {
@@ -2392,43 +2392,43 @@
       "status": "success",
       "fetchStatus": "success",
       "asOf": "2026-11-25",
-      "ageDays": 1,
+      "ageDays": 2,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-26T03:20:08Z",
-      "lastSuccessAt": "2026-11-26T03:20:08Z",
+      "checkedAt": "2026-11-27T03:25:35Z",
+      "lastSuccessAt": "2026-11-27T03:25:35Z",
       "error": null
     },
     "dxy": {
       "url": "https://query1.finance.yahoo.com/v8/finance/chart/DX-Y.NYB?range=1d&interval=1d",
       "status": "success",
       "fetchStatus": "success",
-      "asOf": "2026-11-26",
+      "asOf": "2026-11-27",
       "ageDays": 0,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-26T03:20:08Z",
-      "lastSuccessAt": "2026-11-26T03:20:08Z",
+      "checkedAt": "2026-11-27T03:25:35Z",
+      "lastSuccessAt": "2026-11-27T03:25:35Z",
       "error": null
     },
     "wtiOil": {
       "url": "https://query1.finance.yahoo.com/v8/finance/chart/CL%3DF?range=1d&interval=1d",
       "status": "success",
       "fetchStatus": "success",
-      "asOf": "2026-11-26",
+      "asOf": "2026-11-27",
       "ageDays": 0,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-26T03:20:08Z",
-      "lastSuccessAt": "2026-11-26T03:20:08Z",
+      "checkedAt": "2026-11-27T03:25:35Z",
+      "lastSuccessAt": "2026-11-27T03:25:35Z",
       "error": null
     },
     "gold": {
       "url": "https://query1.finance.yahoo.com/v8/finance/chart/GC%3DF?range=1d&interval=1d",
       "status": "success",
       "fetchStatus": "success",
-      "asOf": "2026-11-26",
+      "asOf": "2026-11-27",
       "ageDays": 0,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-26T03:20:08Z",
-      "lastSuccessAt": "2026-11-26T03:20:08Z",
+      "checkedAt": "2026-11-27T03:25:35Z",
+      "lastSuccessAt": "2026-11-27T03:25:35Z",
       "error": null
     },
     "treasuryDaily": {
@@ -2436,43 +2436,43 @@
       "status": "success",
       "fetchStatus": "success",
       "asOf": "2026-11-25",
-      "ageDays": 1,
+      "ageDays": 2,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-26T03:20:08Z",
-      "lastSuccessAt": "2026-11-26T03:20:08Z",
+      "checkedAt": "2026-11-27T03:25:35Z",
+      "lastSuccessAt": "2026-11-27T03:25:35Z",
       "error": null
     },
     "calendarFomc": {
       "url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
       "status": "success",
       "fetchStatus": "success",
-      "asOf": "2026-11-26",
+      "asOf": "2026-11-27",
       "ageDays": 0,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-26T03:20:08Z",
-      "lastSuccessAt": "2026-11-26T03:20:08Z",
+      "checkedAt": "2026-11-27T03:25:35Z",
+      "lastSuccessAt": "2026-11-27T03:25:35Z",
       "error": null
     },
     "calendarCpi": {
       "url": "https://fred.stlouisfed.org/releases/calendar?rid=10",
       "status": "success",
       "fetchStatus": "success",
-      "asOf": "2026-11-26",
+      "asOf": "2026-11-27",
       "ageDays": 0,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-26T03:20:08Z",
-      "lastSuccessAt": "2026-11-26T03:20:08Z",
+      "checkedAt": "2026-11-27T03:25:35Z",
+      "lastSuccessAt": "2026-11-27T03:25:35Z",
       "error": null
     },
     "calendarLabor": {
       "url": "https://fred.stlouisfed.org/releases/calendar?rid=50",
       "status": "success",
       "fetchStatus": "success",
-      "asOf": "2026-11-26",
+      "asOf": "2026-11-27",
       "ageDays": 0,
       "maxAgeDays": 7,
-      "checkedAt": "2026-11-26T03:20:08Z",
-      "lastSuccessAt": "2026-11-26T03:20:08Z",
+      "checkedAt": "2026-11-27T03:25:35Z",
+      "lastSuccessAt": "2026-11-27T03:25:35Z",
       "error": null
     }
   },
