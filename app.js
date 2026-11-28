@@ -2130,8 +2130,20 @@ function setupEventListeners() {
       renderWatchComparison();
     };
   }
-  document.getElementById("btnWatchRecentAll").onclick = () => setWatchRecentFilter("", false);
+  document.getElementById("btnWatchRecentAll").onclick = () => setWatchRecentFilter("", false, "all");
   document.getElementById("btnWatchRecentUnread").onclick = () => setWatchRecentFilter(watchRecentFilter, !watchRecentUnread);
+  document.querySelectorAll("#watchRecentHouseFilter [data-watch-house-side]").forEach(button => {
+    button.onclick = () => {
+      watchRecentHouseAction = button.dataset.watchHouseSide;
+      renderWatchRecentList(false);
+    };
+  });
+  document.querySelectorAll("#watchHouseTradeFilter [data-watch-house-side]").forEach(button => {
+    button.onclick = () => {
+      watchHouseAction = button.dataset.watchHouseSide;
+      if (watchlist.selected && congressSnapshot) renderWatchHouse(watchCompany(watchlist.selected), congressSnapshot);
+    };
+  });
   document.getElementById("watchContent").onclick = event => {
     const read = event.target.closest("[data-watch-read]");
     if (read) {
@@ -2475,7 +2487,7 @@ async function switchFilingMode(filingType) {
     if (headerName) headerName.textContent = "관심 기업";
     if (headerFund) headerFund.textContent = "SEC · 미국 하원";
     if (headerQuarter) headerQuarter.textContent = "미국 상장 종목";
-    if (headerDesc) headerDesc.textContent = "관심 종목의 기관 보유, 내부자 직접 매수, 하원 매수 공시를 한곳에서 봅니다.";
+    if (headerDesc) headerDesc.textContent = "관심 종목의 기관 보유, 내부자 직접 매수, 하원 매매 공시를 한곳에서 봅니다.";
     if (ctrl13F) ctrl13F.style.display = "none";
     if (ctrlF4) ctrlF4.style.display = "none";
     if (vWatchlist) vWatchlist.style.display = "flex";
@@ -2932,6 +2944,7 @@ function resetWatchlistAccount() {
   document.getElementById("watchComparisonRows").replaceChildren();
   watchRecentFilter = "";
   watchRecentUnread = false;
+  watchRecentHouseAction = watchHouseAction = "all";
   watchComparison.recent = null;
   renderWatchlist();
   if (CURRENT_USER && state.currentFilingType === "WATCHLIST") loadWatchCompanies();
@@ -3253,15 +3266,46 @@ function watchInstitutionHoldings(holdings, ticker) {
   return [...positions.values()].sort((left, right) => right.period.localeCompare(left.period) || right.shares - left.shares);
 }
 
-function watchHousePurchases(snapshot, ticker) {
+function watchHouseTrades(snapshot, ticker, action = "all") {
   const from = new Date(Date.parse(snapshot.asOf) - 29 * 86400000).toISOString().slice(0, 10);
   const start = from < snapshot.ptrFrom ? snapshot.ptrFrom : from;
   const symbol = watchSymbol(ticker);
+  const actions = congressActionFilters[action] || [...congressActionFilters.P, ...congressActionFilters.S];
   const entries = snapshot.filings.filter(filing => filing.kind === "ptr" && filing.filed >= start && filing.filed <= snapshot.asOf)
-    .flatMap(filing => filing.rows.filter(row => row.action === "P" && row.assetType === "ST" &&
+    .flatMap(filing => filing.rows.filter(row => actions.includes(row.action) && row.assetType === "ST" &&
       ["New", "Amended"].includes(row.status) && watchSymbol(row.ticker) === symbol).map(row => ({ filing, row })));
   entries.sort((a, b) => b.filing.filed.localeCompare(a.filing.filed) || b.row.traded.localeCompare(a.row.traded));
   return { start, entries };
+}
+
+function watchHouseFilingLag(traded, filed) {
+  const lag = congressFilingLag(traded, filed);
+  return lag === null ? "" : lag === 0 ? "당일 신고" : `신고까지 ${lag}일`;
+}
+
+function renderWatchHouseFilter(id, action, available) {
+  const group = document.getElementById(id);
+  group.hidden = !available;
+  for (const button of group.querySelectorAll("[data-watch-house-side]")) {
+    const active = button.dataset.watchHouseSide === action;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  }
+}
+
+function renderWatchHouse(company, snapshot) {
+  const {start, entries} = watchHouseTrades(snapshot, company.ticker, watchHouseAction);
+  renderWatchHouseFilter("watchHouseTradeFilter", watchHouseAction, true);
+  const rows = entries.map(({filing, row}) => [
+    escapeHtml(filing.name) + `<small class="form4-secondary">${escapeHtml(filing.district)}</small>`,
+    escapeHtml(congressOwners[row.owner] || "표기 없음"),
+    escapeHtml(congressActions[row.action]) + (row.status === "Amended" ? '<small class="form4-secondary">정정</small>' : ''),
+    escapeHtml(row.traded), escapeHtml(filing.filed), watchHouseFilingLag(row.traded, filing.filed) || "—",
+    escapeHtml(row.value), watchSource(`https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/${filing.year}/${filing.id}.pdf`, "PDF 원문")
+  ]);
+  renderWatchTable("watchHouse", `${company.ticker} · ${start}~${snapshot.asOf} 신고분 · ${rows.length.toLocaleString()}건`,
+    [["신고 의원", "entity"], ["소유자", "meta"], ["거래 유형", "meta"], ["거래일", "meta"], ["신고일", "meta"],
+      ["신고 소요일", "meta"], ["신고 금액 구간", "amount"], ["원문", "reference"]], rows);
 }
 
 function renderWatchTable(id, note, columns, rows) {
@@ -3287,6 +3331,8 @@ let watchRecentReady = false;
 let watchRecentLoad = null;
 let watchRecentFilter = "";
 let watchRecentUnread = false;
+let watchRecentHouseAction = "all";
+let watchHouseAction = "all";
 let watchFilingReads = null;
 let companyMetricsLoad = null;
 let companyMetricEligibilityLoad = null;
@@ -3565,14 +3611,13 @@ function watchRecentFilings(companies, {form4, house, holdings}, from, through) 
   const symbols = new Map(companies.filter(company => company.exchange)
     .map(company => [watchSymbol(company.ticker), company]));
   const inRange = date => date >= from && date <= through;
-  const add = (company, type, id, date, reporter, detail, url) => {
+  const add = (company, type, id, date, reporter, detail, url, action) => {
     if (!company || !inRange(date) || url === '#') return;
     const key = `${company.key}:${type}:${id}`;
-    if (!filings.has(key)) filings.set(key, {id, company, type, date, url, count: 0, reporters: new Set(), details: new Set()});
+    if (!filings.has(key)) filings.set(key, {id, company, type, date, url, reporters: new Set(), details: new Map()});
     const filing = filings.get(key);
-    filing.count++;
     if (reporter) filing.reporters.add(reporter);
-    filing.details.add(detail);
+    filing.details.set(detail, {action, count: (filing.details.get(detail)?.count ?? 0) + 1});
   };
   const quantity = shares => Number.isFinite(shares) && shares > 0 ? `${shares.toLocaleString("en-US", {maximumFractionDigits: 8})}주` : "";
   for (const row of form4?.transactions || []) {
@@ -3584,13 +3629,14 @@ function watchRecentFilings(companies, {form4, house, holdings}, from, through) 
   }
   if (house) {
     for (const company of symbols.values()) {
-      for (const {filing, row} of watchHousePurchases(house, company.ticker).entries) {
+      for (const {filing, row} of watchHouseTrades(house, company.ticker).entries) {
         if (!inRange(filing.filed)) continue;
         const owner = Object.hasOwn(congressOwners, row.owner) ? congressOwners[row.owner] : '';
-        const detail = ['주식 매수', row.asset, owner && `소유자 ${owner}`, row.shares && congressShareLabel(row.shares),
-          row.value?.startsWith('$') && `신고 금액 ${row.value}`, row.traded && `거래 ${row.traded}`];
+        const action = `주식 ${congressActions[row.action]}${row.status === "Amended" ? " (정정)" : ""}`;
+        const detail = [action, row.asset, owner && `소유자 ${owner}`, row.shares && congressShareLabel(row.shares),
+          row.value?.startsWith('$') && `신고 금액 ${row.value}`, `거래 ${row.traded}`, watchHouseFilingLag(row.traded, filing.filed)];
         add(company, '미국 하원', `HOUSE_${filing.year}_${filing.id}`, filing.filed, filing.name, detail.filter(Boolean).join(' · '),
-          `https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/${filing.year}/${filing.id}.pdf`);
+          `https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/${filing.year}/${filing.id}.pdf`, row.action);
       }
     }
   }
@@ -3604,6 +3650,11 @@ function watchRecentFilings(companies, {form4, house, holdings}, from, through) 
   }
   return [...filings.values()].sort((a, b) => b.date.localeCompare(a.date) ||
     a.company.ticker.localeCompare(b.company.ticker) || a.type.localeCompare(b.type));
+}
+
+function watchRecentFilingDetails(filing, action) {
+  const actions = congressActionFilters[action];
+  return [...filing.details].filter(([, detail]) => !actions || actions.includes(detail.action));
 }
 
 function watchRecentFilingScope({company, type}) {
@@ -3680,10 +3731,11 @@ async function markWatchFilingRead(id) {
   }
 }
 
-function setWatchRecentFilter(key, unread = watchRecentUnread) {
+function setWatchRecentFilter(key, unread = watchRecentUnread, houseAction = watchRecentHouseAction) {
   if (!CURRENT_USER || !watchComparison.recent || (key && !effectiveWatchKeys().includes(key))) return;
   watchRecentFilter = key;
   watchRecentUnread = unread;
+  watchRecentHouseAction = houseAction;
   renderWatchRecentList(false);
   renderWatchComparison();
   const title = document.getElementById("watchRecentTitle");
@@ -3696,8 +3748,9 @@ function renderWatchRecentList(preserveExpanded = true) {
   const title = document.getElementById("watchRecentTitle");
   title.textContent = selected
     ? `${selected.ticker || selected.name || selected.issuer} · 최근 7일 공시` : "최근 7일 새 공시";
-  document.getElementById("btnWatchRecentAll").hidden = !selected && !watchRecentUnread;
+  document.getElementById("btnWatchRecentAll").hidden = !selected && !watchRecentUnread && watchRecentHouseAction === "all";
   const recent = watchComparison.recent;
+  renderWatchHouseFilter("watchRecentHouseFilter", watchRecentHouseAction, !!recent?.hasHouse);
   const reads = watchFilingReads;
   const unreadButton = document.getElementById("btnWatchRecentUnread");
   unreadButton.disabled = !recent || (!reads?.ready && !watchRecentUnread);
@@ -3721,16 +3774,23 @@ function renderWatchRecentList(preserveExpanded = true) {
   });
   const focusedId = content.contains(document.activeElement) ? document.activeElement.dataset.watchRead : null;
   const expanded = preserveExpanded && content.querySelector("details")?.open;
-  const rows = filings.map(({id, company, type, date, reporters, details, url, count}) => [
-    watchCompanyButton(selected || company), escapeHtml(type), escapeHtml(date),
-    escapeHtml([...reporters].join(' · ') || '신고자 미기재'),
-    [...details].map(detail => `<span class="watch-report-detail">${escapeHtml(detail)}</span>`).join('') +
-      (count > details.size ? `<small class="form4-secondary">공시 내 ${count.toLocaleString()}개 내역</small>` : ''),
-    watchSource(url, type === '미국 하원' ? 'PDF 원문' : 'SEC 원문'),
-    reads?.ids.has(id) ? '확인됨' : reads?.ready ? `<button type="button" class="btn btn-outline watch-read-button"
-      data-watch-read="${escapeHtml(id)}"${reads.pending.has(id) ? ' disabled>저장 중' : '>확인 완료'}</button>` : '—'
-  ]);
-  const countLabel = `${watchRecentUnread ? "미확인 " : ""}${filings.length.toLocaleString()}건`;
+  const rows = filings.flatMap(filing => {
+    const details = watchRecentFilingDetails(filing, watchRecentHouseAction);
+    if (!details.length) return [];
+    const {id, company, type, date, reporters, url} = filing;
+    const count = details.reduce((total, [, detail]) => total + detail.count, 0);
+    return [[
+      watchCompanyButton(selected || company), escapeHtml(type), escapeHtml(date),
+      escapeHtml([...reporters].join(' · ') || '신고자 미기재'),
+      details.map(([text]) => `<span class="watch-report-detail">${escapeHtml(text)}</span>`).join('') +
+        (count > details.length ? `<small class="form4-secondary">공시 내 ${count.toLocaleString()}개 내역</small>` : ''),
+      watchSource(url, type === '미국 하원' ? 'PDF 원문' : 'SEC 원문'),
+      reads?.ids.has(id) ? '확인됨' : reads?.ready ? `<button type="button" class="btn btn-outline watch-read-button"
+        data-watch-read="${escapeHtml(id)}"${reads.pending.has(id) ? ' disabled>저장 중' : '>확인 완료'}</button>` : '—'
+    ]];
+  });
+  const houseLabel = watchRecentHouseAction === 'all' ? '' : `하원 ${congressActions[watchRecentHouseAction]} · `;
+  const countLabel = `${houseLabel}${watchRecentUnread ? "미확인 " : ""}${rows.length.toLocaleString()}건`;
   renderWatchTable("watchRecent", `${recent.note} · ${countLabel}`,
     [["기업 상세", "entity"], ["공시 유형", "meta"], ["공시일", "meta"], ["신고자", "entity"], ["신고 내용", "description"],
       ["원문", "reference"], ["확인 상태", "meta"]], rows);
@@ -3752,6 +3812,7 @@ function renderWatchRecent(keys) {
   if (card.hidden) {
     stopWatchFilingReads();
     watchRecentUnread = false;
+    watchRecentHouseAction = "all";
     return;
   }
   if (!watchRecentReady) {
@@ -3792,7 +3853,7 @@ function renderWatchRecent(keys) {
   if (form4 && form4.coverage.through < through) notes.push(`Form 4 ${form4.coverage.through}까지 확인`);
   if (house && house.asOf < through) notes.push(`하원 ${house.asOf}까지 확인`);
   if (unavailable.length) notes.push(`${unavailable.join('·')} 자료 불러오기 실패`);
-  watchComparison.recent = {filings, counts: watchRecentFilingCounts(filings), hasForm4: !!form4, note: notes.join(' · ')};
+  watchComparison.recent = {filings, counts: watchRecentFilingCounts(filings), hasForm4: !!form4, hasHouse: !!house, note: notes.join(' · ')};
   loadWatchFilingReads(from, through);
   renderWatchRecentList();
 }
@@ -3816,6 +3877,7 @@ function selectWatchCompany(key) {
   const current = () => CURRENT_USER?.uid === uid && watchlist.selected === key;
   const message = (id, text) => { document.getElementById(id).textContent = text; };
   for (const id of ["watch13F", "watchForm4", "watchHouse"]) message(id, "공시를 불러오는 중입니다.");
+  renderWatchHouseFilter("watchHouseTradeFilter", watchHouseAction, false);
 
   if (company.exchange) {
     loadRealSecData().then(() => {
@@ -3830,16 +3892,8 @@ function selectWatchCompany(key) {
     });
     loadCongressSnapshot().then(snapshot => {
       if (!current()) return;
-      if (!snapshot) return message("watchHouse", "하원 매수 공시를 불러오지 못했습니다.");
-      const { start, entries } = watchHousePurchases(snapshot, company.ticker);
-      const rows = entries.map(({ filing, row }) => [
-        escapeHtml(filing.name) + `<small class="form4-secondary">${escapeHtml(filing.district)}</small>`,
-        escapeHtml(congressOwners[row.owner] || "표기 없음"),
-        escapeHtml(row.traded) + `<small class="form4-secondary">공시 ${escapeHtml(filing.filed)}${row.status === "Amended" ? " · 정정" : ""}</small>`,
-        escapeHtml(row.value), watchSource(`https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/${filing.year}/${filing.id}.pdf`, "PDF 원문")
-      ]);
-      renderWatchTable("watchHouse", `${company.ticker} · ${start}~${snapshot.asOf} 제출분`,
-        [["신고 의원", "entity"], ["소유자", "meta"], ["거래일 / 공시일", "meta"], ["신고 금액 구간", "amount"], ["원문", "reference"]], rows);
+      if (!snapshot) return message("watchHouse", "하원 매매 공시를 불러오지 못했습니다.");
+      renderWatchHouse(company, snapshot);
     });
   } else {
     for (const id of ["watch13F", "watchHouse"]) message(id, "현재 SEC 상장 목록에서 종목을 확인할 수 없습니다.");

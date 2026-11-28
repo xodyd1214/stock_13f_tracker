@@ -20,9 +20,14 @@ function context(names, extra = {}) {
   return ctx;
 }
 const helpers = ['hasPrice', 'priceLabel', 'insiderCode', 'insiderLabel', 'quoteFreshness'];
+const houseActions = {
+  congressActions: {P: '매수', S: '매도', 'S (partial)': '일부 매도'},
+  congressActionFilters: {P: ['P'], S: ['S', 'S (partial)']}
+};
 test('watch feed groups verified filings by company and uses inclusive filing dates', () => {
-  const c = context(['watchRecentFilings', 'watchRecentFilingScope', 'watchRecentFilingCounts', 'watchHousePurchases', 'watchSymbol', 'congressShareLabel'], {
-    getMappedTicker: (_, ticker) => ticker, congressOwners: {SP: '배우자'}
+  const c = context(['watchRecentFilings', 'watchRecentFilingScope', 'watchRecentFilingCounts', 'watchRecentFilingDetails',
+    'watchHouseTrades', 'watchHouseFilingLag', 'congressFilingLag', 'watchSymbol', 'congressShareLabel'], {
+    getMappedTicker: (_, ticker) => ticker, congressOwners: {SP: '배우자'}, ...houseActions
   });
   const company = {key:'0000789019:MSFT', issuer:'0000789019', ticker:'MSFT', exchange:'Nasdaq'};
   const secUrl = 'https://www.sec.gov/Archives/example.xml';
@@ -34,7 +39,8 @@ test('watch feed groups verified filings by company and uses inclusive filing da
     kind:'ptr', id:'123', year:2026, filed:'2026-11-17', name:'Reporter', rows:[
       {action:'P', assetType:'ST', status:'New', ticker:'MSFT', traded:'2026-10-11', asset:'Microsoft Common Stock',
         owner:'SP', shares:'12.5', value:'$1,001 - $15,000'},
-      {action:'S', assetType:'ST', status:'New', ticker:'MSFT', traded:'2026-11-18'}
+      {action:'S', assetType:'ST', status:'New', ticker:'MSFT', traded:'2026-11-16'},
+      {action:'S (partial)', assetType:'ST', status:'Amended', ticker:'MSFT', traded:'2026-11-17'}
     ]
   }]};
   c.verifiedDisplayRow = row => row.checked;
@@ -44,13 +50,19 @@ test('watch feed groups verified filings by company and uses inclusive filing da
     {ticker:'MSFT', filingDate:'2026-11-19', shares:100, accession:'two', checked:false, sourceUrl:secUrl}
   ];
   const results = c.watchRecentFilings([company], {form4, house, holdings}, '2026-11-17', '2026-11-23');
-  assert.deepEqual(Array.from(results, ({type, date, count}) => [type,date,count]), [
-    ['Form 4','2026-11-23',2], ['Form 13F','2026-11-20',1], ['미국 하원','2026-11-17',1]
+  assert.deepEqual(Array.from(results, ({type, date, details}) => [type,date,details.size]), [
+    ['Form 4','2026-11-23',2], ['Form 13F','2026-11-20',1], ['미국 하원','2026-11-17',3]
   ]);
   assert.deepEqual(Array.from(results[0].reporters), ['Insider', 'Second insider']);
-  assert.match([...results[0].details][0], /직접 매수 · Common Stock · 120주 · 거래 2026-10-01/);
-  assert.match([...results[1].details][0], /분기말 보유 · 100주 · 보유 기준일 2026-09-30/);
-  assert.match([...results[2].details][0], /Microsoft Common Stock · 소유자 배우자 · 12.5주 · 신고 금액/);
+  assert.match(results[0].details.keys().next().value, /직접 매수 · Common Stock · 120주 · 거래 2026-10-01/);
+  assert.match(results[1].details.keys().next().value, /분기말 보유 · 100주 · 보유 기준일 2026-09-30/);
+  assert.equal(c.watchRecentFilingDetails(results[0], 'P').length, 0);
+  const purchases = c.watchRecentFilingDetails(results[2], 'P');
+  assert.equal(purchases.length, 1);
+  assert.match(purchases[0][0], /Microsoft Common Stock · 소유자 배우자 · 12.5주 · 신고 금액.*신고까지 37일/);
+  assert.deepEqual(Array.from(c.watchRecentFilingDetails(results[2], 'S'), ([text]) => text), [
+    '주식 일부 매도 (정정) · 거래 2026-11-17 · 당일 신고', '주식 매도 · 거래 2026-11-16 · 신고까지 1일'
+  ]);
   assert.deepEqual(Array.from(results, c.watchRecentFilingScope), [company.issuer, company.key, company.key]);
   assert.deepEqual(Array.from(results, ({id}) => id), ['F4_test', 'F13_one', 'HOUSE_2026_123']);
   const otherCompany = {...company, key:'0000320193:AAPL', ticker:'AAPL'};
@@ -122,22 +134,24 @@ test('watchlist 13F uses reviewed security identities and keeps each reported pe
     [['Latest manager', 1, 100], ['Earlier manager', 12, 120]]);
 });
 
-test('watchlist House activity includes only matched stock purchases in the filing window', () => {
-  const c = context(['watchHousePurchases', 'watchSymbol']);
+test('watchlist House trade filters include sales and partial sales within the filing window', () => {
+  const c = context(['watchHouseTrades', 'watchSymbol'], houseActions);
   const trade = { ticker: 'BRK.B', action: 'P', assetType: 'ST', status: 'New', traded: '2026-10-01' };
   const filing = (filed, rows, kind = 'ptr') => ({ filed, rows, kind });
   const snapshot = { asOf: '2026-11-07', ptrFrom: '2026-08-10', filings: [
     filing('2026-10-08', [trade]),
     filing('2026-10-09', [trade, { ...trade, ticker: 'BRK.A' }, { ...trade, action: 'S' },
       { ...trade, status: 'Deleted' }, { ...trade, assetType: 'OP' }, { ...trade, ticker: '' }]),
-    filing('2026-11-01', [{ ...trade, status: 'Amended' }]),
+    filing('2026-11-01', [{ ...trade, status: 'Amended' }, { ...trade, action: 'S (partial)' }, { ...trade, action: 'E' }]),
     filing('2026-11-05', [trade], 'annual'),
     filing('2026-11-08', [trade])
   ] };
-  const result = c.watchHousePurchases(snapshot, 'BRK-B');
+  const result = c.watchHouseTrades(snapshot, 'BRK-B');
   assert.equal(result.start, '2026-10-09');
-  assert.deepEqual(Array.from(result.entries, ({ filing, row }) => [filing.filed, row.status]),
-    [['2026-11-01', 'Amended'], ['2026-10-09', 'New']]);
+  assert.deepEqual(Array.from(result.entries, ({filing, row}) => [filing.filed, row.action, row.status]),
+    [['2026-11-01', 'P', 'Amended'], ['2026-11-01', 'S (partial)', 'New'], ['2026-10-09', 'P', 'New'], ['2026-10-09', 'S', 'New']]);
+  assert.deepEqual(Array.from(c.watchHouseTrades(snapshot, 'BRK-B', 'P').entries, ({row}) => row.action), ['P', 'P']);
+  assert.deepEqual(Array.from(c.watchHouseTrades(snapshot, 'BRK-B', 'S').entries, ({row}) => row.action), ['S (partial)', 'S']);
 });
 
 test('Form 4 watchlist import resolves stored CIKs and legacy tickers without guessing ambiguous issuers', () => {

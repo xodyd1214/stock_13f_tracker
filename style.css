@@ -2096,6 +2096,18 @@ body {
   margin-bottom: 10px;
 }
 
+.watch-house-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.watch-house-filters[hidden] {
+  display: none;
+}
+
 #watchRecent .watch-report-detail {
   display: block;
 }
@@ -2331,7 +2343,7 @@ button.congress-link {
     grid-column: 1 / -1;
   }
 
-  #watchRecent .watch-table {
+  :is(#watchRecent, #watchHouse) .watch-table {
     min-width: 0;
   }
 

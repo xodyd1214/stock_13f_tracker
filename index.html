@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- 커스텀 스타일시트 (캐시 버스팅) -->
-  <link rel="stylesheet" href="style.css?v=123">
+  <link rel="stylesheet" href="style.css?v=124">
 </head>
 <body>
   <div class="app-container">
@@ -598,6 +598,14 @@
               <button type="button" class="btn btn-outline" id="btnWatchRecentUnread" aria-controls="watchRecent" aria-pressed="false" disabled>미확인 공시만 보기</button>
               <button type="button" class="btn btn-outline" id="btnWatchRecentAll" aria-controls="watchRecent" hidden>전체 보기</button>
             </div>
+            <div class="watch-house-filters" id="watchRecentHouseFilter" hidden>
+              <span class="card-sub">하원 거래</span>
+              <div class="filter-tabs" role="group" aria-label="최근 7일 하원 거래 유형">
+                <button type="button" class="filter-tab active" data-watch-house-side="all" aria-pressed="true" aria-controls="watchRecent">전체</button>
+                <button type="button" class="filter-tab" data-watch-house-side="P" aria-pressed="false" aria-controls="watchRecent">매수</button>
+                <button type="button" class="filter-tab" data-watch-house-side="S" aria-pressed="false" aria-controls="watchRecent">매도</button>
+              </div>
+            </div>
             <p class="card-sub" id="watchRecentReadStatus" role="status"></p>
             <div id="watchRecent" aria-live="polite"></div>
           </section>
@@ -620,7 +628,12 @@
               <div id="watchForm4" aria-live="polite"></div>
             </section>
             <section class="table-section watch-card watch-disclosure" data-disclosure="house" aria-labelledby="watchHouseTitle">
-              <h3 id="watchHouseTitle"><span class="watch-disclosure-source">미국 하원</span> 최근 매수 공시</h3>
+              <h3 id="watchHouseTitle"><span class="watch-disclosure-source">미국 하원</span> 최근 매매 공시</h3>
+              <div class="filter-tabs watch-house-filters" id="watchHouseTradeFilter" role="group" aria-label="종목별 하원 거래 유형" hidden>
+                <button type="button" class="filter-tab active" data-watch-house-side="all" aria-pressed="true" aria-controls="watchHouse">전체</button>
+                <button type="button" class="filter-tab" data-watch-house-side="P" aria-pressed="false" aria-controls="watchHouse">매수</button>
+                <button type="button" class="filter-tab" data-watch-house-side="S" aria-pressed="false" aria-controls="watchHouse">매도</button>
+              </div>
               <div id="watchHouse" aria-live="polite"></div>
             </section>
           </div>
@@ -1141,7 +1154,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="sec-display-config.js?v=2"></script>
   <script src="sec_display_loader.js?v=5"></script>
-  <script src="app.js?v=138"></script>
+  <script src="app.js?v=139"></script>
 </body>
 </html>
 
